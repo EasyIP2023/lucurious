@@ -1,0 +1,10 @@
+# Ignore object files
+**/*.o
+
+# Ignore static libraries
+**/*.a
+
+# Ignore shared libraries
+**/*.so
+
+build/
