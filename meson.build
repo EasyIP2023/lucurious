@@ -17,12 +17,33 @@ cc = meson.get_compiler('c')
 
 add_global_arguments('-D_POSIX_C_SOURCE=200809L', language : 'c')
 
-glfw3 = dependency('glfw3')
-vulkan = dependency('vulkan')
-cglm = dependency('cglm')
+lucur_inc = include_directories('.','include')
 
-executable(
- 	'lucur',
- 	[ 'src/main.c' ],
-  dependencies: [glfw3, vulkan, cglm]
+subdir('include')
+subdir('src')
+
+lucur_parts = [
+	lib_vulkan
+]
+
+lib_lucur = shared_library(
+	meson.project_name(),
+	version: '.'.join(so_version),
+	link_whole: lucur_parts,
+	include_directories: lucur_inc,
+	install: true
 )
+
+lucur = declare_dependency(
+	link_with: lib_lucur,
+	include_directories: lucur_inc,
+)
+
+subdir('test')
+
+pkg_mod = import('pkgconfig')
+pkg_mod.generate(libraries: lib_lucur,
+                 version: meson.project_version(),
+                 name: meson.project_name(),
+                 filebase:  meson.project_name(),
+                 description: 'Library for building and styling 2D/3D Wayland Compositors')

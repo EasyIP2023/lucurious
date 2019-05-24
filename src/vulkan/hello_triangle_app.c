@@ -1,3 +1,5 @@
+#include <vlucur/vlucur.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,7 +9,7 @@
 #include <vulkan/vulkan.h>
 #include <cglm/call.h>
 
-int main() {
+void run() {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", NULL, NULL);
@@ -26,6 +28,4 @@ int main() {
 
   glfwDestroyWindow(window);
   glfwTerminate();
-
-  return 0;
 }

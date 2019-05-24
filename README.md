@@ -14,12 +14,44 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * libinput
 
-**Current Usage**
+**To install**
 ```bash
 mkdir -v build
 meson build
-ninja -C build
-./build/lucur
+ninja install -C build
+
+# Encase of PolicyKit daemon errors
+pkttyagent -p $(echo $$) | pkexec ninja install -C $(pwd)/build/
+```
+
+**To Uninstall**
+```bash
+ninja uninstall -C build
+
+# Encase of PolicyKit daemon errors
+pkttyagent -p $(echo $$) | pkexec ninja uninstall -C $(pwd)/build/
+```
+
+**If need to reconfigure build**
+```bash
+meson --reconfigure build
+```
+
+**If need to wipe build**
+```bash
+meson --reconfigure build
+```
+
+**Running test**
+```bash
+ninja test -C build
+```
+
+**Usage**
+```bash
+# This is just an extra step
+export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+cc -L /usr/local/lib/ -l lucurious test.c -o test
 ```
 
 ## Development
