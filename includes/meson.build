@@ -1,3 +1,3 @@
 
-headers = ['darry/darr.h','htable/ht.h','tp/tpool.h']
+headers = ['example/dexample.h','example2/hexample.h','example3/texample.h']
 install_headers(headers, subdir: 'delir')
