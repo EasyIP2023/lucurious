@@ -39,12 +39,13 @@ meson --reconfigure build
 
 **If need to wipe build**
 ```bash
-meson --reconfigure build
+meson --wipe build
 ```
 
 **Running test**
 ```bash
 ninja test -C build
+cat build/meson-logs/testlog.txt
 ```
 
 **Usage**
