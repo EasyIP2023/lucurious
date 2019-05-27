@@ -11,6 +11,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * vulkan (Install your graphics card driver)
 * vulkan-icd-loader
 * vulkan-headers
+* vulkan-sdk
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * libinput
 
