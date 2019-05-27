@@ -1,4 +1,4 @@
-#include <vlucur/vlucur.h>
+#include <vlucur/vkall.h>
 
 int main() {
   run();

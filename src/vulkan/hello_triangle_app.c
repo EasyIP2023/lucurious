@@ -1,4 +1,4 @@
-#include <vlucur/vlucur.h>
+#include <vlucur/vkall.h>
 #include <vlucur/errors.h>
 
 #include <stdio.h>
@@ -27,6 +27,10 @@ const char *validation_layers = { "VK_LAYER_KHRONOS_validation" };
   const bool enable_validation_layers = true;
 #endif
 
+struct queue_family_indices {
+  uint32_t graphics_family;
+};
+
 struct htapp {
   GLFWwindow *window;
 
@@ -40,6 +44,20 @@ struct htapp {
   uint32_t glfw_extension_count;
 
   VkDebugUtilsMessengerEXT debug_messenger;
+
+  /* To get device properties like the name, type and supported Vulkan version */
+  VkPhysicalDeviceProperties device_properties;
+  /* For optional features like texture compression,
+    64 bit floats and multi viewport rendering */
+  VkPhysicalDeviceFeatures device_features;
+  VkPhysicalDevice physical_device;
+  VkPhysicalDevice *devices;
+  uint32_t device_count;
+
+  VkQueueFamilyProperties *queue_families;
+  uint32_t queue_family_count;
+
+  struct queue_family_indices indices;
 };
 
 void set_required_extension(struct htapp *app) {
@@ -183,9 +201,116 @@ void setup_debug_messenger(struct htapp *app) {
   }
 }
 
+/*
+find which queue families are supported by the device and which
+one of these supports the commands that we want to use
+*/
+bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
+  bool ret = false;
+
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
+  app->queue_families = calloc(sizeof(VkQueueFamilyProperties), app->queue_family_count * sizeof(VkQueueFamilyProperties));
+  assert(app->queue_families != NULL);
+
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
+
+  for (uint32_t i = 0; i <= app->queue_family_count; i++) {
+    if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
+        app->queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT        ||
+        app->queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT       ||
+        app->queue_families[i].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ||
+        app->queue_families[i].queueFlags & VK_QUEUE_PROTECTED_BIT      ||
+        app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
+        app->indices.graphics_family = i;
+
+    if (app->indices.graphics_family != 0) {
+      ret = true;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+bool is_device_suitable(struct htapp *app, VkPhysicalDevice device) {
+
+  // Query device properties
+  vkGetPhysicalDeviceProperties(device, &app->device_properties);
+  vkGetPhysicalDeviceFeatures(device, &app->device_features);
+
+  /* commented becuase my current device queue_family_count = 1, Not supported */
+  // find_queue_families(app,device) &&
+  return  ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU || \
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER || \
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU || \
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU || \
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU || \
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM) && \
+          app->device_features.geometryShader);
+}
+
+void pick_graphics_device(struct htapp *app) {
+  VkResult err;
+  err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
+  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   || \
+         err != VK_ERROR_OUT_OF_DEVICE_MEMORY || \
+         err != VK_ERROR_INITIALIZATION_FAILED);
+
+
+  if (app->device_count == 0) {
+    perror("[x] failed to find GPUs with Vulkan support!");
+    return;
+  }
+
+  app->devices = calloc(sizeof(VkPhysicalDevice), app->device_count * sizeof(VkPhysicalDevice));
+  assert(app->devices != NULL);
+
+  err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, app->devices);
+  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   || \
+         err != VK_ERROR_OUT_OF_DEVICE_MEMORY || \
+         err != VK_ERROR_INITIALIZATION_FAILED);
+
+  for (unsigned int i = 0; i < app->device_count; i++) {
+    if (is_device_suitable(app, app->devices[i])) {
+      app->physical_device = app->devices[i];
+      break;
+    }
+  }
+
+  if (app->physical_device == VK_NULL_HANDLE) {
+    perror("[x] failed to find a suitable GPU!");
+    return;
+  }
+
+  // Query device properties
+  vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
+  printf("physical_device found: %s\n", app->device_properties.deviceName);
+
+}
+
 void init_vulkan(struct htapp *app) {
   create_instance(app);
   setup_debug_messenger(app);
+  pick_graphics_device(app);
+}
+
+void reset_values(struct htapp *app) {
+  app->window = NULL;
+  app->instance = 0;
+  app->vkprops = NULL;
+  app->available_layers = NULL;
+  app->glfw_extensions = NULL;
+  app->glfw_extension_count = 0;
+  app->debug_messenger = VK_NULL_HANDLE;
+  // app.device_properties = NULL;
+  // app.device_features = NULL;
+  /* this gets destroyed when vkInstance is destroyed */
+  app->physical_device = VK_NULL_HANDLE;
+  app->devices = VK_NULL_HANDLE;
+  app->device_count = 0;
+  app->queue_families = NULL;
+  app->queue_family_count = 0;
+  app->indices.graphics_family = 0;
 }
 
 void cleanup(struct htapp *app) {
@@ -194,26 +319,19 @@ void cleanup(struct htapp *app) {
     DestroyDebugUtilsMessengerEXT(app->instance, app->debug_messenger, NULL);
 
   free(app->vkprops);
-  app->vkprops = NULL;
-
   free(app->available_layers);
-  app->available_layers = NULL;
+  free(app->devices);
+  free(app->queue_families);
 
   vkDestroyInstance(app->instance, NULL);
   glfwDestroyWindow(app->window);
   glfwTerminate();
+  reset_values(app);
 }
 
 void run() {
   struct htapp app;
-
-  app.window = NULL;
-  app.instance = 0;
-  app.vkprops = NULL;
-  app.available_layers = NULL;
-  app.glfw_extensions = NULL;
-  app.glfw_extension_count = 0;
-
+  reset_values(&app);
   init_window(&app);
   init_vulkan(&app);
   main_loop(&app);

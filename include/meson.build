@@ -1,3 +1,3 @@
 
-headers = ['vlucur/vlucur.h']
+headers = ['vlucur/vkall.h']
 install_headers(headers, subdir: 'lucur')
