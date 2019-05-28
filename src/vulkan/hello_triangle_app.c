@@ -28,7 +28,7 @@ const char *validation_layers = { "VK_LAYER_KHRONOS_validation" };
 #endif
 
 struct queue_family_indices {
-  uint32_t graphics_family;
+  int graphics_family;
 };
 
 struct htapp {
@@ -58,6 +58,9 @@ struct htapp {
   uint32_t queue_family_count;
 
   struct queue_family_indices indices;
+
+  VkDevice *device; // logical device
+  VkQueue graphics_queue;
 };
 
 void set_required_extension(struct htapp *app) {
@@ -84,7 +87,7 @@ bool check_validation_layer_support(struct htapp *app) {
 
   bool layer_found = false;
 
-  for (unsigned int j = 0; j < layer_count; j++) {
+  for (uint32_t j = 0; j < layer_count; j++) {
     if (!strcmp(&validation_layers[0], app->available_layers[j].layerName)) {
       layer_found = true;
       break;
@@ -169,7 +172,7 @@ void create_instance(struct htapp *app) {
 
     printf("Instance created\navailable extesions: %d\n", extension_count);
 
-    for (unsigned int i = 0; i < extension_count; i++)
+    for (uint32_t i = 0; i < extension_count; i++)
       printf("%s\n", app->vkprops[i].extensionName);
 
   }
@@ -183,14 +186,14 @@ void setup_debug_messenger(struct htapp *app) {
 
   /* specify all the types of severities you
     would like your callback to be called for */
-  create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | \
-                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | \
+  create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 
   /* filter which types of messages your callback is
   notified about. all types are enabled here */
-  create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | \
-                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | \
+  create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   create_info.pfnUserCallback = debug_callback;
   create_info.pUserData = NULL; // Optional
@@ -214,7 +217,7 @@ bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
 
-  for (uint32_t i = 0; i <= app->queue_family_count; i++) {
+  for (uint32_t i = 0; i < app->queue_family_count; i++) {
     if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
         app->queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT        ||
         app->queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT       ||
@@ -223,7 +226,7 @@ bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
         app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
         app->indices.graphics_family = i;
 
-    if (app->indices.graphics_family != 0) {
+    if (app->indices.graphics_family != -1) {
       ret = true;
       break;
     }
@@ -234,26 +237,64 @@ bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
 
 bool is_device_suitable(struct htapp *app, VkPhysicalDevice device) {
 
-  // Query device properties
+  /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
-  /* commented becuase my current device queue_family_count = 1, Not supported */
-  // find_queue_families(app,device) &&
-  return  ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU || \
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER || \
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU || \
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU || \
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU || \
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM) && \
+  return find_queue_families(app,device) &&
+        ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM) &&
           app->device_features.geometryShader);
+}
+
+/* After selecting a physical device to use.
+  Set up a logical device to interface with it */
+void create_logical_device(struct htapp *app) {
+  VkDeviceQueueCreateInfo queue_create_info = {};
+
+  queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queue_create_info.queueFamilyIndex = app->indices.graphics_family;
+  queue_create_info.queueCount = app->queue_family_count;
+
+  float queue_priority = 1.0f;
+  queue_create_info.pQueuePriorities = &queue_priority;
+
+  VkDeviceCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+  create_info.pQueueCreateInfos = &queue_create_info;
+  create_info.queueCreateInfoCount = 1;
+  create_info.pEnabledFeatures = &app->device_features;
+  create_info.enabledExtensionCount = 0;
+
+  if (enable_validation_layers) {
+    create_info.enabledLayerCount = (uint32_t) (sizeof(validation_layers));
+    create_info.ppEnabledLayerNames = &validation_layers;
+  } else {
+    create_info.enabledLayerCount = 0;
+  }
+
+  app->device = calloc(sizeof(VkDevice),sizeof(VkDevice));
+  assert(app->device != NULL);
+
+  /* Create logic device */
+  if (vkCreateDevice(app->physical_device, &create_info, NULL, app->device) != VK_SUCCESS) {
+    perror("[x] failed to create logical device!");
+    return;
+  }
+
+  vkGetDeviceQueue(*app->device, app->indices.graphics_family, 0, &app->graphics_queue);
 }
 
 void pick_graphics_device(struct htapp *app) {
   VkResult err;
   err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
-  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   || \
-         err != VK_ERROR_OUT_OF_DEVICE_MEMORY || \
+  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   ||
+         err != VK_ERROR_OUT_OF_DEVICE_MEMORY ||
          err != VK_ERROR_INITIALIZATION_FAILED);
 
 
@@ -266,11 +307,12 @@ void pick_graphics_device(struct htapp *app) {
   assert(app->devices != NULL);
 
   err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, app->devices);
-  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   || \
-         err != VK_ERROR_OUT_OF_DEVICE_MEMORY || \
+  assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   ||
+         err != VK_ERROR_OUT_OF_DEVICE_MEMORY ||
          err != VK_ERROR_INITIALIZATION_FAILED);
 
-  for (unsigned int i = 0; i < app->device_count; i++) {
+  /* get physical device */
+  for (uint32_t i = 0; i < app->device_count; i++) {
     if (is_device_suitable(app, app->devices[i])) {
       app->physical_device = app->devices[i];
       break;
@@ -282,7 +324,7 @@ void pick_graphics_device(struct htapp *app) {
     return;
   }
 
-  // Query device properties
+  /* Query device properties */
   vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
   printf("physical_device found: %s\n", app->device_properties.deviceName);
 
@@ -292,6 +334,7 @@ void init_vulkan(struct htapp *app) {
   create_instance(app);
   setup_debug_messenger(app);
   pick_graphics_device(app);
+  create_logical_device(app);
 }
 
 void reset_values(struct htapp *app) {
@@ -302,15 +345,17 @@ void reset_values(struct htapp *app) {
   app->glfw_extensions = NULL;
   app->glfw_extension_count = 0;
   app->debug_messenger = VK_NULL_HANDLE;
-  // app.device_properties = NULL;
-  // app.device_features = NULL;
+  //app->device_properties;
+  //app->device_features;
   /* this gets destroyed when vkInstance is destroyed */
   app->physical_device = VK_NULL_HANDLE;
   app->devices = VK_NULL_HANDLE;
   app->device_count = 0;
   app->queue_families = NULL;
   app->queue_family_count = 0;
-  app->indices.graphics_family = 0;
+  app->indices.graphics_family = -1;
+  app->device = VK_FALSE;
+  app->graphics_queue = VK_FALSE;
 }
 
 void cleanup(struct htapp *app) {
@@ -324,6 +369,9 @@ void cleanup(struct htapp *app) {
   free(app->queue_families);
 
   vkDestroyInstance(app->instance, NULL);
+  //vkDeviceWaitIdle(*app->device);
+  //vkDestroyDevice(*app->device, NULL);
+  free(app->device);
   glfwDestroyWindow(app->window);
   glfwTerminate();
   reset_values(app);
