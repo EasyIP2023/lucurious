@@ -3,7 +3,7 @@ vulkan = dependency('vulkan')
 cglm = dependency('cglm')
 
 lib_vulkan = static_library(
-	'lib_vulkan',
+	'lvulkan',
 	files(
 		'hello_triangle_app.c',
 		'errors.c',

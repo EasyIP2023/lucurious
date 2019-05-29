@@ -1,2 +1,3 @@
 
 subdir('vulkan')
+subdir('wayland')

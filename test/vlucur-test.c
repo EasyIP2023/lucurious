@@ -1,6 +1,5 @@
 #include <vlucur/vkall.h>
 
-int main() {
+void run_vulkan_test() {
   run();
-  return 0;
 }
