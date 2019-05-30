@@ -184,8 +184,9 @@ int runme(void) {
     fprintf(stderr, "Can't create xdg_shell_surface\n");
     return EXIT_FAILURE;
   } else {
-    fprintf(stderr, "Created xdg_shell_surface\n");
+    fprintf(stdout, "Created xdg_shell_surface\n");
   }
+
   xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
   xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, NULL);
   xdg_toplevel_add_listener(xdg_toplevel, &xdg_toplevel_listener, NULL);

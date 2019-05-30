@@ -7,8 +7,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
 #include <cglm/call.h>
 
@@ -31,17 +30,12 @@ struct queue_family_indices {
   int graphics_family;
 };
 
-struct htapp {
-  GLFWwindow *window;
-
+struct vkapp {
   /* Connection between application and the Vulkan library */
   VkInstance instance;
 
   VkExtensionProperties *vkprops;
   VkLayerProperties *available_layers;
-
-  const char **glfw_extensions;
-  uint32_t glfw_extension_count;
 
   VkDebugUtilsMessengerEXT debug_messenger;
 
@@ -63,17 +57,7 @@ struct htapp {
   VkQueue graphics_queue;
 };
 
-void set_required_extension(struct htapp *app) {
-
-  app->glfw_extensions = glfwGetRequiredInstanceExtensions(&app->glfw_extension_count);
-  assert(app->glfw_extensions != NULL);
-
-  // if (enable_validation_layers)
-  //   result.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-}
-
-bool check_validation_layer_support(struct htapp *app) {
+bool check_validation_layer_support(struct vkapp *app) {
   VkResult err;
   uint32_t layer_count;
   err = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
@@ -97,26 +81,7 @@ bool check_validation_layer_support(struct htapp *app) {
   return (layer_found) ? true : false;
 }
 
-void init_window(struct htapp *app) {
-  if(!glfwInit()) return;
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-  app->window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", NULL, NULL);
-  glfwMakeContextCurrent(app->window);
-}
-
-void main_loop(struct htapp *app) {
-  printf("glfwWindow %d\n", glfwWindowShouldClose(app->window));
-
-  // Still working on why window not showing up
-  // Could be the wayland compositor I'm using
-  return;
-  while (!glfwWindowShouldClose(app->window))
-    glfwPollEvents();
-}
-
-void create_instance(struct htapp *app) {
+void create_instance(struct vkapp *app) {
   if (enable_validation_layers && !check_validation_layer_support(app)) {
     perror("[x] validation layers requested, but not available!\n");
     return;
@@ -137,17 +102,12 @@ void create_instance(struct htapp *app) {
   create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   create_info.pApplicationInfo = &app_info;
 
-  /* glfw3 extesion to interface vulkan with the window system */
-  set_required_extension(app);
-
-  create_info.enabledExtensionCount = app->glfw_extension_count;
-  create_info.ppEnabledExtensionNames = app->glfw_extensions;
-
   if (enable_validation_layers) {
     create_info.enabledLayerCount = (uint32_t) (sizeof(validation_layers));
     create_info.ppEnabledLayerNames = &validation_layers;
   } else {
     create_info.enabledLayerCount = 0;
+    create_info.ppEnabledExtensionNames = &validation_layers;
   }
 
   /* Create the instance */
@@ -178,7 +138,7 @@ void create_instance(struct htapp *app) {
   }
 }
 
-void setup_debug_messenger(struct htapp *app) {
+void setup_debug_messenger(struct vkapp *app) {
   if (!enable_validation_layers) return;
 
   VkDebugUtilsMessengerCreateInfoEXT create_info = {};
@@ -208,7 +168,7 @@ void setup_debug_messenger(struct htapp *app) {
 find which queue families are supported by the device and which
 one of these supports the commands that we want to use
 */
-bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
+bool find_queue_families(struct vkapp *app, VkPhysicalDevice device) {
   bool ret = false;
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
@@ -235,7 +195,7 @@ bool find_queue_families(struct htapp *app, VkPhysicalDevice device) {
   return ret;
 }
 
-bool is_device_suitable(struct htapp *app, VkPhysicalDevice device) {
+bool is_device_suitable(struct vkapp *app, VkPhysicalDevice device) {
 
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
@@ -253,7 +213,7 @@ bool is_device_suitable(struct htapp *app, VkPhysicalDevice device) {
 
 /* After selecting a physical device to use.
   Set up a logical device to interface with it */
-void create_logical_device(struct htapp *app) {
+void create_logical_device(struct vkapp *app) {
   VkDeviceQueueCreateInfo queue_create_info = {};
 
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -290,7 +250,7 @@ void create_logical_device(struct htapp *app) {
   vkGetDeviceQueue(*app->device, app->indices.graphics_family, 0, &app->graphics_queue);
 }
 
-void pick_graphics_device(struct htapp *app) {
+void pick_graphics_device(struct vkapp *app) {
   VkResult err;
   err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
   assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   ||
@@ -330,20 +290,17 @@ void pick_graphics_device(struct htapp *app) {
 
 }
 
-void init_vulkan(struct htapp *app) {
+void init_vulkan(struct vkapp *app) {
   create_instance(app);
   setup_debug_messenger(app);
   pick_graphics_device(app);
   create_logical_device(app);
 }
 
-void reset_values(struct htapp *app) {
-  app->window = NULL;
+void reset_values(struct vkapp *app) {
   app->instance = 0;
   app->vkprops = NULL;
   app->available_layers = NULL;
-  app->glfw_extensions = NULL;
-  app->glfw_extension_count = 0;
   app->debug_messenger = VK_NULL_HANDLE;
   //app->device_properties;
   //app->device_features;
@@ -358,7 +315,7 @@ void reset_values(struct htapp *app) {
   app->graphics_queue = VK_FALSE;
 }
 
-void cleanup(struct htapp *app) {
+void cleanup(struct vkapp *app) {
 
   if (enable_validation_layers)
     DestroyDebugUtilsMessengerEXT(app->instance, app->debug_messenger, NULL);
@@ -372,16 +329,12 @@ void cleanup(struct htapp *app) {
   //vkDeviceWaitIdle(*app->device);
   //vkDestroyDevice(*app->device, NULL);
   free(app->device);
-  glfwDestroyWindow(app->window);
-  glfwTerminate();
   reset_values(app);
 }
 
 void run() {
-  struct htapp app;
+  struct vkapp app;
   reset_values(&app);
-  init_window(&app);
   init_vulkan(&app);
-  main_loop(&app);
   cleanup(&app);
 }
