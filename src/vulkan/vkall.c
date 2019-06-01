@@ -2,7 +2,6 @@
 #include <vlucur/errors.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
@@ -30,7 +29,7 @@ struct queue_family_indices {
   int graphics_family;
 };
 
-struct vkapp {
+struct vkcomp {
   /* Connection between application and the Vulkan library */
   VkInstance instance;
 
@@ -53,11 +52,11 @@ struct vkapp {
 
   struct queue_family_indices indices;
 
-  VkDevice *device; // logical device
+  VkDevice device; // logical device
   VkQueue graphics_queue;
 };
 
-bool check_validation_layer_support(struct vkapp *app) {
+bool check_validation_layer_support(vkcomp *app) {
   VkResult err;
   uint32_t layer_count;
   err = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
@@ -81,7 +80,7 @@ bool check_validation_layer_support(struct vkapp *app) {
   return (layer_found) ? true : false;
 }
 
-void create_instance(struct vkapp *app) {
+void create_instance(vkcomp *app) {
   if (enable_validation_layers && !check_validation_layer_support(app)) {
     perror("[x] validation layers requested, but not available!\n");
     return;
@@ -111,9 +110,9 @@ void create_instance(struct vkapp *app) {
   }
 
   /* Create the instance */
-  VkResult result = vkCreateInstance(&create_info, NULL, &app->instance);
+  err = vkCreateInstance(&create_info, NULL, &app->instance);
 
-  if (result != VK_SUCCESS) {
+  if (err != VK_SUCCESS) {
     perror("[x] failed to created instance");
     return;
   }
@@ -138,7 +137,7 @@ void create_instance(struct vkapp *app) {
   }
 }
 
-void setup_debug_messenger(struct vkapp *app) {
+void setup_debug_messenger(vkcomp *app) {
   if (!enable_validation_layers) return;
 
   VkDebugUtilsMessengerCreateInfoEXT create_info = {};
@@ -168,7 +167,7 @@ void setup_debug_messenger(struct vkapp *app) {
 find which queue families are supported by the device and which
 one of these supports the commands that we want to use
 */
-bool find_queue_families(struct vkapp *app, VkPhysicalDevice device) {
+bool find_queue_families(vkcomp *app, VkPhysicalDevice device) {
   bool ret = false;
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
@@ -195,13 +194,13 @@ bool find_queue_families(struct vkapp *app, VkPhysicalDevice device) {
   return ret;
 }
 
-bool is_device_suitable(struct vkapp *app, VkPhysicalDevice device) {
+bool is_device_suitable(vkcomp *app, VkPhysicalDevice device) {
 
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
-  return find_queue_families(app,device) &&
+  return find_queue_families(app, device) &&
         ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
           app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER ||
           app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
@@ -213,7 +212,7 @@ bool is_device_suitable(struct vkapp *app, VkPhysicalDevice device) {
 
 /* After selecting a physical device to use.
   Set up a logical device to interface with it */
-void create_logical_device(struct vkapp *app) {
+void create_logical_device(vkcomp *app) {
   VkDeviceQueueCreateInfo queue_create_info = {};
 
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -227,7 +226,7 @@ void create_logical_device(struct vkapp *app) {
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
   create_info.pQueueCreateInfos = &queue_create_info;
-  create_info.queueCreateInfoCount = 1;
+  create_info.queueCreateInfoCount = app->queue_family_count;
   create_info.pEnabledFeatures = &app->device_features;
   create_info.enabledExtensionCount = 0;
 
@@ -238,19 +237,16 @@ void create_logical_device(struct vkapp *app) {
     create_info.enabledLayerCount = 0;
   }
 
-  app->device = calloc(sizeof(VkDevice),sizeof(VkDevice));
-  assert(app->device != NULL);
-
   /* Create logic device */
-  if (vkCreateDevice(app->physical_device, &create_info, NULL, app->device) != VK_SUCCESS) {
+  if (vkCreateDevice(app->physical_device, &create_info, NULL, &app->device) != VK_SUCCESS) {
     perror("[x] failed to create logical device!");
     return;
   }
 
-  vkGetDeviceQueue(*app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
 }
 
-void pick_graphics_device(struct vkapp *app) {
+void pick_graphics_device(vkcomp *app) {
   VkResult err;
   err = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
   assert(err != VK_ERROR_OUT_OF_HOST_MEMORY   ||
@@ -287,17 +283,16 @@ void pick_graphics_device(struct vkapp *app) {
   /* Query device properties */
   vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
   printf("physical_device found: %s\n", app->device_properties.deviceName);
-
 }
 
-void init_vulkan(struct vkapp *app) {
+void init_vulkan(vkcomp *app) {
   create_instance(app);
   setup_debug_messenger(app);
   pick_graphics_device(app);
   create_logical_device(app);
 }
 
-void reset_values(struct vkapp *app) {
+void reset_values(vkcomp *app) {
   app->instance = 0;
   app->vkprops = NULL;
   app->available_layers = NULL;
@@ -315,7 +310,9 @@ void reset_values(struct vkapp *app) {
   app->graphics_queue = VK_FALSE;
 }
 
-void cleanup(struct vkapp *app) {
+void cleanup(vkcomp *app) {
+  vkDeviceWaitIdle(app->device);
+  vkDestroyDevice(app->device, NULL);
 
   if (enable_validation_layers)
     DestroyDebugUtilsMessengerEXT(app->instance, app->debug_messenger, NULL);
@@ -326,15 +323,16 @@ void cleanup(struct vkapp *app) {
   free(app->queue_families);
 
   vkDestroyInstance(app->instance, NULL);
-  //vkDeviceWaitIdle(*app->device);
-  //vkDestroyDevice(*app->device, NULL);
-  free(app->device);
+
   reset_values(app);
+
+  free(app);
+  app = NULL;
 }
 
-void run() {
-  struct vkapp app;
-  reset_values(&app);
-  init_vulkan(&app);
-  cleanup(&app);
+vkcomp *create_app(size_t init_value) {
+  vkcomp *app = NULL;
+  app = (vkcomp*) calloc(sizeof(vkcomp), init_value * sizeof(vkcomp));
+  assert(app != NULL);
+  return app;
 }

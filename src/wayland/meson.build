@@ -33,4 +33,4 @@ foreach p : server_protocols
 	wayland_protos_src += wayland_scanner_code.process(xml)
 endforeach
 
-lib_lwayland = static_library('lwayland', wayland_protos_src, link_args: '-lrt')
+lib_lwayland = static_library('lwayland', wayland_protos_src)

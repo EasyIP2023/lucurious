@@ -3,7 +3,7 @@
 
 Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s an api for building and styling 2D/3D Wayland Compositors. Will be using [Vulkan](https://vulkan.lunarg.com) and the Wayland protocol to turn the nonexistent UI into reality.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s an library for building and styling 2D/3D Wayland Compositors. Will be using [Vulkan](https://vulkan.lunarg.com) and the Wayland protocol to turn the nonexistent UI into reality.
 
 ## Dependencies
 * wayland-client
@@ -77,13 +77,6 @@ Version: 1.1.107
 Libs: -L${libdir} -lcglm
 Libs.private:  -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc
 Cflags: -I${includedir}
-```
-
-**How to use wayland-scanner**
-```bash
-wayland-scanner private-code < xdg-shell.xml > xdg-shell-protocol.c
-wayland-scanner server-header < xdg-shell.xml > xdg-shell-server-protocol.h
-wayland-scanner client-header < xdg-shell.xml > xdg-shell-client-protocol.h
 ```
 
 ## References
