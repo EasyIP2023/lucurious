@@ -1,9 +1,7 @@
 #include <wclient/client.h>
-#include <wclient/waves.h>
 #include <wclient/shm.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -11,28 +9,29 @@
 
 #include "xdg-shell-client-protocol.h"
 
-/* Redirecting ouput of a few variable to /dev/null for now */
-#define DEBUG
+struct wclient {
+  struct wl_compositor *compositor;
+  struct wl_seat *seat;
 
-#ifdef DEBUG
-  FILE *debug = NULL;
-#else
-  FILE *debug = stderr; /* or stdout */
-#endif
+  struct wl_shm *shm;
+  struct xdg_wm_base *xdg_wm_base;
+  struct xdg_toplevel *xdg_toplevel;
 
-struct wl_compositor *compositor = NULL;
-struct wl_seat *seat = NULL;
+  void *shm_data;
 
-static struct wl_shm *shm = NULL;
-static struct xdg_wm_base *xdg_wm_base = NULL;
-static struct xdg_toplevel *xdg_toplevel = NULL;
+  struct wl_display *display;
+  struct wl_registry *registry;
+  struct wl_buffer *buffer;
+
+  struct wl_surface *surface;
+  struct xdg_surface *xdg_surface;
+
+  uint32_t version;
+  int running;
+};
 
 static const int width = 1024;
 static const int height = 681;
-
-static void *shm_data = NULL;
-
-static int running = 1;
 
 static void noop() {
   // This space intentionally left blank
@@ -40,7 +39,7 @@ static void noop() {
 
 static void xdg_surface_handle_configure(void *data,
     struct xdg_surface *xdg_surface, uint32_t serial) {
-  fprintf(debug,"%p\n", data);
+  ALL_UNUSED(data);
   xdg_surface_ack_configure(xdg_surface, serial);
 }
 
@@ -50,8 +49,9 @@ static const struct xdg_surface_listener xdg_surface_listener = {
 
 static void xdg_toplevel_handle_close(void *data,
     struct xdg_toplevel *xdg_toplevel) {
-  fprintf(debug,"%p : %p\n", data, xdg_toplevel);
-  running = 0;
+  ALL_UNUSED(xdg_toplevel);
+  wclient *wc = data;
+  wc->running = 0;
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
@@ -61,11 +61,11 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 
 static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 		uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
-	struct wl_seat *seat = data;
+	wclient *wc = data;
+  ALL_UNUSED(time, pointer);
 	if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
-		xdg_toplevel_move(xdg_toplevel, seat, serial);
+		xdg_toplevel_move(wc->xdg_toplevel, wc->seat, serial);
 	}
-  fprintf(debug, "%p : %d : %p\n", data, time, pointer);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -78,11 +78,11 @@ static const struct wl_pointer_listener pointer_listener = {
 
 static void seat_handle_capabilities(void *data, struct wl_seat *seat,
 		uint32_t capabilities) {
+  ALL_UNUSED(data);
 	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
 		struct wl_pointer *pointer = wl_seat_get_pointer(seat);
 		wl_pointer_add_listener(pointer, &pointer_listener, seat);
 	}
-  fprintf(debug, "%p\n", data);
 }
 
 static const struct wl_seat_listener seat_listener = {
@@ -91,23 +91,24 @@ static const struct wl_seat_listener seat_listener = {
 
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
-  printf("Got a registry event for %s id %d\n", interface, name);
-  fprintf(debug, "%p : %d\n", data, version);
+  fprintf(stdout, "Got a registry event for %s id %d\n", interface, name);
+  wclient *wc = data;
+  wc->version = version;
   if (strcmp(interface, wl_compositor_interface.name) == 0) {
-    compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
+    wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
   } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
-    xdg_wm_base = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
+    wc->xdg_wm_base = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
   } else if (strcmp(interface, wl_shm_interface.name) == 0) {
-    shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+    wc->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
   } else if (strcmp(interface, wl_seat_interface.name) == 0) {
-    seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
-    wl_seat_add_listener(seat, &seat_listener, NULL);
+    wc->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
+    wl_seat_add_listener(wc->seat, &seat_listener, NULL);
   }
 }
 
 static void global_registry_remover(void *data, struct wl_registry *registry, uint32_t name) {
+  ALL_UNUSED(data, registry);
   printf("Got a registry losing event for %d\n", name);
-  fprintf(debug, "%p : %p\n", data, registry);
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -115,7 +116,7 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-static struct wl_buffer *create_buffer() {
+static struct wl_buffer *create_buffer(wclient *wc) {
 	int stride = width * 4;
 	int size = stride * height;
 
@@ -125,90 +126,118 @@ static struct wl_buffer *create_buffer() {
 		return NULL;
 	}
 
-	shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	if (shm_data == MAP_FAILED) {
+	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (wc->shm_data == MAP_FAILED) {
 		fprintf(stderr, "mmap failed: %m\n");
 		close(fd);
 		return NULL;
 	}
 
-	struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, size);
+	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
 	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, width, height,
 		stride, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_pool_destroy(pool);
 
 	// MagickImage is from waves.h
-	memcpy(shm_data, MagickImage, size);
+	// memcpy(wc->shm_data, MagickImage, size);
 	return buffer;
 }
 
-int runme(void) {
+void reset_wclient(wclient *wc) {
+  wc->display = NULL;
+  wc->registry = NULL;
+  wc->buffer = NULL;
+  wc->surface = NULL;
+  wc->xdg_surface = NULL;
+  wc->compositor = NULL;
+  wc->seat = NULL;
+  wc->shm = NULL;
+  wc->xdg_wm_base = NULL;
+  wc->xdg_toplevel = NULL;
+  wc->shm_data = NULL;
+  wc->running = 1;
+}
 
-  /* Redirecting ouput of a few variable to /dev/null for now */
-  debug = fopen("/dev/null", "w");
+void connect_client(wclient *wc) {
+  wc->display = wl_display_connect(NULL);
+  assert(wc->display != NULL);
 
-  struct wl_display *display = wl_display_connect(NULL);
-  if (display == NULL) {
-    fprintf(stderr, "Can't connect to display\n");
-    return EXIT_FAILURE;
-  }
   printf("connected to display\n");
 
-  struct wl_registry *registry = wl_display_get_registry(display);
-  wl_registry_add_listener(registry, &registry_listener, NULL);
+  wc->registry = wl_display_get_registry(wc->display);
+  wl_registry_add_listener(wc->registry, &registry_listener, wc);
 
-  wl_display_dispatch(display);
-  wl_display_roundtrip(display);
+  wl_display_dispatch(wc->display);
+  wl_display_roundtrip(wc->display);
 
-  if (compositor == NULL) {
+  if (wc->compositor == NULL) {
     fprintf(stderr, "Can't find compositor\n");
-    return EXIT_FAILURE;
+    return;
   } else {
-    fprintf(stderr, "Found compositor\n");
+    fprintf(stdout, "Found compositor\n");
   }
 
-  if (xdg_wm_base == NULL) {
+  if (wc->xdg_wm_base == NULL) {
     fprintf(stderr, "[x] No xdg_wm_base support\n");
-    goto free;
+    return;
   }
 
-  struct wl_buffer *buffer = create_buffer();
-  if (buffer == NULL) {
-    return EXIT_FAILURE;
-  }
+  wc->buffer = create_buffer(wc);
+  if (wc->buffer == NULL) return;
 
-  struct wl_surface *surface = wl_compositor_create_surface(compositor);
-  struct xdg_surface *xdg_surface = xdg_wm_base_get_xdg_surface(xdg_wm_base, surface);
+  wc->surface = wl_compositor_create_surface(wc->compositor);
+  wc->xdg_surface = xdg_wm_base_get_xdg_surface(wc->xdg_wm_base, wc->surface);
 
-  if (xdg_surface == NULL) {
+  if (wc->xdg_surface == NULL) {
     fprintf(stderr, "Can't create xdg_shell_surface\n");
-    return EXIT_FAILURE;
+    return;
   } else {
     fprintf(stdout, "Created xdg_shell_surface\n");
   }
 
-  xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-  xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, NULL);
-  xdg_toplevel_add_listener(xdg_toplevel, &xdg_toplevel_listener, NULL);
+  wc->xdg_toplevel = xdg_surface_get_toplevel(wc->xdg_surface);
+  xdg_surface_add_listener(wc->xdg_surface, &xdg_surface_listener, wc);
+  xdg_toplevel_add_listener(wc->xdg_toplevel, &xdg_toplevel_listener, wc);
   printf("Add xdg listeners\n");
 
-  wl_surface_commit(surface);
-  wl_display_roundtrip(display);
+  wl_surface_commit(wc->surface);
+  wl_display_roundtrip(wc->display);
 
-  wl_surface_attach(surface, buffer, 0, 0);
-  wl_surface_commit(surface);
+  wl_surface_attach(wc->surface, wc->buffer, 0, 0);
+  wl_surface_commit(wc->surface);
 
-  while (wl_display_dispatch(display) != -1 && running) {
+  fprintf(stderr, "wl_display %p\n", wc->display);
+  fprintf(stderr, "wl_surface %p\n", wc->surface);
+}
+
+struct wl_display *get_wl_display(wclient *wc) {
+  return wc->display;
+}
+
+struct wl_surface *get_wl_surface(wclient *wc) {
+  return wc->surface;
+}
+
+int run_client(wclient *wc) {
+  while (wl_display_dispatch(wc->display) != -1 && wc->running) {
     // This space intentionally left blank
   }
-
-  xdg_toplevel_destroy(xdg_toplevel);
-  xdg_surface_destroy(xdg_surface);
-  wl_surface_destroy(surface);
-  printf("Destroy xdg_toplevel, xdg_surface, & wl_surface\n");
-free:
-  wl_display_disconnect(display);
-  printf("disconnected from display\n");
-
   return EXIT_SUCCESS;
+}
+
+void free_wclient(wclient *wc) {
+  xdg_toplevel_destroy(wc->xdg_toplevel);
+  xdg_surface_destroy(wc->xdg_surface);
+  wl_surface_destroy(wc->surface);
+  wl_display_disconnect(wc->display);
+  free(wc->registry);
+  reset_wclient(wc);
+}
+
+wclient *create_client(size_t init_value) {
+  wclient *wc = NULL;
+  wc = calloc(sizeof(wclient), init_value * sizeof(wclient));
+  assert(wc != NULL);
+  reset_wclient(wc);
+  return wc;
 }

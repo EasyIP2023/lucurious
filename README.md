@@ -3,7 +3,7 @@
 
 Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s an library for building and styling 2D/3D Wayland Compositors. Will be using [Vulkan](https://vulkan.lunarg.com) and the Wayland protocol to turn the nonexistent UI into reality.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s a library for building and styling 2D/3D Wayland Compositors. Will be using [Vulkan](https://vulkan.lunarg.com) and the Wayland protocol to turn the nonexistent UI into reality.
 
 ## Dependencies
 * wayland-client

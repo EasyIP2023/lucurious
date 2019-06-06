@@ -7,11 +7,9 @@
 #include <stdbool.h>
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_wayland.h>
 
 #include <cglm/call.h>
-
-const int WIDTH = 800;
-const int HEIGHT = 600;
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
@@ -54,6 +52,8 @@ struct vkcomp {
 
   VkDevice device; // logical device
   VkQueue graphics_queue;
+
+  VkSurfaceKHR surface;
 };
 
 bool check_validation_layer_support(vkcomp *app) {
@@ -111,11 +111,7 @@ void create_instance(vkcomp *app) {
 
   /* Create the instance */
   err = vkCreateInstance(&create_info, NULL, &app->instance);
-
-  if (err != VK_SUCCESS) {
-    perror("[x] failed to created instance");
-    return;
-  }
+  assert(!err);
 
   uint32_t extension_count = 0;
   err = vkEnumerateInstanceExtensionProperties(NULL, &extension_count, NULL);
@@ -213,6 +209,7 @@ bool is_device_suitable(vkcomp *app, VkPhysicalDevice device) {
 /* After selecting a physical device to use.
   Set up a logical device to interface with it */
 void create_logical_device(vkcomp *app) {
+  VkResult err;
   VkDeviceQueueCreateInfo queue_create_info = {};
 
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -238,10 +235,8 @@ void create_logical_device(vkcomp *app) {
   }
 
   /* Create logic device */
-  if (vkCreateDevice(app->physical_device, &create_info, NULL, &app->device) != VK_SUCCESS) {
-    perror("[x] failed to create logical device!");
-    return;
-  }
+  err = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
+  assert(!err);
 
   vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
 }
@@ -285,11 +280,21 @@ void pick_graphics_device(vkcomp *app) {
   printf("physical_device found: %s\n", app->device_properties.deviceName);
 }
 
-void init_vulkan(vkcomp *app) {
-  create_instance(app);
-  setup_debug_messenger(app);
-  pick_graphics_device(app);
-  create_logical_device(app);
+void create_surface(vkcomp *app, void *wl_display, void *wl_surface) {
+  VkResult err;
+
+  VkWaylandSurfaceCreateInfoKHR create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.display = wl_display;
+  create_info.surface = wl_surface;
+
+  fprintf(stderr, "before %p : %p\n", app->surface, &app->surface);
+  err = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
+  fprintf(stderr, "after %p : %p : %d\n", app->surface, &app->surface, err);
+  // not proper
+  assert(err);
 }
 
 void reset_values(vkcomp *app) {
@@ -308,6 +313,7 @@ void reset_values(vkcomp *app) {
   app->indices.graphics_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
+  app->surface = VK_NULL_HANDLE;
 }
 
 void cleanup(vkcomp *app) {
@@ -317,16 +323,24 @@ void cleanup(vkcomp *app) {
   if (enable_validation_layers)
     DestroyDebugUtilsMessengerEXT(app->instance, app->debug_messenger, NULL);
 
-  free(app->vkprops);
-  free(app->available_layers);
-  free(app->devices);
-  free(app->queue_families);
+  if (app->vkprops != NULL)
+    free(app->vkprops);
+  if (app->available_layers != NULL)
+    free(app->available_layers);
+  if (app->devices != NULL)
+    free(app->devices);
+  if (app->queue_families != NULL)
+    free(app->queue_families);
 
-  vkDestroyInstance(app->instance, NULL);
+  if (app->instance != 0 && app->surface != VK_NULL_HANDLE) {
+    //vkDestroySurfaceKHR(app->instance, app->surface, NULL);
+    vkDestroyInstance(app->instance, NULL);
+  }
 
   reset_values(app);
 
-  free(app);
+  if (app != NULL)
+    free(app);
   app = NULL;
 }
 
