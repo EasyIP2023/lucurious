@@ -1,6 +1,5 @@
 #include <vlucur/vkall.h>
 #include <wclient/client.h>
-#include <stdio.h>
 
 int main () {
 
@@ -11,9 +10,9 @@ int main () {
   reset_values(app);
   create_instance(app);
   setup_debug_messenger(app);
-  create_surface(app, get_wl_display(wc), get_wl_surface(wc));
   pick_graphics_device(app);
   create_logical_device(app);
+  create_surface(app, get_wl_display(wc), get_wl_surface(wc));
 
   run_client(wc);
   free_wclient(wc);

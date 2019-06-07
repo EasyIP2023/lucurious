@@ -30,9 +30,6 @@ struct wclient {
   int running;
 };
 
-static const int width = 1024;
-static const int height = 681;
-
 static void noop() {
   // This space intentionally left blank
 }
@@ -117,8 +114,8 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 static struct wl_buffer *create_buffer(wclient *wc) {
-	int stride = width * 4;
-	int size = stride * height;
+	int stride = 1024 * 4;
+	int size = stride * 681;
 
 	int fd = create_shm_file(size);
 	if (fd < 0) {
@@ -134,7 +131,7 @@ static struct wl_buffer *create_buffer(wclient *wc) {
 	}
 
 	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
-	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, width, height,
+	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
 		stride, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_pool_destroy(pool);
 
@@ -205,9 +202,6 @@ void connect_client(wclient *wc) {
 
   wl_surface_attach(wc->surface, wc->buffer, 0, 0);
   wl_surface_commit(wc->surface);
-
-  fprintf(stderr, "wl_display %p\n", wc->display);
-  fprintf(stderr, "wl_surface %p\n", wc->surface);
 }
 
 struct wl_display *get_wl_display(wclient *wc) {
@@ -226,12 +220,23 @@ int run_client(wclient *wc) {
 }
 
 void free_wclient(wclient *wc) {
-  xdg_toplevel_destroy(wc->xdg_toplevel);
-  xdg_surface_destroy(wc->xdg_surface);
-  wl_surface_destroy(wc->surface);
-  wl_display_disconnect(wc->display);
-  free(wc->registry);
+  if (wc->xdg_toplevel != NULL)
+    xdg_toplevel_destroy(wc->xdg_toplevel);
+  if (wc->xdg_surface != NULL)
+    xdg_surface_destroy(wc->xdg_surface);
+  if (wc->surface != NULL)
+    wl_surface_destroy(wc->surface);
+  if (wc->seat != NULL)
+    wl_seat_destroy(wc->seat);
+  if (wc->compositor != NULL)
+    wl_compositor_destroy(wc->compositor);
+  if (wc->registry != NULL)
+    wl_registry_destroy(wc->registry);
+  if (wc->display != NULL)
+    wl_display_disconnect(wc->display);
+  free(wc);
   reset_wclient(wc);
+  wc = NULL;
 }
 
 wclient *create_client(size_t init_value) {

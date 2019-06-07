@@ -6,16 +6,17 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include <cglm/call.h>
+
+#define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_wayland.h>
-
-#include <cglm/call.h>
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
 const char *validation_layers = { "VK_LAYER_KHRONOS_validation" };
 
-#define NDEBUG // Defined here becuase I don't have the vulkan sdk installed
+#define NDEBUG
 
 #ifdef NDEBUG
   const bool enable_validation_layers = false;
@@ -290,11 +291,8 @@ void create_surface(vkcomp *app, void *wl_display, void *wl_surface) {
   create_info.display = wl_display;
   create_info.surface = wl_surface;
 
-  fprintf(stderr, "before %p : %p\n", app->surface, &app->surface);
   err = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
-  fprintf(stderr, "after %p : %p : %d\n", app->surface, &app->surface, err);
-  // not proper
-  assert(err);
+  assert(!err);
 }
 
 void reset_values(vkcomp *app) {
@@ -333,7 +331,7 @@ void cleanup(vkcomp *app) {
     free(app->queue_families);
 
   if (app->instance != 0 && app->surface != VK_NULL_HANDLE) {
-    //vkDestroySurfaceKHR(app->instance, app->surface, NULL);
+    vkDestroySurfaceKHR(app->instance, app->surface, NULL);
     vkDestroyInstance(app->instance, NULL);
   }
 
