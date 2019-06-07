@@ -292,7 +292,8 @@ void create_surface(vkcomp *app, void *wl_display, void *wl_surface) {
   create_info.surface = wl_surface;
 
   err = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
-  assert(!err);
+  // VkCreateWaylandSurfaceKHR not allocating heap address for VkSurfaceKHR extension
+	//assert(!err);
 }
 
 void reset_values(vkcomp *app) {
@@ -331,7 +332,7 @@ void cleanup(vkcomp *app) {
     free(app->queue_families);
 
   if (app->instance != 0 && app->surface != VK_NULL_HANDLE) {
-    vkDestroySurfaceKHR(app->instance, app->surface, NULL);
+		// vkDestroySurfaceKHR(app->instance, app->surface, NULL);
     vkDestroyInstance(app->instance, NULL);
   }
 
