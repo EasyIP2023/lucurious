@@ -1,34 +1,10 @@
+#include <sys/mman.h>
+#include <unistd.h>
+
 #include <wclient/client.h>
 #include <wclient/shm.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <assert.h>
-
 #include "xdg-shell-client-protocol.h"
-
-struct wclient {
-  struct wl_compositor *compositor;
-  struct wl_seat *seat;
-
-  struct wl_shm *shm;
-  struct xdg_wm_base *xdg_wm_base;
-  struct xdg_toplevel *xdg_toplevel;
-
-  void *shm_data;
-
-  struct wl_display *display;
-  struct wl_registry *registry;
-  struct wl_buffer *buffer;
-
-  struct wl_surface *surface;
-  struct xdg_surface *xdg_surface;
-
-  uint32_t version;
-  int running;
-};
 
 static void noop() {
   // This space intentionally left blank
@@ -44,10 +20,9 @@ static const struct xdg_surface_listener xdg_surface_listener = {
   .configure = xdg_surface_handle_configure,
 };
 
-static void xdg_toplevel_handle_close(void *data,
-    struct xdg_toplevel *xdg_toplevel) {
+static void xdg_toplevel_handle_close(void *data, struct xdg_toplevel *xdg_toplevel) {
   ALL_UNUSED(xdg_toplevel);
-  wclient *wc = data;
+  struct wclient *wc = data;
   wc->running = 0;
 }
 
@@ -58,7 +33,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 
 static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 		uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
-	wclient *wc = data;
+  struct wclient *wc = data;
   ALL_UNUSED(time, pointer);
 	if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
 		xdg_toplevel_move(wc->xdg_toplevel, wc->seat, serial);
@@ -89,7 +64,7 @@ static const struct wl_seat_listener seat_listener = {
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
   fprintf(stdout, "Got a registry event for %s id %d\n", interface, name);
-  wclient *wc = data;
+  struct wclient *wc = data;
   wc->version = version;
   if (strcmp(interface, wl_compositor_interface.name) == 0) {
     wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
@@ -113,7 +88,7 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-static struct wl_buffer *create_buffer(wclient *wc) {
+static struct wl_buffer *create_buffer(struct wclient *wc) {
 	int stride = 1024 * 4;
 	int size = stride * 681;
 
@@ -140,7 +115,7 @@ static struct wl_buffer *create_buffer(wclient *wc) {
 	return buffer;
 }
 
-void reset_wclient(wclient *wc) {
+void initialize_wclient_values(struct wclient *wc) {
   wc->display = NULL;
   wc->registry = NULL;
   wc->buffer = NULL;
@@ -155,7 +130,7 @@ void reset_wclient(wclient *wc) {
   wc->running = 1;
 }
 
-void connect_client(wclient *wc) {
+void connect_client(struct wclient *wc) {
   wc->display = wl_display_connect(NULL);
   assert(wc->display != NULL);
 
@@ -204,22 +179,26 @@ void connect_client(wclient *wc) {
   wl_surface_commit(wc->surface);
 }
 
-struct wl_display *get_wl_display(wclient *wc) {
-  return wc->display;
-}
-
-struct wl_surface *get_wl_surface(wclient *wc) {
-  return wc->surface;
-}
-
-int run_client(wclient *wc) {
+int run_client(struct wclient *wc) {
   while (wl_display_dispatch(wc->display) != -1 && wc->running) {
     // This space intentionally left blank
   }
   return EXIT_SUCCESS;
 }
 
-void free_wclient(wclient *wc) {
+VkWaylandSurfaceCreateInfoKHR set_wayland_surface_ciKHR(struct wclient *wc) {
+
+  VkWaylandSurfaceCreateInfoKHR create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.display = wc->display;
+  create_info.surface = wc->surface;
+
+  return create_info;
+}
+
+void freeup_wc(struct wclient *wc) {
   xdg_toplevel_destroy(wc->xdg_toplevel);
   xdg_surface_destroy(wc->xdg_surface);
   wl_surface_destroy(wc->surface);
@@ -227,15 +206,5 @@ void free_wclient(wclient *wc) {
   wl_compositor_destroy(wc->compositor);
   wl_registry_destroy(wc->registry);
   wl_display_disconnect(wc->display);
-  reset_wclient(wc);
-  free(wc);
-  wc = NULL;
-}
-
-wclient *create_client(size_t init_value) {
-  wclient *wc = NULL;
-  wc = calloc(sizeof(wclient), init_value * sizeof(wclient));
-  assert(wc != NULL);
-  reset_wclient(wc);
-  return wc;
+  initialize_wclient_values(wc);
 }

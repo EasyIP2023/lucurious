@@ -1,16 +1,14 @@
-#include <lucom.h>
 #include <vlucur/vkall.h>
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
 const char *validation_layers = { "VK_LAYER_KHRONOS_validation" };
 
-void initial_values(struct vkcomp *app) {
+void initialize_vulkan_values(struct vkcomp *app) {
   app->instance = 0;
+  app->surface = VK_NULL_HANDLE;
   app->instance_layer_properties = NULL;
   app->instance_layer_count = 0;
-  //app->device_properties;
-  //app->device_features;
   app->physical_device = VK_NULL_HANDLE;
   app->devices = VK_NULL_HANDLE;
   app->device_count = 0;
@@ -42,7 +40,7 @@ VkResult get_instance_extension_properties(struct vkcomp *app, VkLayerProperties
   } while (res == VK_INCOMPLETE);
 
   if (app) {
-    fprintf(stdout, "Instance created\navailable extesions: %d\n", instance_extension_count);
+    fprintf(stdout, "\nINSTANCE CREATED\n\nAVAILABLE EXTESIONS: %d\n", instance_extension_count);
 
     for (uint32_t i = 0; i < instance_extension_count; i++)
       fprintf(stdout, "%s\n", instance_extension[i].extensionName);
@@ -79,6 +77,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
     app->instance_layer_properties = (VkLayerProperties *) \
       calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
 
+  printf("VALIDATION LAYER SUPPORT:\n");
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_instance_extension_properties(NULL, &vk_props[i]);
@@ -91,6 +90,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
            vk_props[i].description, strlen(vk_props[i].description) + 1);
     app->instance_layer_properties[app->instance_layer_count].specVersion = vk_props[i].specVersion;
     app->instance_layer_properties[app->instance_layer_count].implementationVersion = vk_props[i].implementationVersion;
+    printf("%s\n",app->instance_layer_properties[app->instance_layer_count].layerName);
     app->instance_layer_count++;
   }
 
@@ -154,9 +154,13 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
 }
 
 /*
-find which queue families are supported by the device and which
-one of these supports the commands that we want to use
-*/
+ * Almost every operation in Vulkan, anything from drawing to
+ * uploading textures, requires commands to be submitted
+ * to a queue. This will create and find
+ * which queue families are supported
+ * by the device and which one of these supports the
+ * commands that we want to use
+ */
 bool find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
   bool ret = false;
 
@@ -200,6 +204,7 @@ bool is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
           app->device_features.geometryShader);
 }
 
+/* Get user physical device */
 VkResult enumerate_devices(struct vkcomp *app) {
   VkResult res;
   res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
@@ -231,7 +236,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
 
   /* Query device properties */
   vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
-  printf("physical_device found: %s\n", app->device_properties.deviceName);
+  printf("\nPHYSICAL_DEVICE FOUND: %s\n", app->device_properties.deviceName);
 
   return res;
 }
@@ -245,14 +250,15 @@ VkResult init_logical_device(struct vkcomp *app) {
   VkDeviceQueueCreateInfo queue_create_info = {};
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
   queue_create_info.pNext = NULL;
+  queue_create_info.flags = 0;
   queue_create_info.queueFamilyIndex = app->indices.graphics_family;
   queue_create_info.queueCount = app->queue_family_count;
-  queue_create_info.pQueuePriorities = &queue_priorities;
+  queue_create_info.pQueuePriorities = queue_priorities;
 
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
-  create_info.flags = 0;
+  create_info.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
   create_info.pQueueCreateInfos = &queue_create_info;
   create_info.queueCreateInfoCount = app->queue_family_count;
   create_info.pEnabledFeatures = &app->device_features;
@@ -265,17 +271,23 @@ VkResult init_logical_device(struct vkcomp *app) {
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
   if (res) return res;
 
+  /*
+   * Queues are automatically created with
+   * the logical device, but you need a queue
+   * handle to interface with them
+   */
   vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
 
   return res;
 }
 
-void cleanup(struct vkcomp *app) {
+void freeup_vk(struct vkcomp *app) {
   vkDeviceWaitIdle(app->device);
   vkDestroyDevice(app->device, NULL);
   free(app->instance_layer_properties);
   free(app->devices);
   free(app->queue_families);
+  vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   vkDestroyInstance(app->instance, NULL);
-  initial_values(app);
+  initialize_vulkan_values(app);
 }
