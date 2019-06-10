@@ -17,6 +17,7 @@ void initialize_vulkan_values(struct vkcomp *app) {
   app->indices.graphics_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
+  app->queue_create_infos = NULL;
 }
 
 VkResult get_instance_extension_properties(struct vkcomp *app, VkLayerProperties *prop) {
@@ -102,7 +103,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
 
 /* Create connection between app and the vulkan api */
 VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) {
-  VkResult res;
+  VkResult res = VK_INCOMPLETE;
 
   /* initialize the VkApplicationInfo structure */
   VkApplicationInfo app_info = {};
@@ -161,14 +162,15 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
  * by the device and which one of these supports the
  * commands that we want to use
  */
-bool find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
-  bool ret = false;
+VkBool32 find_queue_families(struct vkcomp *app) {
+  VkBool32 ret = false;
+  VkBool32 present_support = false;
 
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, NULL);
   app->queue_families = calloc(sizeof(VkQueueFamilyProperties), app->queue_family_count * sizeof(VkQueueFamilyProperties));
   assert(app->queue_families != NULL);
 
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, app->queue_families);
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
@@ -179,7 +181,11 @@ bool find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
         app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
         app->indices.graphics_family = i;
 
-    if (app->indices.graphics_family != -1) {
+    /* To look for a queue family with the capabilities to present our window system */
+    vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support);
+
+    if (app->indices.graphics_family != -1 && present_support) {
+      app->indices.present_family = i;
       ret = true;
       break;
     }
@@ -188,14 +194,13 @@ bool find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
   return ret;
 }
 
-bool is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
+VkBool32 is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
 
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
-  return find_queue_families(app, device) &&
-        ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+  return ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
           app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER ||
           app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
           app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU ||
@@ -206,7 +211,7 @@ bool is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
 
 /* Get user physical device */
 VkResult enumerate_devices(struct vkcomp *app) {
-  VkResult res;
+  VkResult res = VK_INCOMPLETE;
   res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
   if (res) return res;
 
@@ -244,23 +249,29 @@ VkResult enumerate_devices(struct vkcomp *app) {
 /* After selecting a physical device to use.
   Set up a logical device to interface with it */
 VkResult init_logical_device(struct vkcomp *app) {
-  VkResult res;
+  VkQueue present_queue;
+  VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
 
-  VkDeviceQueueCreateInfo queue_create_info = {};
-  queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queue_create_info.pNext = NULL;
-  queue_create_info.flags = 0;
-  queue_create_info.queueFamilyIndex = app->indices.graphics_family;
-  queue_create_info.queueCount = app->queue_family_count;
-  queue_create_info.pQueuePriorities = queue_priorities;
+  app->queue_create_infos = calloc(sizeof(VkDeviceQueueCreateInfo),
+      app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
+  assert(app->queue_create_infos != NULL);
+
+  for (uint32_t i = 0; i < app->queue_family_count; i++) {
+    app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    app->queue_create_infos[i].pNext = NULL;
+    app->queue_create_infos[i].flags = 0;
+    app->queue_create_infos[i].queueFamilyIndex = i;
+    app->queue_create_infos[i].queueCount = app->queue_family_count;
+    app->queue_create_infos[i].pQueuePriorities = queue_priorities;
+  }
 
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
-  create_info.pQueueCreateInfos = &queue_create_info;
-  create_info.queueCreateInfoCount = app->queue_family_count;
+  create_info.pQueueCreateInfos = app->queue_create_infos;
+  create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
   create_info.pEnabledFeatures = &app->device_features;
   create_info.enabledExtensionCount = 0;
   create_info.ppEnabledExtensionNames = NULL;
@@ -277,6 +288,7 @@ VkResult init_logical_device(struct vkcomp *app) {
    * handle to interface with them
    */
   vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+  vkGetDeviceQueue(app->device, app->indices.present_family, 0, &present_queue);
 
   return res;
 }
@@ -287,6 +299,7 @@ void freeup_vk(struct vkcomp *app) {
   free(app->instance_layer_properties);
   free(app->devices);
   free(app->queue_families);
+  free(app->queue_create_infos);
   vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   vkDestroyInstance(app->instance, NULL);
   initialize_vulkan_values(app);

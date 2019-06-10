@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <stdbool.h>
 
 #include <cglm/call.h>
 
@@ -15,6 +14,7 @@
 
 struct queue_family_indices {
   int graphics_family;
+  int present_family;
 };
 
 struct vkcomp {
@@ -37,6 +37,7 @@ struct vkcomp {
   VkPhysicalDevice *devices;
   uint32_t device_count;
 
+  VkDeviceQueueCreateInfo *queue_create_infos;
   VkQueueFamilyProperties *queue_families;
   uint32_t queue_family_count;
   struct queue_family_indices indices;
@@ -74,8 +75,10 @@ struct vkcomp {
 #define U_ASSERT_ONLY
 #endif
 
-/* http://efesx.com/2010/07/17/variadic-macro-to-count-number-of-arguments/ */
-/* https://stackoverflow.com/questions/23235910/variadic-unused-function-macro */
+/*
+ * http://efesx.com/2010/07/17/variadic-macro-to-count-number-of-arguments/
+ * https://stackoverflow.com/questions/23235910/variadic-unused-function-macro
+ */
 #define UNUSED1(z) (void)(z)
 #define UNUSED2(y,z) UNUSED1(y),UNUSED1(z)
 #define UNUSED3(x,y,z) UNUSED1(x),UNUSED2(y,z)

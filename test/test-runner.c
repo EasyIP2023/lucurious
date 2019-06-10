@@ -21,6 +21,9 @@ int main () {
   err = enumerate_devices(&app);
   assert(!err);
 
+  err = find_queue_families(&app);
+  assert(!err);
+
   err = init_logical_device(&app);
   assert(!err);
 
