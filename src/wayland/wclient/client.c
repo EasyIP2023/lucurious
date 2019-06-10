@@ -220,22 +220,15 @@ int run_client(wclient *wc) {
 }
 
 void free_wclient(wclient *wc) {
-  if (wc->xdg_toplevel != NULL)
-    xdg_toplevel_destroy(wc->xdg_toplevel);
-  if (wc->xdg_surface != NULL)
-    xdg_surface_destroy(wc->xdg_surface);
-  if (wc->surface != NULL)
-    wl_surface_destroy(wc->surface);
-  if (wc->seat != NULL)
-    wl_seat_destroy(wc->seat);
-  if (wc->compositor != NULL)
-    wl_compositor_destroy(wc->compositor);
-  if (wc->registry != NULL)
-    wl_registry_destroy(wc->registry);
-  if (wc->display != NULL)
-    wl_display_disconnect(wc->display);
-  free(wc);
+  xdg_toplevel_destroy(wc->xdg_toplevel);
+  xdg_surface_destroy(wc->xdg_surface);
+  wl_surface_destroy(wc->surface);
+  wl_seat_destroy(wc->seat);
+  wl_compositor_destroy(wc->compositor);
+  wl_registry_destroy(wc->registry);
+  wl_display_disconnect(wc->display);
   reset_wclient(wc);
+  free(wc);
   wc = NULL;
 }
 

@@ -11,6 +11,10 @@
 
 #include <vulkan/vulkan.h>
 
+struct queue_family_indices {
+  int graphics_family;
+};
+
 struct vkcomp {
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
   wl_display *display;
@@ -36,6 +40,22 @@ struct vkcomp {
    */
   VkLayerProperties *instance_layer_properties;
   uint32_t instance_layer_count;
+
+  /* To get device properties like the name, type and supported Vulkan version */
+  VkPhysicalDeviceProperties device_properties;
+  /* For optional features like texture compression,
+    64 bit floats and multi viewport rendering */
+  VkPhysicalDeviceFeatures device_features;
+  VkPhysicalDevice physical_device;
+  VkPhysicalDevice *devices;
+  uint32_t device_count;
+
+  VkQueueFamilyProperties *queue_families;
+  uint32_t queue_family_count;
+  struct queue_family_indices indices;
+
+  VkDevice device; /* logical device */
+  VkQueue graphics_queue;
 };
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */

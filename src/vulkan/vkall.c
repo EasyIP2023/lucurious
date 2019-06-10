@@ -9,6 +9,16 @@ void initial_values(struct vkcomp *app) {
   app->instance = 0;
   app->instance_layer_properties = NULL;
   app->instance_layer_count = 0;
+  //app->device_properties;
+  //app->device_features;
+  app->physical_device = VK_NULL_HANDLE;
+  app->devices = VK_NULL_HANDLE;
+  app->device_count = 0;
+  app->queue_families = NULL;
+  app->queue_family_count = 0;
+  app->indices.graphics_family = -1;
+  app->device = VK_FALSE;
+  app->graphics_queue = VK_FALSE;
 }
 
 VkResult get_instance_extension_properties(struct vkcomp *app, VkLayerProperties *prop) {
@@ -32,10 +42,10 @@ VkResult get_instance_extension_properties(struct vkcomp *app, VkLayerProperties
   } while (res == VK_INCOMPLETE);
 
   if (app) {
-    fprintf(stderr, "Instance created\navailable extesions: %d\n", instance_extension_count);
+    fprintf(stdout, "Instance created\navailable extesions: %d\n", instance_extension_count);
 
     for (uint32_t i = 0; i < instance_extension_count; i++)
-      fprintf(stderr, "%s\n", instance_extension[i].extensionName);
+      fprintf(stdout, "%s\n", instance_extension[i].extensionName);
   }
 
   free(instance_extension);
@@ -90,6 +100,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
   return res;
 }
 
+/* Create connection between app and the vulkan api */
 VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) {
   VkResult res;
 
@@ -142,9 +153,129 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
   return res;
 }
 
-void cleanup(struct vkcomp *app) {
-  free(app->instance_layer_properties);
-  vkDestroyInstance(app->instance, NULL);
+/*
+find which queue families are supported by the device and which
+one of these supports the commands that we want to use
+*/
+bool find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
+  bool ret = false;
 
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
+  app->queue_families = calloc(sizeof(VkQueueFamilyProperties), app->queue_family_count * sizeof(VkQueueFamilyProperties));
+  assert(app->queue_families != NULL);
+
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
+
+  for (uint32_t i = 0; i < app->queue_family_count; i++) {
+    if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
+        app->queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT        ||
+        app->queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT       ||
+        app->queue_families[i].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ||
+        app->queue_families[i].queueFlags & VK_QUEUE_PROTECTED_BIT      ||
+        app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
+        app->indices.graphics_family = i;
+
+    if (app->indices.graphics_family != -1) {
+      ret = true;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+bool is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
+
+  /* Query device properties */
+  vkGetPhysicalDeviceProperties(device, &app->device_properties);
+  vkGetPhysicalDeviceFeatures(device, &app->device_features);
+
+  return find_queue_families(app, device) &&
+        ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU ||
+          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM) &&
+          app->device_features.geometryShader);
+}
+
+VkResult enumerate_devices(struct vkcomp *app) {
+  VkResult res;
+  res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
+  if (res) return res;
+
+  if (app->device_count == 0) {
+    perror("[x] failed to find GPUs with Vulkan support!");
+    return res;
+  }
+
+  app->devices = calloc(sizeof(VkPhysicalDevice), app->device_count * sizeof(VkPhysicalDevice));
+  assert(app->devices != NULL);
+
+  res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, app->devices);
+  if (res) return res;
+
+  /* get physical device */
+  for (uint32_t i = 0; i < app->device_count; i++) {
+    if (is_device_suitable(app, app->devices[i])) {
+      app->physical_device = app->devices[i];
+      break;
+    }
+  }
+
+  if (app->physical_device == VK_NULL_HANDLE) {
+    perror("[x] failed to find a suitable GPU!");
+    return res;
+  }
+
+  /* Query device properties */
+  vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
+  printf("physical_device found: %s\n", app->device_properties.deviceName);
+
+  return res;
+}
+
+/* After selecting a physical device to use.
+  Set up a logical device to interface with it */
+VkResult init_logical_device(struct vkcomp *app) {
+  VkResult res;
+  float queue_priorities[1] = {1.0};
+
+  VkDeviceQueueCreateInfo queue_create_info = {};
+  queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queue_create_info.pNext = NULL;
+  queue_create_info.queueFamilyIndex = app->indices.graphics_family;
+  queue_create_info.queueCount = app->queue_family_count;
+  queue_create_info.pQueuePriorities = &queue_priorities;
+
+  VkDeviceCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.pQueueCreateInfos = &queue_create_info;
+  create_info.queueCreateInfoCount = app->queue_family_count;
+  create_info.pEnabledFeatures = &app->device_features;
+  create_info.enabledExtensionCount = 0;
+  create_info.ppEnabledExtensionNames = NULL;
+  create_info.ppEnabledLayerNames = NULL;
+  create_info.enabledLayerCount = 0;
+
+  /* Create logic device */
+  res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
+  if (res) return res;
+
+  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+
+  return res;
+}
+
+void cleanup(struct vkcomp *app) {
+  vkDeviceWaitIdle(app->device);
+  vkDestroyDevice(app->device, NULL);
+  free(app->instance_layer_properties);
+  free(app->devices);
+  free(app->queue_families);
+  vkDestroyInstance(app->instance, NULL);
   initial_values(app);
 }
