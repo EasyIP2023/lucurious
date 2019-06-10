@@ -1,22 +1,19 @@
+#include <lucom.h>
 #include <vlucur/vkall.h>
-#include <wclient/client.h>
 
 int main () {
+  struct vkcomp app;
+  VkResult err;
 
-  wclient *wc = create_client(1);
-  connect_client(wc);
+  initial_values(&app);
 
-  vkcomp *app = create_app(1);
-  reset_values(app);
-  create_instance(app);
-  setup_debug_messenger(app);
-  pick_graphics_device(app);
-  create_logical_device(app);
-  create_surface(app, get_wl_display(wc), get_wl_surface(wc));
+  err = check_validation_layer_support(&app);
+  assert(!err);
 
-  run_client(wc);
-  free_wclient(wc);
-  cleanup(app);
+  err = create_instance(&app, "Hello Triangle", "No Engine");
+  assert(!err);
+
+  cleanup(&app);
 
   return 0;
 }

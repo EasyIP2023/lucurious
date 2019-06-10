@@ -1,18 +1,13 @@
-#include <stdlib.h>
-
 #ifndef VKALL_H
 #define VKALL_H
 
-typedef struct vkcomp vkcomp;
+#include <lucom.h>
+#include <vulkan/vulkan_wayland.h>
 
 /* Function protypes */
-vkcomp *create_app(size_t init_value);
-void reset_values(vkcomp *app);
-void create_instance(vkcomp *app);
-void setup_debug_messenger(vkcomp *app);
-void create_surface(vkcomp *app, void *wl_display, void *wl_surface);
-void pick_graphics_device(vkcomp *app);
-void create_logical_device(vkcomp *app);
-void cleanup(vkcomp *app);
+void initial_values(struct vkcomp *app);
+VkResult check_validation_layer_support(struct vkcomp *app);
+VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name);
+void cleanup(struct vkcomp *app);
 
 #endif

@@ -8,3 +8,5 @@
 **/*.so
 
 build/
+
+vkall.c
