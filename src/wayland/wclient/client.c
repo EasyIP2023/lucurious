@@ -94,13 +94,13 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 
 	int fd = create_shm_file(size);
 	if (fd < 0) {
-		fprintf(stderr, "creating a buffer file for %d B failed: %m\n", size);
+		fprintf(stderr, "[x] creating a buffer file for %d B failed: %m\n", size);
 		return NULL;
 	}
 
 	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (wc->shm_data == MAP_FAILED) {
-		fprintf(stderr, "mmap failed: %m\n");
+		fprintf(stderr, "[x] mmap failed: %m\n");
 		close(fd);
 		return NULL;
 	}
@@ -143,7 +143,7 @@ void connect_client(struct wclient *wc) {
   wl_display_roundtrip(wc->display);
 
   if (wc->compositor == NULL) {
-    fprintf(stderr, "Can't find compositor\n");
+    fprintf(stderr, "[x] Can't find compositor\n");
     return;
   } else {
     fprintf(stdout, "Found compositor\n");
@@ -161,7 +161,7 @@ void connect_client(struct wclient *wc) {
   wc->xdg_surface = xdg_wm_base_get_xdg_surface(wc->xdg_wm_base, wc->surface);
 
   if (wc->xdg_surface == NULL) {
-    fprintf(stderr, "Can't create xdg_shell_surface\n");
+    fprintf(stderr, "[x] Can't create xdg_shell_surface\n");
     return;
   } else {
     fprintf(stdout, "Created xdg_shell_surface\n");

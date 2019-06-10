@@ -25,7 +25,7 @@ int main () {
   assert(!err);
 
   err = vk_connect_surfaceKHR(&app, set_wayland_surface_ciKHR(&wc));
-  //assert(!err);
+  assert(!err);
 
   run_client(&wc);
 
