@@ -9,7 +9,6 @@
 #include <cglm/call.h>
 
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
-
 #include <vulkan/vulkan.h>
 
 struct queue_family_indices {
@@ -33,6 +32,7 @@ struct vkcomp {
   /* For optional features like texture compression,
     64 bit floats and multi viewport rendering */
   VkPhysicalDeviceFeatures device_features;
+  VkPhysicalDeviceMemoryProperties memory_properties;
   VkPhysicalDevice physical_device;
   VkPhysicalDevice *devices;
   uint32_t device_count;

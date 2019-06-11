@@ -18,16 +18,13 @@ int main () {
   err = create_instance(&app, "Hello Triangle", "No Engine");
   assert(!err);
 
+  err = vk_connect_surfaceKHR(&app, set_wayland_surface_ciKHR(&wc));
+  assert(!err);
+
   err = enumerate_devices(&app);
   assert(!err);
 
-  err = find_queue_families(&app);
-  assert(!err);
-
   err = init_logical_device(&app);
-  assert(!err);
-
-  err = vk_connect_surfaceKHR(&app, set_wayland_surface_ciKHR(&wc));
   assert(!err);
 
   run_client(&wc);

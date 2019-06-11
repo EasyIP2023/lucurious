@@ -1,8 +1,20 @@
 #include <vlucur/vkall.h>
 
+const char *device_extensions[] = {
+  VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
-const char *validation_layers = { "VK_LAYER_KHRONOS_validation" };
+const char *validation_layers[] = {
+  "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
+  "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
+  "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
+  "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
+  "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects"
+  "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
+  "VK_LAYER_LUNARG_device_simulation"
+};
 
 void initialize_vulkan_values(struct vkcomp *app) {
   app->instance = 0;
@@ -15,47 +27,65 @@ void initialize_vulkan_values(struct vkcomp *app) {
   app->queue_families = NULL;
   app->queue_family_count = 0;
   app->indices.graphics_family = -1;
+  app->indices.present_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
   app->queue_create_infos = NULL;
 }
 
-VkResult get_instance_extension_properties(struct vkcomp *app, VkLayerProperties *prop) {
+VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {
   VkResult res = VK_INCOMPLETE;
-  VkExtensionProperties *instance_extension = NULL;
-  uint32_t instance_extension_count = 0;
+  VkExtensionProperties *extensions = NULL;
+  uint32_t extension_count = 0;
 
   do {
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &instance_extension_count, instance_extension) :
-                  vkEnumerateInstanceExtensionProperties(prop->layerName, &instance_extension_count, NULL);
+    res = (app && !device)  ?  vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+          (prop)            ?  vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, NULL) :
+                               vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
     if (res) return res;
 
-    if (instance_extension_count == 0)
+    if (extension_count == 0)
       return VK_SUCCESS;
 
-    instance_extension = realloc(instance_extension, instance_extension_count * sizeof(VkExtensionProperties));
-    assert(instance_extension != NULL);
+    extensions = (VkExtensionProperties *) realloc(extensions,
+      extension_count * sizeof(VkExtensionProperties));
+    if (!extensions) return res;
 
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &instance_extension_count, instance_extension) :
-                  vkEnumerateInstanceExtensionProperties(prop->layerName, &instance_extension_count, instance_extension);
+    res = (app && !device)  ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+          (prop)            ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
+                              vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
   } while (res == VK_INCOMPLETE);
 
-  if (app) {
-    fprintf(stdout, "\nINSTANCE CREATED\n\nAVAILABLE EXTESIONS: %d\n", instance_extension_count);
+  if (app && !device) {
+    fprintf(stdout, "\nINSTANCE CREATED\n\nAVAILABLE INSTANCE EXTESIONS: %d\n", extension_count);
 
-    for (uint32_t i = 0; i < instance_extension_count; i++)
-      fprintf(stdout, "%s\n", instance_extension[i].extensionName);
+    for (uint32_t i = 0; i < extension_count; i++)
+      fprintf(stdout, "%s\n", extensions[i].extensionName);
   }
 
-  free(instance_extension);
-  instance_extension = NULL;
+  /* Checking for swap chain support */
+  if (device) {
+    fprintf(stdout, "\nAVAILABLE DEVICE EXTESIONS: %d\n", extension_count);
+    for (uint32_t i = 0; i < extension_count; i++) {
+      fprintf(stdout, "%s\n", extensions[i].extensionName);
+      if (!strcmp(extensions[i].extensionName, device_extensions[0])) {
+        res = VK_TRUE;
+        fprintf(stdout, "Device has swap chain support!!!\n");
+        break;
+      }
+    }
+  }
+
+  free(extensions);
+  extensions = NULL;
 
   return res;
 }
 
 /*
  * Gets all you're validation layers extensions
- * that you can later using pointer arithmetic cycle through
+ * that you can later using pointer arithmetic to
+ * cycle through
  */
 VkResult check_validation_layer_support(struct vkcomp *app) {
   uint32_t layer_count = 0;
@@ -69,7 +99,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
     if (layer_count == 0) return VK_SUCCESS;
 
     vk_props = (VkLayerProperties *) realloc(vk_props, layer_count * sizeof(VkLayerProperties));
-    assert(vk_props != NULL);
+    if (!vk_props) return res;
 
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
@@ -78,10 +108,10 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
     app->instance_layer_properties = (VkLayerProperties *) \
       calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
 
-  printf("VALIDATION LAYER SUPPORT:\n");
+  fprintf(stdout, "\nVALIDATION LAYER SUPPORT:\n");
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
-    res = get_instance_extension_properties(NULL, &vk_props[i]);
+    res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
 
     /* must to do a deep copy of the structs information */
@@ -91,7 +121,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
            vk_props[i].description, strlen(vk_props[i].description) + 1);
     app->instance_layer_properties[app->instance_layer_count].specVersion = vk_props[i].specVersion;
     app->instance_layer_properties[app->instance_layer_count].implementationVersion = vk_props[i].implementationVersion;
-    printf("%s\n",app->instance_layer_properties[app->instance_layer_count].layerName);
+    fprintf(stdout, "%s\n",app->instance_layer_properties[app->instance_layer_count].layerName);
     app->instance_layer_count++;
   }
 
@@ -123,7 +153,7 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
   create_info.flags = 0;
   create_info.pApplicationInfo = &app_info;
   create_info.enabledExtensionCount = 0;
-  create_info.ppEnabledExtensionNames = NULL;
+  create_info.ppEnabledExtensionNames = device_extensions; // assuming device has swap chain support
   create_info.enabledLayerCount = 0;
   create_info.ppEnabledLayerNames = NULL;
 
@@ -148,7 +178,7 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
       return res;
   }
 
-  res = get_instance_extension_properties(app, NULL);
+  res = get_extension_properties(app, NULL, NULL);
   if (res) return res;
 
   return res;
@@ -162,15 +192,16 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
  * by the device and which one of these supports the
  * commands that we want to use
  */
-VkBool32 find_queue_families(struct vkcomp *app) {
-  VkBool32 ret = false;
-  VkBool32 present_support = false;
+VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
+  VkBool32 ret = VK_FALSE;
+  VkBool32 present_support = VK_FALSE;
 
-  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, NULL);
-  app->queue_families = calloc(sizeof(VkQueueFamilyProperties), app->queue_family_count * sizeof(VkQueueFamilyProperties));
-  assert(app->queue_families != NULL);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
+  app->queue_families = (VkQueueFamilyProperties *) realloc(app->queue_families,
+      app->queue_family_count * sizeof(VkQueueFamilyProperties));
+  if (!app->queue_families) return ret;
 
-  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, app->queue_families);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
@@ -182,11 +213,11 @@ VkBool32 find_queue_families(struct vkcomp *app) {
         app->indices.graphics_family = i;
 
     /* To look for a queue family with the capabilities to present our window system */
-    vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support);
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
 
-    if (app->indices.graphics_family != -1 && present_support) {
+    if (app->indices.graphics_family != -1) { // && present_support) {
       app->indices.present_family = i;
-      ret = true;
+      ret = VK_TRUE;
       break;
     }
   }
@@ -220,15 +251,22 @@ VkResult enumerate_devices(struct vkcomp *app) {
     return res;
   }
 
-  app->devices = calloc(sizeof(VkPhysicalDevice), app->device_count * sizeof(VkPhysicalDevice));
-  assert(app->devices != NULL);
+  app->devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
+      app->device_count * sizeof(VkPhysicalDevice));
+  if (!app->devices) return res;
 
   res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, app->devices);
   if (res) return res;
 
-  /* get physical device */
+  /*
+  * get a physical device that is suitable
+  * to do the graphics related task that we need
+  */
   for (uint32_t i = 0; i < app->device_count; i++) {
-    if (is_device_suitable(app, app->devices[i])) {
+    if (is_device_suitable(app, app->devices[i]) &&
+        find_queue_families(app, app->devices[i]) &&
+        /* Checking for swap chain support */
+        get_extension_properties(app, NULL, app->devices[i])) {
       app->physical_device = app->devices[i];
       break;
     }
@@ -240,8 +278,10 @@ VkResult enumerate_devices(struct vkcomp *app) {
   }
 
   /* Query device properties */
+  vkGetPhysicalDeviceMemoryProperties(app->physical_device, &app->memory_properties);
   vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
-  printf("\nPHYSICAL_DEVICE FOUND: %s\n", app->device_properties.deviceName);
+  fprintf(stdout, "\nPHYSICAL_DEVICE FOUND: %s\nMEMORY HEAP COUNT: %d\n",
+    app->device_properties.deviceName, app->memory_properties.memoryHeapCount);
 
   return res;
 }
@@ -253,9 +293,9 @@ VkResult init_logical_device(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
 
-  app->queue_create_infos = calloc(sizeof(VkDeviceQueueCreateInfo),
+  app->queue_create_infos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
-  assert(app->queue_create_infos != NULL);
+  if (!app->queue_create_infos) return res;
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -274,7 +314,7 @@ VkResult init_logical_device(struct vkcomp *app) {
   create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
   create_info.pEnabledFeatures = &app->device_features;
   create_info.enabledExtensionCount = 0;
-  create_info.ppEnabledExtensionNames = NULL;
+  create_info.ppEnabledExtensionNames = device_extensions; // assuming device has swap chain support
   create_info.ppEnabledLayerNames = NULL;
   create_info.enabledLayerCount = 0;
 
