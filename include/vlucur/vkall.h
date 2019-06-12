@@ -4,7 +4,7 @@
 #include <lucom.h>
 
 /* Function protypes */
-void initialize_vulkan_values(struct vkcomp *app);
+struct vkcomp init_vk();
 VkResult check_validation_layer_support(struct vkcomp *app);
 VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name);
 VkResult enumerate_devices(struct vkcomp *app);

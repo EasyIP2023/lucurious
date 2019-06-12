@@ -27,7 +27,7 @@ struct wclient {
   int running;
 };
 
-void initialize_wclient_values(struct wclient *wc);
+struct wclient init_wc();
 void connect_client(struct wclient *wc);
 int run_client(struct wclient *wc);
 void freeup_wc(struct wclient *wc);

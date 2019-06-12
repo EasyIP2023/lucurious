@@ -4,11 +4,8 @@
 
 int main () {
   VkResult err;
-  struct vkcomp app;
-  struct wclient wc;
-
-  initialize_vulkan_values(&app);
-  initialize_wclient_values(&wc);
+  struct vkcomp app = init_vk();
+  struct wclient wc = init_wc();
 
   connect_client(&wc);
 

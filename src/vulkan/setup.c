@@ -1,21 +1,23 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 
-void initialize_vulkan_values(struct vkcomp *app) {
-  app->instance = 0;
-  app->surface = VK_NULL_HANDLE;
-  app->instance_layer_properties = NULL;
-  app->instance_layer_count = 0;
-  app->physical_device = VK_NULL_HANDLE;
-  app->devices = VK_NULL_HANDLE;
-  app->device_count = 0;
-  app->queue_families = NULL;
-  app->queue_family_count = 0;
-  app->indices.graphics_family = -1;
-  app->indices.present_family = -1;
-  app->device = VK_FALSE;
-  app->graphics_queue = VK_FALSE;
-  app->queue_create_infos = NULL;
+struct vkcomp init_vk() {
+  struct vkcomp app;
+  app.instance = 0;
+  app.surface = VK_NULL_HANDLE;
+  app.instance_layer_properties = NULL;
+  app.instance_layer_count = 0;
+  app.physical_device = VK_NULL_HANDLE;
+  app.devices = VK_NULL_HANDLE;
+  app.device_count = 0;
+  app.queue_families = NULL;
+  app.queue_family_count = 0;
+  app.indices.graphics_family = -1;
+  app.indices.present_family = -1;
+  app.device = VK_FALSE;
+  app.graphics_queue = VK_FALSE;
+  app.queue_create_infos = NULL;
+  return app;
 }
 
 /*
@@ -222,5 +224,19 @@ void freeup_vk(struct vkcomp *app) {
   free(app->queue_create_infos);
   vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   vkDestroyInstance(app->instance, NULL);
-  initialize_vulkan_values(app);
+
+  app->instance = 0;
+  app->surface = VK_NULL_HANDLE;
+  app->instance_layer_properties = NULL;
+  app->instance_layer_count = 0;
+  app->physical_device = VK_NULL_HANDLE;
+  app->devices = VK_NULL_HANDLE;
+  app->device_count = 0;
+  app->queue_families = NULL;
+  app->queue_family_count = 0;
+  app->indices.graphics_family = -1;
+  app->indices.present_family = -1;
+  app->device = VK_FALSE;
+  app->graphics_queue = VK_FALSE;
+  app->queue_create_infos = NULL;
 }

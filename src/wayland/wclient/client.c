@@ -6,6 +6,23 @@
 
 #include "xdg-shell-client-protocol.h"
 
+struct wclient init_wc() {
+  struct wclient wc;
+  wc.display = NULL;
+  wc.registry = NULL;
+  wc.buffer = NULL;
+  wc.surface = NULL;
+  wc.xdg_surface = NULL;
+  wc.compositor = NULL;
+  wc.seat = NULL;
+  wc.shm = NULL;
+  wc.xdg_wm_base = NULL;
+  wc.xdg_toplevel = NULL;
+  wc.shm_data = NULL;
+  wc.running = 1;
+  return wc;
+}
+
 static void noop() {
   // This space intentionally left blank
 }
@@ -115,21 +132,6 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 	return buffer;
 }
 
-void initialize_wclient_values(struct wclient *wc) {
-  wc->display = NULL;
-  wc->registry = NULL;
-  wc->buffer = NULL;
-  wc->surface = NULL;
-  wc->xdg_surface = NULL;
-  wc->compositor = NULL;
-  wc->seat = NULL;
-  wc->shm = NULL;
-  wc->xdg_wm_base = NULL;
-  wc->xdg_toplevel = NULL;
-  wc->shm_data = NULL;
-  wc->running = 1;
-}
-
 void connect_client(struct wclient *wc) {
   wc->display = wl_display_connect(NULL);
   assert(wc->display != NULL);
@@ -206,5 +208,17 @@ void freeup_wc(struct wclient *wc) {
   wl_compositor_destroy(wc->compositor);
   wl_registry_destroy(wc->registry);
   wl_display_disconnect(wc->display);
-  initialize_wclient_values(wc);
+
+  wc->display = NULL;
+  wc->registry = NULL;
+  wc->buffer = NULL;
+  wc->surface = NULL;
+  wc->xdg_surface = NULL;
+  wc->compositor = NULL;
+  wc->seat = NULL;
+  wc->shm = NULL;
+  wc->xdg_wm_base = NULL;
+  wc->xdg_toplevel = NULL;
+  wc->shm_data = NULL;
+  wc->running = 1;
 }
