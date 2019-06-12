@@ -46,6 +46,12 @@ struct vkcomp {
   VkQueue graphics_queue;
 };
 
+struct swap_chain_support_details {
+  VkSurfaceCapabilitiesKHR capabilities;
+  VkSurfaceFormatKHR *formats;
+  VkPresentModeKHR *present_modes;
+};
+
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
 #define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                            \
   {                                                                        \
