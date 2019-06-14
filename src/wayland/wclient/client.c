@@ -6,20 +6,25 @@
 
 #include "xdg-shell-client-protocol.h"
 
-struct wclient init_wc() {
-  struct wclient wc;
-  wc.display = NULL;
-  wc.registry = NULL;
-  wc.buffer = NULL;
-  wc.surface = NULL;
-  wc.xdg_surface = NULL;
-  wc.compositor = NULL;
-  wc.seat = NULL;
-  wc.shm = NULL;
-  wc.xdg_wm_base = NULL;
-  wc.xdg_toplevel = NULL;
-  wc.shm_data = NULL;
-  wc.running = 1;
+static void set_values(struct wclient *wc) {
+  wc->display = NULL;
+  wc->registry = NULL;
+  wc->buffer = NULL;
+  wc->surface = NULL;
+  wc->xdg_surface = NULL;
+  wc->compositor = NULL;
+  wc->seat = NULL;
+  wc->shm = NULL;
+  wc->xdg_wm_base = NULL;
+  wc->xdg_toplevel = NULL;
+  wc->shm_data = NULL;
+  wc->running = 1;
+}
+
+struct wclient *init_wc() {
+  struct wclient *wc = calloc(sizeof(struct wclient), sizeof(struct wclient));
+  assert(wc != NULL);
+  set_values(wc);
   return wc;
 }
 
@@ -200,25 +205,34 @@ VkWaylandSurfaceCreateInfoKHR set_wayland_surface_ciKHR(struct wclient *wc) {
   return create_info;
 }
 
-void freeup_wc(struct wclient *wc) {
-  xdg_toplevel_destroy(wc->xdg_toplevel);
-  xdg_surface_destroy(wc->xdg_surface);
-  wl_surface_destroy(wc->surface);
-  wl_seat_destroy(wc->seat);
-  wl_compositor_destroy(wc->compositor);
-  wl_registry_destroy(wc->registry);
-  wl_display_disconnect(wc->display);
+void freeup_wc(void *data) {
+  struct wclient *wc = (struct wclient*) data;
 
-  wc->display = NULL;
-  wc->registry = NULL;
-  wc->buffer = NULL;
-  wc->surface = NULL;
-  wc->xdg_surface = NULL;
-  wc->compositor = NULL;
-  wc->seat = NULL;
-  wc->shm = NULL;
-  wc->xdg_wm_base = NULL;
-  wc->xdg_toplevel = NULL;
-  wc->shm_data = NULL;
-  wc->running = 1;
+  if (wc->xdg_toplevel != NULL)
+    xdg_toplevel_destroy(wc->xdg_toplevel);
+  if (wc->xdg_surface != NULL)
+    xdg_surface_destroy(wc->xdg_surface);
+  if (wc->surface != NULL)
+    wl_surface_destroy(wc->surface);
+  if (wc->buffer != NULL)
+    wl_buffer_destroy(wc->buffer);
+  if (wc->shm != NULL)
+    wl_shm_destroy(wc->shm);
+  if (wc->seat != NULL)
+    wl_seat_destroy(wc->seat);
+  if (wc->compositor != NULL)
+    wl_compositor_destroy(wc->compositor);
+  if (wc->registry != NULL)
+    wl_registry_destroy(wc->registry);
+  if (wc->display != NULL)
+    wl_display_disconnect(wc->display);
+
+  //if (wc->shm_data != NULL)
+    //free(wc->shm_data);
+  //wc->xdg_wm_base = NULL;
+  set_values(wc);
+
+  if (wc != NULL)
+    free(wc);
+  wc = NULL;
 }
