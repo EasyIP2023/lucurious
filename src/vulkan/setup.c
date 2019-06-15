@@ -122,6 +122,8 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
       return res;
   }
 
+  fprintf(stderr, "REACHED 2\n");
+
   res = get_extension_properties(app, NULL, NULL);
   if (res) return res;
 
@@ -223,14 +225,31 @@ VkResult init_logical_device(struct vkcomp *app) {
 
 void freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
-  vkDeviceWaitIdle(app->device);
-  vkDestroyDevice(app->device, NULL);
-  free(app->instance_layer_properties);
-  free(app->devices);
-  free(app->queue_families);
-  free(app->queue_create_infos);
-  vkDestroySurfaceKHR(app->instance, app->surface, NULL);
-  vkDestroyInstance(app->instance, NULL);
-  free(app);
+  if (app->device) {
+    vkDeviceWaitIdle(app->device);
+    vkDestroyDevice(app->device, NULL);
+  }
+  if (app->instance_layer_properties)
+    free(app->instance_layer_properties);
+  if (app->devices)
+    free(app->devices);
+  if (app->queue_families)
+    free(app->queue_families);
+  if (app->queue_create_infos)
+    free(app->queue_create_infos);
+  if (app->surface)
+    vkDestroySurfaceKHR(app->instance, app->surface, NULL);
+  if (app->instance)
+    vkDestroyInstance(app->instance, NULL);
+
+  set_values(app);
+  if (app)
+    free(app);
   app = NULL;
+
+  // app->instance_layer_count = 0;
+  // app->physical_device = VK_NULL_HANDLE;
+  // app->device_count = 0;
+  // app->queue_family_count = 0;
+  // app->graphics_queue = VK_FALSE;
 }

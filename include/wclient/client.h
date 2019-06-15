@@ -28,7 +28,7 @@ struct wclient {
 };
 
 struct wclient *init_wc();
-void connect_client(struct wclient *wc);
+int connect_client(struct wclient *wc);
 int run_client(struct wclient *wc);
 VkWaylandSurfaceCreateInfoKHR set_wayland_surface_ciKHR(struct wclient *wc);
 void freeup_wc(void *data);

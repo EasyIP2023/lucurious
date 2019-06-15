@@ -7,27 +7,62 @@ int main () {
   struct vkcomp *app = init_vk();
   struct wclient *wc = init_wc();
 
-  connect_client(wc);
+  if (connect_client(wc)) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to connect client");
+    return EXIT_FAILURE;
+  }
 
   err = check_validation_layer_support(app);
-  assert(!err);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] checking for validation layer support failed");
+    return EXIT_FAILURE;
+  }
 
   err = create_instance(app, "Hello Triangle", "No Engine");
-  assert(!err);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to create vulkan instance");
+    return EXIT_FAILURE;
+  }
 
   err = vk_connect_surfaceKHR(app, set_wayland_surface_ciKHR(wc));
-  assert(!err);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to connect to vulkan surfaceKHR");
+    return EXIT_FAILURE;
+  }
 
   err = enumerate_devices(app);
-  assert(!err);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to find physical device");
+    return EXIT_FAILURE;
+  }
 
   err = init_logical_device(app);
-  assert(!err);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to initialize logical device to physical device");
+    return EXIT_FAILURE;
+  }
 
-  run_client(wc);
+  if (run_client(wc)) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    perror("[x] failed to run wayland client");
+    return EXIT_FAILURE;
+  }
 
   freeup_wc(wc);
   freeup_vk(app);
 
-  return 0;
+  return EXIT_SUCCESS;
 }

@@ -137,53 +137,74 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 	return buffer;
 }
 
-void connect_client(struct wclient *wc) {
+int connect_client(struct wclient *wc) {
+  int err = 0;
+
   wc->display = wl_display_connect(NULL);
-  assert(wc->display != NULL);
+  if (!wc->display) return EXIT_FAILURE;
 
   printf("connected to display\n");
 
   wc->registry = wl_display_get_registry(wc->display);
-  wl_registry_add_listener(wc->registry, &registry_listener, wc);
+  if (!wc->registry) return EXIT_FAILURE;
 
-  wl_display_dispatch(wc->display);
-  wl_display_roundtrip(wc->display);
+  err = wl_registry_add_listener(wc->registry, &registry_listener, wc);
+  if (err) return EXIT_FAILURE;
 
-  if (wc->compositor == NULL) {
+  err = wl_display_dispatch(wc->display);
+  if (!err) return EXIT_FAILURE;
+
+  err = wl_display_roundtrip(wc->display);
+  if (!err) return EXIT_FAILURE;
+
+  if (!wc->compositor) {
     fprintf(stderr, "[x] Can't find compositor\n");
-    return;
+    return EXIT_FAILURE;
   } else {
     fprintf(stdout, "Found compositor\n");
   }
 
-  if (wc->xdg_wm_base == NULL) {
+  if (!wc->xdg_wm_base) {
     fprintf(stderr, "[x] No xdg_wm_base support\n");
-    return;
+    return EXIT_FAILURE;
   }
 
   wc->buffer = create_buffer(wc);
-  if (wc->buffer == NULL) return;
+  if (!wc->buffer) return EXIT_FAILURE;
 
   wc->surface = wl_compositor_create_surface(wc->compositor);
+  if (!wc->surface) return EXIT_FAILURE;
+
   wc->xdg_surface = xdg_wm_base_get_xdg_surface(wc->xdg_wm_base, wc->surface);
+  if (!wc->xdg_surface) return EXIT_FAILURE;
 
   if (wc->xdg_surface == NULL) {
     fprintf(stderr, "[x] Can't create xdg_shell_surface\n");
-    return;
+    return EXIT_FAILURE;
   } else {
     fprintf(stdout, "Created xdg_shell_surface\n");
   }
 
   wc->xdg_toplevel = xdg_surface_get_toplevel(wc->xdg_surface);
-  xdg_surface_add_listener(wc->xdg_surface, &xdg_surface_listener, wc);
-  xdg_toplevel_add_listener(wc->xdg_toplevel, &xdg_toplevel_listener, wc);
+  if (!wc->xdg_toplevel) return EXIT_FAILURE;
+
+  err = xdg_surface_add_listener(wc->xdg_surface, &xdg_surface_listener, wc);
+  if (err) return EXIT_FAILURE;
+
+  err = xdg_toplevel_add_listener(wc->xdg_toplevel, &xdg_toplevel_listener, wc);
+  if (err) return EXIT_FAILURE;
+
   printf("Add xdg listeners\n");
 
   wl_surface_commit(wc->surface);
-  wl_display_roundtrip(wc->display);
+
+  err = wl_display_roundtrip(wc->display);
+  if (!err) return EXIT_FAILURE;
 
   wl_surface_attach(wc->surface, wc->buffer, 0, 0);
   wl_surface_commit(wc->surface);
+
+  return err = 0;
 }
 
 int run_client(struct wclient *wc) {
@@ -208,31 +229,32 @@ VkWaylandSurfaceCreateInfoKHR set_wayland_surface_ciKHR(struct wclient *wc) {
 void freeup_wc(void *data) {
   struct wclient *wc = (struct wclient*) data;
 
-  if (wc->xdg_toplevel != NULL)
+  if (wc->xdg_toplevel)
     xdg_toplevel_destroy(wc->xdg_toplevel);
-  if (wc->xdg_surface != NULL)
+  if (wc->xdg_surface)
     xdg_surface_destroy(wc->xdg_surface);
-  if (wc->surface != NULL)
+  if (wc->surface)
     wl_surface_destroy(wc->surface);
-  if (wc->buffer != NULL)
+  if (wc->buffer)
     wl_buffer_destroy(wc->buffer);
-  if (wc->shm != NULL)
+  if (wc->shm)
     wl_shm_destroy(wc->shm);
-  if (wc->seat != NULL)
+  if (wc->seat)
     wl_seat_destroy(wc->seat);
-  if (wc->compositor != NULL)
+  if (wc->compositor)
     wl_compositor_destroy(wc->compositor);
-  if (wc->registry != NULL)
+  if (wc->registry)
     wl_registry_destroy(wc->registry);
-  if (wc->display != NULL)
+  if (wc->display)
     wl_display_disconnect(wc->display);
+  if (wc->shm_data) {
+    int size = 1024 * 4 * 681;
+    munmap(wc->shm_data, size);
+  }
 
-  //if (wc->shm_data != NULL)
-    //free(wc->shm_data);
   //wc->xdg_wm_base = NULL;
   set_values(wc);
-
-  if (wc != NULL)
+  if (wc)
     free(wc);
   wc = NULL;
 }
