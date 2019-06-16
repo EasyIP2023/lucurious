@@ -46,7 +46,7 @@ int main () {
     return EXIT_FAILURE;
   }
 
-  err = init_logical_device(app);
+  err = set_logical_device(app);
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);

@@ -1,34 +1,28 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 
-/* All of the useful standard validation is
-  bundled into a layer included in the SDK */
-
-// const char *validation_extensions[17] = {
-//   "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
-//   "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
-//   "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
-//   "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
-//   "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects"
-//   "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
-//   "VK_LAYER_LUNARG_device_simulation"
-// };
-
 static void set_values(struct vkcomp *app) {
   app->instance = 0;
   app->surface = VK_NULL_HANDLE;
-  app->vlayer_props = NULL;
-  app->vlayer_count = 0;
+  app->vk_layer_props = NULL;
+  app->vk_layer_count = 0;
+  app->ep_instance_props = NULL;
+  app->ep_instance_count = 0;
+  app->ep_device_props = NULL;
+  app->ep_device_count = 0;
+  // app->device_properties;
+  // app->device_features;
+  // app->memory_properties;
   app->physical_device = VK_NULL_HANDLE;
   app->devices = VK_NULL_HANDLE;
   app->device_count = 0;
+  app->queue_create_infos = NULL;
   app->queue_families = NULL;
   app->queue_family_count = 0;
   app->indices.graphics_family = -1;
   app->indices.present_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
-  app->queue_create_infos = NULL;
 }
 
 struct vkcomp *init_vk() {
@@ -61,18 +55,18 @@ VkResult set_global_layers(struct vkcomp *app) {
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
-  app->vlayer_props = (VkLayerProperties *) \
+  app->vk_layer_props = (VkLayerProperties *) \
     calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
-  if (!app->vlayer_props) return res;
+  if (!app->vk_layer_props) return res;
 
   fprintf(stdout, "\nVALIDATION LAYER SUPPORT:\n");
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
-    memcpy(&app->vlayer_props[app->vlayer_count], &vk_props[i], sizeof(vk_props[i]));
-    fprintf(stdout, "%s\n", app->vlayer_props[app->vlayer_count].layerName);
-    app->vlayer_count++;
+    memcpy(&app->vk_layer_props[app->vk_layer_count], &vk_props[i], sizeof(vk_props[i]));
+    fprintf(stdout, "%s\n", app->vk_layer_props[app->vk_layer_count].layerName);
+    app->vk_layer_count = i;
   }
 
   free(vk_props);
@@ -95,8 +89,8 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
   app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   app_info.apiVersion = VK_API_VERSION_1_0;
 
-  /* tells the Vulkan driver which global extensions
-    and validation layers we want to use */
+  /* tells the Vulkan driver which instance extensions
+    and global validation layers we want to use */
   VkInstanceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   create_info.pNext = NULL;
@@ -161,7 +155,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
   for (uint32_t i = 0; i < app->device_count; i++) {
     if (is_device_suitable(app, app->devices[i]) &&
         find_queue_families(app, app->devices[i]) &&
-        /* Checking for swap chain support */
+        /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, app->devices[i])) {
       app->physical_device = app->devices[i];
       break;
@@ -184,7 +178,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
 
 /* After selecting a physical device to use.
   Set up a logical device to interface with it */
-VkResult init_logical_device(struct vkcomp *app) {
+VkResult set_logical_device(struct vkcomp *app) {
   VkQueue present_queue;
   VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
@@ -235,8 +229,12 @@ void freeup_vk(void *data) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
   }
-  if (app->vlayer_props)
-    free(app->vlayer_props);
+  if (app->vk_layer_props)
+    free(app->vk_layer_props);
+  if (app->ep_instance_props)
+    free(app->ep_instance_props);
+  if (app->ep_device_props)
+    free(app->ep_device_props);
   if (app->devices)
     free(app->devices);
   if (app->queue_families)
@@ -252,10 +250,4 @@ void freeup_vk(void *data) {
   if (app)
     free(app);
   app = NULL;
-
-  // app->vlayer_count = 0;
-  // app->physical_device = VK_NULL_HANDLE;
-  // app->device_count = 0;
-  // app->queue_family_count = 0;
-  // app->graphics_queue = VK_FALSE;
 }

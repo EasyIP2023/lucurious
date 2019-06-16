@@ -1,11 +1,11 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 
-const char *device_extensions[1] = {
+const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const char *instance_extensions[3] = {
+const char *instance_extensions[] = {
   VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
   VK_KHR_SURFACE_EXTENSION_NAME,
   VK_KHR_DISPLAY_EXTENSION_NAME
@@ -13,7 +13,7 @@ const char *instance_extensions[3] = {
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
-const char *validation_extensions[17] = {
+const char *validation_extensions[] = {
   "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
   "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
   "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
@@ -54,7 +54,7 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
     /* To look for a queue family with the capabilities to present our window system */
     vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
 
-    if (app->indices.graphics_family != -1) { // && present_support) {
+    if (app->indices.graphics_family != -1 && present_support) {
       app->indices.present_family = i;
       ret = VK_TRUE;
       break;
@@ -106,16 +106,33 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
   if (app && !device) {
     fprintf(stdout, "\nINSTANCE CREATED\n\nAVAILABLE INSTANCE EXTESIONS: %d\n", extension_count);
 
-    for (uint32_t i = 0; i < extension_count; i++)
-      fprintf(stdout, "%s\n", extensions[i].extensionName);
+    app->ep_instance_props = (VkExtensionProperties *) \
+      calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
+    if (!app->ep_instance_props) return res;
+
+    for (uint32_t i = 0; i < extension_count; i++) {
+      memcpy(&app->ep_instance_props[i], &extensions[i], sizeof(extensions[i]));
+      fprintf(stdout, "%s\n", app->ep_instance_props[i].extensionName);
+      app->ep_instance_count = i;
+    }
   }
 
-  /* Checking for swap chain support */
   if (device) {
     fprintf(stdout, "\nAVAILABLE DEVICE EXTESIONS: %d\n", extension_count);
+
+    app->ep_device_props = (VkExtensionProperties *) \
+      realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
+    if (!app->ep_device_props) return res;
+
     for (uint32_t i = 0; i < extension_count; i++) {
-      fprintf(stdout, "%s\n", extensions[i].extensionName);
-      if (!strcmp(extensions[i].extensionName, device_extensions[0])) {
+      memcpy(&app->ep_device_props[i], &extensions[i], sizeof(extensions[i]));
+      fprintf(stdout, "%s\n", app->ep_device_props[i].extensionName);
+      app->ep_device_count = i;
+    }
+
+    /* check for swap chain support */
+    for (uint32_t i = 0; i < app->ep_device_count; i++) {
+      if (!strcmp(app->ep_device_props[i].extensionName, device_extensions[0])) {
         res = VK_TRUE;
         break;
       }

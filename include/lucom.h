@@ -21,9 +21,15 @@ struct vkcomp {
   VkSurfaceKHR surface;
 
   /* keep track of all vulkan extensions */
-  VkLayerProperties *vlayer_props;
-  uint32_t vlayer_count;
+  VkLayerProperties *vk_layer_props;
+  uint32_t vk_layer_count;
 
+  VkExtensionProperties *ep_instance_props;
+  uint32_t ep_instance_count;
+
+  VkExtensionProperties *ep_device_props;
+  uint32_t ep_device_count;
+  
   /* To get device properties like the name, type and supported Vulkan version */
   VkPhysicalDeviceProperties device_properties;
   /* For optional features like texture compression,
@@ -50,25 +56,25 @@ struct swap_chain_support_details {
 };
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
-#define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                            \
-  {                                                                        \
-    info.fp##entrypoint =                                                  \
-        PFN_vk##entrypoint)vkGetInstanceProcAddr(inst, "vk" #entrypoint);  \
-    if (info.fp##entrypoint == NULL) {                                     \
-      perror("vkGetDeviceProcAddr failed to find vk %s", #entrypoint);      \
-      exit(-1);                                                            \
-    }                                                                      \
+#define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                                    \
+  {                                                                                \
+    info.fp##entrypoint =                                                          \
+        PFN_vk##entrypoint)vkGetInstanceProcAddr(inst, "vk" #entrypoint);          \
+    if (info.fp##entrypoint == NULL) {                                             \
+      fprintf(stderr, "[x] vkGetDeviceProcAddr failed to find vk %s", #entrypoint); \
+      exit(-1);                                                                    \
+    }                                                                              \
   }
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
-#define GET_DEVICE_PROC_ADDR(dev, entrypoint)                                  \
-  {                                                                          \
-    info.fp##entrypoint =                                                  \
-        (PFN_vk##entrypoint)vkGetDeviceProcAddr(dev, "vk" #entrypoint);    \
-    if (info.fp##entrypoint == NULL) {                                     \
-        perror("[x] vkGetDeviceProcAddr failed to find vk %s", #entrypoint);  \
-        exit(-1);                                                          \
-    }                                                                      \
+#define GET_DEVICE_PROC_ADDR(dev, entrypoint)                                          \
+  {                                                                                   \
+    info.fp##entrypoint =                                                             \
+        (PFN_vk##entrypoint)vkGetDeviceProcAddr(dev, "vk" #entrypoint);               \
+    if (info.fp##entrypoint == NULL) {                                                \
+        fprintf(stderr, "[x] vkGetDeviceProcAddr failed to find vk %s", #entrypoint);  \
+        exit(-1);                                                                     \
+    }                                                                                 \
   }
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
