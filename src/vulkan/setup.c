@@ -1,11 +1,24 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 
+/* All of the useful standard validation is
+  bundled into a layer included in the SDK */
+
+// const char *validation_extensions[17] = {
+//   "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
+//   "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
+//   "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
+//   "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
+//   "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects"
+//   "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
+//   "VK_LAYER_LUNARG_device_simulation"
+// };
+
 static void set_values(struct vkcomp *app) {
   app->instance = 0;
   app->surface = VK_NULL_HANDLE;
-  app->instance_layer_properties = NULL;
-  app->instance_layer_count = 0;
+  app->vlayer_props = NULL;
+  app->vlayer_count = 0;
   app->physical_device = VK_NULL_HANDLE;
   app->devices = VK_NULL_HANDLE;
   app->device_count = 0;
@@ -28,10 +41,9 @@ struct vkcomp *init_vk() {
 
 /*
  * Gets all you're validation layers extensions
- * that you can later using pointer arithmetic to
- * cycle through
+ * that comes installed with the vulkan sdk
  */
-VkResult check_validation_layer_support(struct vkcomp *app) {
+VkResult set_global_layers(struct vkcomp *app) {
   uint32_t layer_count = 0;
   VkLayerProperties *vk_props = NULL;
   VkResult res = VK_INCOMPLETE;
@@ -40,6 +52,7 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
     res = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
     if (res) return res;
 
+    /* layer count will only be zero if vulkan sdk not installed */
     if (layer_count == 0) return VK_SUCCESS;
 
     vk_props = (VkLayerProperties *) realloc(vk_props, layer_count * sizeof(VkLayerProperties));
@@ -48,25 +61,18 @@ VkResult check_validation_layer_support(struct vkcomp *app) {
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
-  if (app->instance_layer_properties == NULL)
-    app->instance_layer_properties = (VkLayerProperties *) \
-      calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
+  app->vlayer_props = (VkLayerProperties *) \
+    calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
+  if (!app->vlayer_props) return res;
 
   fprintf(stdout, "\nVALIDATION LAYER SUPPORT:\n");
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
-
-    /* must to do a deep copy of the structs information */
-    memcpy(app->instance_layer_properties[app->instance_layer_count].layerName,
-           vk_props[i].layerName, strlen(vk_props[i].layerName) + 1);
-    memcpy(app->instance_layer_properties[app->instance_layer_count].description,
-           vk_props[i].description, strlen(vk_props[i].description) + 1);
-    app->instance_layer_properties[app->instance_layer_count].specVersion = vk_props[i].specVersion;
-    app->instance_layer_properties[app->instance_layer_count].implementationVersion = vk_props[i].implementationVersion;
-    fprintf(stdout, "%s\n",app->instance_layer_properties[app->instance_layer_count].layerName);
-    app->instance_layer_count++;
+    memcpy(&app->vlayer_props[app->vlayer_count], &vk_props[i], sizeof(vk_props[i]));
+    fprintf(stdout, "%s\n", app->vlayer_props[app->vlayer_count].layerName);
+    app->vlayer_count++;
   }
 
   free(vk_props);
@@ -96,10 +102,10 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
   create_info.pNext = NULL;
   create_info.flags = 0;
   create_info.pApplicationInfo = &app_info;
-  create_info.enabledExtensionCount = 0;
-  create_info.ppEnabledExtensionNames = device_extensions; // assuming device has swap chain support
   create_info.enabledLayerCount = 0;
   create_info.ppEnabledLayerNames = NULL;
+  create_info.enabledExtensionCount = 3;
+  create_info.ppEnabledExtensionNames = instance_extensions;
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
@@ -111,18 +117,18 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
     case VK_ERROR_INITIALIZATION_FAILED:
       return res;
     case VK_ERROR_LAYER_NOT_PRESENT:
+      fprintf(stderr, "[x] one of the validation layers is currently not present");
       return res;
     case VK_ERROR_EXTENSION_NOT_PRESENT:
+    fprintf(stderr, "[x] one of the vulkan instance/device extensions is currently not present");
       return res;
     case VK_ERROR_INCOMPATIBLE_DRIVER:
-      perror("[x] cannot find a compatible Vulkan ICD\n");
+      fprintf(stderr, "[x] cannot find a compatible Vulkan ICD\n");
       return res;
     default:
-      perror("[x] unknown error\n");
+      fprintf(stderr, "[x] unknown error\n");
       return res;
   }
-
-  fprintf(stderr, "REACHED 2\n");
 
   res = get_extension_properties(app, NULL, NULL);
   if (res) return res;
@@ -137,7 +143,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
   if (res) return res;
 
   if (app->device_count == 0) {
-    perror("[x] failed to find GPUs with Vulkan support!");
+    fprintf(stderr, "[x] failed to find GPUs with Vulkan support!");
     return res;
   }
 
@@ -163,7 +169,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
   }
 
   if (app->physical_device == VK_NULL_HANDLE) {
-    perror("[x] failed to find a suitable GPU!");
+    fprintf(stderr, "[x] failed to find a suitable GPU!");
     return res;
   }
 
@@ -203,8 +209,8 @@ VkResult init_logical_device(struct vkcomp *app) {
   create_info.pQueueCreateInfos = app->queue_create_infos;
   create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
   create_info.pEnabledFeatures = &app->device_features;
-  create_info.enabledExtensionCount = 0;
-  create_info.ppEnabledExtensionNames = device_extensions; // assuming device has swap chain support
+  create_info.enabledExtensionCount = 1;
+  create_info.ppEnabledExtensionNames = device_extensions;
   create_info.ppEnabledLayerNames = NULL;
   create_info.enabledLayerCount = 0;
 
@@ -229,8 +235,8 @@ void freeup_vk(void *data) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
   }
-  if (app->instance_layer_properties)
-    free(app->instance_layer_properties);
+  if (app->vlayer_props)
+    free(app->vlayer_props);
   if (app->devices)
     free(app->devices);
   if (app->queue_families)
@@ -247,7 +253,7 @@ void freeup_vk(void *data) {
     free(app);
   app = NULL;
 
-  // app->instance_layer_count = 0;
+  // app->vlayer_count = 0;
   // app->physical_device = VK_NULL_HANDLE;
   // app->device_count = 0;
   // app->queue_family_count = 0;

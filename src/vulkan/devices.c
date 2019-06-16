@@ -1,13 +1,19 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 
-const char *device_extensions[] = {
+const char *device_extensions[1] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+const char *instance_extensions[3] = {
+  VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+  VK_KHR_SURFACE_EXTENSION_NAME,
+  VK_KHR_DISPLAY_EXTENSION_NAME
 };
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
-const char *validation_layers[] = {
+const char *validation_extensions[17] = {
   "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
   "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
   "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
@@ -84,6 +90,7 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
                                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
     if (res) return res;
 
+    /* Rare but may happen for instances. If so continue on with the app */
     if (extension_count == 0)
       return VK_SUCCESS;
 
@@ -110,7 +117,6 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
       fprintf(stdout, "%s\n", extensions[i].extensionName);
       if (!strcmp(extensions[i].extensionName, device_extensions[0])) {
         res = VK_TRUE;
-        fprintf(stdout, "Device has swap chain support!!!\n");
         break;
       }
     }

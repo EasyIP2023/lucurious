@@ -9,4 +9,4 @@
 
 build/
 
-vkall_test.c
+valgrind-out.txt

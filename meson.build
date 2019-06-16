@@ -17,7 +17,7 @@ cc = meson.get_compiler('c')
 
 add_global_arguments('-D_POSIX_C_SOURCE=200809L', language : 'c')
 add_global_link_arguments('-lrt', language : 'c')
-add_global_link_arguments(['-g','-ggdb'], language : 'c')
+add_global_link_arguments(['-g','-ggdb3'], language : 'c')
 
 lucur_inc = include_directories('.','include')
 

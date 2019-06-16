@@ -10,15 +10,15 @@ int main () {
   if (connect_client(wc)) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to connect client");
+    fprintf(stderr, "[x] failed to connect client");
     return EXIT_FAILURE;
   }
 
-  err = check_validation_layer_support(app);
+  err = set_global_layers(app);
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] checking for validation layer support failed");
+    fprintf(stderr, "[x] checking for validation layer support failed");
     return EXIT_FAILURE;
   }
 
@@ -26,15 +26,15 @@ int main () {
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to create vulkan instance");
+    fprintf(stderr, "[x] failed to create vulkan instance");
     return EXIT_FAILURE;
   }
 
-  err = vk_connect_surfaceKHR(app, set_wayland_surface_ciKHR(wc));
+  err = vk_connect_surfaceKHR(app, get_display(wc), get_surface(wc));
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to connect to vulkan surfaceKHR");
+    fprintf(stderr, "[x] failed to connect to vulkan surfaceKHR");
     return EXIT_FAILURE;
   }
 
@@ -42,7 +42,7 @@ int main () {
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to find physical device");
+    fprintf(stderr, "[x] failed to find physical device");
     return EXIT_FAILURE;
   }
 
@@ -50,14 +50,14 @@ int main () {
   if (err) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to initialize logical device to physical device");
+    fprintf(stderr, "[x] failed to initialize logical device to physical device");
     return EXIT_FAILURE;
   }
 
   if (run_client(wc)) {
     freeup_wc(wc);
     freeup_vk(app);
-    perror("[x] failed to run wayland client");
+    fprintf(stderr, "[x] failed to run wayland client");
     return EXIT_FAILURE;
   }
 

@@ -137,6 +137,14 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 	return buffer;
 }
 
+struct wl_display *get_display(struct wclient *wc) {
+  return wc->display;
+}
+
+struct wl_surface *get_surface(struct wclient *wc) {
+  return wc->surface;
+}
+
 int connect_client(struct wclient *wc) {
   int err = 0;
 
@@ -212,18 +220,6 @@ int run_client(struct wclient *wc) {
     // This space intentionally left blank
   }
   return EXIT_SUCCESS;
-}
-
-VkWaylandSurfaceCreateInfoKHR set_wayland_surface_ciKHR(struct wclient *wc) {
-
-  VkWaylandSurfaceCreateInfoKHR create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.display = wc->display;
-  create_info.surface = wc->surface;
-
-  return create_info;
 }
 
 void freeup_wc(void *data) {

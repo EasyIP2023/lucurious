@@ -20,12 +20,9 @@ struct vkcomp {
   VkInstance instance;
   VkSurfaceKHR surface;
 
-  /*
-   * A layer can expose extensions, keep track of those
-   * extensions here.
-   */
-  VkLayerProperties *instance_layer_properties;
-  uint32_t instance_layer_count;
+  /* keep track of all vulkan extensions */
+  VkLayerProperties *vlayer_props;
+  uint32_t vlayer_count;
 
   /* To get device properties like the name, type and supported Vulkan version */
   VkPhysicalDeviceProperties device_properties;
