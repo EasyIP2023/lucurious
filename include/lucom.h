@@ -11,6 +11,16 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
+struct swap_chain_support_details {
+  VkSurfaceCapabilitiesKHR capabilities;
+
+  VkSurfaceFormatKHR *formats;
+  uint32_t format_count;
+
+  VkPresentModeKHR *present_modes;
+  uint32_t pres_mode_count;
+};
+
 struct queue_family_indices {
   int graphics_family;
   int present_family;
@@ -29,7 +39,7 @@ struct vkcomp {
 
   VkExtensionProperties *ep_device_props;
   uint32_t ep_device_count;
-  
+
   /* To get device properties like the name, type and supported Vulkan version */
   VkPhysicalDeviceProperties device_properties;
   /* For optional features like texture compression,
@@ -47,12 +57,12 @@ struct vkcomp {
 
   VkDevice device; /* logical device */
   VkQueue graphics_queue;
-};
 
-struct swap_chain_support_details {
-  VkSurfaceCapabilitiesKHR capabilities;
-  VkSurfaceFormatKHR *formats;
-  VkPresentModeKHR *present_modes;
+  struct swap_chain_support_details dets;
+  VkSwapchainKHR swap_chain;
+  VkImage *swap_chain_imgs;
+  VkFormat swap_chain_img_fmt;
+  VkExtent2D swap_chain_extent;
 };
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
@@ -100,5 +110,16 @@ struct swap_chain_support_details {
 #define ALL_UNUSED_IMPL_(nargs) UNUSED ## nargs
 #define ALL_UNUSED_IMPL(nargs) ALL_UNUSED_IMPL_(nargs)
 #define ALL_UNUSED(...) ALL_UNUSED_IMPL(VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
+
+/* https://stackoverflow.com/questions/3437404/min-and-max-in-c */
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+#define min(a,b) \
+  ({ __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b; })
 
 #endif

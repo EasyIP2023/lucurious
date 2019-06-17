@@ -1,5 +1,6 @@
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
+#include <vlucur/display.h>
 
 static void set_values(struct vkcomp *app) {
   app->instance = 0;
@@ -23,6 +24,15 @@ static void set_values(struct vkcomp *app) {
   app->indices.present_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
+  // app->dets.capabilities = 0;
+  app->dets.formats = NULL;
+  app->dets.format_count = 0;
+  app->dets.present_modes = NULL;
+  app->dets.pres_mode_count = 0;
+  app->swap_chain = NULL;
+  app->swap_chain_imgs = NULL;
+  // app->swap_chain_img_fmt = 0;
+  // app->swap_chain_extent = 0;
 }
 
 struct vkcomp *init_vk() {
@@ -223,8 +233,81 @@ VkResult set_logical_device(struct vkcomp *app) {
   return res;
 }
 
+VkResult create_swap_chain(struct vkcomp *app) {
+  VkResult res = VK_INCOMPLETE;
+  uint32_t image_count = 0;
+
+  res = q_swapchain_support(app, app->physical_device);
+  if (res) return res;
+
+  image_count = app->dets.capabilities.minImageCount + 1;
+
+  /* Be sure image_count doesn't exceed the maximum. */
+  if (app->dets.capabilities.maxImageCount > 0 && image_count > app->dets.capabilities.maxImageCount)
+    image_count = app->dets.capabilities.maxImageCount;
+
+  VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
+  VkPresentModeKHR pres_mode = chose_swap_present_mode(app);
+  VkExtent2D extent = choose_swap_extent(app);
+
+  VkSwapchainCreateInfoKHR create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  create_info.surface = app->surface;
+  create_info.minImageCount = image_count;
+  create_info.imageFormat = surface_fmt.format;
+  create_info.imageColorSpace = surface_fmt.colorSpace;
+  create_info.imageExtent = extent;
+  create_info.imageArrayLayers = 1;
+  create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+  if (app->indices.graphics_family != app->indices.present_family) {
+    const uint32_t queue_family_indices[] = {
+      app->indices.graphics_family,
+      app->indices.present_family
+    };
+    create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    create_info.queueFamilyIndexCount = 2;
+    create_info.pQueueFamilyIndices = queue_family_indices;
+  } else {
+    create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    create_info.queueFamilyIndexCount = 0;
+    create_info.pQueueFamilyIndices = NULL;
+  }
+
+  /* specify that I currently want not transformation */
+  create_info.preTransform = app->dets.capabilities.currentTransform;
+  create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  create_info.presentMode = pres_mode;
+  create_info.clipped = VK_TRUE;
+  create_info.oldSwapchain = VK_NULL_HANDLE;
+
+  res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->swap_chain);
+  if (res) return res;
+
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &image_count, NULL);
+  if (res) return res;
+
+  app->swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), image_count * sizeof(VkImage));
+  if (!app->swap_chain_imgs) return res;
+
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &image_count, app->swap_chain_imgs);
+  if (res) return res;
+
+  app->swap_chain_img_fmt = surface_fmt.format;
+  app->swap_chain_extent = extent;
+
+  return res;
+}
+
 void freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
+  if (app->swap_chain_imgs)
+    free(app->swap_chain_imgs);
+  // if (app->swap_chain) {
+  //   fprintf(stderr, "Before vkDestroySwapchainKHR %p - %p\n", &app->swap_chain, app->swap_chain);
+  //   vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
+  //   fprintf(stderr, "After vkDestroySwapchainKHR %p - %p\n", &app->swap_chain, app->swap_chain);
+  // }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
@@ -241,6 +324,10 @@ void freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->dets.formats)
+    free(app->dets.formats);
+  if (app->dets.present_modes)
+    free(app->dets.present_modes);
   if (app->surface)
     vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   if (app->instance)

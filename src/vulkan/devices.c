@@ -51,7 +51,7 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
         app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
         app->indices.graphics_family = i;
 
-    /* To look for a queue family with the capabilities to present our window system */
+    /* Check to see if a device can create images on the surface we created */
     vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
 
     if (app->indices.graphics_family != -1 && present_support) {
@@ -65,9 +65,9 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
 }
 
 VkBool32 is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
-
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
+  /* Query device features */
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
   return ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||

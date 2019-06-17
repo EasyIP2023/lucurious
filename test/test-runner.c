@@ -54,6 +54,14 @@ int main () {
     return EXIT_FAILURE;
   }
 
+  err = create_swap_chain(app);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    fprintf(stderr, "[x] failed to create swap chain");
+    return EXIT_FAILURE;
+  }
+
   if (run_client(wc)) {
     freeup_wc(wc);
     freeup_vk(app);
