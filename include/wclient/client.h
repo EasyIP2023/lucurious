@@ -3,6 +3,7 @@
 
 #include <lucom.h>
 
+#include <wayland-client.h>
 #include <wayland-client-protocol.h>
 #include <linux/input-event-codes.h>
 

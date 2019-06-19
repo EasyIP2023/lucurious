@@ -18,6 +18,7 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * vulkan-sdk
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * libinput
+* [cunit](http://cunit.sourceforge.net/)
 
 **To install**
 ```bash

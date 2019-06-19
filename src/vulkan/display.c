@@ -18,13 +18,13 @@ VkResult vk_connect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_su
 }
 
 /* query swap chain details */
-VkResult q_swapchain_support(struct vkcomp *app, VkPhysicalDevice device) {
+VkResult q_swapchain_support(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
 
-  res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, app->surface, &app->dets.capabilities);
+  res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &app->dets.capabilities);
   if (res) return res;
 
-  res = vkGetPhysicalDeviceSurfaceFormatsKHR(device, app->surface, &app->dets.format_count, NULL);
+  res = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &app->dets.format_count, NULL);
   if (res) return res;
 
   if (app->dets.format_count != 0) {
@@ -32,11 +32,11 @@ VkResult q_swapchain_support(struct vkcomp *app, VkPhysicalDevice device) {
       calloc(sizeof(VkSurfaceFormatKHR), app->dets.format_count * sizeof(VkSurfaceFormatKHR));
     if (!app->dets.formats) return 0;
 
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(device, app->surface, &app->dets.format_count, app->dets.formats);
+    res = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &app->dets.format_count, app->dets.formats);
     if (res) return res;
   }
 
-  res = vkGetPhysicalDeviceSurfacePresentModesKHR(device, app->surface, &app->dets.pres_mode_count, NULL);
+  res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, NULL);
   if (res) return res;
 
   if (app->dets.pres_mode_count != 0) {
@@ -44,7 +44,7 @@ VkResult q_swapchain_support(struct vkcomp *app, VkPhysicalDevice device) {
       calloc(sizeof(VkPresentModeKHR), app->dets.pres_mode_count * sizeof(VkPresentModeKHR));
     if (!app->dets.formats) return res;
 
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(device, app->surface, &app->dets.pres_mode_count, app->dets.present_modes);
+    res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, app->dets.present_modes);
     if (res) return res;
   }
 

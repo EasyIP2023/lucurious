@@ -25,6 +25,7 @@ subdir('include')
 subdir('src')
 
 lucur_parts = [
+	lib_logging,
 	lib_vulkan,
 	lib_lwayland,
 	lib_wserver,

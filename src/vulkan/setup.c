@@ -3,36 +3,37 @@
 #include <vlucur/display.h>
 
 static void set_values(struct vkcomp *app) {
-  app->instance = 0;
+  app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
-  app->vk_layer_props = NULL;
-  app->vk_layer_count = 0;
-  app->ep_instance_props = NULL;
-  app->ep_instance_count = 0;
-  app->ep_device_props = NULL;
-  app->ep_device_count = 0;
+  app->vk_layer_props = VK_NULL_HANDLE;
+  app->vk_layer_count = VK_NULL_HANDLE;
+  app->ep_instance_props = VK_NULL_HANDLE;
+  app->ep_instance_count = VK_NULL_HANDLE;
+  app->ep_device_props = VK_NULL_HANDLE;
+  app->ep_device_count = VK_NULL_HANDLE;
   // app->device_properties;
   // app->device_features;
   // app->memory_properties;
   app->physical_device = VK_NULL_HANDLE;
   app->devices = VK_NULL_HANDLE;
-  app->device_count = 0;
-  app->queue_create_infos = NULL;
-  app->queue_families = NULL;
+  app->device_count = VK_NULL_HANDLE;
+  app->queue_create_infos = VK_NULL_HANDLE;
+  app->queue_families = VK_NULL_HANDLE;
   app->queue_family_count = 0;
   app->indices.graphics_family = -1;
   app->indices.present_family = -1;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
   // app->dets.capabilities = 0;
-  app->dets.formats = NULL;
-  app->dets.format_count = 0;
-  app->dets.present_modes = NULL;
-  app->dets.pres_mode_count = 0;
-  app->swap_chain = NULL;
-  app->swap_chain_imgs = NULL;
+  app->dets.formats = VK_NULL_HANDLE;
+  app->dets.format_count = VK_NULL_HANDLE;
+  app->dets.present_modes = VK_NULL_HANDLE;
+  app->dets.pres_mode_count = VK_NULL_HANDLE;
+  app->swap_chain = VK_NULL_HANDLE;
+  app->swap_chain_imgs = VK_NULL_HANDLE;
   // app->swap_chain_img_fmt = 0;
   // app->swap_chain_extent = 0;
+  app->image_count = VK_NULL_HANDLE;
 }
 
 struct vkcomp *init_vk() {
@@ -235,16 +236,15 @@ VkResult set_logical_device(struct vkcomp *app) {
 
 VkResult create_swap_chain(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
-  uint32_t image_count = 0;
 
-  res = q_swapchain_support(app, app->physical_device);
+  res = q_swapchain_support(app);
   if (res) return res;
 
-  image_count = app->dets.capabilities.minImageCount + 1;
+  app->image_count = app->dets.capabilities.minImageCount + 1;
 
   /* Be sure image_count doesn't exceed the maximum. */
-  if (app->dets.capabilities.maxImageCount > 0 && image_count > app->dets.capabilities.maxImageCount)
-    image_count = app->dets.capabilities.maxImageCount;
+  if (app->dets.capabilities.maxImageCount > 0 && app->image_count > app->dets.capabilities.maxImageCount)
+    app->image_count = app->dets.capabilities.maxImageCount;
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
   VkPresentModeKHR pres_mode = chose_swap_present_mode(app);
@@ -253,7 +253,7 @@ VkResult create_swap_chain(struct vkcomp *app) {
   VkSwapchainCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   create_info.surface = app->surface;
-  create_info.minImageCount = image_count;
+  create_info.minImageCount = app->image_count;
   create_info.imageFormat = surface_fmt.format;
   create_info.imageColorSpace = surface_fmt.colorSpace;
   create_info.imageExtent = extent;
@@ -284,13 +284,13 @@ VkResult create_swap_chain(struct vkcomp *app) {
   res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->swap_chain);
   if (res) return res;
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &image_count, NULL);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->image_count, NULL);
   if (res) return res;
 
-  app->swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), image_count * sizeof(VkImage));
+  app->swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->image_count * sizeof(VkImage));
   if (!app->swap_chain_imgs) return res;
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &image_count, app->swap_chain_imgs);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->image_count, app->swap_chain_imgs);
   if (res) return res;
 
   app->swap_chain_img_fmt = surface_fmt.format;
@@ -299,15 +299,22 @@ VkResult create_swap_chain(struct vkcomp *app) {
   return res;
 }
 
+VkResult create_img_views(struct vkcomp *app) {
+  VkResult res = VK_INCOMPLETE;
+  ALL_UNUSED(app);
+
+  return res;
+}
+
 void freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
-  if (app->swap_chain_imgs)
+  if (app->swap_chain_imgs) {
+    for (uint32_t i = 0; i < app->image_count; i++)
+      vkDestroyImage(app->device, app->swap_chain_imgs[i], NULL);
     free(app->swap_chain_imgs);
-  // if (app->swap_chain) {
-  //   fprintf(stderr, "Before vkDestroySwapchainKHR %p - %p\n", &app->swap_chain, app->swap_chain);
+  }
+  // if (app->swap_chain)
   //   vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
-  //   fprintf(stderr, "After vkDestroySwapchainKHR %p - %p\n", &app->swap_chain, app->swap_chain);
-  // }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
