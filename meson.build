@@ -45,7 +45,7 @@ lucur = declare_dependency(
 	include_directories: lucur_inc,
 )
 
-subdir('test')
+subdir('tests')
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(libraries: lib_lucur,

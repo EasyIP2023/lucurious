@@ -18,7 +18,6 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * vulkan-sdk
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * libinput
-* [cunit](http://cunit.sourceforge.net/)
 
 **To install**
 ```bash
@@ -62,17 +61,6 @@ cc -L /usr/local/lib/ -l lucurious test.c -o test
 ```
 
 ## Development
-Install [valgrind](http://valgrind.org/) to find memory leaks or memory related issues.
-
-**To produce valgrind error report**
-```bash
-valgrind --leak-check=full \
-         --show-leak-kinds=all \
-         --track-origins=yes \
-         --verbose \
-         --log-file=valgrind-out.txt \
-         ./build/test/ltest
-```
 **Creating your own cglm.pc**
 ```bash
 sudo vim /usr/lib/pkgconfig/cglm.pc

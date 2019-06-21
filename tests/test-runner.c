@@ -2,10 +2,10 @@
 #include <vlucur/vkall.h>
 #include <wclient/client.h>
 
-int main () {
+int main (void) {
   VkResult err;
-  struct vkcomp *app = init_vk();
   struct wclient *wc = init_wc();
+  struct vkcomp *app = init_vk();
 
   if (connect_client(wc)) {
     freeup_wc(wc);
