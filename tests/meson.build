@@ -45,11 +45,13 @@ test('lucur-wclient-test',
     suite: ['all'])
 
 # Testing main wayland client later compositor build with executable
-lucur_main_test = executable('ltest',
-                  'test-runner.c',
+lucur_main_test = executable('lucur-main-test',
+                  'test-main.c',
                   include_directories : lucur_inc,
                   dependencies : [check],
                   link_with : lib_lucur,
-                  install : true)
+                  install : false)
 
-test('lucur-main-test', lucur_main_test)
+test('lucur-main-test',
+    lucur_main_test,
+    suite: ['all'])

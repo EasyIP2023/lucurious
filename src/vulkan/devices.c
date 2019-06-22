@@ -14,13 +14,13 @@ const char *instance_extensions[] = {
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
 const char *validation_extensions[] = {
-  "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
-  "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
-  "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
-  "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects"
-  "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
-  "VK_LAYER_LUNARG_device_simulation"
+  "VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_monitor",
+  "VK_LAYER_LUNARG_api_dump", "VK_LAYER_GOOGLE_threading",
+  "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_parameter_validation",
+  "VK_LAYER_LUNARG_vktrace", "VK_LAYER_LUNARG_standard_validation",
+  "VK_LAYER_GOOGLE_unique_objects", "VK_LAYER_LUNARG_assistant_layer",
+  "VK_LAYER_LUNARG_screenshot", "VK_LAYER_LUNARG_device_simulation",
+  "VK_LAYER_LUNARG_core_validation"
 };
 
 /*
@@ -51,11 +51,15 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
         app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
         app->indices.graphics_family = i;
 
-    /* Check to see if a device can create images on the surface we created */
-    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
+    /* Check to see if a device can create images on the surface we may have created */
+    if (app->surface)
+      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
 
     if (app->indices.graphics_family != -1 && present_support) {
       app->indices.present_family = i;
+      ret = VK_TRUE;
+      break;
+    } else if (app->indices.graphics_family != -1) {
       ret = VK_TRUE;
       break;
     }
@@ -103,30 +107,26 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
                               vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
   } while (res == VK_INCOMPLETE);
 
+  /* set available instance extensions */
   if (app && !device) {
-    fprintf(stdout, "\nINSTANCE CREATED\n\nAVAILABLE INSTANCE EXTESIONS: %d\n", extension_count);
-
     app->ep_instance_props = (VkExtensionProperties *) \
       calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_instance_props) return res;
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_instance_props[i], &extensions[i], sizeof(extensions[i]));
-      fprintf(stdout, "%s\n", app->ep_instance_props[i].extensionName);
       app->ep_instance_count = i;
     }
   }
 
+  /* set available device extensions */
   if (device) {
-    fprintf(stdout, "\nAVAILABLE DEVICE EXTESIONS: %d\n", extension_count);
-
     app->ep_device_props = (VkExtensionProperties *) \
       realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_device_props) return res;
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_device_props[i], &extensions[i], sizeof(extensions[i]));
-      fprintf(stdout, "%s\n", app->ep_device_props[i].extensionName);
       app->ep_device_count = i;
     }
 

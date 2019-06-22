@@ -44,8 +44,6 @@ struct vkcomp {
   VkPhysicalDeviceFeatures device_features;
   VkPhysicalDeviceMemoryProperties memory_properties;
   VkPhysicalDevice physical_device;
-  VkPhysicalDevice *devices;
-  uint32_t device_count;
 
   VkDeviceQueueCreateInfo *queue_create_infos;
   VkQueueFamilyProperties *queue_families;

@@ -15,8 +15,6 @@ static void set_values(struct vkcomp *app) {
   // app->device_features;
   // app->memory_properties;
   app->physical_device = VK_NULL_HANDLE;
-  app->devices = VK_NULL_HANDLE;
-  app->device_count = VK_NULL_HANDLE;
   app->queue_create_infos = VK_NULL_HANDLE;
   app->queue_families = VK_NULL_HANDLE;
   app->queue_family_count = 0;
@@ -70,13 +68,11 @@ VkResult set_global_layers(struct vkcomp *app) {
     calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
   if (!app->vk_layer_props) return res;
 
-  fprintf(stdout, "\nVALIDATION LAYER SUPPORT:\n");
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
     memcpy(&app->vk_layer_props[app->vk_layer_count], &vk_props[i], sizeof(vk_props[i]));
-    fprintf(stdout, "%s\n", app->vk_layer_props[app->vk_layer_count].layerName);
     app->vk_layer_count = i;
   }
 
@@ -144,45 +140,46 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
 /* Get user physical device */
 VkResult enumerate_devices(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
-  res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, NULL);
+  VkPhysicalDevice *devices = VK_NULL_HANDLE;
+  uint32_t device_count = 0;
+
+  res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
   if (res) return res;
 
-  if (app->device_count == 0) {
+  if (device_count == 0) {
     fprintf(stderr, "[x] failed to find GPUs with Vulkan support!");
     return res;
   }
 
-  app->devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
-      app->device_count * sizeof(VkPhysicalDevice));
-  if (!app->devices) return res;
+  devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
+      device_count * sizeof(VkPhysicalDevice));
+  if (!devices) return res;
 
-  res = vkEnumeratePhysicalDevices(app->instance, &app->device_count, app->devices);
-  if (res) return res;
+  res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
+  if (res) { free(devices); devices = NULL; return res; }
 
   /*
   * get a physical device that is suitable
   * to do the graphics related task that we need
   */
-  for (uint32_t i = 0; i < app->device_count; i++) {
-    if (is_device_suitable(app, app->devices[i]) &&
-        find_queue_families(app, app->devices[i]) &&
+  for (uint32_t i = 0; i < device_count; i++) {
+    if (is_device_suitable(app, devices[i]) &&
+        find_queue_families(app, devices[i]) &&
         /* Check if current device has swap chain support */
-        get_extension_properties(app, NULL, app->devices[i])) {
-      app->physical_device = app->devices[i];
+        get_extension_properties(app, NULL, devices[i])) {
+      memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
+      free(devices);
+      devices = NULL;
       break;
     }
   }
 
   if (app->physical_device == VK_NULL_HANDLE) {
-    fprintf(stderr, "[x] failed to find a suitable GPU!");
+    fprintf(stderr, "[x] failed to find a suitable GPU!\n");
+    free(devices);
+    devices = NULL;
     return res;
   }
-
-  /* Query device properties */
-  vkGetPhysicalDeviceMemoryProperties(app->physical_device, &app->memory_properties);
-  vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
-  fprintf(stdout, "\nPHYSICAL_DEVICE FOUND: %s\nMEMORY HEAP COUNT: %d\n",
-    app->device_properties.deviceName, app->memory_properties.memoryHeapCount);
 
   return res;
 }
@@ -236,6 +233,8 @@ VkResult set_logical_device(struct vkcomp *app) {
 
 VkResult create_swap_chain(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
+
+  if (!app->surface) return res;
 
   res = q_swapchain_support(app);
   if (res) return res;
@@ -313,8 +312,11 @@ void freeup_vk(void *data) {
       vkDestroyImage(app->device, app->swap_chain_imgs[i], NULL);
     free(app->swap_chain_imgs);
   }
-  // if (app->swap_chain)
+  // if (app->swap_chain) {
+  //   fprintf(stderr, "app->device: %p - %p\n", &app->device, app->device);
+  //   fprintf(stderr, "app->swap_chain: %p - %p\n", &app->swap_chain, app->swap_chain);
   //   vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
+  // }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
@@ -325,8 +327,6 @@ void freeup_vk(void *data) {
     free(app->ep_instance_props);
   if (app->ep_device_props)
     free(app->ep_device_props);
-  if (app->devices)
-    free(app->devices);
   if (app->queue_families)
     free(app->queue_families);
   if (app->queue_create_infos)

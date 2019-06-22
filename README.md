@@ -61,6 +61,27 @@ cc -L /usr/local/lib/ -l lucurious test.c -o test
 ```
 
 ## Development
+Install [valgrind](http://valgrind.org/) to find memory leaks or memory related issues.
+
+**To produce valgrind generic output**
+```bash
+valgrind ./build/tests/${UNIT_TEST_NAME}
+```
+**To be sure that there are zero memory leaks**
+```bash
+export CK_FORK=no
+valgrind ./build/tests/${UNIT_TEST_NAME}
+```
+**To produce detailed valgrind error report**
+```bash
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         --verbose \
+         --log-file=valgrind-out.txt \
+         ./build/tests/${UNIT_TEST_NAME}
+```
+
 **Creating your own cglm.pc**
 ```bash
 sudo vim /usr/lib/pkgconfig/cglm.pc
