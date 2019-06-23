@@ -53,20 +53,20 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   .close = xdg_toplevel_handle_close,
 };
 
-static void pointer_handle_button(void *data, struct wl_pointer *pointer,
+/* static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 		uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
-  struct wclient *wc = data;
+  struct wclient *wc = (struct wclient *) data;
   ALL_UNUSED(time, pointer);
 	if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
 		xdg_toplevel_move(wc->xdg_toplevel, wc->seat, serial);
 	}
-}
+} */
 
 static const struct wl_pointer_listener pointer_listener = {
 	.enter = noop,
 	.leave = noop,
 	.motion = noop,
-	.button = pointer_handle_button,
+	.button = noop,
 	.axis = noop,
 };
 
@@ -86,7 +86,7 @@ static const struct wl_seat_listener seat_listener = {
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
   fprintf(stdout, "Got a registry event for %s id %d\n", interface, name);
-  struct wclient *wc = data;
+  struct wclient *wc = (struct wclient *) data;
   wc->version = version;
   if (strcmp(interface, wl_compositor_interface.name) == 0) {
     wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);

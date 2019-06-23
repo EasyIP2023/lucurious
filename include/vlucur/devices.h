@@ -3,7 +3,7 @@
 
 extern const char *device_extensions[];
 extern const char *instance_extensions[];
-extern const char *validation_extensions[];
+extern const char *enabled_validation_layers[];
 
 VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device);
 VkBool32 is_device_suitable(struct vkcomp *app, VkPhysicalDevice device);

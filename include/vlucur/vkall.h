@@ -59,6 +59,7 @@ struct vkcomp {
   VkFormat swap_chain_img_fmt;
   VkExtent2D swap_chain_extent;
   uint32_t image_count;
+  VkImageView *swap_chain_img_views;
 };
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
@@ -91,6 +92,7 @@ VkResult enumerate_devices(struct vkcomp *app);
 VkResult set_logical_device(struct vkcomp *app);
 VkResult vk_connect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
 VkResult create_swap_chain(struct vkcomp *app);
+VkResult create_img_views(struct vkcomp *app);
 void freeup_vk(void *data);
 
 #endif

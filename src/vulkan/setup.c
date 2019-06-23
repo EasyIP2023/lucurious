@@ -17,7 +17,7 @@ static void set_values(struct vkcomp *app) {
   app->physical_device = VK_NULL_HANDLE;
   app->queue_create_infos = VK_NULL_HANDLE;
   app->queue_families = VK_NULL_HANDLE;
-  app->queue_family_count = 0;
+  app->queue_family_count = VK_NULL_HANDLE;
   app->indices.graphics_family = -1;
   app->indices.present_family = -1;
   app->device = VK_FALSE;
@@ -32,6 +32,7 @@ static void set_values(struct vkcomp *app) {
   // app->swap_chain_img_fmt = 0;
   // app->swap_chain_extent = 0;
   app->image_count = VK_NULL_HANDLE;
+  app->swap_chain_img_views = VK_NULL_HANDLE;
 }
 
 struct vkcomp *init_vk() {
@@ -184,8 +185,10 @@ VkResult enumerate_devices(struct vkcomp *app) {
   return res;
 }
 
-/* After selecting a physical device to use.
-  Set up a logical device to interface with it */
+/*
+ * After selecting a physical device to use.
+ *  Set up a logical device to interface with it
+ */
 VkResult set_logical_device(struct vkcomp *app) {
   VkQueue present_queue;
   VkResult res = VK_INCOMPLETE;
@@ -234,11 +237,16 @@ VkResult set_logical_device(struct vkcomp *app) {
 VkResult create_swap_chain(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
 
-  if (!app->surface) return res;
+  if (!app->surface || !app->device) return res;
 
   res = q_swapchain_support(app);
   if (res) return res;
 
+  /*
+   * Don't want to stick to minimum becuase one would have to wait on the
+   * drive to complete internal operations before one can acquire another
+   * images to render to. So it's recommended to add one to minImageCount
+   */
   app->image_count = app->dets.capabilities.minImageCount + 1;
 
   /* Be sure image_count doesn't exceed the maximum. */
@@ -246,7 +254,7 @@ VkResult create_swap_chain(struct vkcomp *app) {
     app->image_count = app->dets.capabilities.maxImageCount;
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
-  VkPresentModeKHR pres_mode = chose_swap_present_mode(app);
+  VkPresentModeKHR pres_mode = choose_swap_present_mode(app);
   VkExtent2D extent = choose_swap_extent(app);
 
   VkSwapchainCreateInfoKHR create_info = {};
@@ -273,8 +281,9 @@ VkResult create_swap_chain(struct vkcomp *app) {
     create_info.pQueueFamilyIndices = NULL;
   }
 
-  /* specify that I currently want not transformation */
+  /* current transform should be applied to images in the swap chain */
   create_info.preTransform = app->dets.capabilities.currentTransform;
+  /* specify that I currently do not want any transformation */
   create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   create_info.presentMode = pres_mode;
   create_info.clipped = VK_TRUE;
@@ -300,23 +309,54 @@ VkResult create_swap_chain(struct vkcomp *app) {
 
 VkResult create_img_views(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
-  ALL_UNUSED(app);
+
+  app->swap_chain_img_views = (VkImageView *) \
+    calloc(sizeof(VkImageView), app->image_count * sizeof(VkImageView));
+  if (!app->swap_chain_img_views) return res;
+
+  for (uint32_t i = 0; i < app->image_count; i++) {
+    VkImageViewCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    create_info.image = app->swap_chain_imgs[i];
+    create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    create_info.format = app->swap_chain_img_fmt;
+    create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    /* describe what the image’s purpose is and which
+        part of the image should be accessed */
+    create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    create_info.subresourceRange.baseMipLevel = 0;
+    create_info.subresourceRange.levelCount = 1;
+    create_info.subresourceRange.baseArrayLayer = 0;
+    create_info.subresourceRange.layerCount = 1;
+
+    res = vkCreateImageView(app->device, &create_info, NULL, &app->swap_chain_img_views[i]);
+    if (res) return res;
+  }
 
   return res;
 }
 
 void freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
+  if (app->swap_chain_img_views) {
+    for (uint32_t i = 0; i < app->image_count; i++)
+      vkDestroyImageView(app->device, app->swap_chain_img_views[i], NULL);
+    free(app->swap_chain_img_views);
+  }
   if (app->swap_chain_imgs) {
     for (uint32_t i = 0; i < app->image_count; i++)
       vkDestroyImage(app->device, app->swap_chain_imgs[i], NULL);
     free(app->swap_chain_imgs);
   }
-  // if (app->swap_chain) {
-  //   fprintf(stderr, "app->device: %p - %p\n", &app->device, app->device);
-  //   fprintf(stderr, "app->swap_chain: %p - %p\n", &app->swap_chain, app->swap_chain);
-  //   vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
-  // }
+  if (app->swap_chain) {
+    free(app->swap_chain);
+    // Still Seg faults
+    // vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
+  }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);

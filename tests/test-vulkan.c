@@ -139,9 +139,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   ck_assert_ptr_null(app->surface);
 
   err = create_swap_chain(app);
-  if (err && app->surface != NULL) {
-    ck_abort_msg("[x] failed to create swap chain no surface");
-  }
+  if (err) fprintf(stderr, "[x] failed to create swap chain no surface\n");
 
   freeup_vk(app);
   app = NULL;

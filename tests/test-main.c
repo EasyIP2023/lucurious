@@ -56,6 +56,13 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg("[x] failed to create swap chain");
   }
 
+  err = create_img_views(app);
+  if (err) {
+    freeup_wc(wc);
+    freeup_vk(app);
+    ck_abort_msg("[x] failed to create image views");
+  }
+
   if (run_client(wc)) {
     freeup_wc(wc);
     freeup_vk(app);

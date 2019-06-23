@@ -13,7 +13,7 @@ const char *instance_extensions[] = {
 
 /* All of the useful standard validation is
   bundled into a layer included in the SDK */
-const char *validation_extensions[] = {
+const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_monitor",
   "VK_LAYER_LUNARG_api_dump", "VK_LAYER_GOOGLE_threading",
   "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_parameter_validation",

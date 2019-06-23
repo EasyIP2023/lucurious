@@ -5,15 +5,15 @@ valgrind = find_program('valgrind', required : false)
 if valgrind.found()
   valgrind_env = environment()
   valgrind_env.set('LTEST_JOBS', '4')
-  valgrind_suppressions_file = 'valgrind.suppressions'
+  #valgrind_suppressions_file = 'valgrind.suppressions'
   add_test_setup('valgrind',
       exe_wrapper : [valgrind,
           '--leak-check=full',
           '--show-leak-kinds=all',
           '--track-origins=yes',
           '--gen-suppressions=all',
-          '--error-exitcode=3',
-          '--suppressions=' + valgrind_suppressions_file],
+          '--error-exitcode=3'],
+          #'--suppressions=' + valgrind_suppressions_file],
       env :  valgrind_env,
       timeout_multiplier : 100)
 else

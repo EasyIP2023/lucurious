@@ -1,8 +1,8 @@
 #include <vlucur/vkall.h>
 #include <vlucur/display.h>
 
-#define WIDTH 1080
-#define HEIGHT 1920
+#define WIDTH 1920
+#define HEIGHT 1080
 
 VkResult vk_connect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface) {
   VkResult res = VK_INCOMPLETE;
@@ -34,6 +34,8 @@ VkResult q_swapchain_support(struct vkcomp *app) {
 
     res = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &app->dets.format_count, app->dets.formats);
     if (res) return res;
+  } else {
+    return VK_INCOMPLETE;
   }
 
   res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, NULL);
@@ -46,12 +48,15 @@ VkResult q_swapchain_support(struct vkcomp *app) {
 
     res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, app->dets.present_modes);
     if (res) return res;
+  } else {
+    return VK_INCOMPLETE;
   }
 
   return res;
 }
 
-/* function that choose swapchain surface format
+/*
+ * function that choose swapchain surface format (Color Depth)
  * For more info go here
  * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
  */
@@ -70,16 +75,19 @@ VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
   return app->dets.formats[0];
 }
 
-/* function that chooses the best presentation mode for swapchain
+/*
+ * function that chooses the best presentation mode for swapchain
+ * (Conditions required for swapping images to the screen)
  * For more info go here
  * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
  */
-VkPresentModeKHR chose_swap_present_mode(struct vkcomp *app) {
-  VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR;
+VkPresentModeKHR choose_swap_present_mode(struct vkcomp *app) {
+  VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR; /* Only mode that is guaranteed */
 
   for (uint32_t i = 0; i < app->dets.pres_mode_count; i++) {
-    if (app->dets.present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
-      return app->dets.present_modes[i];
+    if (app->dets.present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+      return app->dets.present_modes[i]; /* For triple buffering */
+    }
     else if (app->dets.present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
       best_mode = app->dets.present_modes[i];
   }
@@ -97,11 +105,11 @@ VkExtent2D choose_swap_extent(struct vkcomp *app) {
     actual_extent.width = max(app->dets.capabilities.minImageExtent.width,
                           min(app->dets.capabilities.maxImageExtent.width,
                           actual_extent.width));
-
     actual_extent.height = max(app->dets.capabilities.minImageExtent.height,
                            min(app->dets.capabilities.maxImageExtent.height,
                            actual_extent.height));
 
+    /* resolution will most likely result in 1080p or 1920x1080 */
     return actual_extent;
   }
 }
