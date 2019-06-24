@@ -4,7 +4,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-VkResult vk_connect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface) {
+VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface) {
   VkResult res = VK_INCOMPLETE;
   VkWaylandSurfaceCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;

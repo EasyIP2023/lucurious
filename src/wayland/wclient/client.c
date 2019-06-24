@@ -21,7 +21,7 @@ static void set_values(struct wclient *wc) {
   wc->running = 1;
 }
 
-struct wclient *init_wc() {
+struct wclient *wlu_init_wc() {
   struct wclient *wc = calloc(sizeof(struct wclient), sizeof(struct wclient));
   assert(wc != NULL);
   set_values(wc);
@@ -137,15 +137,7 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 	return buffer;
 }
 
-struct wl_display *get_display(struct wclient *wc) {
-  return wc->display;
-}
-
-struct wl_surface *get_surface(struct wclient *wc) {
-  return wc->surface;
-}
-
-int connect_client(struct wclient *wc) {
+int wlu_connect_client(struct wclient *wc) {
   int err = 0;
 
   wc->display = wl_display_connect(NULL);
@@ -215,14 +207,14 @@ int connect_client(struct wclient *wc) {
   return err = 0;
 }
 
-int run_client(struct wclient *wc) {
+int wlu_run_client(struct wclient *wc) {
   while (wl_display_dispatch(wc->display) != -1 && wc->running) {
     // This space intentionally left blank
   }
   return EXIT_SUCCESS;
 }
 
-void freeup_wc(void *data) {
+void wlu_freeup_wc(void *data) {
   struct wclient *wc = (struct wclient*) data;
 
   if (wc->xdg_toplevel)
@@ -248,7 +240,10 @@ void freeup_wc(void *data) {
     munmap(wc->shm_data, size);
   }
 
-  //wc->xdg_wm_base = NULL;
+  // wc->xdg_wm_base = NULL; Not sure about this one
+  if (wc->xdg_wm_base)
+    free(wc->xdg_wm_base);
+
   set_values(wc);
   if (wc)
     free(wc);

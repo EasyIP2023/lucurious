@@ -28,11 +28,9 @@ struct wclient {
   int running;
 };
 
-struct wclient *init_wc();
-int connect_client(struct wclient *wc);
-int run_client(struct wclient *wc);
-struct wl_display *get_display(struct wclient *wc);
-struct wl_surface *get_surface(struct wclient *wc);
-void freeup_wc(void *data);
+struct wclient *wlu_init_wc();
+int wlu_connect_client(struct wclient *wc);
+int wlu_run_client(struct wclient *wc);
+void wlu_freeup_wc(void *data);
 
 #endif

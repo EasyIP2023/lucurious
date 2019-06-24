@@ -4,11 +4,11 @@
 
 START_TEST(init_wayland_client) {
   struct wclient *wc = NULL;
-  wc = init_wc();
+  wc = wlu_init_wc();
 
   ck_assert_ptr_nonnull(wc);
 
-  freeup_wc(wc);
+  wlu_freeup_wc(wc);
   wc = NULL;
 } END_TEST;
 

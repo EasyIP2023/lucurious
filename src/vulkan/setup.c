@@ -35,7 +35,7 @@ static void set_values(struct vkcomp *app) {
   app->swap_chain_img_views = VK_NULL_HANDLE;
 }
 
-struct vkcomp *init_vk() {
+struct vkcomp *wlu_init_vk() {
   struct vkcomp *app;
   app = calloc(sizeof(struct vkcomp), sizeof(struct vkcomp));
   assert(app != NULL);
@@ -47,7 +47,7 @@ struct vkcomp *init_vk() {
  * Gets all you're validation layers extensions
  * that comes installed with the vulkan sdk
  */
-VkResult set_global_layers(struct vkcomp *app) {
+VkResult wlu_set_global_layers(struct vkcomp *app) {
   uint32_t layer_count = 0;
   VkLayerProperties *vk_props = NULL;
   VkResult res = VK_INCOMPLETE;
@@ -73,7 +73,7 @@ VkResult set_global_layers(struct vkcomp *app) {
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
-    memcpy(&app->vk_layer_props[app->vk_layer_count], &vk_props[i], sizeof(vk_props[i]));
+    memcpy(&app->vk_layer_props[i], &vk_props[i], sizeof(vk_props[i]));
     app->vk_layer_count = i;
   }
 
@@ -84,7 +84,7 @@ VkResult set_global_layers(struct vkcomp *app) {
 }
 
 /* Create connection between app and the vulkan api */
-VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) {
+VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_name) {
   VkResult res = VK_INCOMPLETE;
 
   /* initialize the VkApplicationInfo structure */
@@ -139,7 +139,7 @@ VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name) 
 }
 
 /* Get user physical device */
-VkResult enumerate_devices(struct vkcomp *app) {
+VkResult wlu_enumerate_devices(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -189,7 +189,7 @@ VkResult enumerate_devices(struct vkcomp *app) {
  * After selecting a physical device to use.
  *  Set up a logical device to interface with it
  */
-VkResult set_logical_device(struct vkcomp *app) {
+VkResult wlu_set_logical_device(struct vkcomp *app) {
   VkQueue present_queue;
   VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
@@ -234,7 +234,7 @@ VkResult set_logical_device(struct vkcomp *app) {
   return res;
 }
 
-VkResult create_swap_chain(struct vkcomp *app) {
+VkResult wlu_create_swap_chain(struct vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
 
   if (!app->surface || !app->device) return res;
@@ -307,7 +307,7 @@ VkResult create_swap_chain(struct vkcomp *app) {
   return res;
 }
 
-VkResult create_img_views(struct vkcomp *app) {
+VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
   VkResult res = VK_INCOMPLETE;
 
   app->swap_chain_img_views = (VkImageView *) \
@@ -318,7 +318,18 @@ VkResult create_img_views(struct vkcomp *app) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = app->swap_chain_imgs[i];
-    create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    switch (type) {
+      case one_d_img:
+        break;
+      case two_d_img:
+        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        break;
+      case three_d_img:
+        break;
+      default:
+        fprintf(stderr, "[x] image type not specified. Types: 1D_IMAGE, 2D_IMAGE, 3D_IMAGE\n");
+        if (res) return res;
+    }
     create_info.format = app->swap_chain_img_fmt;
     create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
     create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -340,7 +351,7 @@ VkResult create_img_views(struct vkcomp *app) {
   return res;
 }
 
-void freeup_vk(void *data) {
+void wlu_freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
   if (app->swap_chain_img_views) {
     for (uint32_t i = 0; i < app->image_count; i++)

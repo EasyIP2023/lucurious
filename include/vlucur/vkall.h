@@ -8,6 +8,8 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
+enum wlu_image { one_d_img, two_d_img, three_d_img };
+
 struct swap_chain_support_details {
   VkSurfaceCapabilitiesKHR capabilities;
 
@@ -85,14 +87,14 @@ struct vkcomp {
   }
 
 /* Function protypes */
-struct vkcomp *init_vk();
-VkResult set_global_layers(struct vkcomp *app);
-VkResult create_instance(struct vkcomp *app, char *app_name, char *engine_name);
-VkResult enumerate_devices(struct vkcomp *app);
-VkResult set_logical_device(struct vkcomp *app);
-VkResult vk_connect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
-VkResult create_swap_chain(struct vkcomp *app);
-VkResult create_img_views(struct vkcomp *app);
-void freeup_vk(void *data);
+struct vkcomp *wlu_init_vk();
+VkResult wlu_set_global_layers(struct vkcomp *app);
+VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_name);
+VkResult wlu_enumerate_devices(struct vkcomp *app);
+VkResult wlu_set_logical_device(struct vkcomp *app);
+VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
+VkResult wlu_create_swap_chain(struct vkcomp *app);
+VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type);
+void wlu_freeup_vk(void *data);
 
 #endif

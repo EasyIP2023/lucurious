@@ -14,22 +14,22 @@ const char *validation_extensions[] = {
 
 START_TEST(test_init_vulkan) {
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
   ck_assert_ptr_nonnull(app);
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 } END_TEST;
 
 START_TEST(test_set_global_layers) {
   VkResult err;
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
-  err = set_global_layers(app);
+  err = wlu_set_global_layers(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] checking and settinn validation layers failed");
   }
 
@@ -38,7 +38,7 @@ START_TEST(test_set_global_layers) {
   for (uint32_t i = 0; i < app->vk_layer_count; i++)
     ck_assert_str_eq(app->vk_layer_props[i].layerName, validation_extensions[i]);
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 
 } END_TEST;
@@ -46,18 +46,18 @@ START_TEST(test_set_global_layers) {
 START_TEST(test_create_instance) {
   VkResult err;
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
-  err = create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
   ck_assert_ptr_nonnull(app->instance);
   ck_assert_ptr_nonnull(app->ep_instance_props);
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 
 } END_TEST;
@@ -65,23 +65,23 @@ START_TEST(test_create_instance) {
 START_TEST(test_enumerate_device) {
   VkResult err;
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
-  err = create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = enumerate_devices(app);
+  err = wlu_enumerate_devices(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");
   }
 
   ck_assert_ptr_nonnull(app->physical_device);
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 } END_TEST;
 
@@ -89,59 +89,59 @@ START_TEST(test_enumerate_device) {
 START_TEST(test_set_logical_device) {
   VkResult err;
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
-  err = create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = enumerate_devices(app);
+  err = wlu_enumerate_devices(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");
   }
 
-  err = set_logical_device(app);
+  err = wlu_set_logical_device(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to initialize logical device to physical device");
   }
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 } END_TEST;
 
 START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
   struct vkcomp *app = NULL;
-  app = init_vk();
+  app = wlu_init_vk();
 
-  err = create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = enumerate_devices(app);
+  err = wlu_enumerate_devices(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");
   }
 
-  err = set_logical_device(app);
+  err = wlu_set_logical_device(app);
   if (err) {
-    freeup_vk(app);
+    wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to initialize logical device to physical device");
   }
 
   ck_assert_ptr_null(app->surface);
 
-  err = create_swap_chain(app);
+  err = wlu_create_swap_chain(app);
   if (err) fprintf(stderr, "[x] failed to create swap chain no surface\n");
 
-  freeup_vk(app);
+  wlu_freeup_vk(app);
   app = NULL;
 } END_TEST;
 
