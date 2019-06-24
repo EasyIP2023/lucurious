@@ -1,3 +1,4 @@
+#include <lucom.h>
 #include <vlucur/vkall.h>
 #include <vlucur/display.h>
 
@@ -10,8 +11,8 @@ VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.display = wl_display;
-  create_info.surface = wl_surface;
+  create_info.display = (struct wl_display *) wl_display;
+  create_info.surface = (struct wl_surface *) wl_surface;
 
   res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
   return res;

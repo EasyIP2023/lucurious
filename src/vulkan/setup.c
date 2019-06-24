@@ -1,3 +1,4 @@
+#include <lucom.h>
 #include <vlucur/vkall.h>
 #include <vlucur/devices.h>
 #include <vlucur/display.h>
@@ -74,6 +75,7 @@ VkResult wlu_set_global_layers(struct vkcomp *app) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
     memcpy(&app->vk_layer_props[i], &vk_props[i], sizeof(vk_props[i]));
+    fprintf(stderr, "%s\n", app->vk_layer_props[i].layerName);
     app->vk_layer_count = i;
   }
 

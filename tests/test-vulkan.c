@@ -1,15 +1,14 @@
-#include <lucom.h>
 #include <vlucur/vkall.h>
 #include <check.h>
 
-const char *validation_extensions[] = {
-  "VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_monitor",
-  "VK_LAYER_LUNARG_api_dump", "VK_LAYER_GOOGLE_threading",
-  "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_parameter_validation",
-  "VK_LAYER_LUNARG_vktrace", "VK_LAYER_LUNARG_standard_validation",
-  "VK_LAYER_GOOGLE_unique_objects", "VK_LAYER_LUNARG_assistant_layer",
-  "VK_LAYER_LUNARG_screenshot", "VK_LAYER_LUNARG_device_simulation",
-  "VK_LAYER_LUNARG_core_validation"
+const char *enabled_validation_layers[] = {
+  "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
+  "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
+  "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
+  "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
+  "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects",
+  "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
+  "VK_LAYER_LUNARG_device_simulation"
 };
 
 START_TEST(test_init_vulkan) {
@@ -36,7 +35,7 @@ START_TEST(test_set_global_layers) {
   ck_assert_ptr_nonnull(app->vk_layer_props);
 
   for (uint32_t i = 0; i < app->vk_layer_count; i++)
-    ck_assert_str_eq(app->vk_layer_props[i].layerName, validation_extensions[i]);
+    ck_assert_str_eq(app->vk_layer_props[i].layerName, enabled_validation_layers[i]);
 
   wlu_freeup_vk(app);
   app = NULL;

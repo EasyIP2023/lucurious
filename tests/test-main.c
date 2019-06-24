@@ -1,4 +1,3 @@
-#include <lucom.h>
 #include <vlucur/vkall.h>
 #include <wclient/client.h>
 #include <check.h>

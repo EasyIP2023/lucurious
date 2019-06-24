@@ -1,5 +1,5 @@
+#include <lucom.h>
 #include <sys/mman.h>
-#include <unistd.h>
 
 #include <wclient/client.h>
 #include <wclient/shm.h>

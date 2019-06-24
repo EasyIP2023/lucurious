@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
 #if defined(NDEBUG) && defined(__GNUC__)

@@ -1,8 +1,6 @@
 #ifndef VKALL_H
 #define VKALL_H
 
-#include <lucom.h>
-
 #include <cglm/call.h>
 
 #define VK_USE_PLATFORM_WAYLAND_KHR 1

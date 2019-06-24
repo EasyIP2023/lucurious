@@ -1,14 +1,11 @@
 /* https://github.com/emersion/hello-wayland/blob/master/shm.c */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <lucom.h>
 #include <errno.h>
 #include <time.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <wclient/shm.h>
 

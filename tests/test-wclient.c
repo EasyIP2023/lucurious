@@ -1,4 +1,4 @@
-#include <lucom.h>
+#include <stdlib.h>
 #include <wclient/client.h>
 #include <check.h>
 
