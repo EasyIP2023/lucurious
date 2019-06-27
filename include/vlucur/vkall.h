@@ -8,19 +8,14 @@
 
 enum wlu_image { one_d_img, two_d_img, three_d_img };
 
-struct swap_chain_support_details {
-  VkSurfaceCapabilitiesKHR capabilities;
-
-  VkSurfaceFormatKHR *formats;
-  uint32_t format_count;
-
-  VkPresentModeKHR *present_modes;
-  uint32_t pres_mode_count;
+struct swap_chain_buffers {
+  VkImage image;
+  VkImageView view;
 };
 
 struct queue_family_indices {
-  int graphics_family;
-  int present_family;
+  uint32_t graphics_family;
+  uint32_t present_family;
 };
 
 struct vkcomp {
@@ -53,13 +48,11 @@ struct vkcomp {
   VkDevice device; /* logical device */
   VkQueue graphics_queue;
 
-  struct swap_chain_support_details dets;
+  struct swap_chain_buffers *sc_buffs;
   VkSwapchainKHR swap_chain;
-  VkImage *swap_chain_imgs;
-  VkFormat swap_chain_img_fmt;
-  VkExtent2D swap_chain_extent;
-  uint32_t image_count;
-  VkImageView *swap_chain_img_views;
+  VkFormat sc_img_fmt;
+  VkExtent2D sc_extent;
+  uint32_t img_count;
 };
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
@@ -93,6 +86,7 @@ VkResult wlu_set_logical_device(struct vkcomp *app);
 VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
 VkResult wlu_create_swap_chain(struct vkcomp *app);
 VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type);
+VkResult wlu_create_graphics_pipeline(struct vkcomp *app);
 void wlu_freeup_vk(void *data);
 
 #endif

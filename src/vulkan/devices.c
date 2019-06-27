@@ -56,11 +56,11 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
     if (app->surface)
       vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
 
-    if (app->indices.graphics_family != -1 && present_support) {
+    if (app->indices.graphics_family != UINT32_MAX && present_support) {
       app->indices.present_family = i;
       ret = VK_TRUE;
       break;
-    } else if (app->indices.graphics_family != -1) {
+    } else if (app->indices.graphics_family != UINT32_MAX) {
       ret = VK_TRUE;
       break;
     }

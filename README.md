@@ -5,7 +5,7 @@ Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
 Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s a library for building and styling 2D/3D Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). Will be using [Vulkan](https://vulkan.lunarg.com) and the Wayland protocol to turn the nonexistent UI into reality.
 
-I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to learn more about the inner workings of the wayland protocol and how the linux graphics stack works. [Wlroots](https://github.com/swaywm/wlroots) could be used in this project as it is an extremely good wayland compositing library and I recommend usage if you want to build your own compositor without dealing with the underlying wayland compositor features.
+I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to learn more about the inner workings of the wayland protocol and how the linux graphics stack works, plus I'm working on this for my master thesis. [Wlroots](https://github.com/swaywm/wlroots) could be used in this project as it is an extremely good wayland compositing library and I recommend usage if you want to build your own compositor without dealing with the underlying wayland compositor features.
 
 ## Dependencies
 * wayland-client
@@ -16,8 +16,10 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * vulkan-icd-loader
 * vulkan-headers
 * vulkan-sdk
-* [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * libinput
+* [CGLM (for linear algebra)](https://github.com/recp/cglm)
+* [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
+* [Spirv-Headers](https://github.com/KhronosGroup/SPIRV-Headers)
 
 **To install**
 ```bash
@@ -111,3 +113,4 @@ Cflags: -I${includedir}
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
 * [vulkan](https://vulkan.lunarg.com)
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)
+* [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-2)

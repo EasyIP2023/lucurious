@@ -29,7 +29,7 @@ START_TEST(test_set_global_layers) {
   err = wlu_set_global_layers(app);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking and settinn validation layers failed");
+    ck_abort_msg("[x] checking and setting validation layers failed, sdk must not be installed");
   }
 
   ck_assert_ptr_nonnull(app->vk_layer_props);

@@ -19,21 +19,15 @@ static void set_values(struct vkcomp *app) {
   app->queue_create_infos = VK_NULL_HANDLE;
   app->queue_families = VK_NULL_HANDLE;
   app->queue_family_count = VK_NULL_HANDLE;
-  app->indices.graphics_family = -1;
-  app->indices.present_family = -1;
+  app->indices.graphics_family = UINT32_MAX;
+  app->indices.present_family = UINT32_MAX;
   app->device = VK_FALSE;
   app->graphics_queue = VK_FALSE;
-  // app->dets.capabilities = 0;
-  app->dets.formats = VK_NULL_HANDLE;
-  app->dets.format_count = VK_NULL_HANDLE;
-  app->dets.present_modes = VK_NULL_HANDLE;
-  app->dets.pres_mode_count = VK_NULL_HANDLE;
+  app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
-  app->swap_chain_imgs = VK_NULL_HANDLE;
-  // app->swap_chain_img_fmt = 0;
-  // app->swap_chain_extent = 0;
-  app->image_count = VK_NULL_HANDLE;
-  app->swap_chain_img_views = VK_NULL_HANDLE;
+  // app->sc_img_fmt = 0;
+  // app->sc_extent = 0;
+  app->img_count = VK_NULL_HANDLE;
 }
 
 struct vkcomp *wlu_init_vk() {
@@ -75,7 +69,7 @@ VkResult wlu_set_global_layers(struct vkcomp *app) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
     if (res) return res;
     memcpy(&app->vk_layer_props[i], &vk_props[i], sizeof(vk_props[i]));
-    fprintf(stderr, "%s\n", app->vk_layer_props[i].layerName);
+    /* fprintf(stderr, "%s\n", app->vk_layer_props[i].layerName); */
     app->vk_layer_count = i;
   }
 
@@ -241,33 +235,65 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
 
   if (!app->surface || !app->device) return res;
 
-  res = q_swapchain_support(app);
-  if (res) return res;
+  VkSurfaceCapabilitiesKHR capabilities = q_swapchain_capabilities(app);
 
   /*
    * Don't want to stick to minimum becuase one would have to wait on the
    * drive to complete internal operations before one can acquire another
    * images to render to. So it's recommended to add one to minImageCount
    */
-  app->image_count = app->dets.capabilities.minImageCount + 1;
+  app->img_count = capabilities.minImageCount + 1;
 
-  /* Be sure image_count doesn't exceed the maximum. */
-  if (app->dets.capabilities.maxImageCount > 0 && app->image_count > app->dets.capabilities.maxImageCount)
-    app->image_count = app->dets.capabilities.maxImageCount;
+  app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
+      app->img_count * sizeof(struct swap_chain_buffers));
+  if (!app->sc_buffs) return res;
+
+  /* Be sure img_count doesn't exceed the maximum. */
+  if (capabilities.maxImageCount > 0 && app->img_count > capabilities.maxImageCount)
+    app->img_count = capabilities.maxImageCount;
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
   VkPresentModeKHR pres_mode = choose_swap_present_mode(app);
-  VkExtent2D extent = choose_swap_extent(app);
+  VkExtent2D extent = choose_swap_extent(capabilities);
+
+  VkSurfaceTransformFlagBitsKHR pre_transform;
+  pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
+      VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
+
+  VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  VkCompositeAlphaFlagBitsKHR composite_alpha_flags[4] = {
+      VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+      VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+      VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+      VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+  };
+
+  for (uint32_t i = 0; i < sizeof(composite_alpha_flags); i++) {
+    if (capabilities.supportedCompositeAlpha & composite_alpha_flags[i]) {
+      composite_alpha = composite_alpha_flags[i];
+      break;
+    }
+  }
 
   VkSwapchainCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  create_info.pNext = NULL;
+  create_info.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
   create_info.surface = app->surface;
-  create_info.minImageCount = app->image_count;
+  create_info.minImageCount = app->img_count;
   create_info.imageFormat = surface_fmt.format;
   create_info.imageColorSpace = surface_fmt.colorSpace;
-  create_info.imageExtent = extent;
+  create_info.imageExtent.width = extent.width;
+  create_info.imageExtent.height = extent.height;
   create_info.imageArrayLayers = 1;
   create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  /* current transform should be applied to images in the swap chain */
+  create_info.preTransform = pre_transform;
+  /* specify that I currently do not want any transformation */
+  create_info.compositeAlpha = composite_alpha;
+  create_info.presentMode = pres_mode;
+  create_info.clipped = VK_TRUE;
+  create_info.oldSwapchain = VK_NULL_HANDLE;
 
   if (app->indices.graphics_family != app->indices.present_family) {
     const uint32_t queue_family_indices[] = {
@@ -283,28 +309,26 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
     create_info.pQueueFamilyIndices = NULL;
   }
 
-  /* current transform should be applied to images in the swap chain */
-  create_info.preTransform = app->dets.capabilities.currentTransform;
-  /* specify that I currently do not want any transformation */
-  create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  create_info.presentMode = pres_mode;
-  create_info.clipped = VK_TRUE;
-  create_info.oldSwapchain = VK_NULL_HANDLE;
-
   res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->swap_chain);
   if (res) return res;
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->image_count, NULL);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, NULL);
   if (res) return res;
 
-  app->swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->image_count * sizeof(VkImage));
-  if (!app->swap_chain_imgs) return res;
+  VkImage *swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
+  if (!swap_chain_imgs) return res;
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->image_count, app->swap_chain_imgs);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, swap_chain_imgs);
   if (res) return res;
 
-  app->swap_chain_img_fmt = surface_fmt.format;
-  app->swap_chain_extent = extent;
+  for (uint32_t i = 0; i < app->img_count; i++)
+    memcpy(&app->sc_buffs[i].image, &swap_chain_imgs[i], sizeof(swap_chain_imgs[i]));
+
+  free(swap_chain_imgs);
+  swap_chain_imgs = NULL;
+
+  app->sc_img_fmt = surface_fmt.format;
+  app->sc_extent = extent;
 
   return res;
 }
@@ -312,14 +336,12 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
 VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
   VkResult res = VK_INCOMPLETE;
 
-  app->swap_chain_img_views = (VkImageView *) \
-    calloc(sizeof(VkImageView), app->image_count * sizeof(VkImageView));
-  if (!app->swap_chain_img_views) return res;
+  if (!app->sc_buffs) return res;
 
-  for (uint32_t i = 0; i < app->image_count; i++) {
+  for (uint32_t i = 0; i < app->img_count; i++) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    create_info.image = app->swap_chain_imgs[i];
+    create_info.image = app->sc_buffs[i].image;
     switch (type) {
       case one_d_img:
         break;
@@ -332,12 +354,11 @@ VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
         fprintf(stderr, "[x] image type not specified. Types: 1D_IMAGE, 2D_IMAGE, 3D_IMAGE\n");
         if (res) return res;
     }
-    create_info.format = app->swap_chain_img_fmt;
-    create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-    create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
+    create_info.format = app->sc_img_fmt;
+    create_info.components.r = VK_COMPONENT_SWIZZLE_R;
+    create_info.components.g = VK_COMPONENT_SWIZZLE_G;
+    create_info.components.b = VK_COMPONENT_SWIZZLE_B;
+    create_info.components.a = VK_COMPONENT_SWIZZLE_A;
     /* describe what the image’s purpose is and which
         part of the image should be accessed */
     create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -346,34 +367,22 @@ VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
     create_info.subresourceRange.baseArrayLayer = 0;
     create_info.subresourceRange.layerCount = 1;
 
-    res = vkCreateImageView(app->device, &create_info, NULL, &app->swap_chain_img_views[i]);
+    res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_buffs[i].view);
     if (res) return res;
   }
 
   return res;
 }
 
+VkResult wlu_create_graphics_pipeline(struct vkcomp *app) {
+  VkResult res = VK_INCOMPLETE;
+  ALL_UNUSED(app);
+
+  return res;
+}
+
 void wlu_freeup_vk(void *data) {
   struct vkcomp *app = (struct vkcomp *) data;
-  if (app->swap_chain_img_views) {
-    for (uint32_t i = 0; i < app->image_count; i++)
-      vkDestroyImageView(app->device, app->swap_chain_img_views[i], NULL);
-    free(app->swap_chain_img_views);
-  }
-  if (app->swap_chain_imgs) {
-    for (uint32_t i = 0; i < app->image_count; i++)
-      vkDestroyImage(app->device, app->swap_chain_imgs[i], NULL);
-    free(app->swap_chain_imgs);
-  }
-  if (app->swap_chain) {
-    free(app->swap_chain);
-    // Still Seg faults
-    // vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
-  }
-  if (app->device) {
-    vkDeviceWaitIdle(app->device);
-    vkDestroyDevice(app->device, NULL);
-  }
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)
@@ -384,10 +393,22 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
-  if (app->dets.formats)
-    free(app->dets.formats);
-  if (app->dets.present_modes)
-    free(app->dets.present_modes);
+  if (app->sc_buffs) {
+    for (uint32_t i = 0; i < app->img_count; i++) {
+      vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
+      vkDestroyImage(app->device, app->sc_buffs[i].image, NULL);
+    }
+    free(app->sc_buffs);
+  }
+  if (app->swap_chain) {
+    free(app->swap_chain);
+    // Still Seg faults
+    // vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
+  }
+  if (app->device) {
+    vkDeviceWaitIdle(app->device);
+    vkDestroyDevice(app->device, NULL);
+  }
   if (app->surface)
     vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   if (app->instance)

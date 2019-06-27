@@ -19,41 +19,18 @@ VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl
 }
 
 /* query swap chain details */
-VkResult q_swapchain_support(struct vkcomp *app) {
-  VkResult res = VK_INCOMPLETE;
+VkSurfaceCapabilitiesKHR q_swapchain_capabilities(struct vkcomp *app) {
+  VkSurfaceCapabilitiesKHR capabilities;
+  VkResult err;
 
-  res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &app->dets.capabilities);
-  if (res) return res;
-
-  res = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &app->dets.format_count, NULL);
-  if (res) return res;
-
-  if (app->dets.format_count != 0) {
-    app->dets.formats = (VkSurfaceFormatKHR * ) \
-      calloc(sizeof(VkSurfaceFormatKHR), app->dets.format_count * sizeof(VkSurfaceFormatKHR));
-    if (!app->dets.formats) return 0;
-
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &app->dets.format_count, app->dets.formats);
-    if (res) return res;
-  } else {
-    return VK_INCOMPLETE;
+  err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
+  if (err) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] q_swapchain_capabilities: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed\n");
+    exit(-1);
   }
 
-  res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, NULL);
-  if (res) return res;
-
-  if (app->dets.pres_mode_count != 0) {
-    app->dets.present_modes = (VkPresentModeKHR *) \
-      calloc(sizeof(VkPresentModeKHR), app->dets.pres_mode_count * sizeof(VkPresentModeKHR));
-    if (!app->dets.formats) return res;
-
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &app->dets.pres_mode_count, app->dets.present_modes);
-    if (res) return res;
-  } else {
-    return VK_INCOMPLETE;
-  }
-
-  return res;
+  return capabilities;
 }
 
 /*
@@ -61,20 +38,67 @@ VkResult q_swapchain_support(struct vkcomp *app) {
  * For more info go here
  * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
  */
-VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
-  if (app->dets.format_count == 1 && app->dets.formats[0].format == VK_FORMAT_UNDEFINED) {
-    VkSurfaceFormatKHR ret_fmt = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-    return ret_fmt;
+ VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
+  VkResult err;
+  VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
+  uint32_t format_count = 0;
+
+  err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
+  if (err) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
+    exit(-1);
   }
 
-  for (uint32_t i = 0; i < app->dets.format_count; i++) {
-    if (app->dets.formats[i].format == VK_FORMAT_B8G8R8A8_UNORM &&
-        app->dets.formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-        return app->dets.formats[i];
+  if (format_count == 0) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_surface_format: format_count equals 0\n");
+    exit(-1);
   }
 
-  return app->dets.formats[0];
-}
+  formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
+    format_count * sizeof(VkSurfaceFormatKHR));
+
+  if (!formats) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_surface_format: calloc VkSurfaceFormatKHR failed, ERROR CODE: %d\n", err);
+    exit(-1);
+  }
+
+  err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
+  if (err) {
+    free(formats);
+    formats = NULL;
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
+    exit(-1);
+  }
+
+  VkSurfaceFormatKHR ret_fmt;
+  memcpy(&ret_fmt, &formats[0], sizeof(formats[0]));
+
+  if (format_count == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
+    free(formats);
+    formats = NULL;
+    VkSurfaceFormatKHR rf = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+    return rf;
+  }
+
+  for (uint32_t i = 0; i < format_count; i++) {
+    if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+      memcpy(&ret_fmt, &formats[i], sizeof(formats[i]));
+      free(formats);
+      formats = NULL;
+      return ret_fmt;
+    }
+  }
+
+  free(formats);
+  formats = NULL;
+
+  return ret_fmt;
+ }
+
 
 /*
  * function that chooses the best presentation mode for swapchain
@@ -83,31 +107,71 @@ VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
  * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
  */
 VkPresentModeKHR choose_swap_present_mode(struct vkcomp *app) {
+  VkResult err;
   VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR; /* Only mode that is guaranteed */
+  VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
+  uint32_t pres_mode_count = 0;
 
-  for (uint32_t i = 0; i < app->dets.pres_mode_count; i++) {
-    if (app->dets.present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-      return app->dets.present_modes[i]; /* For triple buffering */
-    }
-    else if (app->dets.present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
-      best_mode = app->dets.present_modes[i];
+  err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
+  if (err) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
+    exit(-1);
   }
+
+  if (pres_mode_count == 0) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_present_mode: pres_mode_count equals 0\n");
+    exit(-1);
+  }
+
+  present_modes = (VkPresentModeKHR *) calloc(sizeof(VkPresentModeKHR),
+      pres_mode_count * sizeof(VkPresentModeKHR));
+  if (!present_modes) {
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_present_mode: VkPresentModeKHR calloc failed\n");
+    exit(-1);
+  }
+
+  err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
+  if (err) {
+    free(present_modes);
+    present_modes = NULL;
+    wlu_freeup_vk(app);
+    fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
+    exit(-1);
+  }
+
+  for (uint32_t i = 0; i < pres_mode_count; i++) {
+    if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+      memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
+      free(present_modes);
+      present_modes = NULL;
+      return best_mode; /* For triple buffering */
+    }
+    else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+      memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
+    }
+  }
+
+  free(present_modes);
+  present_modes = NULL;
 
   return best_mode;
 }
 
 /* The swap extent is the resolution of the swap chain images */
-VkExtent2D choose_swap_extent(struct vkcomp *app) {
-  if (app->dets.capabilities.currentExtent.width != UINT32_MAX) {
-    return app->dets.capabilities.currentExtent;
+VkExtent2D choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities) {
+  if (capabilities.currentExtent.width != UINT32_MAX) {
+    return capabilities.currentExtent;
   } else {
     VkExtent2D actual_extent = {WIDTH, HEIGHT};
 
-    actual_extent.width = max(app->dets.capabilities.minImageExtent.width,
-                          min(app->dets.capabilities.maxImageExtent.width,
+    actual_extent.width = max(capabilities.minImageExtent.width,
+                          min(capabilities.maxImageExtent.width,
                           actual_extent.width));
-    actual_extent.height = max(app->dets.capabilities.minImageExtent.height,
-                           min(app->dets.capabilities.maxImageExtent.height,
+    actual_extent.height = max(capabilities.minImageExtent.height,
+                           min(capabilities.maxImageExtent.height,
                            actual_extent.height));
 
     /* resolution will most likely result in 1080p or 1920x1080 */
