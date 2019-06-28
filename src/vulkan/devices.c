@@ -6,7 +6,7 @@ const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const char *instance_extensions[] = {
+const char *instance_extensions[3] = {
   VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
   VK_KHR_SURFACE_EXTENSION_NAME,
   VK_KHR_DISPLAY_EXTENSION_NAME
@@ -101,7 +101,7 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
 
     extensions = (VkExtensionProperties *) realloc(extensions,
       extension_count * sizeof(VkExtensionProperties));
-    if (!extensions) return res;
+    if (!extensions) return VK_FALSE;
 
     res = (app && !device)  ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
           (prop)            ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
@@ -112,7 +112,7 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
   if (app && !device) {
     app->ep_instance_props = (VkExtensionProperties *) \
       calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_instance_props) return res;
+    if (!app->ep_instance_props) { free(extensions); extensions = NULL; return VK_FALSE; }
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_instance_props[i], &extensions[i], sizeof(extensions[i]));
@@ -124,7 +124,7 @@ VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, V
   if (device) {
     app->ep_device_props = (VkExtensionProperties *) \
       realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_device_props) return res;
+    if (!app->ep_device_props) { free(extensions); extensions = NULL; return VK_FALSE; }
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_device_props[i], &extensions[i], sizeof(extensions[i]));

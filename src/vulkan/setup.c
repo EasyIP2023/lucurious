@@ -25,8 +25,8 @@ static void set_values(struct vkcomp *app) {
   app->graphics_queue = VK_FALSE;
   app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
-  // app->sc_img_fmt = 0;
-  // app->sc_extent = 0;
+  // app->sc_img_fmt;
+  // app->sc_extent;
   app->img_count = VK_NULL_HANDLE;
 }
 
@@ -55,21 +55,20 @@ VkResult wlu_set_global_layers(struct vkcomp *app) {
     if (layer_count == 0) return VK_SUCCESS;
 
     vk_props = (VkLayerProperties *) realloc(vk_props, layer_count * sizeof(VkLayerProperties));
-    if (!vk_props) return res;
+    if (!vk_props) return VK_FALSE;
 
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
   app->vk_layer_props = (VkLayerProperties *) \
     calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
-  if (!app->vk_layer_props) return res;
+  if (!app->vk_layer_props) { free(vk_props); vk_props = NULL; return VK_FALSE; }
 
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
-    if (res) return res;
+    if (res) { free(vk_props); vk_props = NULL; return res; }
     memcpy(&app->vk_layer_props[i], &vk_props[i], sizeof(vk_props[i]));
-    /* fprintf(stderr, "%s\n", app->vk_layer_props[i].layerName); */
     app->vk_layer_count = i;
   }
 
@@ -118,7 +117,7 @@ VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_na
       fprintf(stderr, "[x] one of the validation layers is currently not present");
       return res;
     case VK_ERROR_EXTENSION_NOT_PRESENT:
-    fprintf(stderr, "[x] one of the vulkan instance/device extensions is currently not present");
+      fprintf(stderr, "[x] one of the vulkan instance/device extensions is currently not present");
       return res;
     case VK_ERROR_INCOMPATIBLE_DRIVER:
       fprintf(stderr, "[x] cannot find a compatible Vulkan ICD\n");
@@ -145,12 +144,12 @@ VkResult wlu_enumerate_devices(struct vkcomp *app) {
 
   if (device_count == 0) {
     fprintf(stderr, "[x] failed to find GPUs with Vulkan support!");
-    return res;
+    return VK_FALSE;
   }
 
   devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
       device_count * sizeof(VkPhysicalDevice));
-  if (!devices) return res;
+  if (!devices) return VK_FALSE;
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
   if (res) { free(devices); devices = NULL; return res; }
@@ -175,7 +174,7 @@ VkResult wlu_enumerate_devices(struct vkcomp *app) {
     fprintf(stderr, "[x] failed to find a suitable GPU!\n");
     free(devices);
     devices = NULL;
-    return res;
+    return VK_FALSE;
   }
 
   return res;
@@ -192,7 +191,7 @@ VkResult wlu_set_logical_device(struct vkcomp *app) {
 
   app->queue_create_infos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
-  if (!app->queue_create_infos) return res;
+  if (!app->queue_create_infos) return VK_FALSE;
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -235,7 +234,8 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
 
   if (!app->surface || !app->device) return res;
 
-  VkSurfaceCapabilitiesKHR capabilities = q_swapchain_capabilities(app);
+  VkSurfaceCapabilitiesKHR capabilities = q_device_capabilities(app);
+  if (capabilities.minImageCount == UINT32_MAX) return res;
 
   /*
    * Don't want to stick to minimum becuase one would have to wait on the
@@ -246,15 +246,20 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
 
   app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
       app->img_count * sizeof(struct swap_chain_buffers));
-  if (!app->sc_buffs) return res;
+  if (!app->sc_buffs) return VK_FALSE;
 
   /* Be sure img_count doesn't exceed the maximum. */
   if (capabilities.maxImageCount > 0 && app->img_count > capabilities.maxImageCount)
     app->img_count = capabilities.maxImageCount;
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
+  if (surface_fmt.format == VK_FORMAT_UNDEFINED) return res;
+
   VkPresentModeKHR pres_mode = choose_swap_present_mode(app);
+  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) return res;
+
   VkExtent2D extent = choose_swap_extent(capabilities);
+  if (extent.width == UINT32_MAX) return res;
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -296,12 +301,12 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   if (app->indices.graphics_family != app->indices.present_family) {
-    const uint32_t queue_family_indices[] = {
+    const uint32_t queue_family_indices[2] = {
       app->indices.graphics_family,
       app->indices.present_family
     };
     create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    create_info.queueFamilyIndexCount = 2;
+    create_info.queueFamilyIndexCount = sizeof(queue_family_indices);
     create_info.pQueueFamilyIndices = queue_family_indices;
   } else {
     create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -316,10 +321,10 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
   if (res) return res;
 
   VkImage *swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
-  if (!swap_chain_imgs) return res;
+  if (!swap_chain_imgs) return VK_FALSE;
 
   res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, swap_chain_imgs);
-  if (res) return res;
+  if (res) { free(swap_chain_imgs); swap_chain_imgs = NULL; return res; }
 
   for (uint32_t i = 0; i < app->img_count; i++)
     memcpy(&app->sc_buffs[i].image, &swap_chain_imgs[i], sizeof(swap_chain_imgs[i]));
@@ -352,7 +357,7 @@ VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
         break;
       default:
         fprintf(stderr, "[x] image type not specified. Types: 1D_IMAGE, 2D_IMAGE, 3D_IMAGE\n");
-        if (res) return res;
+        return res;
     }
     create_info.format = app->sc_img_fmt;
     create_info.components.r = VK_COMPONENT_SWIZZLE_R;

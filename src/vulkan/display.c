@@ -18,70 +18,69 @@ VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl
   return res;
 }
 
-/* query swap chain details */
-VkSurfaceCapabilitiesKHR q_swapchain_capabilities(struct vkcomp *app) {
+/* query device capabilities */
+VkSurfaceCapabilitiesKHR q_device_capabilities(struct vkcomp *app) {
   VkSurfaceCapabilitiesKHR capabilities;
   VkResult err;
 
   err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
   if (err) {
-    wlu_freeup_vk(app);
-    fprintf(stderr, "[x] q_swapchain_capabilities: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed\n");
-    exit(-1);
+    fprintf(stderr, "[x] q_swapchain_capabilities: vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed, ERROR CODE: %d\n", err);
+    capabilities.minImageCount = UINT32_MAX;
+    return capabilities;
   }
 
   return capabilities;
 }
 
-/*
- * function that choose swapchain surface format (Color Depth)
- * For more info go here
- * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
- */
+/* choose swapchain surface format and color space (Color Depth) */
  VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
   VkResult err;
+  VkSurfaceFormatKHR ret_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
   uint32_t format_count = 0;
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) {
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
-    exit(-1);
+    return ret_fmt;
   }
 
   if (format_count == 0) {
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_surface_format: format_count equals 0\n");
-    exit(-1);
+    return ret_fmt;
   }
 
   formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
     format_count * sizeof(VkSurfaceFormatKHR));
 
   if (!formats) {
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_surface_format: calloc VkSurfaceFormatKHR failed, ERROR CODE: %d\n", err);
-    exit(-1);
+    return ret_fmt;
   }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
   if (err) {
     free(formats);
     formats = NULL;
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
-    exit(-1);
+    return ret_fmt;
   }
 
-  VkSurfaceFormatKHR ret_fmt;
   memcpy(&ret_fmt, &formats[0], sizeof(formats[0]));
 
+  /*
+   * VK_FORMAT_B8G8R8A8_UNORM till store the B, G, R and alpha channels
+   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
+   * SRGB if used for colorSpace if available, because it
+   * results in more accurate perceived colors
+   */
   if (format_count == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
     free(formats);
     formats = NULL;
-    VkSurfaceFormatKHR rf = {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-    return rf;
+    ret_fmt.format = VK_FORMAT_B8G8R8A8_UNORM;
+    ret_fmt.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    return ret_fmt;
   }
 
   for (uint32_t i = 0; i < format_count; i++) {
@@ -103,43 +102,39 @@ VkSurfaceCapabilitiesKHR q_swapchain_capabilities(struct vkcomp *app) {
 /*
  * function that chooses the best presentation mode for swapchain
  * (Conditions required for swapping images to the screen)
- * For more info go here
- * https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
  */
 VkPresentModeKHR choose_swap_present_mode(struct vkcomp *app) {
   VkResult err;
+  VkPresentModeKHR pres_err = VK_PRESENT_MODE_MAX_ENUM_KHR;
   VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR; /* Only mode that is guaranteed */
   VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
   uint32_t pres_mode_count = 0;
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
   if (err) {
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
-    exit(-1);
+    return pres_err;
   }
 
   if (pres_mode_count == 0) {
-    wlu_freeup_vk(app);
-    fprintf(stderr, "[x] choose_swap_present_mode: pres_mode_count equals 0\n");
-    exit(-1);
+    fprintf(stderr, "[x] choose_swap_present_mode: pres_mode_count equals %d\n", pres_mode_count);
+    return pres_err;
   }
 
   present_modes = (VkPresentModeKHR *) calloc(sizeof(VkPresentModeKHR),
       pres_mode_count * sizeof(VkPresentModeKHR));
+
   if (!present_modes) {
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_present_mode: VkPresentModeKHR calloc failed\n");
-    exit(-1);
+    return pres_err;
   }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
   if (err) {
     free(present_modes);
     present_modes = NULL;
-    wlu_freeup_vk(app);
     fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
-    exit(-1);
+    return pres_err;
   }
 
   for (uint32_t i = 0; i < pres_mode_count; i++) {
