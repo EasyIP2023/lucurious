@@ -341,19 +341,19 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
 VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
   VkResult res = VK_INCOMPLETE;
 
-  if (!app->sc_buffs) return res;
+  if (!app->sc_buffs) return VK_FALSE;
 
   for (uint32_t i = 0; i < app->img_count; i++) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = app->sc_buffs[i].image;
     switch (type) {
-      case one_d_img:
+      case ONE_D_IMG:
         break;
-      case two_d_img:
+      case TWO_D_IMG:
         create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
         break;
-      case three_d_img:
+      case THREE_D_IMG:
         break;
       default:
         fprintf(stderr, "[x] image type not specified. Types: 1D_IMAGE, 2D_IMAGE, 3D_IMAGE\n");

@@ -21,86 +21,16 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
 * [Spirv-Headers](https://github.com/KhronosGroup/SPIRV-Headers)
 
-**To install**
-```bash
-mkdir -v build
-meson build
-ninja install -C build
-
-# Encase of PolicyKit daemon errors
-pkttyagent -p $(echo $$) | pkexec ninja install -C $(pwd)/build/
-```
-
-**To Uninstall**
-```bash
-ninja uninstall -C build
-
-# Encase of PolicyKit daemon errors
-pkttyagent -p $(echo $$) | pkexec ninja uninstall -C $(pwd)/build/
-```
-
-**If need to reconfigure build**
-```bash
-meson --reconfigure build
-```
-
-**If need to wipe build**
-```bash
-meson --wipe build
-```
+## [Documentation](https://github.com/lucurious-labs/lucurious/tree/development/docs)
+## [Usage/Examples](https://github.com/lucurious-labs/lucurious/tree/development/examples)
+## [Development](https://github.com/lucurious-labs/lucurious/tree/development/src)
 
 **Running test**
 ```bash
+mkdir -v build/
+meson build/
 ninja test -C build
 cat build/meson-logs/testlog.txt
-```
-
-**Usage**
-```bash
-# This is just an extra step
-export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
-cc -L /usr/local/lib/ -l lucurious test.c -o test
-```
-
-## Development
-Install [valgrind](http://valgrind.org/) to find memory leaks or memory related issues.
-
-**To produce valgrind generic output**
-```bash
-valgrind ./build/tests/${UNIT_TEST_NAME}
-```
-**To be sure that there are zero memory leaks**
-```bash
-export CK_FORK=no
-valgrind ./build/tests/${UNIT_TEST_NAME}
-```
-**To produce detailed valgrind error report**
-```bash
-valgrind --leak-check=full \
-         --show-leak-kinds=all \
-         --track-origins=yes \
-         --verbose \
-         --log-file=valgrind-out.txt \
-         ./build/tests/${UNIT_TEST_NAME}
-```
-
-**Creating your own cglm.pc**
-```bash
-sudo vim /usr/lib/pkgconfig/cglm.pc
-```
-Contents of file
-```bash
-prefix=/usr
-exec_prefix=/usr
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
-
-Name: CGLM-Loader
-Description: CGLM Loader
-Version: 1.1.107
-Libs: -L${libdir} -lcglm
-Libs.private:  -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc
-Cflags: -I${includedir}
 ```
 
 ## References

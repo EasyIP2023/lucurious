@@ -6,7 +6,7 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
-enum wlu_image { one_d_img, two_d_img, three_d_img };
+enum wlu_image { ONE_D_IMG = 1, TWO_D_IMG = 2, THREE_D_IMG = 3 };
 
 struct swap_chain_buffers {
   VkImage image;

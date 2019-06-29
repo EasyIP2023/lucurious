@@ -55,7 +55,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg("[x] failed to create swap chain");
   }
 
-  err = wlu_create_img_views(app, two_d_img);
+  err = wlu_create_img_views(app, TWO_D_IMG);
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);

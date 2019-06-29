@@ -1,0 +1,118 @@
+.\" The MIT License (MIT)
+.\"
+.\" Copyright (c) 2019 Vincent Davis
+.\" <vincedav2495@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is hereby granted, free of charge, to any person obtaining a copy
+.\" of this software and associated documentation files (the "Software"), to deal
+.\" in the Software without restriction, including without limitation the rights
+.\" to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+.\" copies of the Software, and to permit persons to whom the Software is
+.\" furnished to do so, subject to the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be included in
+.\" all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+.\" AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+.\" OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+.\" THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.TH WLU_VKALL_H 3 "29 June 2019" "1.0" "WLU Vulkan All Header Man Page"
+.SH BRIEF DESCRIPTION
+Wayland Lucurious Vulkan All Header
+
+.SH SYNOPSIS
+.nf
+.B #include <wlu/vkall.h>
+.PP
+.I "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+.B "\t\t\t\t\t\tAPI Enums and Structs"
+.I "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+
+.BR "enum wlu_image " "{ " "ONE_D_IMG " "= 1, " "TWO_D_IMG " "= 2, " "THREE_D_IMG " "= 3 }";
+
+.BR "struct swap_chain_buffers " "{"
+.BR "\tVkImage " "image";
+.BR "\tVkImageView " "view";
+};
+
+.BR "struct queue_family_indices " "{"
+.BR "\tuint32_t " "graphics_family";
+.BR "\tuint32_t " "present_family";
+};
+
+.BR "struct vkcomp " "{"
+.BR "\tVkInstance " "instance";
+.BR "\tVkSurfaceKHR " "surface";
+
+.BR "\tVkLayerProperties " "*vk_layer_props";
+.BR "\tuint32_t " "vk_layer_count";
+
+.BR "\tVkExtensionProperties " "*ep_instance_props";
+.BR "\tuint32_t" "ep_instance_count";
+
+.BR "\tVkExtensionProperties " "*ep_device_props";
+.BR "\tuint32_t " "ep_device_count";
+
+.BR "\tVkPhysicalDeviceProperties " "device_properties";
+.BR "\tVkPhysicalDeviceFeatures " "device_features";
+.BR "\tVkPhysicalDeviceMemoryProperties " "memory_properties";
+.BR "\tVkPhysicalDevice " "physical_device";
+
+.BR "\tVkDeviceQueueCreateInfo " "*queue_create_infos";
+.BR "\tVkQueueFamilyProperties " "*queue_families";
+.BR "\tuint32_t " "queue_family_count";
+.BR "\tstruct queue_family_indices " "indices";
+
+.BR "\tVkDevice " "device";
+.BR "\tVkQueue " "graphics_queue";
+
+.BR "\tstruct swap_chain_buffers " "*sc_buffs";
+.BR "\tVkSwapchainKHR " "swap_chain";
+.BR "\tVkFormat " "sc_img_fmt";
+.BR "\tVkExtent2D " "sc_extent";
+.BR "\tuint32_t " "img_count";
+};
+
+.I "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+.B "\t\t\t\t\t\t\tAPI Functions"
+.I "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+
+.BR "struct vkcomp *wlu_init_vk()";
+.BR "VkResult wlu_set_global_layers(struct vkcomp " "*app");
+.BR "VkResult wlu_create_instance(struct vkcomp " "*app" ", char " "*app_name" ", char " "*engine_name");
+.BR "VkResult wlu_enumerate_devices(struct vkcomp " "*app");
+.BR "VkResult wlu_set_logical_device(struct vkcomp " "*app");
+.BR "VkResult wlu_vkconnect_surfaceKHR(struct vkcomp " "*app" ", void " "*wl_display" ", void " "*wl_surface");
+.BR "VkResult wlu_create_swap_chain(struct vkcomp " "*app");
+.BR "VkResult wlu_create_img_views(struct vkcomp " "*app" ", enum wlu_image" "type");
+.BR "VkResult wlu_create_graphics_pipeline(struct vkcomp " "*app");
+.BR "void wlu_freeup_vk(void " "*data");
+.fi
+.PP
+.nf
+.pp
+.SH DESCRIPTION
+.PP
+
+The
+.BR swap_chain_buffers
+struct contains elements VkImage & VkImageView.
+.BR VkImage
+is the acutal image object that represents multidimensional (up to 3) arrays of data.
+Data of which has various purposes (e.g. attachments, textures) and can be utilized by binding images
+to a graphics or compute pipeline via descriptor sets.
+
+.SH SEE_ALSO
+.B "wlu_init_wc(3)" "," "wlu_set_global_layers(3)" "," "wlu_create_instance(3)" ","
+.B "wlu_vkconnect_surfaceKHR(3)" "," "wlu_enumerate_devices(3)" "," "wlu_set_logical_device(3)" ","
+.B "wlu_create_swap_chain(3)" "," "wlu_create_img_views(3)" "," "wlu_freeup_vk(3)"
+
+.SH AUTHOR
+Vincent Davis (vdavis2495@gmail.com)

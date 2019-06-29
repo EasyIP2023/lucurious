@@ -45,6 +45,7 @@ lucur = declare_dependency(
 	include_directories: lucur_inc,
 )
 
+subdir('docs')
 subdir('tests')
 
 pkg_mod = import('pkgconfig')
