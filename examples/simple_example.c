@@ -37,7 +37,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  err = wlu_enumerate_devices(app);
+  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);

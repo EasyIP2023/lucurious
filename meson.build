@@ -1,7 +1,7 @@
 project(
 	'lucurious',
 	'c',
-	version: '1.0.0',
+	version: '0.0.1',
 	license: 'MIT',
 	meson_version: '>=0.50.1',
 	default_options: [
@@ -43,6 +43,13 @@ lib_lucur = shared_library(
 lucur = declare_dependency(
 	link_with: lib_lucur,
 	include_directories: lucur_inc,
+)
+
+executable(
+	'lucur',
+	lib_exec,
+	link_with: lib_lucur,
+	include_directories: lucur_inc
 )
 
 subdir('docs')

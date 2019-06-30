@@ -32,7 +32,7 @@ const char *enabled_validation_layers[] = {
  * by the device and which one of these supports the
  * commands that we want to use
  */
-VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
+VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device, VkQueueFlagBits vkqfbits) {
   VkBool32 ret = VK_FALSE;
   VkBool32 present_support = VK_FALSE;
 
@@ -44,13 +44,8 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
-    if (app->queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT       ||
-        app->queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT        ||
-        app->queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT       ||
-        app->queue_families[i].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ||
-        app->queue_families[i].queueFlags & VK_QUEUE_PROTECTED_BIT      ||
-        app->queue_families[i].queueFlags & VK_QUEUE_FLAG_BITS_MAX_ENUM)
-        app->indices.graphics_family = i;
+    if (app->queue_families[i].queueFlags & vkqfbits)
+      app->indices.graphics_family = i;
 
     /* Check to see if a device can create images on the surface we may have created */
     if (app->surface)
@@ -69,19 +64,13 @@ VkBool32 find_queue_families(struct vkcomp *app, VkPhysicalDevice device) {
   return ret;
 }
 
-VkBool32 is_device_suitable(struct vkcomp *app, VkPhysicalDevice device) {
+VkBool32 is_device_suitable(struct vkcomp *app, VkPhysicalDevice device, VkPhysicalDeviceType vkpdtype) {
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
   /* Query device features */
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
-  return ((app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_OTHER ||
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU ||
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU ||
-          app->device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM) &&
-          app->device_features.geometryShader);
+  return (app->device_properties.deviceType == vkpdtype && app->device_features.geometryShader);
 }
 
 VkResult get_extension_properties(struct vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {

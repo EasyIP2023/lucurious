@@ -72,7 +72,7 @@ START_TEST(test_enumerate_device) {
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = wlu_enumerate_devices(app);
+  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");
@@ -96,7 +96,7 @@ START_TEST(test_set_logical_device) {
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = wlu_enumerate_devices(app);
+  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");
@@ -123,7 +123,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
     ck_abort_msg("[x] checking for validation layer support failed");
   }
 
-  err = wlu_enumerate_devices(app);
+  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     ck_abort_msg("[x] failed to find physical device");

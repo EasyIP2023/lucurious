@@ -23,15 +23,15 @@
 .\" THE SOFTWARE.
 .\" %%%LICENSE_END
 .\"
-.TH WLU_INIT_VK 3 "29 June 2019" "1.0" "WLU_INIT_VK Man Page"
+.TH WLU_FREEUP_VK 3 "29 June 2019" "1.0" "WLU_FREEUP_VK Man Page"
 .SH NAME
-wlu_init_vk \- This will return a pointer the struct vkcomp
+wlu_freeup_vk \- Frees struct vkcomp memory
 
 .SH SYNOPSIS
 .nf
 .B #include <wlu/vkall.h>
 .PP
-.BR "" struct " vkcomp *wlu_init_vk()"
+.BR "" struct " vkcomp wlu_freeup_vk(struct vkcomp " "*app")
 .fi
 .PP
 .nf
@@ -39,11 +39,11 @@ wlu_init_vk \- This will return a pointer the struct vkcomp
 .SH DESCRIPTION
 .PP
 The
-.BR wlu_init_vk()
-function returns a pointer to a vkcomp struct with above elements viewable in
+.BR wlu_freeup_vk()
+function free's up any memory if allocate that belongs to the struct vkcomp variable
 .BR wlu_vkall.h(3)
 .
-.SH EXAMPLE WLU_INIT_VK
+.SH EXAMPLE WLU_FREEUP_VK
 .EE
 .in
 .SS Program source
@@ -59,7 +59,7 @@ int main() {
 .EE
 
 .SH SEE_ALSO
-.B "wlu_freeup_vk(3)"
+.B "wlu_init_vk(3)"
 
 .SH AUTHOR
 Vincent Davis (vincedav2495@gmail.com)

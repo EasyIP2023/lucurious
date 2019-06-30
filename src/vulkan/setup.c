@@ -134,7 +134,7 @@ VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_na
 }
 
 /* Get user physical device */
-VkResult wlu_enumerate_devices(struct vkcomp *app) {
+VkResult wlu_enumerate_devices(struct vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype) {
   VkResult res = VK_INCOMPLETE;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -159,8 +159,8 @@ VkResult wlu_enumerate_devices(struct vkcomp *app) {
   * to do the graphics related task that we need
   */
   for (uint32_t i = 0; i < device_count; i++) {
-    if (is_device_suitable(app, devices[i]) &&
-        find_queue_families(app, devices[i]) &&
+    if (is_device_suitable(app, devices[i], vkpdtype) &&
+        find_queue_families(app, devices[i], vkqfbits) &&
         /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, devices[i])) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));

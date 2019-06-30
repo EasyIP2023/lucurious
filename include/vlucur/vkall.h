@@ -81,7 +81,7 @@ struct vkcomp {
 struct vkcomp *wlu_init_vk();
 VkResult wlu_set_global_layers(struct vkcomp *app);
 VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_name);
-VkResult wlu_enumerate_devices(struct vkcomp *app);
+VkResult wlu_enumerate_devices(struct vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype);
 VkResult wlu_set_logical_device(struct vkcomp *app);
 VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
 VkResult wlu_create_swap_chain(struct vkcomp *app);

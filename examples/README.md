@@ -26,3 +26,14 @@ export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
 cc -L /usr/local/lib/ -l lucurious simple_example.c -o se
 ./se
 ```
+
+**Commands Line Usage**
+
+Print help message
+```bash
+lucur --help
+```
+Print instance extensions
+```bash
+lucur --pie
+```
