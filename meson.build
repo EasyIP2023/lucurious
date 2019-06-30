@@ -49,7 +49,9 @@ executable(
 	'lucur',
 	lib_exec,
 	link_with: lib_lucur,
-	include_directories: lucur_inc
+	include_directories: lucur_inc,
+	install: true,
+	install_dir: '/usr/bin'
 )
 
 subdir('docs')

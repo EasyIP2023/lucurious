@@ -46,7 +46,7 @@ void print_gvalidation_layers() {
           app->vk_layer_props[i].layerName,
           app->vk_layer_props[i].description);
   }
-  fprintf(stdout, "\tValidation Layer Count: %d\n\n", app->vk_layer_count);
+  fprintf(stdout, "\tValidation Layer Count: %d\n", app->vk_layer_count);
 
   wlu_freeup_vk(app);
 }
