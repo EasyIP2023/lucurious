@@ -3,7 +3,7 @@
 #include <check.h>
 
 START_TEST(init_wayland_client) {
-  struct wclient *wc = NULL;
+  wclient *wc = NULL;
   wc = wlu_init_wc();
 
   ck_assert_ptr_nonnull(wc);

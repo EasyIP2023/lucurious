@@ -25,7 +25,7 @@
 .\"
 .TH WLU_INIT_VK 3 "29 June 2019" "1.0" "WLU_INIT_VK Man Page"
 .SH NAME
-wlu_init_vk \- This will return a pointer the struct vkcomp
+wlu_init_vk \- This will return a pointer the vkcomp
 
 .SH SYNOPSIS
 .nf
@@ -52,7 +52,7 @@ function returns a pointer to a vkcomp struct with above elements viewable in
 #include <wlu/vkall.h>
 
 int main() {
-  struct vkcomp *app = wlu_init_vk();
+  vkcomp *app = wlu_init_vk();
   wlu_freeup_vk(app);
   return 0;
 }

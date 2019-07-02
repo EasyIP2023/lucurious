@@ -6,7 +6,7 @@
 
 #include "xdg-shell-client-protocol.h"
 
-static void set_values(struct wclient *wc) {
+static void set_values(wclient *wc) {
   wc->display = NULL;
   wc->registry = NULL;
   wc->buffer = NULL;
@@ -21,8 +21,8 @@ static void set_values(struct wclient *wc) {
   wc->running = 1;
 }
 
-struct wclient *wlu_init_wc() {
-  struct wclient *wc = calloc(sizeof(struct wclient), sizeof(struct wclient));
+wclient *wlu_init_wc() {
+  wclient *wc = calloc(sizeof(wclient), sizeof(wclient));
   assert(wc != NULL);
   set_values(wc);
   return wc;
@@ -44,7 +44,7 @@ static const struct xdg_surface_listener xdg_surface_listener = {
 
 static void xdg_toplevel_handle_close(void *data, struct xdg_toplevel *xdg_toplevel) {
   ALL_UNUSED(xdg_toplevel);
-  struct wclient *wc = data;
+  wclient *wc = data;
   wc->running = 0;
 }
 
@@ -55,7 +55,7 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
 
 /* static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 		uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
-  struct wclient *wc = (struct wclient *) data;
+  wclient *wc = (wclient *) data;
   ALL_UNUSED(time, pointer);
 	if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
 		xdg_toplevel_move(wc->xdg_toplevel, wc->seat, serial);
@@ -86,7 +86,7 @@ static const struct wl_seat_listener seat_listener = {
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
   fprintf(stdout, "Got a registry event for %s id %d\n", interface, name);
-  struct wclient *wc = (struct wclient *) data;
+  wclient *wc = (wclient *) data;
   wc->version = version;
   if (strcmp(interface, wl_compositor_interface.name) == 0) {
     wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
@@ -110,7 +110,7 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-static struct wl_buffer *create_buffer(struct wclient *wc) {
+static struct wl_buffer *create_buffer(wclient *wc) {
 	int stride = 1024 * 4;
 	int size = stride * 681;
 
@@ -137,7 +137,7 @@ static struct wl_buffer *create_buffer(struct wclient *wc) {
 	return buffer;
 }
 
-int wlu_connect_client(struct wclient *wc) {
+int wlu_connect_client(wclient *wc) {
   int err = 0;
 
   wc->display = wl_display_connect(NULL);
@@ -207,7 +207,7 @@ int wlu_connect_client(struct wclient *wc) {
   return err = 0;
 }
 
-int wlu_run_client(struct wclient *wc) {
+int wlu_run_client(wclient *wc) {
   while (wl_display_dispatch(wc->display) != -1 && wc->running) {
     // This space intentionally left blank
   }
@@ -215,7 +215,7 @@ int wlu_run_client(struct wclient *wc) {
 }
 
 void wlu_freeup_wc(void *data) {
-  struct wclient *wc = (struct wclient*) data;
+  wclient *wc = (wclient*) data;
 
   if (wc->xdg_toplevel)
     xdg_toplevel_destroy(wc->xdg_toplevel);

@@ -3,8 +3,8 @@
 
 int main() {
   VkResult err;
-  struct wclient *wc = wlu_init_wc();
-  struct vkcomp *app = wlu_init_vk();
+  wclient *wc = wlu_init_wc();
+  vkcomp *app = wlu_init_vk();
 
   if (wlu_connect_client(wc)) {
     wlu_freeup_wc(wc);

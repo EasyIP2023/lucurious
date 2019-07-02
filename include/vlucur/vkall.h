@@ -6,19 +6,23 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
-enum wlu_image { ONE_D_IMG = 1, TWO_D_IMG = 2, THREE_D_IMG = 3 };
+typedef enum wlu_image {
+  ONE_D_IMG = 1,
+  TWO_D_IMG = 2,
+  THREE_D_IMG = 3
+} wlu_image;
 
-struct swap_chain_buffers {
+typedef struct swap_chain_buffers {
   VkImage image;
   VkImageView view;
-};
+} swap_chain_buffers;
 
-struct queue_family_indices {
+typedef struct queue_family_indices {
   uint32_t graphics_family;
   uint32_t present_family;
-};
+} queue_family_indices;
 
-struct vkcomp {
+typedef struct vkcomp {
   VkInstance instance;
   VkSurfaceKHR surface;
 
@@ -43,17 +47,17 @@ struct vkcomp {
   VkDeviceQueueCreateInfo *queue_create_infos;
   VkQueueFamilyProperties *queue_families;
   uint32_t queue_family_count;
-  struct queue_family_indices indices;
+  queue_family_indices indices;
 
   VkDevice device; /* logical device */
   VkQueue graphics_queue;
 
-  struct swap_chain_buffers *sc_buffs;
+  swap_chain_buffers *sc_buffs;
   VkSwapchainKHR swap_chain;
   VkFormat sc_img_fmt;
   VkExtent2D sc_extent;
   uint32_t img_count;
-};
+} vkcomp;
 
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
 #define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                                    \
@@ -78,15 +82,15 @@ struct vkcomp {
   }
 
 /* Function protypes */
-struct vkcomp *wlu_init_vk();
-VkResult wlu_set_global_layers(struct vkcomp *app);
-VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_name);
-VkResult wlu_enumerate_devices(struct vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype);
-VkResult wlu_set_logical_device(struct vkcomp *app);
-VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface);
-VkResult wlu_create_swap_chain(struct vkcomp *app);
-VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type);
-VkResult wlu_create_graphics_pipeline(struct vkcomp *app);
+vkcomp *wlu_init_vk();
+VkResult wlu_set_global_layers(vkcomp *app);
+VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name);
+VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype);
+VkResult wlu_set_logical_device(vkcomp *app);
+VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
+VkResult wlu_create_swap_chain(vkcomp *app);
+VkResult wlu_create_img_views(vkcomp *app, wlu_image type);
+VkResult wlu_create_graphics_pipeline(vkcomp *app);
 void wlu_freeup_vk(void *data);
 
 #endif

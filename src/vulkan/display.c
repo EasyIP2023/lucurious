@@ -5,7 +5,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl_surface) {
+VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
   VkResult res = VK_INCOMPLETE;
   VkWaylandSurfaceCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
@@ -19,7 +19,7 @@ VkResult wlu_vkconnect_surfaceKHR(struct vkcomp *app, void *wl_display, void *wl
 }
 
 /* query device capabilities */
-VkSurfaceCapabilitiesKHR q_device_capabilities(struct vkcomp *app) {
+VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
   VkSurfaceCapabilitiesKHR capabilities;
   VkResult err;
 
@@ -34,7 +34,7 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(struct vkcomp *app) {
 }
 
 /* choose swapchain surface format and color space (Color Depth) */
- VkSurfaceFormatKHR choose_swap_surface_format(struct vkcomp *app) {
+ VkSurfaceFormatKHR choose_swap_surface_format(vkcomp *app) {
   VkResult err;
   VkSurfaceFormatKHR ret_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
@@ -103,7 +103,7 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(struct vkcomp *app) {
  * function that chooses the best presentation mode for swapchain
  * (Conditions required for swapping images to the screen)
  */
-VkPresentModeKHR choose_swap_present_mode(struct vkcomp *app) {
+VkPresentModeKHR choose_swap_present_mode(vkcomp *app) {
   VkResult err;
   VkPresentModeKHR pres_err = VK_PRESENT_MODE_MAX_ENUM_KHR;
   VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR; /* Only mode that is guaranteed */

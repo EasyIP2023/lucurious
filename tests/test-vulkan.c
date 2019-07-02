@@ -12,7 +12,7 @@ const char *enabled_validation_layers[] = {
 };
 
 START_TEST(test_init_vulkan) {
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   ck_assert_ptr_nonnull(app);
@@ -23,7 +23,7 @@ START_TEST(test_init_vulkan) {
 
 START_TEST(test_set_global_layers) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_set_global_layers(app);
@@ -44,7 +44,7 @@ START_TEST(test_set_global_layers) {
 
 START_TEST(test_create_instance) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
@@ -63,7 +63,7 @@ START_TEST(test_create_instance) {
 
 START_TEST(test_enumerate_device) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
@@ -87,7 +87,7 @@ START_TEST(test_enumerate_device) {
 
 START_TEST(test_set_logical_device) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
@@ -114,7 +114,7 @@ START_TEST(test_set_logical_device) {
 
 START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");

@@ -5,7 +5,7 @@
 #include <wayland-client-protocol.h>
 #include <linux/input-event-codes.h>
 
-struct wclient {
+typedef struct wclient {
   struct wl_compositor *compositor;
   struct wl_seat *seat;
 
@@ -24,11 +24,11 @@ struct wclient {
 
   uint32_t version;
   int running;
-};
+} wclient;
 
-struct wclient *wlu_init_wc();
-int wlu_connect_client(struct wclient *wc);
-int wlu_run_client(struct wclient *wc);
+wclient *wlu_init_wc();
+int wlu_connect_client(wclient *wc);
+int wlu_run_client(wclient *wc);
 void wlu_freeup_wc(void *data);
 
 #endif

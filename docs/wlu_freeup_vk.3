@@ -25,13 +25,13 @@
 .\"
 .TH WLU_FREEUP_VK 3 "29 June 2019" "1.0" "WLU_FREEUP_VK Man Page"
 .SH NAME
-wlu_freeup_vk \- Frees struct vkcomp memory
+wlu_freeup_vk \- Frees vkcomp memory
 
 .SH SYNOPSIS
 .nf
 .B #include <wlu/vkall.h>
 .PP
-.BR "" struct " vkcomp wlu_freeup_vk(struct vkcomp " "*app")
+.BR "vkcomp wlu_freeup_vk(vkcomp " "*app")
 .fi
 .PP
 .nf
@@ -40,7 +40,7 @@ wlu_freeup_vk \- Frees struct vkcomp memory
 .PP
 The
 .BR wlu_freeup_vk()
-function free's up any memory if allocate that belongs to the struct vkcomp variable
+function free's up any memory if allocate that belongs to the vkcomp variable
 .BR wlu_vkall.h(3)
 .
 .SH EXAMPLE WLU_FREEUP_VK
@@ -52,7 +52,7 @@ function free's up any memory if allocate that belongs to the struct vkcomp vari
 #include <wlu/vkall.h>
 
 int main() {
-  struct vkcomp *app = wlu_init_vk();
+  vkcomp *app = wlu_init_vk();
   wlu_freeup_vk(app);
   return 0;
 }

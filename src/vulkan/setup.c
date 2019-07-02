@@ -3,7 +3,7 @@
 #include <vlucur/devices.h>
 #include <vlucur/display.h>
 
-static void set_values(struct vkcomp *app) {
+static void set_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
   app->vk_layer_props = VK_NULL_HANDLE;
@@ -30,9 +30,9 @@ static void set_values(struct vkcomp *app) {
   app->img_count = VK_NULL_HANDLE;
 }
 
-struct vkcomp *wlu_init_vk() {
-  struct vkcomp *app;
-  app = calloc(sizeof(struct vkcomp), sizeof(struct vkcomp));
+vkcomp *wlu_init_vk() {
+  vkcomp *app;
+  app = calloc(sizeof(vkcomp), sizeof(vkcomp));
   assert(app != NULL);
   set_values(app);
   return app;
@@ -42,7 +42,7 @@ struct vkcomp *wlu_init_vk() {
  * Gets all you're validation layers extensions
  * that comes installed with the vulkan sdk
  */
-VkResult wlu_set_global_layers(struct vkcomp *app) {
+VkResult wlu_set_global_layers(vkcomp *app) {
   uint32_t layer_count = 0;
   VkLayerProperties *vk_props = NULL;
   VkResult res = VK_INCOMPLETE;
@@ -79,7 +79,7 @@ VkResult wlu_set_global_layers(struct vkcomp *app) {
 }
 
 /* Create connection between app and the vulkan api */
-VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_name) {
+VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
   VkResult res = VK_INCOMPLETE;
 
   /* initialize the VkApplicationInfo structure */
@@ -134,7 +134,7 @@ VkResult wlu_create_instance(struct vkcomp *app, char *app_name, char *engine_na
 }
 
 /* Get user physical device */
-VkResult wlu_enumerate_devices(struct vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype) {
+VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype) {
   VkResult res = VK_INCOMPLETE;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -184,7 +184,7 @@ VkResult wlu_enumerate_devices(struct vkcomp *app, VkQueueFlagBits vkqfbits, VkP
  * After selecting a physical device to use.
  *  Set up a logical device to interface with it
  */
-VkResult wlu_set_logical_device(struct vkcomp *app) {
+VkResult wlu_set_logical_device(vkcomp *app) {
   VkQueue present_queue;
   VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
@@ -229,7 +229,7 @@ VkResult wlu_set_logical_device(struct vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain(struct vkcomp *app) {
+VkResult wlu_create_swap_chain(vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
 
   if (!app->surface || !app->device) return res;
@@ -244,8 +244,8 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
    */
   app->img_count = capabilities.minImageCount + 1;
 
-  app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
-      app->img_count * sizeof(struct swap_chain_buffers));
+  app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
+      app->img_count * sizeof(swap_chain_buffers));
   if (!app->sc_buffs) return VK_FALSE;
 
   /* Be sure img_count doesn't exceed the maximum. */
@@ -338,7 +338,7 @@ VkResult wlu_create_swap_chain(struct vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
+VkResult wlu_create_img_views(vkcomp *app, wlu_image type) {
   VkResult res = VK_INCOMPLETE;
 
   if (!app->sc_buffs) return VK_FALSE;
@@ -379,7 +379,7 @@ VkResult wlu_create_img_views(struct vkcomp *app, enum wlu_image type) {
   return res;
 }
 
-VkResult wlu_create_graphics_pipeline(struct vkcomp *app) {
+VkResult wlu_create_graphics_pipeline(vkcomp *app) {
   VkResult res = VK_INCOMPLETE;
   ALL_UNUSED(app);
 
@@ -387,7 +387,7 @@ VkResult wlu_create_graphics_pipeline(struct vkcomp *app) {
 }
 
 void wlu_freeup_vk(void *data) {
-  struct vkcomp *app = (struct vkcomp *) data;
+  vkcomp *app = (vkcomp *) data;
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)

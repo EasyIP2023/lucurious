@@ -23,6 +23,16 @@
 .\" THE SOFTWARE.
 .\" %%%LICENSE_END
 .\"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .TH WLU_VKALL_H 3 "29 June 2019" "1.0" "WLU Vulkan All Header Man Page"
 .SH BRIEF DESCRIPTION
 Wayland Lucurious Vulkan All Header
@@ -32,17 +42,17 @@ Wayland Lucurious Vulkan All Header
 .B #include <wlu/vkall.h>
 .PP
 
-.BR "struct swap_chain_buffers " "{"
+.BR "swap_chain_buffers " "{"
 .BR "\tVkImage " "image";
 .BR "\tVkImageView " "view";
 };
 
-.BR "struct queue_family_indices " "{"
+.BR "queue_family_indices " "{"
 .BR "\tuint32_t " "graphics_family";
 .BR "\tuint32_t " "present_family";
 };
 
-.BR "struct vkcomp " "{"
+.BR "vkcomp " "{"
 .BR "\tVkInstance " "instance";
 .BR "\tVkSurfaceKHR " "surface";
 
@@ -63,27 +73,27 @@ Wayland Lucurious Vulkan All Header
 .BR "\tVkDeviceQueueCreateInfo " "*queue_create_infos";
 .BR "\tVkQueueFamilyProperties " "*queue_families";
 .BR "\tuint32_t " "queue_family_count";
-.BR "\tstruct queue_family_indices " "indices";
+.BR "\tqueue_family_indices " "indices";
 
 .BR "\tVkDevice " "device";
 .BR "\tVkQueue " "graphics_queue";
 
-.BR "\tstruct swap_chain_buffers " "*sc_buffs";
+.BR "\tswap_chain_buffers " "*sc_buffs";
 .BR "\tVkSwapchainKHR " "swap_chain";
 .BR "\tVkFormat " "sc_img_fmt";
 .BR "\tVkExtent2D " "sc_extent";
 .BR "\tuint32_t " "img_count";
 };
 
-.BR "" struct " vkcomp *wlu_init_vk()";
-.BR "" VkResult " wlu_set_global_layers(struct vkcomp " "*app");
-.BR "" VkResult " wlu_create_instance(struct vkcomp " "*app" ", char " "*app_name" ", char " "*engine_name");
-.BR "" VkResult " wlu_enumerate_devices(struct vkcomp " "*app" ", VkQueueFlagBits " "vkqfbits" ", VkPhysicalDeviceType " "vkpdtype");
-.BR "" VkResult " wlu_set_logical_device(struct vkcomp " "*app");
-.BR "" VkResult " wlu_vkconnect_surfaceKHR(struct vkcomp " "*app" ", void " "*wl_display" ", void " "*wl_surface");
-.BR "" VkResult " wlu_create_swap_chain(struct vkcomp " "*app");
-.BR "" VkResult " wlu_create_img_views(struct vkcomp " "*app" ", enum wlu_image" "type");
-.BR "" VkResult " wlu_create_graphics_pipeline(struct vkcomp " "*app");
+.BR "vkcomp *wlu_init_vk()";
+.BR "" VkResult " wlu_set_global_layers(vkcomp " "*app");
+.BR "" VkResult " wlu_create_instance(vkcomp " "*app" ", char " "*app_name" ", char " "*engine_name");
+.BR "" VkResult " wlu_enumerate_devices(vkcomp " "*app" ", VkQueueFlagBits " "vkqfbits" ", VkPhysicalDeviceType " "vkpdtype");
+.BR "" VkResult " wlu_set_logical_device(vkcomp " "*app");
+.BR "" VkResult " wlu_vkconnect_surfaceKHR(vkcomp " "*app" ", void " "*wl_display" ", void " "*wl_surface");
+.BR "" VkResult " wlu_create_swap_chain(vkcomp " "*app");
+.BR "" VkResult " wlu_create_img_views(vkcomp " "*app" ", wlu_image" "type");
+.BR "" VkResult " wlu_create_graphics_pipeline(vkcomp " "*app");
 .BR "" void " wlu_freeup_vk(void " "*data");
 .fi
 .PP
@@ -92,29 +102,28 @@ Wayland Lucurious Vulkan All Header
 .SH DESCRIPTION
 .PP
 
-.B "struct swap_chain_buffers"
+.B "swap_chain_buffers"
 
-.BR "\tVkImage image"
-
-VkImage is the acutal image object that represents multidimensional (up to 3) arrays of data.
+.BR "\tVkImage image "
+- VkImage is the acutal image object that represents multidimensional (up to 3) arrays of data.
 Data of which has various purposes (e.g. attachments, textures) and can be utilized by binding images
 to a graphics or compute pipeline via descriptor sets.
 
-.BR "\tVkImageView view"
-
-VkImage objects are not accessed by the shaders pipeline directly. So, VkImageViews that represent
+.PP
+.BR "\tVkImageView view "
+\- VkImage objects are not accessed by the shaders pipeline directly. So, VkImageViews that represent
 ranges of image subresources (The number of mipmap levels and array layers) and metadata are used for
 said purpose. Views must contain images of the same type and must have valid subsets of image subresources.
+.PP
 
-.B "struct queue_family_indices"
+.B "queue_family_indices"
 
 Almost every operation in Vulkan, anything from drawing to uploading textures, requires
 commands to be submitted to a queue. Different queue families produce different types of
 queues and each queue family allows for a subset of commands.
 
 .BR "\tuint32_t graphics_family"
-
-\tIs equal to the queue family index that has support for the graphics bit that is set in wlu_enumerate_devices(3)
+\- Is equal to the queue family index that has support for the graphics bit that is set in wlu_enumerate_devices(3)
 (eg. VK_QUEUE_GRAPHICS_BIT). For more info visit
 .I https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkQueueFlagBits.html
 
@@ -125,7 +134,7 @@ For more info visit
 
 .I https://khronos.org/registry/vulkan/specs/1.1-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html
 
-.B "struct vkcomp"
+.B "vkcomp"
 
 .BR "\tVkInstance instance"
 
@@ -170,13 +179,13 @@ To print a list of device instance extensions type "lucur --pie" in your termina
 
 .BR "\tuint32_t queue_family_count"
 
-.BR "\tstruct queue_family_indices indices"
+.BR "\tqueue_family_indices indices"
 
 .BR "\tVkDevice device"
 
 .BR "\tVkQueue graphics_queue"
 
-.BR "\tstruct swap_chain_buffers *sc_buffs"
+.BR "\tswap_chain_buffers *sc_buffs"
 
 .BR "\tVkSwapchainKHR swap_chain"
 

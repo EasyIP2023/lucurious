@@ -28,7 +28,7 @@ void lower_to_upper(char *s) {
 
 void print_gvalidation_layers() {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_set_global_layers(app);
@@ -53,7 +53,7 @@ void print_gvalidation_layers() {
 
 void print_instance_extensions() {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "PrintStmt", "PrintStmt");
@@ -77,7 +77,7 @@ void print_instance_extensions() {
 
 void print_device_extensions(VkQueueFlagBits vkqfbits, VkPhysicalDeviceType dt) {
   VkResult err;
-  struct vkcomp *app = NULL;
+  vkcomp *app = NULL;
   app = wlu_init_vk();
 
   err = wlu_create_instance(app, "PrintStmt", "PrintStmt");
