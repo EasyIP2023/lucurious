@@ -21,7 +21,7 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
 * [Spirv-Headers](https://github.com/KhronosGroup/SPIRV-Headers)
 
-### [Documentation](https://github.com/lucurious-labs/lucurious/tree/development/docs)
+### [Documentation](https://github.com/lucurious-labs/lucurious-docs)
 ### [Installation/Usage/Examples](https://github.com/lucurious-labs/lucurious/tree/development/examples)
 ### [Development](https://github.com/lucurious-labs/lucurious/tree/development/src)
 ### [Testing](https://github.com/lucurious-labs/lucurious/tree/development/tests)

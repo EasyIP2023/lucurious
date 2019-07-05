@@ -244,13 +244,13 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
    */
   app->img_count = capabilities.minImageCount + 1;
 
-  app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
-      app->img_count * sizeof(swap_chain_buffers));
-  if (!app->sc_buffs) return VK_FALSE;
-
   /* Be sure img_count doesn't exceed the maximum. */
   if (capabilities.maxImageCount > 0 && app->img_count > capabilities.maxImageCount)
     app->img_count = capabilities.maxImageCount;
+
+  app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
+      app->img_count * sizeof(swap_chain_buffers));
+  if (!app->sc_buffs) return res;
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
   if (surface_fmt.format == VK_FORMAT_UNDEFINED) return res;
@@ -341,7 +341,7 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
 VkResult wlu_create_img_views(vkcomp *app, wlu_image type) {
   VkResult res = VK_INCOMPLETE;
 
-  if (!app->sc_buffs) return VK_FALSE;
+  if (!app->sc_buffs) return res;
 
   for (uint32_t i = 0; i < app->img_count; i++) {
     VkImageViewCreateInfo create_info = {};
