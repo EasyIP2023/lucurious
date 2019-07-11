@@ -29,6 +29,10 @@ cc -L /usr/local/lib/ -l lucurious simple_example.c -o se
 
 **Commands Line Usage**
 
+Pull up man pages
+```bash
+man lucur
+```
 Print help message
 ```bash
 lucur --help

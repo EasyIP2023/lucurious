@@ -193,6 +193,7 @@ VkResult wlu_set_logical_device(vkcomp *app) {
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
   if (!app->queue_create_infos) return VK_FALSE;
 
+  /* For creation of the presentation queue */
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     app->queue_create_infos[i].pNext = NULL;
@@ -297,7 +298,7 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
   /* specify that I currently do not want any transformation */
   create_info.compositeAlpha = composite_alpha;
   create_info.presentMode = pres_mode;
-  create_info.clipped = VK_TRUE;
+  create_info.clipped = WLU_TRUE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   if (app->indices.graphics_family != app->indices.present_family) {
@@ -338,7 +339,7 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_img_views(vkcomp *app, wlu_image type) {
+VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   VkResult res = VK_INCOMPLETE;
 
   if (!app->sc_buffs) return res;

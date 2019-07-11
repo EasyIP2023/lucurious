@@ -6,11 +6,12 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
-typedef enum wlu_image {
+typedef enum wlu_image_type {
   ONE_D_IMG = 1,
   TWO_D_IMG = 2,
-  THREE_D_IMG = 3
-} wlu_image;
+  THREE_D_IMG = 3,
+  WLU_MAX_IMAGE_ENUM = 0x7FFFFFFF
+} wlu_image_type;
 
 typedef struct swap_chain_buffers {
   VkImage image;
@@ -89,7 +90,7 @@ VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysical
 VkResult wlu_set_logical_device(vkcomp *app);
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 VkResult wlu_create_swap_chain(vkcomp *app);
-VkResult wlu_create_img_views(vkcomp *app, wlu_image type);
+VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type);
 VkResult wlu_create_graphics_pipeline(vkcomp *app);
 void wlu_freeup_vk(void *data);
 

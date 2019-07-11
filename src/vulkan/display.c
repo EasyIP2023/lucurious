@@ -43,12 +43,12 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) {
     fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
-    return ret_fmt;
+    goto ret_format;
   }
 
   if (format_count == 0) {
     fprintf(stderr, "[x] choose_swap_surface_format: format_count equals 0\n");
-    return ret_fmt;
+    goto ret_format;
   }
 
   formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
@@ -56,15 +56,13 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
 
   if (!formats) {
     fprintf(stderr, "[x] choose_swap_surface_format: calloc VkSurfaceFormatKHR failed, ERROR CODE: %d\n", err);
-    return ret_fmt;
+    goto ret_format;
   }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
   if (err) {
-    free(formats);
-    formats = NULL;
     fprintf(stderr, "[x] choose_swap_surface_format: vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
-    return ret_fmt;
+    goto ret_format;
   }
 
   memcpy(&ret_fmt, &formats[0], sizeof(formats[0]));
@@ -76,25 +74,23 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
    * results in more accurate perceived colors
    */
   if (format_count == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
-    free(formats);
-    formats = NULL;
     ret_fmt.format = VK_FORMAT_B8G8R8A8_UNORM;
     ret_fmt.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    return ret_fmt;
+    goto ret_format;
   }
 
   for (uint32_t i = 0; i < format_count; i++) {
     if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
       memcpy(&ret_fmt, &formats[i], sizeof(formats[i]));
-      free(formats);
-      formats = NULL;
-      return ret_fmt;
+      goto ret_format;
     }
   }
 
-  free(formats);
-  formats = NULL;
-
+ret_format:
+  if (formats) {
+    free(formats);
+    formats = NULL;
+  }
   return ret_fmt;
  }
 
@@ -105,20 +101,19 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
  */
 VkPresentModeKHR choose_swap_present_mode(vkcomp *app) {
   VkResult err;
-  VkPresentModeKHR pres_err = VK_PRESENT_MODE_MAX_ENUM_KHR;
-  VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR; /* Only mode that is guaranteed */
+  VkPresentModeKHR best_mode = VK_PRESENT_MODE_MAX_ENUM_KHR;
   VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
   uint32_t pres_mode_count = 0;
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
   if (err) {
     fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
-    return pres_err;
+    goto ret_best_mode;
   }
 
   if (pres_mode_count == 0) {
     fprintf(stderr, "[x] choose_swap_present_mode: pres_mode_count equals %d\n", pres_mode_count);
-    return pres_err;
+    goto ret_best_mode;
   }
 
   present_modes = (VkPresentModeKHR *) calloc(sizeof(VkPresentModeKHR),
@@ -126,32 +121,34 @@ VkPresentModeKHR choose_swap_present_mode(vkcomp *app) {
 
   if (!present_modes) {
     fprintf(stderr, "[x] choose_swap_present_mode: VkPresentModeKHR calloc failed\n");
-    return pres_err;
+    goto ret_best_mode;
   }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
   if (err) {
-    free(present_modes);
-    present_modes = NULL;
     fprintf(stderr, "[x] choose_swap_present_mode: vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d\n", err);
-    return pres_err;
+    goto ret_best_mode;
   }
+
+  /* Only mode that is guaranteed */
+  best_mode = VK_PRESENT_MODE_FIFO_KHR;
 
   for (uint32_t i = 0; i < pres_mode_count; i++) {
     if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
       memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
-      free(present_modes);
-      present_modes = NULL;
-      return best_mode; /* For triple buffering */
+      /* For triple buffering */
+      goto ret_best_mode;
     }
     else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
       memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
     }
   }
 
-  free(present_modes);
-  present_modes = NULL;
-
+ret_best_mode:
+  if (present_modes) {
+    free(present_modes);
+    present_modes = NULL;
+  }
   return best_mode;
 }
 

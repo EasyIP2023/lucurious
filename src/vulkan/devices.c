@@ -6,7 +6,7 @@ const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const char *instance_extensions[3] = {
+const char *instance_extensions[] = {
   VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
   VK_KHR_SURFACE_EXTENSION_NAME,
   VK_KHR_DISPLAY_EXTENSION_NAME
@@ -53,10 +53,10 @@ VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBi
 
     if (app->indices.graphics_family != UINT32_MAX && present_support) {
       app->indices.present_family = i;
-      ret = VK_TRUE;
+      ret = WLU_TRUE;
       break;
     } else if (app->indices.graphics_family != UINT32_MAX) {
-      ret = VK_TRUE;
+      ret = WLU_TRUE;
       break;
     }
   }
@@ -123,7 +123,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     /* check for swap chain support */
     for (uint32_t i = 0; i < app->ep_device_count; i++) {
       if (!strcmp(app->ep_device_props[i].extensionName, device_extensions[0])) {
-        res = VK_TRUE;
+        res = WLU_TRUE;
         break;
       }
     }

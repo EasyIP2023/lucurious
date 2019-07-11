@@ -1,4 +1,5 @@
 #include <lucom.h>
+#include <utils/log.h>
 #include <sys/mman.h>
 
 #include <wclient/client.h>
@@ -85,7 +86,7 @@ static const struct wl_seat_listener seat_listener = {
 
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
-  fprintf(stdout, "Got a registry event for %s id %d\n", interface, name);
+  wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
   wclient *wc = (wclient *) data;
   wc->version = version;
   if (strcmp(interface, wl_compositor_interface.name) == 0) {
@@ -102,7 +103,7 @@ static void global_registry_handler(void *data, struct wl_registry *registry, ui
 
 static void global_registry_remover(void *data, struct wl_registry *registry, uint32_t name) {
   ALL_UNUSED(data, registry);
-  printf("Got a registry losing event for %d\n", name);
+  wlu_log_me(WLU_INFO, "Got a registry losing event for %d\n", name);
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -116,13 +117,13 @@ static struct wl_buffer *create_buffer(wclient *wc) {
 
 	int fd = create_shm_file(size);
 	if (fd < 0) {
-		fprintf(stderr, "[x] creating a buffer file for %d B failed: %m\n", size);
+		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
 		return NULL;
 	}
 
 	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (wc->shm_data == MAP_FAILED) {
-		fprintf(stderr, "[x] mmap failed: %m\n");
+		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
 		close(fd);
 		return NULL;
 	}
@@ -143,7 +144,7 @@ int wlu_connect_client(wclient *wc) {
   wc->display = wl_display_connect(NULL);
   if (!wc->display) return EXIT_FAILURE;
 
-  printf("connected to display\n");
+  wlu_log_me(WLU_SUCCESS, "connected to display");
 
   wc->registry = wl_display_get_registry(wc->display);
   if (!wc->registry) return EXIT_FAILURE;
@@ -158,14 +159,14 @@ int wlu_connect_client(wclient *wc) {
   if (!err) return EXIT_FAILURE;
 
   if (!wc->compositor) {
-    fprintf(stderr, "[x] Can't find compositor\n");
+    wlu_log_me(WLU_DANGER, "[x] Can't find compositor");
     return EXIT_FAILURE;
   } else {
-    fprintf(stdout, "Found compositor\n");
+    wlu_log_me(WLU_SUCCESS, "Found compositor");
   }
 
   if (!wc->xdg_wm_base) {
-    fprintf(stderr, "[x] No xdg_wm_base support\n");
+    wlu_log_me(WLU_DANGER, "[x] No xdg_wm_base support");
     return EXIT_FAILURE;
   }
 
@@ -179,10 +180,10 @@ int wlu_connect_client(wclient *wc) {
   if (!wc->xdg_surface) return EXIT_FAILURE;
 
   if (wc->xdg_surface == NULL) {
-    fprintf(stderr, "[x] Can't create xdg_shell_surface\n");
+    wlu_log_me(WLU_DANGER, "[x] Can't create xdg_shell_surface");
     return EXIT_FAILURE;
   } else {
-    fprintf(stdout, "Created xdg_shell_surface\n");
+    wlu_log_me(WLU_SUCCESS, "Created xdg_shell_surface");
   }
 
   wc->xdg_toplevel = xdg_surface_get_toplevel(wc->xdg_surface);
@@ -194,7 +195,7 @@ int wlu_connect_client(wclient *wc) {
   err = xdg_toplevel_add_listener(wc->xdg_toplevel, &xdg_toplevel_listener, wc);
   if (err) return EXIT_FAILURE;
 
-  printf("Add xdg listeners\n");
+  wlu_log_me(WLU_SUCCESS, "Add xdg listeners");
 
   wl_surface_commit(wc->surface);
 
