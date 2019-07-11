@@ -4,9 +4,6 @@
 #include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
-#include <wayland-server.h>
-
-#define WLU_SRC_DIR "/home/vince/git/lucurious"
 
 static const char *term_colors[] = {
 	[WLU_NONE]   	= "",
@@ -45,10 +42,7 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 }
 
 const char *_wlu_strip_path(const char *filepath) {
-	static int srclen = sizeof(WLU_SRC_DIR);
-	if (strstr(filepath, WLU_SRC_DIR) == filepath) {
-		filepath += srclen;
-	} else if (*filepath == '.') {
+	if (*filepath == '.') {
 		while (*filepath == '.' || *filepath == '/') {
 			++filepath;
 		}
