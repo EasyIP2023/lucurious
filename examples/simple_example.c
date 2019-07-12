@@ -1,5 +1,6 @@
 #include <wlu/vkall.h>
 #include <wlu/client.h>
+#include <wlu/log.h>
 
 int main() {
   VkResult err;
@@ -9,7 +10,7 @@ int main() {
   if (wlu_connect_client(wc)) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to connect client");
+    wlu_log_me(WLU_DANGER, "[x] failed to connect client");
     return EXIT_FAILURE;
   }
 
@@ -17,7 +18,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] checking and setting validation layers failed");
+    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
     return EXIT_FAILURE;
   }
 
@@ -25,7 +26,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to create vulkan instance");
+    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
     return EXIT_FAILURE;
   }
 
@@ -33,7 +34,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to connect to vulkan surfaceKHR");
+    wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
     return EXIT_FAILURE;
   }
 
@@ -41,7 +42,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to find physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     return EXIT_FAILURE;
   }
 
@@ -49,7 +50,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to initialize logical device to physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
     return EXIT_FAILURE;
   }
 
@@ -57,7 +58,7 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to create swap chain");
+    wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
     return EXIT_FAILURE;
   }
 
@@ -65,14 +66,14 @@ int main() {
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to create image views");
+    wlu_log_me(WLU_DANGER, "[x] failed to create image views");
     return EXIT_FAILURE;
   }
 
   if (wlu_run_client(wc)) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);
-    fprintf(stderr, "[x] failed to run wayland client");
+    wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
     return EXIT_FAILURE;
   }
 

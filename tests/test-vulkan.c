@@ -1,4 +1,5 @@
-#include <vlucur/vkall.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/utils/log.h>
 #include <check.h>
 
 const char *enabled_validation_layers[] = {
@@ -29,7 +30,8 @@ START_TEST(test_set_global_layers) {
   err = wlu_set_global_layers(app);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking and setting validation layers failed, sdk must not be installed");
+    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
+    ck_abort_msg(NULL);
   }
 
   ck_assert_ptr_nonnull(app->vk_layer_props);
@@ -50,7 +52,8 @@ START_TEST(test_create_instance) {
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking for validation layer support failed");
+    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
+    ck_abort_msg(NULL);
   }
 
   ck_assert_ptr_nonnull(app->instance);
@@ -69,13 +72,15 @@ START_TEST(test_enumerate_device) {
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking for validation layer support failed");
+    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
+    ck_abort_msg(NULL);
   }
 
   err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] failed to find physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
+    ck_abort_msg(NULL);
   }
 
   ck_assert_ptr_nonnull(app->physical_device);
@@ -93,19 +98,22 @@ START_TEST(test_set_logical_device) {
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking for validation layer support failed");
+    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
+    ck_abort_msg(NULL);
   }
 
   err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] failed to find physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
+    ck_abort_msg(NULL);
   }
 
   err = wlu_set_logical_device(app);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] failed to initialize logical device to physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
+    ck_abort_msg(NULL);
   }
 
   wlu_freeup_vk(app);
@@ -120,25 +128,28 @@ START_TEST(test_swap_chain_fail_no_surface) {
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] checking for validation layer support failed");
+    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
+    ck_abort_msg(NULL);
   }
 
   err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] failed to find physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
+    ck_abort_msg(NULL);
   }
 
   err = wlu_set_logical_device(app);
   if (err) {
     wlu_freeup_vk(app);
-    ck_abort_msg("[x] failed to initialize logical device to physical device");
+    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
+    ck_abort_msg(NULL);
   }
 
   ck_assert_ptr_null(app->surface);
 
   err = wlu_create_swap_chain(app);
-  if (err) fprintf(stderr, "[x] failed to create swap chain no surface\n");
+  if (err) wlu_log_me(WLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   wlu_freeup_vk(app);
   app = NULL;

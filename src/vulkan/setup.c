@@ -1,5 +1,6 @@
 #include <lucom.h>
-#include <vlucur/vkall.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/utils/log.h>
 #include <vlucur/devices.h>
 #include <vlucur/display.h>
 
@@ -49,32 +50,51 @@ VkResult wlu_set_global_layers(vkcomp *app) {
 
   do {
     res = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
-    if (res) return res;
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkEnumerateInstanceLayerProperties, ERROR CODE: %d", res);
+      goto finish_vk_props;
+    }
 
     /* layer count will only be zero if vulkan sdk not installed */
-    if (layer_count == 0) return VK_SUCCESS;
+    if (layer_count == 0) {
+      wlu_log_me(WLU_WARNING, "[x] failed to find Validation Layers, layer_count equals 0");
+      goto finish_vk_props;
+    }
 
     vk_props = (VkLayerProperties *) realloc(vk_props, layer_count * sizeof(VkLayerProperties));
-    if (!vk_props) return VK_FALSE;
+    if (!vk_props) {
+      res = VK_RESULT_MAX_ENUM;
+      wlu_log_me(WLU_DANGER, "[x] realloc VkLayerProperties *vk_props failed");
+      goto finish_vk_props;
+    }
 
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
   app->vk_layer_props = (VkLayerProperties *) \
     calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
-  if (!app->vk_layer_props) { free(vk_props); vk_props = NULL; return VK_FALSE; }
+  if (!app->vk_layer_props) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] calloc for app->vk_layer_props failed");
+    goto finish_vk_props;
+  }
 
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
     res = get_extension_properties(NULL, &vk_props[i], NULL);
-    if (res) { free(vk_props); vk_props = NULL; return res; }
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
+      goto finish_vk_props;
+    }
     memcpy(&app->vk_layer_props[i], &vk_props[i], sizeof(vk_props[i]));
     app->vk_layer_count = i;
   }
 
-  free(vk_props);
-  vk_props = NULL;
-
+finish_vk_props:
+  if (vk_props) {
+    free(vk_props);
+    vk_props = NULL;
+  }
   return res;
 }
 
@@ -114,21 +134,24 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
     case VK_ERROR_INITIALIZATION_FAILED:
       return res;
     case VK_ERROR_LAYER_NOT_PRESENT:
-      fprintf(stderr, "[x] one of the validation layers is currently not present");
+      wlu_log_me(WLU_DANGER, "[x] one of the validation layers is currently not present");
       return res;
     case VK_ERROR_EXTENSION_NOT_PRESENT:
-      fprintf(stderr, "[x] one of the vulkan instance/device extensions is currently not present");
+      wlu_log_me(WLU_DANGER, "[x] one of the vulkan instance/device extensions is currently not present");
       return res;
     case VK_ERROR_INCOMPATIBLE_DRIVER:
-      fprintf(stderr, "[x] cannot find a compatible Vulkan ICD\n");
+      wlu_log_me(WLU_DANGER, "[x] cannot find a compatible Vulkan ICD");
       return res;
     default:
-      fprintf(stderr, "[x] unknown error\n");
+      wlu_log_me(WLU_DANGER, "[x] unknown error");
       return res;
   }
 
   res = get_extension_properties(app, NULL, NULL);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   return res;
 }
@@ -140,19 +163,30 @@ VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysical
   uint32_t device_count = 0;
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkEnumeratePhysicalDevices failed, ERROR CODE: %d", res);
+    goto finish_devices;
+  }
 
   if (device_count == 0) {
-    fprintf(stderr, "[x] failed to find GPUs with Vulkan support!");
-    return VK_FALSE;
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] failed to find GPUs with Vulkan support!!! device_count equals 0");
+    goto finish_devices;
   }
 
   devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
       device_count * sizeof(VkPhysicalDevice));
-  if (!devices) return VK_FALSE;
+  if (!devices) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] calloc VkPhysicalDevice *devices failed");
+    goto finish_devices;
+  }
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
-  if (res) { free(devices); devices = NULL; return res; }
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkEnumeratePhysicalDevices failed, ERROR CODE: %d", res);
+    goto finish_devices;
+  }
 
   /*
   * get a physical device that is suitable
@@ -164,19 +198,24 @@ VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysical
         /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, devices[i])) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
-      free(devices);
-      devices = NULL;
+      /* Query device properties */
+      vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
+      wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", app->device_properties.deviceName);
       break;
     }
   }
 
   if (app->physical_device == VK_NULL_HANDLE) {
-    fprintf(stderr, "[x] failed to find a suitable GPU!\n");
-    free(devices);
-    devices = NULL;
-    return VK_FALSE;
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] failed to find a suitable GPU!!!");
+    goto finish_devices;
   }
 
+finish_devices:
+  if (devices) {
+    free(devices);
+    devices = NULL;
+  }
   return res;
 }
 
@@ -191,7 +230,10 @@ VkResult wlu_set_logical_device(vkcomp *app) {
 
   app->queue_create_infos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
-  if (!app->queue_create_infos) return VK_FALSE;
+  if (!app->queue_create_infos) {
+    wlu_log_me(WLU_DANGER, "[x] calloc app->queue_create_infos failed");
+    return VK_RESULT_MAX_ENUM;
+  }
 
   /* For creation of the presentation queue */
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
@@ -217,7 +259,10 @@ VkResult wlu_set_logical_device(vkcomp *app) {
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateDevice failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   /*
    * Queues are automatically created with
@@ -231,7 +276,8 @@ VkResult wlu_set_logical_device(vkcomp *app) {
 }
 
 VkResult wlu_create_swap_chain(vkcomp *app) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
+  VkImage *swap_chain_imgs = NULL;
 
   if (!app->surface || !app->device) return res;
 
@@ -251,16 +297,22 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
 
   app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
       app->img_count * sizeof(swap_chain_buffers));
-  if (!app->sc_buffs) return res;
+  if (!app->sc_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
+    goto finish_swap_chain;
+  }
 
   VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
-  if (surface_fmt.format == VK_FORMAT_UNDEFINED) return res;
+  if (surface_fmt.format == VK_FORMAT_UNDEFINED) goto finish_swap_chain;
 
   VkPresentModeKHR pres_mode = choose_swap_present_mode(app);
-  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) return res;
+  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) goto finish_swap_chain;
 
   VkExtent2D extent = choose_swap_extent(capabilities);
-  if (extent.width == UINT32_MAX) return res;
+  if (extent.width == UINT32_MAX) {
+    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
+    goto finish_swap_chain;
+  }
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -298,7 +350,7 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
   /* specify that I currently do not want any transformation */
   create_info.compositeAlpha = composite_alpha;
   create_info.presentMode = pres_mode;
-  create_info.clipped = WLU_TRUE;
+  create_info.clipped = VK_TRUE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   if (app->indices.graphics_family != app->indices.present_family) {
@@ -316,33 +368,51 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
   }
 
   res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->swap_chain);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateSwapchainKHR failed, ERROR CODE: %d", res);
+    goto finish_swap_chain;
+  }
 
   res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, NULL);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
+    goto finish_swap_chain;
+  }
 
-  VkImage *swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
-  if (!swap_chain_imgs) return VK_FALSE;
+  swap_chain_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
+  if (!swap_chain_imgs) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] calloc VkImage *swap_chain_imgs failed");
+    goto finish_swap_chain;
+  }
 
   res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, swap_chain_imgs);
-  if (res) { free(swap_chain_imgs); swap_chain_imgs = NULL; return res; }
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
+    goto finish_swap_chain;
+  }
 
   for (uint32_t i = 0; i < app->img_count; i++)
     memcpy(&app->sc_buffs[i].image, &swap_chain_imgs[i], sizeof(swap_chain_imgs[i]));
 
-  free(swap_chain_imgs);
-  swap_chain_imgs = NULL;
-
   app->sc_img_fmt = surface_fmt.format;
   app->sc_extent = extent;
 
+finish_swap_chain:
+  if (swap_chain_imgs) {
+    free(swap_chain_imgs);
+    swap_chain_imgs = NULL;
+  }
   return res;
 }
 
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sc_buffs) return res;
+  if (!app->sc_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] app->sc_buffs wasn't allocated!! :(");
+    return res;
+  }
 
   for (uint32_t i = 0; i < app->img_count; i++) {
     VkImageViewCreateInfo create_info = {};
@@ -357,7 +427,7 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
       case THREE_D_IMG:
         break;
       default:
-        fprintf(stderr, "[x] image type not specified. Types: 1D_IMAGE, 2D_IMAGE, 3D_IMAGE\n");
+        wlu_log_me(WLU_DANGER, "[x] image type not specified. Types: ONE_D_IMG, TWO_D_IMG, THREE_D_IMG");
         return res;
     }
     create_info.format = app->sc_img_fmt;
@@ -374,7 +444,10 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
     create_info.subresourceRange.layerCount = 1;
 
     res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_buffs[i].view);
-    if (res) return res;
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkCreateImageView failed, ERROR CODE: %d", res);
+      return res;
+    }
   }
 
   return res;

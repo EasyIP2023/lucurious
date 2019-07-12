@@ -1,5 +1,5 @@
 #include <lucom.h>
-#include <vlucur/vkall.h>
+#include <wlu/vlucur/vkall.h>
 #include <exec/helpers.h>
 
 /* https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c */

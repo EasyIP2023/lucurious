@@ -1,9 +1,9 @@
 #include <lucom.h>
-#include <utils/log.h>
-#include <sys/mman.h>
-
-#include <wclient/client.h>
+#include <wlu/utils/log.h>
+#include <wlu/wclient/client.h>
 #include <wclient/shm.h>
+
+#include <sys/mman.h>
 
 #include "xdg-shell-client-protocol.h"
 

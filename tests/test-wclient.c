@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <wclient/client.h>
+#include <wlu/wclient/client.h>
 #include <check.h>
 
 START_TEST(init_wayland_client) {

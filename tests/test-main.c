@@ -1,6 +1,6 @@
-#include <vlucur/vkall.h>
-#include <wclient/client.h>
-#include <utils/log.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/wclient/client.h>
+#include <wlu/utils/log.h>
 #include <check.h>
 
 START_TEST(test_vulkan_client_create) {

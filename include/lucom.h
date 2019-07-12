@@ -7,8 +7,6 @@
 #include <assert.h>
 #include <unistd.h>
 
-enum wlu_bool { WLU_FALSE, WLU_TRUE };
-
 /* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
 #if defined(NDEBUG) && defined(__GNUC__)
 #define U_ASSERT_ONLY __attribute__((unused))

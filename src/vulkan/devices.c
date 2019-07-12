@@ -1,5 +1,6 @@
 #include <lucom.h>
-#include <vlucur/vkall.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/utils/log.h>
 #include <vlucur/devices.h>
 
 const char *device_extensions[] = {
@@ -39,13 +40,19 @@ VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBi
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
   app->queue_families = (VkQueueFamilyProperties *) realloc(app->queue_families,
       app->queue_family_count * sizeof(VkQueueFamilyProperties));
-  if (!app->queue_families) return ret;
+  if (!app->queue_families) {
+    wlu_log_me(WLU_DANGER, "[x] realloc of app->queue_families failed: %p - %p",
+               &app->queue_families, app->queue_families);
+    return ret;
+  }
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
-    if (app->queue_families[i].queueFlags & vkqfbits)
+    if (app->queue_families[i].queueFlags & vkqfbits) {
+      wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
       app->indices.graphics_family = i;
+    }
 
     /* Check to see if a device can create images on the surface we may have created */
     if (app->surface)
@@ -53,10 +60,11 @@ VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBi
 
     if (app->indices.graphics_family != UINT32_MAX && present_support) {
       app->indices.present_family = i;
-      ret = WLU_TRUE;
+      ret = VK_TRUE;
+      wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
       break;
     } else if (app->indices.graphics_family != UINT32_MAX) {
-      ret = WLU_TRUE;
+      ret = VK_TRUE;
       break;
     }
   }
@@ -85,12 +93,24 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     if (res) return res;
 
     /* Rare but may happen for instances. If so continue on with the app */
-    if (extension_count == 0)
-      return VK_SUCCESS;
+    if (extension_count == 0) {
+      if (app && !device)
+        wlu_log_me(WLU_WARNING, "[x] Failed to find instance extensions, extension_count equals 0");
+      else if (prop)
+        wlu_log_me(WLU_WARNING, "[x] Failed to find validation layers, extension_count equals 0");
+      else
+        wlu_log_me(WLU_WARNING, "[x] Failed to find device extensions, extension_count equals 0");
+      goto finish_extensions;
+    }
 
     extensions = (VkExtensionProperties *) realloc(extensions,
       extension_count * sizeof(VkExtensionProperties));
-    if (!extensions) return VK_FALSE;
+    if (!extensions) {
+      res = VK_RESULT_MAX_ENUM;
+      wlu_log_me(WLU_DANGER, "[x] realloc of extensions failed: %p - %p",
+                 &extensions, extensions);
+      goto finish_extensions;
+    }
 
     res = (app && !device)  ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
           (prop)            ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
@@ -101,7 +121,12 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
   if (app && !device) {
     app->ep_instance_props = (VkExtensionProperties *) \
       calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_instance_props) { free(extensions); extensions = NULL; return VK_FALSE; }
+    if (!app->ep_instance_props) {
+      res = VK_RESULT_MAX_ENUM;
+      wlu_log_me(WLU_DANGER, "[x] calloc of app->ep_instance_props failed: %p - %p",
+                 &app->ep_instance_props, app->ep_instance_props);
+      goto finish_extensions;
+    }
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_instance_props[i], &extensions[i], sizeof(extensions[i]));
@@ -113,7 +138,12 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
   if (device) {
     app->ep_device_props = (VkExtensionProperties *) \
       realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_device_props) { free(extensions); extensions = NULL; return VK_FALSE; }
+    if (!app->ep_device_props) {
+      res = VK_RESULT_MAX_ENUM;
+      wlu_log_me(WLU_DANGER, "[x] realloc of app->ep_device_props failed: %p - %p",
+                 &app->ep_device_props, app->ep_device_props);
+      goto finish_extensions;
+    }
 
     for (uint32_t i = 0; i < extension_count; i++) {
       memcpy(&app->ep_device_props[i], &extensions[i], sizeof(extensions[i]));
@@ -123,14 +153,17 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     /* check for swap chain support */
     for (uint32_t i = 0; i < app->ep_device_count; i++) {
       if (!strcmp(app->ep_device_props[i].extensionName, device_extensions[0])) {
-        res = WLU_TRUE;
+        res = VK_TRUE;
+        wlu_log_me(WLU_SUCCESS, "Physical Device has swap chain support");
         break;
       }
     }
   }
 
-  free(extensions);
-  extensions = NULL;
-
+finish_extensions:
+  if (extensions) {
+    free(extensions);
+    extensions = NULL;
+  }
   return res;
 }

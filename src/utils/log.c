@@ -1,9 +1,10 @@
 #include <lucom.h>
-#include <utils/log.h>
+#include <wlu/utils/log.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
+#include <limits.h>
 
 static const char *term_colors[] = {
 	[WLU_NONE]   	= "",
@@ -42,10 +43,19 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 }
 
 const char *_wlu_strip_path(const char *filepath) {
-	if (*filepath == '.') {
-		while (*filepath == '.' || *filepath == '/') {
-			++filepath;
+	char cwd[PATH_MAX];
+	if (getcwd(cwd, sizeof(cwd)) != NULL) {
+		static int srclen = sizeof(cwd);
+		if (strstr(filepath, cwd) == filepath) {
+			filepath += srclen;
+		} else if (*filepath == '.') {
+			while (*filepath == '.' || *filepath == '/') {
+				++filepath;
+			}
 		}
+	} else {
+		return NULL;
 	}
+
 	return filepath;
 }

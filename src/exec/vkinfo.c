@@ -1,5 +1,5 @@
 #include <lucom.h>
-#include <vlucur/vkall.h>
+#include <wlu/vlucur/vkall.h>
 #include <exec/vkinfo.h>
 
 void help_message() {
