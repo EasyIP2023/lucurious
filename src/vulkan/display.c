@@ -56,13 +56,13 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
     format_count * sizeof(VkSurfaceFormatKHR));
 
   if (!formats) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkSurfaceFormatKHR *formats failed, formats: %p - %p", &formats, formats);
+    wlu_log_me(WLU_DANGER, "[x] calloc VkSurfaceFormatKHR *formats failed");
     goto finish_format;
   }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
   if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d\n", err);
+    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
     goto finish_format;
   }
 
@@ -121,7 +121,7 @@ VkPresentModeKHR choose_swap_present_mode(vkcomp *app) {
       pres_mode_count * sizeof(VkPresentModeKHR));
 
   if (!present_modes) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkPresentModeKHR *present_modes failed, present_modes: %p - %p", &present_modes, present_modes);
+    wlu_log_me(WLU_DANGER, "[x] calloc VkPresentModeKHR *present_modes failed");
     goto finish_best_mode;
   }
 

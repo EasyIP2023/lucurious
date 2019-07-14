@@ -41,8 +41,7 @@ VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBi
   app->queue_families = (VkQueueFamilyProperties *) realloc(app->queue_families,
       app->queue_family_count * sizeof(VkQueueFamilyProperties));
   if (!app->queue_families) {
-    wlu_log_me(WLU_DANGER, "[x] realloc of app->queue_families failed: %p - %p",
-               &app->queue_families, app->queue_families);
+    wlu_log_me(WLU_DANGER, "[x] realloc of app->queue_families failed");
     return ret;
   }
 
@@ -107,8 +106,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       extension_count * sizeof(VkExtensionProperties));
     if (!extensions) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of extensions failed: %p - %p",
-                 &extensions, extensions);
+      wlu_log_me(WLU_DANGER, "[x] realloc of extensions failed");
       goto finish_extensions;
     }
 
@@ -123,8 +121,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_instance_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] calloc of app->ep_instance_props failed: %p - %p",
-                 &app->ep_instance_props, app->ep_instance_props);
+      wlu_log_me(WLU_DANGER, "[x] calloc of app->ep_instance_props failed");
       goto finish_extensions;
     }
 
@@ -140,8 +137,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_device_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of app->ep_device_props failed: %p - %p",
-                 &app->ep_device_props, app->ep_device_props);
+      wlu_log_me(WLU_DANGER, "[x] realloc of app->ep_device_props failed");
       goto finish_extensions;
     }
 

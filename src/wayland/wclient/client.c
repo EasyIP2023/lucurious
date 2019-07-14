@@ -24,7 +24,7 @@ static void set_values(wclient *wc) {
 
 wclient *wlu_init_wc() {
   wclient *wc = calloc(sizeof(wclient), sizeof(wclient));
-  assert(wc != NULL);
+  if (!wc) return NULL;
   set_values(wc);
   return wc;
 }

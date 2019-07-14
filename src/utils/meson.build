@@ -1,6 +1,6 @@
 
 lib_utils = static_library(
 	'lutils',
-	files( 'log.c' ),
+	files( 'log.c', 'errors.c' ),
 	include_directories: lucur_inc
 )

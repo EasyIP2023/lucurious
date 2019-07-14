@@ -32,9 +32,8 @@ static void set_values(vkcomp *app) {
 }
 
 vkcomp *wlu_init_vk() {
-  vkcomp *app;
-  app = calloc(sizeof(vkcomp), sizeof(vkcomp));
-  assert(app != NULL);
+  vkcomp *app = calloc(sizeof(vkcomp), sizeof(vkcomp));
+  if (!app) return NULL;
   set_values(app);
   return app;
 }

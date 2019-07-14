@@ -1,5 +1,7 @@
+#include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/wclient/client.h>
+#include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
 #include <check.h>
 
@@ -7,6 +9,19 @@ START_TEST(test_vulkan_client_create) {
   VkResult err;
   wclient *wc = wlu_init_wc();
   vkcomp *app = wlu_init_vk();
+
+  if (!app) ck_abort_msg(NULL);
+
+  wlu_log_me(WLU_INFO, "main vkcomp struct %p - %p", &app, app);
+
+  /* Signal handler for this process */
+  err = wlu_catch_me(getpid(), app, wc);
+  if (err) {
+    wlu_freeup_wc(wc);
+    wlu_freeup_vk(app);
+    wlu_log_me(WLU_DANGER, "[x] failed to set up signal_handler");
+    ck_abort_msg(NULL);
+  }
 
   if (wlu_connect_client(wc)) {
     wlu_freeup_wc(wc);

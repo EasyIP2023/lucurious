@@ -19,7 +19,7 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 	char buffer[26];
   va_list args; /* type that holds variable arguments */
 
-  /* create message stamp time */
+  /* create message time stamp */
 	struct tm result;
 	time_t t = time(NULL);
 	struct tm *tm_info = localtime_r(&t, &result);
@@ -32,7 +32,6 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 
 	fprintf(stdout, "%s", term_colors[c]);
 
-  /* Determine required size */
   va_start(args, fmt);
   vfprintf(stdout, fmt, args);
   va_end(args);
