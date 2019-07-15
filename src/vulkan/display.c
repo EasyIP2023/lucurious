@@ -1,7 +1,6 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
-#include <vlucur/display.h>
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -20,7 +19,7 @@ VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surfac
 }
 
 /* query device capabilities */
-VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
+VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   VkSurfaceCapabilitiesKHR capabilities;
   VkResult err;
 
@@ -35,7 +34,7 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
 }
 
 /* choose swapchain surface format and color space (Color Depth) */
- VkSurfaceFormatKHR choose_swap_surface_format(vkcomp *app) {
+VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace) {
   VkResult err;
   VkSurfaceFormatKHR ret_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
@@ -74,14 +73,14 @@ VkSurfaceCapabilitiesKHR q_device_capabilities(vkcomp *app) {
    * SRGB if used for colorSpace if available, because it
    * results in more accurate perceived colors
    */
-  if (format_count == 1 && formats[0].format == VK_FORMAT_UNDEFINED) {
-    ret_fmt.format = VK_FORMAT_B8G8R8A8_UNORM;
-    ret_fmt.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+  if (format_count == 1 && formats[0].format == format) {
+    ret_fmt.format = format;
+    ret_fmt.colorSpace = colorSpace;
     goto finish_format;
   }
 
   for (uint32_t i = 0; i < format_count; i++) {
-    if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+    if (formats[i].format == format && formats[i].colorSpace == colorSpace) {
       memcpy(&ret_fmt, &formats[i], sizeof(formats[i]));
       goto finish_format;
     }
@@ -100,7 +99,7 @@ finish_format:
  * function that chooses the best presentation mode for swapchain
  * (Conditions required for swapping images to the screen)
  */
-VkPresentModeKHR choose_swap_present_mode(vkcomp *app) {
+VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   VkResult err;
   VkPresentModeKHR best_mode = VK_PRESENT_MODE_MAX_ENUM_KHR;
   VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
@@ -154,7 +153,7 @@ finish_best_mode:
 }
 
 /* The swap extent is the resolution of the swap chain images */
-VkExtent2D choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities) {
+VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities) {
   if (capabilities.currentExtent.width != UINT32_MAX) {
     return capabilities.currentExtent;
   } else {

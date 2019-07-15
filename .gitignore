@@ -7,6 +7,9 @@
 # Ignore shared libraries
 **/*.so
 
+# Ignore SPIR-V Files
+**/*.spv
+
 build/
 
 valgrind-out.txt

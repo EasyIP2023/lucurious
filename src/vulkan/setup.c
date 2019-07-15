@@ -2,7 +2,7 @@
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
 #include <vlucur/devices.h>
-#include <vlucur/display.h>
+#include <utils/file.h>
 
 static void set_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
@@ -274,7 +274,13 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain(vkcomp *app) {
+VkResult wlu_create_swap_chain(
+  vkcomp *app,
+  VkSurfaceCapabilitiesKHR capabilities,
+  VkSurfaceFormatKHR surface_fmt,
+  VkPresentModeKHR pres_mode,
+  VkExtent2D extent
+) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *swap_chain_imgs = NULL;
 
@@ -282,9 +288,6 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
     wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
     return res;
   }
-
-  VkSurfaceCapabilitiesKHR capabilities = q_device_capabilities(app);
-  if (capabilities.minImageCount == UINT32_MAX) return res;
 
   /*
    * Don't want to stick to minimum becuase one would have to wait on the
@@ -301,18 +304,6 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
       app->img_count * sizeof(swap_chain_buffers));
   if (!app->sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
-    goto finish_swap_chain;
-  }
-
-  VkSurfaceFormatKHR surface_fmt = choose_swap_surface_format(app);
-  if (surface_fmt.format == VK_FORMAT_UNDEFINED) goto finish_swap_chain;
-
-  VkPresentModeKHR pres_mode = choose_swap_present_mode(app);
-  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) goto finish_swap_chain;
-
-  VkExtent2D extent = choose_swap_extent(capabilities);
-  if (extent.width == UINT32_MAX) {
-    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
     goto finish_swap_chain;
   }
 
@@ -455,10 +446,38 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   return res;
 }
 
-VkResult wlu_create_graphics_pipeline(vkcomp *app) {
-  VkResult res = VK_INCOMPLETE;
+/* Create Graphics Pipeline function */
+VkResult wlu_create_gp(vkcomp *app, uint32_t num_args, ...) {
   ALL_UNUSED(app);
 
+  VkResult res = VK_RESULT_MAX_ENUM;
+  char **filebuff = NULL;
+  va_list ap;
+
+  filebuff = (char **) calloc(sizeof(char**), num_args * sizeof(char**));
+  if (!filebuff) {
+    wlu_log_me(WLU_DANGER, "[x] failed to calloc memory for filebuff");
+    goto finish_gp;
+  }
+
+  /* Format specified in function */
+  va_start(ap, NULL);
+
+  for (uint32_t i = 0; i < num_args; i++) {
+    char *s = va_arg(ap, char *);
+    filebuff[i] = wlu_read_file(s);
+    if (!filebuff[i]) goto finish_gp;
+  }
+
+  res = VK_SUCCESS;
+
+finish_gp:
+  va_end(ap);
+  if (filebuff) {
+    for (uint32_t i = 0; i < num_args; i++)
+      if (filebuff[i]) { free(filebuff[i]); filebuff[i] = NULL; }
+    free(filebuff); filebuff = NULL;
+  }
   return res;
 }
 

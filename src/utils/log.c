@@ -1,7 +1,5 @@
 #include <lucom.h>
 #include <wlu/utils/log.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>

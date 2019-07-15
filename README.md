@@ -19,6 +19,7 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * vulkan-sdk
 * libinput
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
+* [libshaderc](https://github.com/google/shaderc)
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
 * [Spirv-Headers](https://github.com/KhronosGroup/SPIRV-Headers)
 

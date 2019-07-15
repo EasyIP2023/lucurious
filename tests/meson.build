@@ -44,6 +44,9 @@ test('lucur-wclient-test',
     lucur_wclient_test,
     suite: ['all'])
 
+run_command('glslangValidator', '-V', 'shaders/shader.frag')
+run_command('glslangValidator', '-V', 'shaders/shader.vert')
+
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',
                   'test-main.c',

@@ -148,7 +148,32 @@ START_TEST(test_swap_chain_fail_no_surface) {
 
   ck_assert_ptr_null(app->surface);
 
-  err = wlu_create_swap_chain(app);
+  VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
+  if (capabilities.minImageCount == UINT32_MAX) {
+    wlu_freeup_vk(app);
+    ck_abort_msg(NULL);
+  }
+
+  VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+  if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
+    wlu_freeup_vk(app);
+    ck_abort_msg(NULL);
+  }
+
+  VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
+  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) {
+    wlu_freeup_vk(app);
+    ck_abort_msg(NULL);
+  }
+
+  VkExtent2D extent = wlu_choose_swap_extent(capabilities);
+  if (extent.width == UINT32_MAX) {
+    wlu_freeup_vk(app);
+    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent);
   if (err) wlu_log_me(WLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   wlu_freeup_vk(app);

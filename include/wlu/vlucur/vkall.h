@@ -89,9 +89,14 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name);
 VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype);
 VkResult wlu_set_logical_device(vkcomp *app);
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
-VkResult wlu_create_swap_chain(vkcomp *app);
+VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
+VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace);
+VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app);
+VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities);
+VkResult wlu_create_swap_chain(vkcomp *app, VkSurfaceCapabilitiesKHR capabilities,
+  VkSurfaceFormatKHR surface_fmt, VkPresentModeKHR pres_mode, VkExtent2D extent);
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type);
-VkResult wlu_create_graphics_pipeline(vkcomp *app);
+VkResult wlu_create_gp(vkcomp *app, uint32_t num_args, ...);
 void wlu_freeup_vk(void *data);
 
 #endif
