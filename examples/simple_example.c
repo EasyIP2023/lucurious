@@ -1,11 +1,32 @@
 #include <wlu/vkall.h>
 #include <wlu/client.h>
 #include <wlu/log.h>
+#include <signal.h>
 
 int main() {
   VkResult err;
+
   wclient *wc = wlu_init_wc();
+  if (!wc) {
+    wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
+    return EXIT_FAILURE;
+  }
+
   vkcomp *app = wlu_init_vk();
+  if (!app) {
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
+    return EXIT_FAILURE;
+  }
+
+  /* Signal handler for this process */
+  err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
+  if (err) {
+    wlu_freeup_wc(wc);
+    wlu_freeup_vk(app);
+    wlu_log_me(WLU_DANGER, "[x] failed to set up signal_handler");
+    return EXIT_FAILURE;
+  }
 
   if (wlu_connect_client(wc)) {
     wlu_freeup_wc(wc);

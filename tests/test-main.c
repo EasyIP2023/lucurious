@@ -3,19 +3,27 @@
 #include <wlu/wclient/client.h>
 #include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
+#include <signal.h>
 #include <check.h>
 
 START_TEST(test_vulkan_client_create) {
   VkResult err;
+
   wclient *wc = wlu_init_wc();
+  if (!wc) {
+    wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
+    ck_abort_msg(NULL);
+  }
+
   vkcomp *app = wlu_init_vk();
-
-  if (!app) ck_abort_msg(NULL);
-
-  wlu_log_me(WLU_INFO, "main vkcomp struct %p - %p", &app, app);
+  if (!app) {
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
+    ck_abort_msg(NULL);
+  }
 
   /* Signal handler for this process */
-  err = wlu_catch_me(getpid(), app, wc);
+  err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
   if (err) {
     wlu_freeup_wc(wc);
     wlu_freeup_vk(app);

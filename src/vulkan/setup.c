@@ -278,7 +278,10 @@ VkResult wlu_create_swap_chain(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *swap_chain_imgs = NULL;
 
-  if (!app->surface || !app->device) return res;
+  if (!app->surface || !app->device) {
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
+    return res;
+  }
 
   VkSurfaceCapabilitiesKHR capabilities = q_device_capabilities(app);
   if (capabilities.minImageCount == UINT32_MAX) return res;

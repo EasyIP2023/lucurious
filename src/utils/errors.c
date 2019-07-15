@@ -13,43 +13,47 @@
  */
 struct wlu_sig_info {
   pid_t pid;
-  vkcomp *gapp;
-  wclient *gwc;
-} wsi;
+  vkcomp *app;
+  wclient *wc;
+};
 
-static void signal_handler(int sig, siginfo_t *info, void *extra) {
-  ALL_UNUSED(extra);
+/* Can do up to 15 processes */
+static struct wlu_sig_info wsi[15];
+static int current_loc = 0;
 
-  wlu_log_me(WLU_DANGER, "[x] Sigfault bruh... Fix it :(");
-  wlu_log_me(WLU_DANGER, "[x] Process ID: %d | Received signal: %i (Segmentation fault) | Signal Code: %d",
-            wsi.pid, sig, info->si_code);
-  wlu_log_me(WLU_DANGER, "[x] Errno Value: %d | Exit Value Status: %d",
-            info->si_errno, info->si_status);
-  wlu_log_me(WLU_DANGER, "[x] Address of segfualt: %p", info->si_addr);
-  wlu_log_me(WLU_DANGER, "[x] Caught and freed up memory for");
-  wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p", wsi.gapp);
+static void signal_handler(int sig) {
+  int i = current_loc; /* Represents location */
 
-  wlu_freeup_vk(wsi.gapp);
-  wlu_freeup_wc(wsi.gwc);
+  wlu_log_me(WLU_DANGER, "[x] Process ID: %d | Received signal: %i", wsi[i].pid, sig);
+  wlu_log_me(WLU_DANGER, "[x] Caught and freeing memory for");
+  wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p - %p", &wsi[i].app, wsi[i].app);
+  wlu_log_me(WLU_DANGER, "[x] wclient struct: %p - %p", &wsi[i].wc, wsi[i].wc);
+
+  if (wsi[i].app)
+    wlu_freeup_vk(wsi[i].app);
+  if (wsi[i].wc)
+    wlu_freeup_wc(wsi[i].wc);
+
+  wlu_log_me(WLU_SUCCESS, "Successfully freed up allocated memory");
 
   exit(EXIT_FAILURE);
 }
 
-int wlu_catch_me(pid_t pid, vkcomp *app, wclient *wc) {
-  struct sigaction sa;
+int wlu_watch_me(int sig, int num_called, pid_t pid, vkcomp *app, wclient *wc) {
+  if (num_called > 14) {
+    wlu_log_me(WLU_DANGER, "[x] num_called can not be greater than 15");
+    return EXIT_FAILURE;
+  }
 
-  memset(&sa, 0, sizeof(sigaction));
-  sigemptyset(&sa.sa_mask);
+  int i = num_called; /* Represents location */
+  current_loc = num_called;
 
-  memcpy(&wsi.pid, &pid, sizeof(pid));
-  memcpy(&wsi.gapp, &app, sizeof(vkcomp));
-  memcpy(&wsi.gwc, &wc, sizeof(wclient));
-
-  sa.sa_flags      = SA_SIGINFO;
-  sa.sa_sigaction = signal_handler;
+  memcpy(&wsi[i].pid, &pid, sizeof(pid));
+  memcpy(&wsi[i].app, &app, sizeof(vkcomp));
+  memcpy(&wsi[i].wc, &wc, sizeof(wclient));
 
   /* ignore whether it works or not */
-  if (sigaction(SIGSEGV, &sa, NULL) == -1)
+  if (signal(sig, signal_handler) == SIG_IGN)
     return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
