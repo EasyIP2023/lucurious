@@ -8,7 +8,7 @@
 **/*.so
 
 # Ignore SPIR-V Files
-**/*.spv
+# **/*.spv
 
 build/
 

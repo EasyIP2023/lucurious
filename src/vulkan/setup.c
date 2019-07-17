@@ -7,18 +7,18 @@
 static void set_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
-  app->vk_layer_props = VK_NULL_HANDLE;
+  app->vk_layer_props = NULL;
   app->vk_layer_count = VK_NULL_HANDLE;
-  app->ep_instance_props = VK_NULL_HANDLE;
+  app->ep_instance_props = NULL;
   app->ep_instance_count = VK_NULL_HANDLE;
-  app->ep_device_props = VK_NULL_HANDLE;
+  app->ep_device_props = NULL;
   app->ep_device_count = VK_NULL_HANDLE;
   // app->device_properties;
   // app->device_features;
   // app->memory_properties;
   app->physical_device = VK_NULL_HANDLE;
-  app->queue_create_infos = VK_NULL_HANDLE;
-  app->queue_families = VK_NULL_HANDLE;
+  app->queue_create_infos = NULL;
+  app->queue_families = NULL;
   app->queue_family_count = VK_NULL_HANDLE;
   app->indices.graphics_family = UINT32_MAX;
   app->indices.present_family = UINT32_MAX;
@@ -125,25 +125,9 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
-  switch(res) {
-    case VK_SUCCESS:
-      break;
-    case VK_ERROR_OUT_OF_HOST_MEMORY:
-      return res;
-    case VK_ERROR_INITIALIZATION_FAILED:
-      return res;
-    case VK_ERROR_LAYER_NOT_PRESENT:
-      wlu_log_me(WLU_DANGER, "[x] one of the validation layers is currently not present");
-      return res;
-    case VK_ERROR_EXTENSION_NOT_PRESENT:
-      wlu_log_me(WLU_DANGER, "[x] one of the vulkan instance/device extensions is currently not present");
-      return res;
-    case VK_ERROR_INCOMPATIBLE_DRIVER:
-      wlu_log_me(WLU_DANGER, "[x] cannot find a compatible Vulkan ICD");
-      return res;
-    default:
-      wlu_log_me(WLU_DANGER, "[x] unknown error");
-      return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateInstance failed, ERROR CODE: %d", res);
+    return res;
   }
 
   res = get_extension_properties(app, NULL, NULL);
@@ -274,18 +258,14 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain(
-  vkcomp *app,
-  VkSurfaceCapabilitiesKHR capabilities,
-  VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR pres_mode,
-  VkExtent2D extent
-) {
+VkResult wlu_create_swap_chain(vkcomp *app, VkSurfaceCapabilitiesKHR capabilities, VkSurfaceFormatKHR surface_fmt,
+                               VkPresentModeKHR pres_mode, VkExtent2D extent) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *swap_chain_imgs = NULL;
 
   if (!app->surface || !app->device) {
     wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
+    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize see wlu_set_logical_device(3) for details");
     return res;
   }
 
@@ -502,7 +482,6 @@ void wlu_freeup_vk(void *data) {
   }
   if (app->swap_chain) {
     free(app->swap_chain);
-    // Still Seg faults
     // vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
   }
   if (app->device) {

@@ -1,7 +1,9 @@
 
-check = dependency('check')
+subdir('shaders')
 
+check = dependency('check')
 valgrind = find_program('valgrind', required : false)
+
 if valgrind.found()
   valgrind_env = environment()
   valgrind_env.set('LTEST_JOBS', '4')
@@ -17,7 +19,7 @@ if valgrind.found()
       env :  valgrind_env,
       timeout_multiplier : 100)
 else
-  message('valgrind not found, disabling valgrind test suite')
+  warning('valgrind not found, disabling valgrind test suite')
 endif
 
 # Testing vulkan suite
@@ -43,9 +45,6 @@ lucur_wclient_test = executable('lucur-wclient-test',
 test('lucur-wclient-test',
     lucur_wclient_test,
     suite: ['all'])
-
-run_command('glslangValidator', '-V', 'shaders/shader.frag')
-run_command('glslangValidator', '-V', 'shaders/shader.vert')
 
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',

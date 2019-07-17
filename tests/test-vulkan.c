@@ -34,10 +34,13 @@ START_TEST(test_set_global_layers) {
     ck_abort_msg(NULL);
   }
 
-  ck_assert_ptr_nonnull(app->vk_layer_props);
+  ck_assert_ptr_null(app->vk_layer_props);
 
-  for (uint32_t i = 0; i < app->vk_layer_count; i++)
-    ck_assert_str_eq(app->vk_layer_props[i].layerName, enabled_validation_layers[i]);
+  if (app->vk_layer_props) {
+    ck_assert_ptr_nonnull(app->vk_layer_props);
+    for (uint32_t i = 0; i < app->vk_layer_count; i++)
+      ck_assert_str_eq(app->vk_layer_props[i].layerName, enabled_validation_layers[i]);
+  }
 
   wlu_freeup_vk(app);
   app = NULL;
@@ -148,32 +151,11 @@ START_TEST(test_swap_chain_fail_no_surface) {
 
   ck_assert_ptr_null(app->surface);
 
-  VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
-  if (capabilities.minImageCount == UINT32_MAX) {
-    wlu_freeup_vk(app);
-    ck_abort_msg(NULL);
-  }
+  VkSurfaceFormatKHR surface_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
+  VkExtent2D extent = {1920, 1080};
+  VkSurfaceCapabilitiesKHR capabilities;
 
-  VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
-  if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
-    wlu_freeup_vk(app);
-    ck_abort_msg(NULL);
-  }
-
-  VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
-  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) {
-    wlu_freeup_vk(app);
-    ck_abort_msg(NULL);
-  }
-
-  VkExtent2D extent = wlu_choose_swap_extent(capabilities);
-  if (extent.width == UINT32_MAX) {
-    wlu_freeup_vk(app);
-    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
-    ck_abort_msg(NULL);
-  }
-
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, VK_PRESENT_MODE_MAX_ENUM_KHR, extent);
   if (err) wlu_log_me(WLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   wlu_freeup_vk(app);

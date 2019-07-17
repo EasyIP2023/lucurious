@@ -1,7 +1,7 @@
 wayland_client = dependency('wayland-client')
 wayland_server = dependency('wayland-server')
 wayland_protos = dependency('wayland-protocols')
-wayland_scanner = find_program('wayland-scanner')
+wayland_scanner = find_program('wayland-scanner', required : true)
 
 wayland_protos_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 

@@ -218,16 +218,16 @@ int wlu_run_client(wclient *wc) {
 void wlu_freeup_wc(void *data) {
   wclient *wc = (wclient*) data;
 
+  if (wc->buffer)
+    wl_buffer_destroy(wc->buffer);
+  if (wc->shm)
+    wl_shm_destroy(wc->shm);
   if (wc->xdg_toplevel)
     xdg_toplevel_destroy(wc->xdg_toplevel);
   if (wc->xdg_surface)
     xdg_surface_destroy(wc->xdg_surface);
   if (wc->surface)
     wl_surface_destroy(wc->surface);
-  if (wc->buffer)
-    wl_buffer_destroy(wc->buffer);
-  if (wc->shm)
-    wl_shm_destroy(wc->shm);
   if (wc->seat)
     wl_seat_destroy(wc->seat);
   if (wc->compositor)
@@ -241,7 +241,6 @@ void wlu_freeup_wc(void *data) {
     munmap(wc->shm_data, size);
   }
 
-  // wc->xdg_wm_base = NULL; Not sure about this one
   if (wc->xdg_wm_base)
     free(wc->xdg_wm_base);
 

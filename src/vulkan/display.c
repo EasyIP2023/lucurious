@@ -23,6 +23,12 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   VkSurfaceCapabilitiesKHR capabilities;
   VkResult err;
 
+  if (!app->surface) {
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
+    capabilities.minImageCount = UINT32_MAX;
+    return capabilities;
+  }
+
   err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed, ERROR CODE: %d", err);
