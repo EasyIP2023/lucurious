@@ -7,10 +7,8 @@
 #include <check.h>
 
 void freeme(vkcomp *app, wclient *wc) {
-  if (app)
-    wlu_freeup_vk(app);
-  if (wc)
-    wlu_freeup_wc(wc);
+  wlu_freeup_vk(app);
+  wlu_freeup_wc(wc);
 }
 
 START_TEST(test_vulkan_client_create) {
@@ -116,7 +114,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_gp(app, 2, "tests/shaders/frag.spv", "tests/shaders/vert.spv");
+  err = wlu_create_gp(app, 2, "build/tests/shaders/frag.spv", "build/tests/shaders/vert.spv");
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");

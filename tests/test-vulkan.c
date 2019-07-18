@@ -34,12 +34,10 @@ START_TEST(test_set_global_layers) {
     ck_abort_msg(NULL);
   }
 
-  ck_assert_ptr_null(app->vk_layer_props);
-
   if (app->vk_layer_props) {
     ck_assert_ptr_nonnull(app->vk_layer_props);
-    for (uint32_t i = 0; i < app->vk_layer_count; i++)
-      ck_assert_str_eq(app->vk_layer_props[i].layerName, enabled_validation_layers[i]);
+  } else  {
+    ck_assert_ptr_null(app->vk_layer_props);
   }
 
   wlu_freeup_vk(app);

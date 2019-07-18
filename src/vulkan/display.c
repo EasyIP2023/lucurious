@@ -71,10 +71,10 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
     goto finish_format;
   }
 
-  memcpy(&ret_fmt, &formats[0], sizeof(formats[0]));
+  ret_fmt = formats[0];
 
-  /*
-   * VK_FORMAT_B8G8R8A8_UNORM till store the B, G, R and alpha channels
+  /* The format in the example
+   * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
    * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
    * SRGB if used for colorSpace if available, because it
    * results in more accurate perceived colors
@@ -87,7 +87,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
 
   for (uint32_t i = 0; i < format_count; i++) {
     if (formats[i].format == format && formats[i].colorSpace == colorSpace) {
-      memcpy(&ret_fmt, &formats[i], sizeof(formats[i]));
+      ret_fmt = formats[i];
       goto finish_format;
     }
   }
@@ -141,12 +141,12 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
 
   for (uint32_t i = 0; i < pres_mode_count; i++) {
     if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-      memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
+      best_mode = present_modes[i];
       /* For triple buffering */
       goto finish_best_mode;
     }
     else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-      memcpy(&best_mode, &present_modes[i], sizeof(present_modes[i]));
+      best_mode = present_modes[i];
     }
   }
 

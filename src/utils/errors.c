@@ -48,9 +48,9 @@ int wlu_watch_me(int sig, int num_called, pid_t pid, vkcomp *app, wclient *wc) {
   int i = num_called; /* Represents location */
   current_loc = num_called;
 
-  memcpy(&wsi[i].pid, &pid, sizeof(pid));
-  memcpy(&wsi[i].app, &app, sizeof(vkcomp));
-  memcpy(&wsi[i].wc, &wc, sizeof(wclient));
+  wsi[i].pid = pid;
+  wsi[i].app = app;
+  wsi[i].wc  = wc;
 
   /* ignore whether it works or not */
   if (signal(sig, signal_handler) == SIG_IGN)

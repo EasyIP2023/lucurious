@@ -126,7 +126,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     }
 
     for (uint32_t i = 0; i < extension_count; i++) {
-      memcpy(&app->ep_instance_props[i], &extensions[i], sizeof(extensions[i]));
+      app->ep_instance_props[i] = extensions[i];
       app->ep_instance_count = i;
     }
   }
@@ -142,7 +142,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     }
 
     for (uint32_t i = 0; i < extension_count; i++) {
-      memcpy(&app->ep_device_props[i], &extensions[i], sizeof(extensions[i]));
+      app->ep_device_props[i] = extensions[i];
       app->ep_device_count = i;
     }
 
