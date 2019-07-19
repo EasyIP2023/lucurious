@@ -258,8 +258,14 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain(vkcomp *app, VkSurfaceCapabilitiesKHR capabilities, VkSurfaceFormatKHR surface_fmt,
-                               VkPresentModeKHR pres_mode, VkExtent2D extent) {
+VkResult wlu_create_swap_chain (
+  vkcomp *app,
+  VkSurfaceCapabilitiesKHR capabilities,
+  VkSurfaceFormatKHR surface_fmt,
+  VkPresentModeKHR pres_mode,
+  VkExtent2D extent
+) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->surface || !app->device) {
@@ -347,6 +353,11 @@ VkResult wlu_create_swap_chain(vkcomp *app, VkSurfaceCapabilitiesKHR capabilitie
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *swcimgs = NULL;
+
+  if (!app->swap_chain) {
+    wlu_log_me(WLU_DANGER, "[x] Swap Chain not create see wlu_create_swap_chain(3) for more info");
+    return res;
+  }
 
   app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
       app->img_count * sizeof(swap_chain_buffers));

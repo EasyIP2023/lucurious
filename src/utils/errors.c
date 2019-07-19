@@ -39,7 +39,7 @@ static void signal_handler(int sig) {
   exit(EXIT_FAILURE);
 }
 
-int wlu_watch_me(int sig, int num_called, pid_t pid, vkcomp *app, wclient *wc) {
+int wlu_watch_me(int sig, int num_called, pid_t pid, void *app, void *wc) {
   if (num_called > 14) {
     wlu_log_me(WLU_DANGER, "[x] num_called can not be greater than 15");
     return EXIT_FAILURE;
@@ -49,8 +49,8 @@ int wlu_watch_me(int sig, int num_called, pid_t pid, vkcomp *app, wclient *wc) {
   current_loc = num_called;
 
   wsi[i].pid = pid;
-  wsi[i].app = app;
-  wsi[i].wc  = wc;
+  wsi[i].app = (vkcomp *) app;
+  wsi[i].wc  = (wclient *) wc;
 
   /* ignore whether it works or not */
   if (signal(sig, signal_handler) == SIG_IGN)

@@ -59,7 +59,6 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
 
   formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
     format_count * sizeof(VkSurfaceFormatKHR));
-
   if (!formats) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkSurfaceFormatKHR *formats failed");
     goto finish_format;
