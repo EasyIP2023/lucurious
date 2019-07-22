@@ -25,11 +25,9 @@ subdir('include')
 subdir('src')
 
 lucur_parts = [
-	lib_utils,
-	lib_vulkan,
-	lib_lwayland,
-	lib_wserver,
-	lib_wclient,
+	lib_utils, lib_shade,
+	lib_vulkan, lib_lwayland,
+	lib_wserver, lib_wclient,
 ]
 
 lib_lucur = shared_library(

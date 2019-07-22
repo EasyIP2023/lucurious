@@ -46,6 +46,18 @@ test('lucur-wclient-test',
     lucur_wclient_test,
     suite: ['all'])
 
+# Testing shade suite
+lucur_vulkan_test = executable('lucur-shade-test',
+  'test-shade.c',
+  include_directories : lucur_inc,
+  dependencies: [check,shaderc],
+  link_with : lib_lucur,
+  install : false)
+
+test('lucur-shade-test',
+    lucur_vulkan_test,
+    suite: ['all'])
+
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',
                   'test-main.c',

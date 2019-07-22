@@ -258,13 +258,11 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain (
-  vkcomp *app,
-  VkSurfaceCapabilitiesKHR capabilities,
-  VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR pres_mode,
-  VkExtent2D extent
-) {
+VkResult wlu_create_swap_chain (vkcomp *app,
+                                VkSurfaceCapabilitiesKHR capabilities,
+                                VkSurfaceFormatKHR surface_fmt,
+                                VkPresentModeKHR pres_mode,
+                                VkExtent2D extent) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 

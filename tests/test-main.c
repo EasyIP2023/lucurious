@@ -114,7 +114,29 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_gp(app, 2, "build/tests/shaders/frag.spv", "build/tests/shaders/vert.spv");
+  // shaderc_compiler_t compiler = shaderc_compiler_initialize();
+  // shaderc_compilation_result_t result = 0;
+  //
+  // const char *frag_spv = wlu_compile_to_spirv()
+  //
+  // wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
+  // const char *frag_spv = wlu_compile_to_spirv(compiler, result,
+  //                         shaderc_glsl_vertex_shader, "frag.spv",
+  //                         bad_shader_src, "main", false);
+  // if (!frag_spv)
+  //   wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+  //
+  // wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
+  // const char *vert_spv = wlu_compile_to_spirv(compiler, result,
+  //                         shaderc_glsl_vertex_shader, "frag.spv",
+  //                         bad_shader_src, "main", false);
+  // if (!vert_spv)
+  //   wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+  //
+  // shaderc_result_release(result);
+  // shaderc_compiler_release(compiler);
+
+  err = wlu_create_gp(app, 2, "tests/shaders/frag.spv", "tests/shaders/vert.spv");
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
