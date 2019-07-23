@@ -3,8 +3,11 @@
 #include <wlu/wclient/client.h>
 #include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
+#include <wlu/shader/shade.h>
 #include <signal.h>
 #include <check.h>
+
+#include "test-shade.h"
 
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
@@ -114,29 +117,37 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  // shaderc_compiler_t compiler = shaderc_compiler_initialize();
-  // shaderc_compilation_result_t result = 0;
-  //
-  // const char *frag_spv = wlu_compile_to_spirv()
-  //
-  // wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
-  // const char *frag_spv = wlu_compile_to_spirv(compiler, result,
-  //                         shaderc_glsl_vertex_shader, "frag.spv",
-  //                         bad_shader_src, "main", false);
-  // if (!frag_spv)
-  //   wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-  //
-  // wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
-  // const char *vert_spv = wlu_compile_to_spirv(compiler, result,
-  //                         shaderc_glsl_vertex_shader, "frag.spv",
-  //                         bad_shader_src, "main", false);
-  // if (!vert_spv)
-  //   wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-  //
-  // shaderc_result_release(result);
-  // shaderc_compiler_release(compiler);
+  shaderc_compiler_t compiler = shaderc_compiler_initialize();
+  shaderc_compilation_result_t result = 0;
 
-  err = wlu_create_gp(app, 2, "tests/shaders/frag.spv", "tests/shaders/vert.spv");
+  wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
+  const char *frag_spv = wlu_compile_to_spirv(compiler, result,
+                         shaderc_glsl_vertex_shader, shader_frag_src,
+                         "frag.spv", "main", true);
+  if (!frag_spv) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_log_me(WLU_WARNING, "Compiling the vert spirv shader");
+  const char *vert_spv = wlu_compile_to_spirv(compiler, result,
+                         shaderc_glsl_vertex_shader, shader_vert_src,
+                         "vert.spv", "main", false);
+  if (!vert_spv) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    ck_abort_msg(NULL);
+  }
+
+  shaderc_result_release(result);
+  shaderc_compiler_release(compiler);
+
+  err = wlu_create_gp(app, frag_spv, vert_spv);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");

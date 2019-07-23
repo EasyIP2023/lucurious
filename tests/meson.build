@@ -1,6 +1,4 @@
 
-subdir('shaders')
-
 check = dependency('check')
 valgrind = find_program('valgrind', required : false)
 
@@ -62,7 +60,7 @@ test('lucur-shade-test',
 lucur_main_test = executable('lucur-main-test',
                   'test-main.c',
                   include_directories : lucur_inc,
-                  dependencies : [check],
+                  dependencies : [check,shaderc],
                   link_with : lib_lucur,
                   install : false)
 

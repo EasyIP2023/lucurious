@@ -7,8 +7,8 @@
 const char *wlu_preprocess_shader(shaderc_compiler_t compiler,
                                   shaderc_compilation_result_t result,
                                   shaderc_shader_kind kind,
-                                  const char *source_name,
                                   const char *source,
+                                  const char *source_name,
                                   const char *entry_point_name) {
 
   const char *name = "MY_DEFINE";
@@ -19,8 +19,8 @@ const char *wlu_preprocess_shader(shaderc_compiler_t compiler,
   shaderc_compile_options_add_macro_definition(options, name, strlen(name), value, strlen(value));
 
   result = shaderc_compile_into_preprocessed_text(
-           compiler, source_name, strlen(source_name),
-           kind, source, entry_point_name, options);
+           compiler, source, strlen(source), kind,
+           source_name, entry_point_name, options);
 
   if (!result) {
     shaderc_compile_options_release(options);
@@ -43,8 +43,8 @@ const char *wlu_preprocess_shader(shaderc_compiler_t compiler,
 const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
                                     shaderc_compilation_result_t result,
                                     shaderc_shader_kind kind,
-                                    const char *source_name,
                                     const char *source,
+                                    const char *source_name,
                                     const char *entry_point_name,
                                     bool optimize) {
 
@@ -59,8 +59,8 @@ const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
     shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
 
   result = shaderc_compile_into_spv_assembly(
-           compiler, source_name, strlen(source_name),
-           kind, source, entry_point_name, options);
+           compiler, source, strlen(source), kind,
+           source_name, entry_point_name, options);
 
   if (!result) {
     shaderc_compile_options_release(options);
@@ -84,8 +84,8 @@ const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
 const char *wlu_compile_to_spirv(shaderc_compiler_t compiler,
                                  shaderc_compilation_result_t result,
                                  shaderc_shader_kind kind,
-                                 const char *source_name,
                                  const char *source,
+                                 const char *source_name,
                                  const char *entry_point_name,
                                  bool optimize) {
 
@@ -100,8 +100,8 @@ const char *wlu_compile_to_spirv(shaderc_compiler_t compiler,
     shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
 
   result = shaderc_compile_into_spv(
-           compiler, source_name, strlen(source_name),
-           kind, source, entry_point_name, options);
+           compiler, source, strlen(source), kind,
+           source_name, entry_point_name, options);
 
   if (!result) {
     shaderc_compile_options_release(options);

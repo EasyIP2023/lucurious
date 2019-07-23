@@ -2,8 +2,13 @@
 #include <wlu/client.h>
 #include <wlu/log.h>
 #include <wlu/errors.h>
+#include <wlu/shade.h>
+
 #include <signal.h>
 #include <unistd.h>
+#include <stdbool.h>
+
+#include "simple_example.h"
 
 int main() {
   VkResult err;
@@ -122,7 +127,39 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_gp(app, 2, "frag.spv", "vert.spv");
+  shaderc_compiler_t compiler = shaderc_compiler_initialize();
+  shaderc_compilation_result_t result = 0;
+
+  wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
+  const char *frag_spv = wlu_compile_to_spirv(compiler, result,
+                         shaderc_glsl_vertex_shader, shader_frag_src,
+                         "frag.spv", "main", true);
+  if (!frag_spv) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    wlu_freeup_vk(app);
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    return EXIT_FAILURE;
+  }
+
+  wlu_log_me(WLU_WARNING, "Compiling the vert spirv shader");
+  const char *vert_spv = wlu_compile_to_spirv(compiler, result,
+                         shaderc_glsl_vertex_shader, shader_vert_src,
+                         "vert.spv", "main", false);
+  if (!vert_spv) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    wlu_freeup_vk(app);
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    return EXIT_FAILURE;
+  }
+
+  shaderc_result_release(result);
+  shaderc_compiler_release(compiler);
+
+  err = wlu_create_gp(app, frag_spv, vert_spv);
   if (err) {
     wlu_freeup_vk(app);
     wlu_freeup_wc(wc);

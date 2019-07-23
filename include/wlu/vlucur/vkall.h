@@ -96,7 +96,7 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities);
 VkResult wlu_create_swap_chain(vkcomp *app, VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt, VkPresentModeKHR pres_mode, VkExtent2D extent);
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type);
-VkResult wlu_create_gp(vkcomp *app, uint32_t num_args, ...);
+VkResult wlu_create_gp(vkcomp *app, ...);
 void wlu_freeup_vk(void *data);
 
 #endif

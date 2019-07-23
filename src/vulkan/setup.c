@@ -258,11 +258,11 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain (vkcomp *app,
-                                VkSurfaceCapabilitiesKHR capabilities,
-                                VkSurfaceFormatKHR surface_fmt,
-                                VkPresentModeKHR pres_mode,
-                                VkExtent2D extent) {
+VkResult wlu_create_swap_chain(vkcomp *app,
+                               VkSurfaceCapabilitiesKHR capabilities,
+                               VkSurfaceFormatKHR surface_fmt,
+                               VkPresentModeKHR pres_mode,
+                               VkExtent2D extent) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
@@ -431,37 +431,36 @@ finish_create_img_views:
 }
 
 /* Create Graphics Pipeline function */
-VkResult wlu_create_gp(vkcomp *app, uint32_t num_args, ...) {
+VkResult wlu_create_gp(vkcomp *app, ...) {
   ALL_UNUSED(app);
 
   VkResult res = VK_RESULT_MAX_ENUM;
-  char **filebuff = NULL;
-  va_list ap;
-
-  filebuff = (char **) calloc(sizeof(char**), num_args * sizeof(char**));
-  if (!filebuff) {
-    wlu_log_me(WLU_DANGER, "[x] failed to calloc memory for filebuff");
-    goto finish_gp;
-  }
-
-  /* Format specified in function */
-  va_start(ap, NULL);
-
-  for (uint32_t i = 0; i < num_args; i++) {
-    char *s = va_arg(ap, char *);
-    filebuff[i] = wlu_read_file(s);
-    if (!filebuff[i]) goto finish_gp;
-  }
+  // char **filebuff = NULL;
+  // va_list ap;
+  //
+  // filebuff = (char **) calloc(sizeof(char**), num_args * sizeof(char**));
+  // if (!filebuff) {
+  //   wlu_log_me(WLU_DANGER, "[x] failed to calloc memory for filebuff");
+  //   goto finish_gp;
+  // }
+  //
+  // /* Format specified in function */
+  // va_start(ap, NULL);
+  //
+  // for (uint32_t i = 0; i < num_args; i++) {
+  //   char *s = va_arg(ap, char *);
+  //   filebuff[i] = wlu_read_file(s);
+  //   if (!filebuff[i]) goto finish_gp;
+  // }
 
   res = VK_SUCCESS;
 
-finish_gp:
-  va_end(ap);
-  if (filebuff) {
-    for (uint32_t i = 0; i < num_args; i++)
-      if (filebuff[i]) { free(filebuff[i]); filebuff[i] = NULL; }
-    free(filebuff); filebuff = NULL;
-  }
+  // va_end(ap);
+  // if (filebuff) {
+  //   for (uint32_t i = 0; i < num_args; i++)
+  //     if (filebuff[i]) { free(filebuff[i]); filebuff[i] = NULL; }
+  //   free(filebuff); filebuff = NULL;
+  // }
   return res;
 }
 

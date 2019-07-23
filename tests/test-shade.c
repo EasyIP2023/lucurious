@@ -4,8 +4,6 @@
 #include <check.h>
 #include <stdbool.h>
 
-/* const char shader_src[] = "#version 450 en\nvoid main() { int x = MY_DEFINE; }\n"; */
-
 START_TEST(shade_multi_error) {
   const char source[2][80] = {
     "void main() {}",
@@ -21,8 +19,8 @@ START_TEST(shade_multi_error) {
     wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", source[i]);
     shaderc_compilation_result_t result = 0;
     const char *spirv = wlu_compile_to_spirv(compiler, result,
-                        shaderc_glsl_vertex_shader, "main.vert",
-                        source[i], "main", true);
+                        shaderc_glsl_vertex_shader, source[i],
+                        "main.vert", "main", true);
     if (!spirv)
       wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     shaderc_result_release(result);
@@ -40,8 +38,8 @@ START_TEST(shade_error) {
 
   wlu_log_me(WLU_WARNING, "Compiling a bad shader:");
   const char *bad_spirv = wlu_compile_to_spirv(compiler, result,
-                          shaderc_glsl_vertex_shader, "bad_src",
-                          bad_shader_src, "main", false);
+                          shaderc_glsl_vertex_shader, bad_shader_src,
+                          "bad_src", "main", false);
   if (!bad_spirv)
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
 
