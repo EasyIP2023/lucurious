@@ -20,17 +20,19 @@ else
   warning('valgrind not found, disabling valgrind test suite')
 endif
 
+extra_args = ['-DDEBUG=1']
+
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',
   'test-vulkan.c',
   include_directories : lucur_inc,
   dependencies: [check],
   link_with : lib_lucur,
-  install : false)
+  link_args : extra_args,
+  install : false
+)
 
-test('lucur-vulkan-test',
-    lucur_vulkan_test,
-    suite: ['all'])
+test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 
 # Testing Wayland suite
 lucur_wclient_test = executable('lucur-wclient-test',
@@ -38,31 +40,33 @@ lucur_wclient_test = executable('lucur-wclient-test',
   include_directories : lucur_inc,
   dependencies: [check],
   link_with : lib_lucur,
-  install : false)
+  link_args : extra_args,
+  install : false
+)
 
-test('lucur-wclient-test',
-    lucur_wclient_test,
-    suite: ['all'])
+test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
 
 # Testing shade suite
-lucur_vulkan_test = executable('lucur-shade-test',
+lucur_shade_test = executable('lucur-shade-test',
   'test-shade.c',
   include_directories : lucur_inc,
   dependencies: [check,shaderc],
   link_with : lib_lucur,
-  install : false)
+  link_args : extra_args,
+  install : false
+)
 
-test('lucur-shade-test',
-    lucur_vulkan_test,
-    suite: ['all'])
+test('lucur-shade-test', lucur_shade_test, suite: ['all'])
 
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',
-                  'test-main.c',
-                  include_directories : lucur_inc,
-                  dependencies : [check,shaderc],
-                  link_with : lib_lucur,
-                  install : false)
+  'test-main.c',
+  include_directories : lucur_inc,
+  dependencies : [check,shaderc],
+  link_with : lib_lucur,
+  link_args : extra_args,
+  install : false
+)
 
 test('lucur-main-test',
     lucur_main_test,
