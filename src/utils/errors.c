@@ -24,6 +24,7 @@ static int current_loc = 0;
 static void signal_handler(int sig) {
   int i = current_loc; /* Represents location */
 
+  wlu_log_me(WLU_DANGER, "");
   wlu_log_me(WLU_DANGER, "[x] Process ID: %d | Received signal: %i", wsi[i].pid, sig);
   wlu_log_me(WLU_DANGER, "[x] Caught and freeing memory for");
   wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p - %p", &wsi[i].app, wsi[i].app);

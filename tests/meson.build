@@ -20,7 +20,7 @@ else
   warning('valgrind not found, disabling valgrind test suite')
 endif
 
-extra_args = ['-DDEBUG=1']
+extra_args = ['-DDEBUG=1', '-g', '-ggdb3']
 
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',

@@ -175,3 +175,32 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities) {
     return actual_extent;
   }
 }
+
+VkShaderModule wlu_create_shader_module(vkcomp *app, const uint32_t *code) {
+  VkResult err;
+  VkShaderModule shader_module = VK_NULL_HANDLE;
+
+  VkShaderModuleCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+  create_info.codeSize = sizeof(code);
+  create_info.pCode = code;
+
+  err = vkCreateShaderModule(app->device, &create_info, NULL, &shader_module);
+
+  switch (err) {
+    case VK_ERROR_OUT_OF_HOST_MEMORY:
+      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_OUT_OF_HOST_MEMORY");
+      break;
+    case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_OUT_OF_DEVICE_MEMORY");
+      break;
+    case VK_ERROR_INVALID_SHADER_NV:
+      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_INVALID_SHADER_NV");
+      break;
+    default:
+      wlu_log_me(WLU_SUCCESS, "Shader module Successfully created");
+      break;
+  }
+
+  return shader_module;
+}

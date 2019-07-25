@@ -21,12 +21,16 @@ pkttyagent -p $(echo $$) | pkexec ninja uninstall -C $(pwd)/build/
 
 **Usage**
 ```bash
-glslangValidator -V shaders/shader.frag
-glslangValidator -V shaders/shader.vert
-
 # This is just an extra step
 export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
-cc -L /usr/local/lib/ -l lucurious simple_example.c -o se
+cc -l lucurious -l lshaderc_shared simple_example.c -o se
+./se
+```
+**OR!**
+```bash
+# This is just an extra step
+export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+make
 ./se
 ```
 

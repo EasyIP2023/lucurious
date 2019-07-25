@@ -3,7 +3,7 @@
 #include <utils/file.h>
 #include <wlu/utils/log.h>
 
-char *wlu_read_file(char *filename) {
+const char *wlu_read_file(const char *filename) {
   FILE *stream = NULL;
   char *buff = NULL;
   long filelen;

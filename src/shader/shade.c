@@ -81,7 +81,7 @@ const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
 
 
 /* Compiles a shader to a SPIR-V binary */
-const char *wlu_compile_to_spirv(shaderc_compiler_t compiler,
+const uint32_t *wlu_compile_to_spirv(shaderc_compiler_t compiler,
                                  shaderc_compilation_result_t result,
                                  shaderc_shader_kind kind,
                                  const char *source,
@@ -117,5 +117,5 @@ const char *wlu_compile_to_spirv(shaderc_compiler_t compiler,
 
   shaderc_compile_options_release(options);
 
-  return shaderc_result_get_bytes(result);
+  return ((uint32_t *) shaderc_result_get_bytes(result) + shaderc_result_get_length(result));
 }

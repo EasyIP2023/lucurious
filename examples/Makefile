@@ -1,5 +1,5 @@
 
-CC=gcc
+CC=gcc -Wall
 FLAGS=-llucurious -lshaderc_shared
 
 all:

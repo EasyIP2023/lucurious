@@ -15,9 +15,15 @@ so_version = ['1']
 
 cc = meson.get_compiler('c')
 
-add_global_arguments('-D_POSIX_C_SOURCE=200809L', language : 'c')
+add_project_arguments(
+	[
+		'-DWLU_DIR_SRC="@0@"'.format(meson.current_source_dir()),
+		'-D_POSIX_C_SOURCE=200809L'
+	],
+	language : 'c'
+)
+
 add_global_link_arguments('-lrt', language : 'c')
-add_global_link_arguments(['-g','-ggdb3'], language : 'c')
 
 lucur_inc = include_directories('.','include')
 
@@ -35,7 +41,8 @@ lib_lucur = shared_library(
 	version: '.'.join(so_version),
 	link_whole: lucur_parts,
 	include_directories: lucur_inc,
-	install: true
+	install: true,
+	install_dir: '/usr/lib'
 )
 
 lucur = declare_dependency(
