@@ -123,7 +123,7 @@ START_TEST(test_vulkan_client_create) {
   wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
   const uint32_t *frag_spv = wlu_compile_to_spirv(compiler, result,
                              shaderc_glsl_vertex_shader, shader_frag_src,
-                             "frag.spv", "main", true);
+                             "frag.spv", "main", false);
   if (!frag_spv) {
     shaderc_result_release(result);
     shaderc_compiler_release(compiler);
@@ -144,21 +144,22 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
-
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, vert_spv);
   if (vert_shader_module == NULL) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, frag_spv);
   if (frag_shader_module == NULL) {
     wlu_freeup_shader(app, vert_shader_module);
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
 
@@ -166,6 +167,8 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
     ck_abort_msg(NULL);
@@ -174,6 +177,8 @@ START_TEST(test_vulkan_client_create) {
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
     ck_abort_msg(NULL);
@@ -181,6 +186,8 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_freeup_shader(app, frag_shader_module);
   wlu_freeup_shader(app, vert_shader_module);
+  shaderc_result_release(result);
+  shaderc_compiler_release(compiler);
   freeme(app, wc);
 } END_TEST;
 

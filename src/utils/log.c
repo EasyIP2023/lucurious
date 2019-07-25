@@ -41,9 +41,6 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 const char *_wlu_strip_path(const char *filepath) {
 	if (*filepath == '.')
 		while (*filepath == '.' || *filepath == '/')
-			++filepath;
-	else
-		return NULL;
-
+			filepath++;
 	return filepath;
 }

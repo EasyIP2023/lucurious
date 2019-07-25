@@ -21,15 +21,11 @@ pkttyagent -p $(echo $$) | pkexec ninja uninstall -C $(pwd)/build/
 
 **Usage**
 ```bash
-# This is just an extra step
-export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
-cc -l lucurious -l lshaderc_shared simple_example.c -o se
+cc -Wall -Wextra `pkgconf --cflags --libs lucurious` simple_example.c -o se
 ./se
 ```
 **OR!**
 ```bash
-# This is just an extra step
-export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
 make
 ./se
 ```

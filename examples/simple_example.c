@@ -131,9 +131,9 @@ int main() {
   shaderc_compilation_result_t result = 0;
 
   wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
-  const char *frag_spv = wlu_compile_to_spirv(compiler, result,
-                         shaderc_glsl_vertex_shader, shader_frag_src,
-                         "frag.spv", "main", true);
+  const uint32_t *frag_spv = wlu_compile_to_spirv(compiler, result,
+                             shaderc_glsl_vertex_shader, shader_frag_src,
+                             "frag.spv", "main", false);
   if (!frag_spv) {
     shaderc_result_release(result);
     shaderc_compiler_release(compiler);
@@ -144,9 +144,9 @@ int main() {
   }
 
   wlu_log_me(WLU_WARNING, "Compiling the vert spirv shader");
-  const char *vert_spv = wlu_compile_to_spirv(compiler, result,
-                         shaderc_glsl_vertex_shader, shader_vert_src,
-                         "vert.spv", "main", false);
+  const uint32_t *vert_spv = wlu_compile_to_spirv(compiler, result,
+                             shaderc_glsl_vertex_shader, shader_vert_src,
+                             "vert.spv", "main", false);
   if (!vert_spv) {
     shaderc_result_release(result);
     shaderc_compiler_release(compiler);
@@ -156,11 +156,32 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
+  VkShaderModule vert_shader_module = wlu_create_shader_module(app, vert_spv);
+  if (vert_shader_module == NULL) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    wlu_freeup_vk(app);
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    return EXIT_FAILURE;
+  }
 
-  err = wlu_create_gp(app, frag_spv, vert_spv);
+  VkShaderModule frag_shader_module = wlu_create_shader_module(app, frag_spv);
+  if (frag_shader_module == NULL) {
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
+    wlu_freeup_vk(app);
+    wlu_freeup_wc(wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_gp(app, frag_shader_module, vert_shader_module);
   if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     wlu_freeup_vk(app);
     wlu_freeup_wc(wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
@@ -168,14 +189,21 @@ int main() {
   }
 
   if (wlu_run_client(wc)) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    shaderc_result_release(result);
+    shaderc_compiler_release(compiler);
     wlu_freeup_vk(app);
     wlu_freeup_wc(wc);
     wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
     return EXIT_FAILURE;
   }
 
+  wlu_freeup_shader(app, frag_shader_module);
+  wlu_freeup_shader(app, vert_shader_module);
+  shaderc_result_release(result);
+  shaderc_compiler_release(compiler);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
-
   return EXIT_SUCCESS;
 }

@@ -464,9 +464,7 @@ VkResult wlu_create_gp(vkcomp *app, ...) {
   return res;
 }
 
-void wlu_freeup_shader(void *data, VkShaderModule shader_module) {
-  vkcomp *app = (vkcomp *) data;
-
+void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module) {
   vkDestroyShaderModule(app->device, shader_module, NULL);
   shader_module = NULL;
 }
