@@ -110,7 +110,7 @@ START_TEST(test_set_logical_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_logical_device(app);
+  err = wlu_create_logical_device(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -140,7 +140,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_logical_device(app);
+  err = wlu_create_logical_device(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");

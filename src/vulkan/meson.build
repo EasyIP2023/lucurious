@@ -7,6 +7,7 @@ lib_vulkan = static_library(
 		'setup.c',
 		'display.c',
 		'devices.c',
+		'graphics_pipeline.c'
 	),
 	include_directories: lucur_inc,
 	dependencies: [vulkan,cglm]

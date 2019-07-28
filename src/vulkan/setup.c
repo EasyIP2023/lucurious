@@ -206,7 +206,7 @@ finish_devices:
  * After selecting a physical device to use.
  *  Set up a logical device to interface with it
  */
-VkResult wlu_set_logical_device(vkcomp *app) {
+VkResult wlu_create_logical_device(vkcomp *app) {
   VkQueue present_queue;
   VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
@@ -258,17 +258,19 @@ VkResult wlu_set_logical_device(vkcomp *app) {
   return res;
 }
 
-VkResult wlu_create_swap_chain(vkcomp *app,
-                               VkSurfaceCapabilitiesKHR capabilities,
-                               VkSurfaceFormatKHR surface_fmt,
-                               VkPresentModeKHR pres_mode,
-                               VkExtent2D extent) {
+VkResult wlu_create_swap_chain(
+  vkcomp *app,
+  VkSurfaceCapabilitiesKHR capabilities,
+  VkSurfaceFormatKHR surface_fmt,
+  VkPresentModeKHR pres_mode,
+  VkExtent2D extent
+) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->surface || !app->device) {
     wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
-    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize see wlu_set_logical_device(3) for details");
+    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize see wlu_create_logical_device(3) for details");
     return res;
   }
 
@@ -430,48 +432,11 @@ finish_create_img_views:
   return res;
 }
 
-/* Create Graphics Pipeline function */
-VkResult wlu_create_gp(vkcomp *app, ...) {
-  ALL_UNUSED(app);
-
-  VkResult res = VK_RESULT_MAX_ENUM;
-  // char **filebuff = NULL;
-  // va_list ap;
-  //
-  // filebuff = (char **) calloc(sizeof(char**), num_args * sizeof(char**));
-  // if (!filebuff) {
-  //   wlu_log_me(WLU_DANGER, "[x] failed to calloc memory for filebuff");
-  //   goto finish_gp;
-  // }
-  //
-  // /* Format specified in function */
-  // va_start(ap, NULL);
-  //
-  // for (uint32_t i = 0; i < num_args; i++) {
-  //   char *s = va_arg(ap, char *);
-  //   filebuff[i] = wlu_read_file(s);
-  //   if (!filebuff[i]) goto finish_gp;
-  // }
-
-  res = VK_SUCCESS;
-
-  // va_end(ap);
-  // if (filebuff) {
-  //   for (uint32_t i = 0; i < num_args; i++)
-  //     if (filebuff[i]) { free(filebuff[i]); filebuff[i] = NULL; }
-  //   free(filebuff); filebuff = NULL;
-  // }
-  return res;
-}
-
-void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module) {
-  vkDestroyShaderModule(app->device, shader_module, NULL);
-  shader_module = NULL;
-}
-
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
+  if (app->pipeline_layout)
+    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)

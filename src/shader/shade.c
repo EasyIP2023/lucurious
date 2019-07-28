@@ -4,12 +4,14 @@
 #include <wlu/utils/log.h>
 
 /* Returns GLSL shader source text after preprocessing */
-const char *wlu_preprocess_shader(shaderc_compiler_t compiler,
-                                  shaderc_compilation_result_t result,
-                                  shaderc_shader_kind kind,
-                                  const char *source,
-                                  const char *source_name,
-                                  const char *entry_point_name) {
+const char *wlu_preprocess_shader(
+  shaderc_compiler_t compiler,
+  shaderc_compilation_result_t result,
+  shaderc_shader_kind kind,
+  const char *source,
+  const char *source_name,
+  const char *entry_point_name
+) {
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
@@ -40,13 +42,15 @@ const char *wlu_preprocess_shader(shaderc_compiler_t compiler,
 }
 
 /* Compiles a shader to SPIR-V assembly. Returns the assembly text as a string. */
-const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
-                                    shaderc_compilation_result_t result,
-                                    shaderc_shader_kind kind,
-                                    const char *source,
-                                    const char *source_name,
-                                    const char *entry_point_name,
-                                    bool optimize) {
+const char *wlu_compile_to_assembly(
+  shaderc_compiler_t compiler,
+  shaderc_compilation_result_t result,
+  shaderc_shader_kind kind,
+  const char *source,
+  const char *source_name,
+  const char *entry_point_name,
+  bool optimize
+) {
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
@@ -79,15 +83,16 @@ const char *wlu_compile_to_assembly(shaderc_compiler_t compiler,
   return shaderc_result_get_bytes(result);
 }
 
-
 /* Compiles a shader to a SPIR-V binary */
-const uint32_t *wlu_compile_to_spirv(shaderc_compiler_t compiler,
-                                 shaderc_compilation_result_t result,
-                                 shaderc_shader_kind kind,
-                                 const char *source,
-                                 const char *source_name,
-                                 const char *entry_point_name,
-                                 bool optimize) {
+const uint32_t *wlu_compile_to_spirv(
+  shaderc_compiler_t compiler,
+  shaderc_compilation_result_t result,
+  shaderc_shader_kind kind,
+  const char *source,
+  const char *source_name,
+  const char *entry_point_name,
+  bool optimize
+) {
 
   const char *name = "MY_DEFINE";
   const char *value = "1";

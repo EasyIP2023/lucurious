@@ -4,10 +4,20 @@
 #include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
+#include <wlu/vlucur/gp.h>
+
 #include <signal.h>
 #include <check.h>
 
 #include "test-shade.h"
+
+#define WIDTH 1920
+#define HEIGHT 1080
+
+void freesh(shaderc_compiler_t compiler, shaderc_compilation_result_t result) {
+  shaderc_result_release(result);
+  shaderc_compiler_release(compiler);
+}
 
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
@@ -71,7 +81,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_logical_device(app);
+  err = wlu_create_logical_device(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -96,7 +106,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent2D extent = wlu_choose_swap_extent(capabilities);
+  VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent.width == UINT32_MAX) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
@@ -117,6 +127,8 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
+  /* This is where creation of the graphics pipeline begins */
+
   shaderc_compiler_t compiler = shaderc_compiler_initialize();
   shaderc_compilation_result_t result = 0;
 
@@ -125,8 +137,7 @@ START_TEST(test_vulkan_client_create) {
                              shaderc_glsl_vertex_shader, shader_frag_src,
                              "frag.spv", "main", false);
   if (!frag_spv) {
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
@@ -137,8 +148,7 @@ START_TEST(test_vulkan_client_create) {
                              shaderc_glsl_vertex_shader, shader_vert_src,
                              "vert.spv", "main", false);
   if (!vert_spv) {
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
@@ -146,8 +156,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, vert_spv);
   if (vert_shader_module == NULL) {
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
@@ -156,29 +165,81 @@ START_TEST(test_vulkan_client_create) {
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, frag_spv);
   if (frag_shader_module == NULL) {
     wlu_freeup_shader(app, vert_shader_module);
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
+  /*
+  VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
+    vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
+  );
 
-  err = wlu_create_gp(app, frag_shader_module, vert_shader_module);
+  VkPipelineShaderStageCreateInfo frag_shader_stage_info = wlu_set_shader_stage_info(
+    frag_shader_module, "main", VK_SHADER_STAGE_FRAGMENT_BIT, NULL
+  );
+
+  VkPipelineShaderStageCreateInfo shader_stages[] = {
+    vert_shader_stage_info, frag_shader_stage_info
+  };
+
+  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertext_input_state_info(
+    0, NULL, 0, NULL
+  );
+
+  VkPipelineInputAssemblyStateCreateInfo input_assembly = wlu_set_input_assembly_state_info(
+    VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
+  );
+
+  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f);
+
+  VkRect2D scissor = wlu_set_rect2D(0, 0, extent);
+
+  VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(&viewport, 1, &scissor, 1);
+
+  VkPipelineRasterizationStateCreateInfo rasterizer = wlu_set_rasterization_state_info(
+    VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT,
+    VK_FRONT_FACE_CLOCKWISE, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
+  );
+
+  VkPipelineMultisampleStateCreateInfo multisampling = wlu_set_multisample_state_info(
+    VK_SAMPLE_COUNT_1_BIT, VK_FALSE, 1.0f, NULL, VK_FALSE, VK_FALSE
+  );
+
+  VkPipelineColorBlendAttachmentState color_blend_attachment = wlu_set_color_blend_attachment_state(
+    VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+  );
+
+  float blend_const[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+  VkPipelineColorBlendStateCreateInfo color_blending = wlu_set_color_blend_attachment_state_info(
+    VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
+  );
+
+  VkDynamicState dynamic_states[] = {
+    VK_DYNAMIC_STATE_VIEWPORT,
+    VK_DYNAMIC_STATE_LINE_WIDTH
+  };
+
+  VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
+  */
+
+  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
+    wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
     ck_abort_msg(NULL);
   }
 
+  /* Ending setup for graphics pipeline */
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
-    shaderc_result_release(result);
-    shaderc_compiler_release(compiler);
+    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
     ck_abort_msg(NULL);
@@ -186,8 +247,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_freeup_shader(app, frag_shader_module);
   wlu_freeup_shader(app, vert_shader_module);
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
+  freesh(compiler, result);
   freeme(app, wc);
 } END_TEST;
 
