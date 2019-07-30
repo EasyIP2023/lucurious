@@ -25,9 +25,10 @@
 #define UNUSED3(x,y,z) UNUSED1(x),UNUSED2(y,z)
 #define UNUSED4(b,x,y,z) UNUSED2(b,x),UNUSED2(y,z)
 #define UNUSED5(a,b,x,y,z) UNUSED2(a,b),UNUSED3(x,y,z)
+#define UNUSED6(a,b,c,x,y,z) UNUSED3(a,b,c),UNUSED3(x,y,z)
 
-#define VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5, N,...) N
-#define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 5, 4, 3, 2, 1)
+#define VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,_6, N,...) N
+#define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
 
 #define ALL_UNUSED_IMPL_(nargs) UNUSED ## nargs
 #define ALL_UNUSED_IMPL(nargs) ALL_UNUSED_IMPL_(nargs)

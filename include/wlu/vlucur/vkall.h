@@ -59,7 +59,9 @@ typedef struct vkcomp {
   VkExtent2D sc_extent;
   uint32_t img_count;
 
+  VkRenderPass render_pass;
   VkPipelineLayout pipeline_layout;
+  VkPipeline graphics_pipeline;
 } vkcomp;
 
 /* Function protypes */

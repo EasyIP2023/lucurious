@@ -77,7 +77,10 @@ VkBool32 is_device_suitable(vkcomp *app, VkPhysicalDevice device, VkPhysicalDevi
   /* Query device features */
   vkGetPhysicalDeviceFeatures(device, &app->device_features);
 
-  return (app->device_properties.deviceType == vkpdtype && app->device_features.geometryShader);
+  return (app->device_properties.deviceType == vkpdtype       &&
+          app->device_features.depthClamp                     &&
+          app->device_features.depthBiasClamp                 &&
+          app->device_features.logicOp);
 }
 
 VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {

@@ -1,15 +1,66 @@
 #ifndef WLU_GRAPHICS_PIPELINE_H
 #define WLU_GRAPHICS_PIPELINE_H
 
-VkShaderModule wlu_create_shader_module(vkcomp *app, const uint32_t *code);
+VkShaderModule wlu_create_shader_module(
+  vkcomp *app,
+  const char *code,
+  size_t code_size
+);
+
 void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module);
 
-/* fixed functions found in src/vulkan/fixed_funcs.c */
-VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
-  VkShaderModule mod,
-  const char *pName,
-  VkShaderStageFlagBits stage,
-  const VkSpecializationInfo *pSpecializationInfo
+VkResult wlu_create_render_pass(
+  vkcomp *app,
+  uint32_t  attachmentCount,
+  const VkAttachmentDescription *pAttachments,
+  uint32_t subpassCount,
+  const VkSubpassDescription *pSubpasses,
+  uint32_t dependencyCount,
+  const VkSubpassDependency *pDependencies
+);
+
+VkResult wlu_create_graphics_pipeline(
+  vkcomp *app,
+  uint32_t stageCount,
+  const VkPipelineShaderStageCreateInfo *pStages,
+  const VkPipelineVertexInputStateCreateInfo *pVertexInputState,
+  const VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
+  const VkPipelineTessellationStateCreateInfo *pTessellationState,
+  const VkPipelineViewportStateCreateInfo *pViewportState,
+  const VkPipelineRasterizationStateCreateInfo *pRasterizationState,
+  const VkPipelineMultisampleStateCreateInfo *pMultisampleState,
+  const VkPipelineDepthStencilStateCreateInfo *pDepthStencilState,
+  const VkPipelineColorBlendStateCreateInfo *pColorBlendState,
+  const VkPipelineDynamicStateCreateInfo *pDynamicState,
+  uint32_t subpass,
+  VkPipeline basePipelineHandle,
+  uint32_t basePipelineIndex
+);
+
+VkAttachmentDescription wlu_set_attachment_desc(
+  vkcomp *app,
+  VkSampleCountFlagBits samples,
+  VkAttachmentLoadOp loadOp,
+  VkAttachmentStoreOp storeOp,
+  VkAttachmentLoadOp stencilLoadOp,
+  VkAttachmentStoreOp stencilStoreOp,
+  VkImageLayout initialLayout,
+  VkImageLayout finalLayout
+);
+
+VkAttachmentReference wlu_set_attachment_ref(
+  uint32_t attachment, VkImageLayout layout
+);
+
+VkSubpassDescription wlu_set_subpass_desc(
+  uint32_t inputAttachmentCount,
+  const VkAttachmentReference *pInputAttachments,
+  uint32_t colorAttachmentCount,
+  const VkAttachmentReference *pColorAttachments,
+  const VkAttachmentReference *pResolveAttachments,
+  const VkAttachmentReference *pDepthStencilAttachment,
+  uint32_t preserveAttachmentCount,
+  const uint32_t *pPreserveAttachments
 );
 
 VkResult wlu_create_pipeline_layout(
@@ -20,16 +71,29 @@ VkResult wlu_create_pipeline_layout(
   const VkPushConstantRange *pPushConstantRanges
 );
 
-VkPipelineVertexInputStateCreateInfo wlu_set_vertext_input_state_info(
+VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
+  VkShaderModule mod,
+  const char *pName,
+  VkShaderStageFlagBits stage,
+  const VkSpecializationInfo *pSpecializationInfo
+);
+
+VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
+  VkPrimitiveTopology topology, VkBool32 pre
+);
+
+VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,
   uint32_t vertexAttributeDescriptionCount,
   const VkVertexInputAttributeDescription *pVertexAttributeDescriptions
 );
 
-VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(VkPrimitiveTopology topology, VkBool32 pre);
-
-VkViewport wlu_set_view_port(float x, float y, float width, float height, float minDepth, float maxDepth);
+VkViewport wlu_set_view_port(
+  float x, float y, float width,
+  float height, float minDepth,
+  float maxDepth
+);
 
 VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
   VkViewport *viewport,

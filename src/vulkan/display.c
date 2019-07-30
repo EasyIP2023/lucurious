@@ -4,7 +4,15 @@
 
 /* How wayland display's and surface's connect to your vulkan application */
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->instance) {
+    wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
   VkWaylandSurfaceCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
   create_info.pNext = NULL;
@@ -22,7 +30,9 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   VkResult err;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     capabilities.minImageCount = UINT32_MAX;
     return capabilities;
   }
@@ -43,6 +53,13 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   VkSurfaceFormatKHR ret_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
   uint32_t format_count = 0;
+
+  if (!app->surface) {
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    goto finish_format;
+  }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) {
@@ -106,6 +123,13 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   VkPresentModeKHR best_mode = VK_PRESENT_MODE_MAX_ENUM_KHR;
   VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
   uint32_t pres_mode_count = 0;
+
+  if (!app->surface) {
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    goto finish_best_mode;
+  }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
   if (err) {

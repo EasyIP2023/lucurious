@@ -2,7 +2,6 @@
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
 #include <vlucur/devices.h>
-#include <utils/file.h>
 
 static void set_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
@@ -29,6 +28,8 @@ static void set_values(vkcomp *app) {
   // app->sc_img_fmt;
   // app->sc_extent;
   app->img_count = VK_NULL_HANDLE;
+  app->pipeline_layout = VK_NULL_HANDLE;
+  app->render_pass = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -141,9 +142,16 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
 
 /* Get user physical device */
 VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
+
+  if (!app->instance) {
+    wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    goto finish_devices;
+  }
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
   if (res) {
@@ -207,9 +215,16 @@ finish_devices:
  *  Set up a logical device to interface with it
  */
 VkResult wlu_create_logical_device(vkcomp *app) {
+  VkResult res = VK_RESULT_MAX_ENUM;
   VkQueue present_queue;
-  VkResult res = VK_INCOMPLETE;
   float queue_priorities[1] = {1.0};
+
+  if (!app->physical_device) {
+    wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_enumerate_devices(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
 
   app->queue_create_infos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
@@ -269,8 +284,11 @@ VkResult wlu_create_swap_chain(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->surface || !app->device) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize see wlu_vkconnect_surfaceKHR(3) for details");
-    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize see wlu_create_logical_device(3) for details");
+    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
+    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return res;
   }
 
@@ -435,8 +453,6 @@ finish_create_img_views:
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
-  if (app->pipeline_layout)
-    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)
@@ -447,6 +463,12 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->graphics_pipeline)
+    vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
+  if (app->pipeline_layout)
+    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
+  if (app->render_pass)
+    vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {
     for (uint32_t i = 0; i < app->img_count; i++) {
       vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);

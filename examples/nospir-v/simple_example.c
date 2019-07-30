@@ -30,148 +30,170 @@ int main(void) {
   wclient *wc = wlu_init_wc();
   if (!wc) {
     wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   vkcomp *app = wlu_init_vk();
   if (!app) {
     freeme(NULL, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   /* Signal handler for this process */
   err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to set up signal_handler");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   if (wlu_connect_client(wc)) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect client");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_set_global_layers(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine");
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
+  /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_create_logical_device(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
   if (capabilities.minImageCount == UINT32_MAX) {
     freeme(app, wc);
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
     freeme(app, wc);
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) {
     freeme(app, wc);
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent.width == UINT32_MAX) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   err = wlu_create_img_views(app, TWO_D_IMG);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create image views");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   /* This is where creation of the graphics pipeline begins */
+
+  /* Starting point for render pass creation */
+  VkAttachmentDescription color_attachment = wlu_set_attachment_desc(app,
+    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+  );
+
+  VkAttachmentReference color_attachment_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+  VkSubpassDescription subpass = wlu_set_subpass_desc(
+    0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL
+  );
+
+  err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
+    return EXIT_SUCCESS;
+  }
+  /* ending point for render pass creation */
 
   shaderc_compiler_t compiler = shaderc_compiler_initialize();
   shaderc_compilation_result_t result = 0;
 
   wlu_log_me(WLU_WARNING, "Compiling the frag spirv shader");
-  const uint32_t *frag_spv = wlu_compile_to_spirv(compiler, result,
-                             shaderc_glsl_vertex_shader, shader_frag_src,
+
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(compiler, result,
+                             shaderc_glsl_fragment_shader, shader_frag_src,
                              "frag.spv", "main", false);
-  if (!frag_spv) {
+  if (!shi_frag.bytes) {
     freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   wlu_log_me(WLU_WARNING, "Compiling the vert spirv shader");
-  const uint32_t *vert_spv = wlu_compile_to_spirv(compiler, result,
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(compiler, result,
                              shaderc_glsl_vertex_shader, shader_vert_src,
                              "vert.spv", "main", false);
-  if (!vert_spv) {
+  if (!shi_vert.bytes) {
     freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
-  VkShaderModule vert_shader_module = wlu_create_shader_module(app, vert_spv);
+  VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
   if (!vert_shader_module) {
     freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
-  VkShaderModule frag_shader_module = wlu_create_shader_module(app, frag_spv);
+  VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
+    wlu_freeup_shader(app, vert_shader_module);
     freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
-  /*
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
   );
@@ -184,7 +206,7 @@ int main(void) {
     vert_shader_stage_info, frag_shader_stage_info
   };
 
-  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertext_input_state_info(
+  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertex_input_state_info(
     0, NULL, 0, NULL
   );
 
@@ -218,13 +240,12 @@ int main(void) {
     VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  VkDynamicState dynamic_states[] = {
+  VkDynamicState dynamic_states[2] = {
     VK_DYNAMIC_STATE_VIEWPORT,
     VK_DYNAMIC_STATE_LINE_WIDTH
   };
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
-  */
 
   err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
   if (err) {
@@ -232,19 +253,34 @@ int main(void) {
     wlu_freeup_shader(app, vert_shader_module);
     freesh(compiler, result);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
-    ck_abort_msg(NULL);
+    wlu_log_me(WLU_DANGER, "[x] failed to create pipeline layout");
+    return EXIT_SUCCESS;
   }
 
-  /* Ending setup for graphics pipeline */
+  err = wlu_create_graphics_pipeline(app, 2, shader_stages,
+    &vertext_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
+    &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+  );
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freesh(compiler, result);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
+    return EXIT_SUCCESS;
+  }
 
+  wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
+
+  /* Ending setup for graphics pipeline */
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
     freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 
   wlu_freeup_shader(app, frag_shader_module);

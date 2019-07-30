@@ -3,6 +3,11 @@
 
 #include <shaderc/shaderc.h>
 
+typedef struct wlu_shader_info {
+  const char *bytes;
+  long byte_size;
+} wlu_shader_info;
+
 const char *wlu_preprocess_shader(
   shaderc_compiler_t compiler,
   shaderc_compilation_result_t result,
@@ -22,7 +27,7 @@ const char *wlu_compile_to_assembly(
   bool optimize
 );
 
-const uint32_t *wlu_compile_to_spirv(
+wlu_shader_info wlu_compile_to_spirv(
   shaderc_compiler_t compiler,
   shaderc_compilation_result_t result,
   shaderc_shader_kind kind,

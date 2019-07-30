@@ -3,6 +3,7 @@ headers = ['wlu/vlucur/vkall.h',
            'wlu/vlucur/gp.h',
            'wlu/wclient/client.h',
            'wlu/utils/log.h',
+           'wlu/utils/file.h',
            'wlu/utils/errors.h',
            'wlu/shader/shade.h']
 

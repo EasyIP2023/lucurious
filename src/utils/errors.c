@@ -35,7 +35,7 @@ static void signal_handler(int sig) {
   if (wsi[i].wc)
     wlu_freeup_wc(wsi[i].wc);
 
-  wlu_log_me(WLU_SUCCESS, "Successfully freed up allocated memory");
+  wlu_log_me(WLU_SUCCESS, "Successfully freed up most allocated memory :)");
 
   exit(EXIT_FAILURE);
 }

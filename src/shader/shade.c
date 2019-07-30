@@ -84,7 +84,7 @@ const char *wlu_compile_to_assembly(
 }
 
 /* Compiles a shader to a SPIR-V binary */
-const uint32_t *wlu_compile_to_spirv(
+wlu_shader_info wlu_compile_to_spirv(
   shaderc_compiler_t compiler,
   shaderc_compilation_result_t result,
   shaderc_shader_kind kind,
@@ -93,6 +93,8 @@ const uint32_t *wlu_compile_to_spirv(
   const char *entry_point_name,
   bool optimize
 ) {
+
+  wlu_shader_info shinfo = {NULL, 0};
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
@@ -111,16 +113,19 @@ const uint32_t *wlu_compile_to_spirv(
   if (!result) {
     shaderc_compile_options_release(options);
     wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv failed, ERROR code: %d", result);
-    return NULL;
+    return shinfo;
   }
 
   if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
     shaderc_compile_options_release(options);
     wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(result));
-    return NULL;
+    return shinfo;
   }
 
   shaderc_compile_options_release(options);
 
-  return ((uint32_t *) shaderc_result_get_bytes(result) + shaderc_result_get_length(result));
+  shinfo.bytes = shaderc_result_get_bytes(result);
+  shinfo.byte_size = shaderc_result_get_length(result);
+
+  return shinfo;
 }

@@ -1,46 +1,45 @@
 #include <lucom.h>
 #include <errno.h>
-#include <utils/file.h>
+#include <wlu/utils/file.h>
 #include <wlu/utils/log.h>
 
-const char *wlu_read_file(const char *filename) {
+wlu_file_info wlu_read_file(const char *filename) {
+  struct wlu_file_info fileinfo = {NULL, 0};
   FILE *stream = NULL;
-  char *buff = NULL;
-  long filelen;
 
   /* Open the file in binary mode */
   stream = fopen(filename, "rb");
   if (!stream) {
     wlu_log_me(WLU_DANGER, "[x] %s: %s", filename, strerror(errno));
-    return NULL;
+    return fileinfo;
   }
 
   /* Go to the end of the file */
-  filelen = fseek(stream, 0, SEEK_END);
-  if (filelen == -1) {
+  fileinfo.byte_size = fseek(stream, 0, SEEK_END);
+  if (fileinfo.byte_size == -1) {
     wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
-    return NULL;
+    return fileinfo;
   }
 
   /* Get the current byte offset in the file */
-  filelen = ftell(stream);
-  if (filelen == -1) {
+  fileinfo.byte_size = ftell(stream);
+  if (fileinfo.byte_size == -1) {
     wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
-    return NULL;
+    return fileinfo;
   }
 
   /* Jump back to the beginning of the file */
   rewind(stream);
 
-  buff = (char *) calloc(sizeof(char), (filelen+1) * sizeof(char));
-  if (!buff) {
+  fileinfo.bytes = (char *) calloc(sizeof(char), (fileinfo.byte_size+1) * sizeof(char));
+  if (!fileinfo.bytes) {
     wlu_log_me(WLU_DANGER, "[x] failed to calloc buff");
-    return NULL;
+    return fileinfo;
   }
 
   /* Read in the entire file */
-  fread(buff, filelen, 1, stream);
+  fread(fileinfo.bytes, fileinfo.byte_size, 1, stream);
   fclose(stream);
 
-  return buff;
+  return fileinfo;
 }

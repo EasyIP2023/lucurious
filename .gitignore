@@ -10,8 +10,8 @@
 # Ignore SPIR-V Files
 **/*.spv
 
-# Ignore se in examples
-examples/se
+# Ignore all se executables in examples
+examples/**/*se
 
 build/
 
