@@ -8,7 +8,7 @@ typedef struct wlu_shader_info {
   long byte_size;
 } wlu_shader_info;
 
-const char *wlu_preprocess_shader(
+wlu_shader_info wlu_preprocess_shader(
   shaderc_compiler_t compiler,
   shaderc_compilation_result_t result,
   shaderc_shader_kind kind,
@@ -17,7 +17,7 @@ const char *wlu_preprocess_shader(
   const char *entry_point_name
 );
 
-const char *wlu_compile_to_assembly(
+wlu_shader_info wlu_compile_to_assembly(
   shaderc_compiler_t compiler,
   shaderc_compilation_result_t result,
   shaderc_shader_kind kind,

@@ -274,6 +274,16 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
 
+  err = wlu_create_framebuffers(app, 1, extent, 1);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freesh(compiler, result);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create framebuffers, ERROR CODE: %d", err);
+    ck_abort_msg(NULL);
+  }
+
   /* Ending setup for graphics pipeline */
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);

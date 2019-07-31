@@ -62,6 +62,8 @@ typedef struct vkcomp {
   VkRenderPass render_pass;
   VkPipelineLayout pipeline_layout;
   VkPipeline graphics_pipeline;
+
+  VkFramebuffer *sc_frame_buffs;
 } vkcomp;
 
 /* Function protypes */
@@ -83,7 +85,7 @@ VkResult wlu_create_swap_chain(
   VkExtent2D extent
 );
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type);
-
+VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers);
 void wlu_freeup_vk(void *data);
 
 #endif

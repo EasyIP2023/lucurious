@@ -30,6 +30,7 @@ static void set_values(vkcomp *app) {
   app->img_count = VK_NULL_HANDLE;
   app->pipeline_layout = VK_NULL_HANDLE;
   app->render_pass = VK_NULL_HANDLE;
+  app->sc_frame_buffs = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -370,7 +371,7 @@ VkResult wlu_create_swap_chain(
 
 VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkImage *swcimgs = NULL;
+  VkImage *sc_imgs = NULL;
 
   if (!app->swap_chain) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain not create see wlu_create_swap_chain(3) for more info");
@@ -390,14 +391,14 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
     goto finish_create_img_views;
   }
 
-  swcimgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
-  if (!swcimgs) {
+  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
+  if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc VkImage *swcimgs failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc VkImage *sc_imgs failed");
     goto finish_create_img_views;
   }
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, swcimgs);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, sc_imgs);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
@@ -406,7 +407,7 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   for (uint32_t i = 0; i < app->img_count; i++) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    create_info.image = app->sc_buffs[i].image = swcimgs[i];
+    create_info.image = app->sc_buffs[i].image = sc_imgs[i];
     switch (type) {
       case ONE_D_IMG:
         create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
@@ -443,10 +444,53 @@ VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
   }
 
 finish_create_img_views:
-  if (swcimgs) {
-    free(swcimgs);
-    swcimgs = NULL;
+  if (sc_imgs) {
+    free(sc_imgs);
+    sc_imgs = NULL;
   }
+  return res;
+}
+
+/*
+ * This function creates the framebuffers
+ * Attachments specified when creating the render pass
+ * are bounded by wrapping them into a VkFramebuffer object.
+ * A framebuffer object references all VkImageView objects this
+ * is represented by "attachments"
+ */
+VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  app->sc_frame_buffs = (VkFramebuffer *) calloc(sizeof(VkFramebuffer),
+        app->img_count * sizeof(VkFramebuffer));
+  if (!app->sc_frame_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc VkFramebuffer *sc_frame_buffs failed");
+    return res;
+  }
+
+  VkImageView attachments[app->img_count];
+
+  for (size_t i = 0; i < app->img_count; i++) {
+    attachments[i] = app->sc_buffs[i].view;
+
+    VkFramebufferCreateInfo frame_buff_info = {};
+    frame_buff_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    frame_buff_info.renderPass = app->render_pass;
+    frame_buff_info.attachmentCount = attachment_count;
+    frame_buff_info.pAttachments = attachments;
+    frame_buff_info.width = extent.width;
+    frame_buff_info.height = extent.height;
+    frame_buff_info.layers = layers;
+
+    res = vkCreateFramebuffer(app->device, &frame_buff_info, NULL, &app->sc_frame_buffs[i]);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkCreateFramebuffer failed, ERROR CODE: %d", res);
+      return res;
+    }
+  }
+
+  wlu_log_me(WLU_SUCCESS, "Frame Buffers have been successfully created!!!");
+
   return res;
 }
 
@@ -463,6 +507,13 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->sc_frame_buffs) {
+    for (uint32_t i = 0; i < app->img_count; i++) {
+      vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
+      app->sc_frame_buffs[i] = VK_NULL_HANDLE;
+    }
+    free(app->sc_frame_buffs);
+  }
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
   if (app->pipeline_layout)
