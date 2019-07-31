@@ -196,3 +196,49 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_
     return actual_extent;
   }
 }
+
+VkResult wlu_start_cmd_buff_record(
+  vkcomp *app,
+  VkCommandBufferUsageFlags flags,
+  const VkCommandBufferInheritanceInfo *pInheritanceInfo
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->cmd_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] app->cmd_buffs must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_buffs(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.pNext = NULL;
+    begin_info.flags = flags;
+    begin_info.pInheritanceInfo = pInheritanceInfo;
+
+    res = vkBeginCommandBuffer(app->cmd_buffs[i], &begin_info);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] Failed to start recording command buffer [%d], ERROR CODE: %d", i, res);
+      return res;
+    }
+  }
+
+  return res;
+}
+
+VkResult wlu_stop_cmd_buff_record(vkcomp *app) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+    res = vkEndCommandBuffer(app->cmd_buffs[i]);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] Failed to stop recording command buffer [%d], ERROR CODE: %d", i, res);
+      return res;
+    }
+  }
+
+  return res;
+}

@@ -37,7 +37,6 @@ int main(void) {
   err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to set up signal_handler");
     return EXIT_FAILURE;
   }
 
@@ -115,7 +114,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_img_views(app, TWO_D_IMG);
+  err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create image views");
@@ -125,7 +124,7 @@ int main(void) {
   /* This is where creation of the graphics pipeline begins */
 
   /* Starting point for render pass creation */
-  VkAttachmentDescription color_attachment = wlu_set_attachment_desc(app,
+  VkAttachmentDescription color_attachment = wlu_set_attachment_desc(surface_fmt.format,
     VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
@@ -208,7 +207,7 @@ int main(void) {
     VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  VkDynamicState dynamic_states[] = {
+  VkDynamicState dynamic_states[2] = {
     VK_DYNAMIC_STATE_VIEWPORT,
     VK_DYNAMIC_STATE_LINE_WIDTH
   };
@@ -220,7 +219,7 @@ int main(void) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
+    wlu_log_me(WLU_DANGER, "[x] failed to create pipeline layout");
     return EXIT_FAILURE;
   }
 
@@ -241,16 +240,85 @@ int main(void) {
 
   /* Ending setup for graphics pipeline */
 
+  err = wlu_create_framebuffers(app, 1, extent, 1);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create framebuffers, ERROR CODE: %d", err);
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_cmd_pool(app, 0);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_start_cmd_buff_record(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
+    return EXIT_FAILURE;
+  }
+
+  VkClearValue clear_color;
+  clear_color.color.float32[0] = 0.0f;
+  clear_color.color.float32[1] = 0.0f;
+  clear_color.color.float32[2] = 0.0f;
+  clear_color.color.float32[3] = 1.0f;
+
+  clear_color.color.int32[0] = 0.0f;
+  clear_color.color.int32[1] = 0.0f;
+  clear_color.color.int32[2] = 0.0f;
+  clear_color.color.int32[3] = 1.0f;
+
+
+  clear_color.color.uint32[0] = 0.0f;
+  clear_color.color.uint32[1] = 0.0f;
+  clear_color.color.uint32[2] = 0.0f;
+  clear_color.color.uint32[3] = 1.0f;
+
+  clear_color.depthStencil.depth = 0.0f;
+  clear_color.depthStencil.stencil = 0;
+  wlu_start_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+
+  wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
+  wlu_draw(app, 3, 1, 0, 0);
+
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to run wayland client");
+    wlu_log_me(WLU_SUCCESS, "[x] failed to run wayland client");
     return EXIT_FAILURE;
   }
+
+  err = wlu_stop_cmd_buff_record(app);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freeme(app, wc);
+    return EXIT_FAILURE;
+  }
+
+  wlu_stop_render_pass(app);
 
   wlu_freeup_shader(app, frag_shader_module);
   wlu_freeup_shader(app, vert_shader_module);
   freeme(app, wc);
-  return EXIT_SUCCESS;
 }

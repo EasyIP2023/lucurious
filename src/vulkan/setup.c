@@ -25,12 +25,12 @@ static void set_values(vkcomp *app) {
   app->graphics_queue = VK_FALSE;
   app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
-  // app->sc_img_fmt;
-  // app->sc_extent;
-  app->img_count = VK_NULL_HANDLE;
+  app->sc_buff_size = VK_NULL_HANDLE;
   app->pipeline_layout = VK_NULL_HANDLE;
   app->render_pass = VK_NULL_HANDLE;
   app->sc_frame_buffs = VK_NULL_HANDLE;
+  app->cmd_pool = VK_NULL_HANDLE;
+  app->cmd_buffs = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -284,13 +284,17 @@ VkResult wlu_create_swap_chain(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->surface || !app->device) {
+  if (!app->surface) {
     wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  if (!app->device) {
     wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-    return res;
   }
 
   /*
@@ -298,11 +302,11 @@ VkResult wlu_create_swap_chain(
    * drive to complete internal operations before one can acquire another
    * images to render to. So it's recommended to add one to minImageCount
    */
-  app->img_count = capabilities.minImageCount + 1;
+  app->sc_buff_size = capabilities.minImageCount + 1;
 
-  /* Be sure img_count doesn't exceed the maximum. */
-  if (capabilities.maxImageCount > 0 && app->img_count > capabilities.maxImageCount)
-    app->img_count = capabilities.maxImageCount;
+  /* Be sure sc_buff_size doesn't exceed the maximum. */
+  if (capabilities.maxImageCount > 0 && app->sc_buff_size > capabilities.maxImageCount)
+    app->sc_buff_size = capabilities.maxImageCount;
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -328,7 +332,7 @@ VkResult wlu_create_swap_chain(
   create_info.pNext = NULL;
   create_info.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
   create_info.surface = app->surface;
-  create_info.minImageCount = app->img_count;
+  create_info.minImageCount = app->sc_buff_size;
   create_info.imageFormat = surface_fmt.format;
   create_info.imageColorSpace = surface_fmt.colorSpace;
   create_info.imageExtent.width = extent.width;
@@ -363,67 +367,52 @@ VkResult wlu_create_swap_chain(
     return res;
   }
 
-  app->sc_img_fmt = surface_fmt.format;
-  app->sc_extent = extent;
-
   return res;
 }
 
-VkResult wlu_create_img_views(vkcomp *app, wlu_image_type type) {
+VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *sc_imgs = NULL;
 
   if (!app->swap_chain) {
-    wlu_log_me(WLU_DANGER, "[x] Swap Chain not create see wlu_create_swap_chain(3) for more info");
-    return res;
+    wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    goto finish_create_img_views;
   }
 
   app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
-      app->img_count * sizeof(swap_chain_buffers));
+      app->sc_buff_size * sizeof(swap_chain_buffers));
   if (!app->sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
     goto finish_create_img_views;
   }
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, NULL);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->sc_buff_size, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
   }
 
-  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->img_count * sizeof(VkImage));
+  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->sc_buff_size * sizeof(VkImage));
   if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] calloc VkImage *sc_imgs failed");
     goto finish_create_img_views;
   }
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->img_count, sc_imgs);
+  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->sc_buff_size, sc_imgs);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
   }
 
-  for (uint32_t i = 0; i < app->img_count; i++) {
+  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = app->sc_buffs[i].image = sc_imgs[i];
-    switch (type) {
-      case ONE_D_IMG:
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
-        break;
-      case TWO_D_IMG:
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        break;
-      case THREE_D_IMG:
-        create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
-        break;
-      default:
-        wlu_log_me(WLU_DANGER, "[x] image type not specified. Types: ONE_D_IMG, TWO_D_IMG, THREE_D_IMG");
-        goto finish_create_img_views;
-    }
-
-    create_info.format = app->sc_img_fmt;
+    create_info.viewType = type;
+    create_info.format = format;
     create_info.components.r = VK_COMPONENT_SWIZZLE_R;
     create_info.components.g = VK_COMPONENT_SWIZZLE_G;
     create_info.components.b = VK_COMPONENT_SWIZZLE_B;
@@ -461,35 +450,85 @@ finish_create_img_views:
 VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
+  if (!app->render_pass) {
+    wlu_log_me(WLU_DANGER, "[x] render pass not setup");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  if (!app->sc_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] Swap Chain buffers not setup");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_img_views(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
   app->sc_frame_buffs = (VkFramebuffer *) calloc(sizeof(VkFramebuffer),
-        app->img_count * sizeof(VkFramebuffer));
+        app->sc_buff_size * sizeof(VkFramebuffer));
   if (!app->sc_frame_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkFramebuffer *sc_frame_buffs failed");
     return res;
   }
 
-  VkImageView attachments[app->img_count];
+  VkImageView attachments[app->sc_buff_size];
 
-  for (size_t i = 0; i < app->img_count; i++) {
+  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
     attachments[i] = app->sc_buffs[i].view;
 
-    VkFramebufferCreateInfo frame_buff_info = {};
-    frame_buff_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    frame_buff_info.renderPass = app->render_pass;
-    frame_buff_info.attachmentCount = attachment_count;
-    frame_buff_info.pAttachments = attachments;
-    frame_buff_info.width = extent.width;
-    frame_buff_info.height = extent.height;
-    frame_buff_info.layers = layers;
+    VkFramebufferCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    create_info.renderPass = app->render_pass;
+    create_info.attachmentCount = attachment_count;
+    create_info.pAttachments = attachments;
+    create_info.width = extent.width;
+    create_info.height = extent.height;
+    create_info.layers = layers;
 
-    res = vkCreateFramebuffer(app->device, &frame_buff_info, NULL, &app->sc_frame_buffs[i]);
+    res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_frame_buffs[i]);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateFramebuffer failed, ERROR CODE: %d", res);
       return res;
     }
   }
 
-  wlu_log_me(WLU_SUCCESS, "Frame Buffers have been successfully created!!!");
+  wlu_log_me(WLU_SUCCESS, "Frame Buffers have been successfully created");
+
+  return res;
+}
+
+VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  VkCommandPoolCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.queueFamilyIndex = app->indices.graphics_family;
+
+  res = vkCreateCommandPool(app->device, &create_info, NULL, &app->cmd_pool);
+
+  return res;
+}
+
+VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  app->cmd_buffs = (VkCommandBuffer * ) calloc(sizeof(VkCommandBuffer),
+        app->sc_buff_size * sizeof(VkCommandBuffer));
+  if (!app->cmd_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc VkCommandBuffer *cmd_buffs failed");
+    return res;
+  }
+
+  VkCommandBufferAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  alloc_info.pNext = NULL;
+  alloc_info.commandPool = app->cmd_pool;
+  alloc_info.level = level;
+  alloc_info.commandBufferCount = (uint32_t) app->sc_buff_size;
+
+  res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_buffs);
 
   return res;
 }
@@ -507,8 +546,12 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->cmd_buffs)
+    vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_buff_size, app->cmd_buffs);
+  if (app->cmd_pool)
+    vkDestroyCommandPool(app->device, app->cmd_pool, NULL);
   if (app->sc_frame_buffs) {
-    for (uint32_t i = 0; i < app->img_count; i++) {
+    for (uint32_t i = 0; i < app->sc_buff_size; i++) {
       vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
       app->sc_frame_buffs[i] = VK_NULL_HANDLE;
     }
@@ -521,7 +564,7 @@ void wlu_freeup_vk(void *data) {
   if (app->render_pass)
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {
-    for (uint32_t i = 0; i < app->img_count; i++) {
+    for (uint32_t i = 0; i < app->sc_buff_size; i++) {
       vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
       app->sc_buffs[i].view = VK_NULL_HANDLE;
     }

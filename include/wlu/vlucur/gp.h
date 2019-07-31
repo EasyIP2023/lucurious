@@ -37,8 +37,30 @@ VkResult wlu_create_graphics_pipeline(
   uint32_t basePipelineIndex
 );
 
-VkAttachmentDescription wlu_set_attachment_desc(
+void wlu_start_render_pass(
   vkcomp *app,
+  uint32_t x,
+  uint32_t y,
+  VkExtent2D extent,
+  uint32_t clear_value_count,
+  const VkClearValue *pClearValues,
+  VkSubpassContents contents
+);
+
+void wlu_stop_render_pass(vkcomp *app);
+
+void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint);
+
+void wlu_draw(
+  vkcomp *app,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
+);
+
+VkAttachmentDescription wlu_set_attachment_desc(
+  VkFormat format,
   VkSampleCountFlagBits samples,
   VkAttachmentLoadOp loadOp,
   VkAttachmentStoreOp storeOp,

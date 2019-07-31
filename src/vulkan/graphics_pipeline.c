@@ -130,8 +130,55 @@ VkResult wlu_create_graphics_pipeline(
   return res;
 }
 
-VkAttachmentDescription wlu_set_attachment_desc(
+void wlu_start_render_pass(
   vkcomp *app,
+  uint32_t x,
+  uint32_t y,
+  VkExtent2D extent,
+  uint32_t clear_value_count,
+  const VkClearValue *pClearValues,
+  VkSubpassContents contents
+) {
+
+  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+    VkRenderPassBeginInfo render_pass_info = {};
+    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_info.pNext = NULL;
+    render_pass_info.renderPass = app->render_pass;
+    render_pass_info.framebuffer = app->sc_frame_buffs[i];
+    render_pass_info.renderArea.offset.x = x;
+    render_pass_info.renderArea.offset.y = y;
+    render_pass_info.renderArea.extent = extent;
+    render_pass_info.clearValueCount = clear_value_count;
+    render_pass_info.pClearValues = pClearValues;
+
+    vkCmdBeginRenderPass(app->cmd_buffs[i], &render_pass_info, contents);
+  }
+}
+
+void wlu_stop_render_pass(vkcomp *app) {
+  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+    vkCmdEndRenderPass(app->cmd_buffs[i]);
+}
+
+void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint) {
+  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+    vkCmdBindPipeline(app->cmd_buffs[i], pipelineBindPoint, app->graphics_pipeline);
+}
+
+void wlu_draw(
+  vkcomp *app,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
+) {
+  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+    vkCmdDraw(app->cmd_buffs[i], vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+VkAttachmentDescription wlu_set_attachment_desc(
+  VkFormat format,
   VkSampleCountFlagBits samples,
   VkAttachmentLoadOp loadOp,
   VkAttachmentStoreOp storeOp,
@@ -142,7 +189,7 @@ VkAttachmentDescription wlu_set_attachment_desc(
 ) {
 
   VkAttachmentDescription color_attachment = {};
-  color_attachment.format = app->sc_img_fmt;
+  color_attachment.format = format;
   color_attachment.samples = samples;
   color_attachment.loadOp = loadOp;
   color_attachment.storeOp = storeOp;
