@@ -45,6 +45,7 @@ typedef struct vkcomp {
 
   VkDevice device; /* logical device */
   VkQueue graphics_queue;
+  VkQueue present_queue;
 
   swap_chain_buffers *sc_buffs;
   VkSwapchainKHR swap_chain;
@@ -58,6 +59,9 @@ typedef struct vkcomp {
 
   VkCommandPool cmd_pool;
   VkCommandBuffer *cmd_buffs;
+
+  VkSemaphore img_semaphore;
+  VkSemaphore render_semaphore;
 } vkcomp;
 
 /* Function protypes */
@@ -65,11 +69,27 @@ vkcomp *wlu_init_vk();
 
 VkResult wlu_set_global_layers(vkcomp *app);
 
-VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name);
+VkResult wlu_create_instance(
+  vkcomp *app,
+  char *app_name,
+  char *engine_name,
+  uint32_t enabledLayerCount,
+  const char* const* ppEnabledLayerNames,
+  uint32_t enabledExtensionCount,
+  const char* const* ppEnabledExtensionNames
+);
 
-VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype);
+VkResult wlu_enumerate_devices(vkcomp *app, VkPhysicalDeviceType vkpdtype);
 
-VkResult wlu_create_logical_device(vkcomp *app);
+VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
+
+VkResult wlu_create_logical_device(
+  vkcomp *app,
+  uint32_t enabledLayerCount,
+  const char* const* ppEnabledLayerNames,
+  uint32_t enabledExtensionCount,
+  const char* const* ppEnabledExtensionNames
+);
 
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 
@@ -104,6 +124,22 @@ VkResult wlu_start_cmd_buff_record(
 );
 
 VkResult wlu_stop_cmd_buff_record(vkcomp *app);
+
+VkResult wlu_draw_frame(
+  vkcomp *app,
+  uint32_t *image_index,
+  uint32_t waitSemaphoreCount,
+  VkSemaphore *pWaitSemaphores,
+  VkPipelineStageFlags *pWaitDstStageMask,
+  uint32_t commandBufferCount,
+  uint32_t signalSemaphoreCount,
+  VkSemaphore *pSignalSemaphores,
+  uint32_t swapchainCount,
+  VkSwapchainKHR *pSwapchains,
+  VkResult *pResults
+);
+
+VkResult wlu_create_semaphores(vkcomp *app);
 
 void wlu_freeup_vk(void *data);
 

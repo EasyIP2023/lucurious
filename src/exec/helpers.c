@@ -74,11 +74,11 @@ VkQueueFlagBits ret_qfambit(char *str) {
 }
 
 VkPhysicalDeviceType ret_dtype(char *str) {
-  if (!strcmp(str, "0")) return VK_PHYSICAL_DEVICE_TYPE_OTHER;
-  if (!strcmp(str, "1")) return VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
-  if (!strcmp(str, "2")) return VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-  if (!strcmp(str, "3")) return VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
-  if (!strcmp(str, "4")) return VK_PHYSICAL_DEVICE_TYPE_CPU;
+  if (!strcmp(str, "VK_PHYSICAL_DEVICE_TYPE_OTHER")) return VK_PHYSICAL_DEVICE_TYPE_OTHER;
+  if (!strcmp(str, "VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU")) return VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+  if (!strcmp(str, "VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU")) return VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+  if (!strcmp(str, "VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU")) return VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+  if (!strcmp(str, "VK_PHYSICAL_DEVICE_TYPE_CPU")) return VK_PHYSICAL_DEVICE_TYPE_CPU;
 
   fprintf(stdout, "[x] No correct option was selected returning VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM\n");
   fprintf(stdout, "[x] For a list of available numbers go here, usage: [0-4]\n");

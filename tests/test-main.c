@@ -3,13 +3,13 @@
 #include <wlu/wclient/client.h>
 #include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
-#include <wlu/utils/file.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
 
 #include <signal.h>
 #include <check.h>
 
+#include "test-extras.h"
 #include "test-shade.h"
 
 #define WIDTH 1920
@@ -61,7 +61,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -76,14 +76,21 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app);
+  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -144,7 +151,13 @@ START_TEST(test_vulkan_client_create) {
     0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL
   );
 
-  err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 0, NULL);
+  VkSubpassDependency subdep = wlu_set_subpass_dep(
+    VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
+  );
+
+  err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 1, &subdep);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
@@ -306,6 +319,16 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
+  err = wlu_create_semaphores(app);
+  if (err) {
+    wlu_freeup_shader(app, frag_shader_module);
+    wlu_freeup_shader(app, vert_shader_module);
+    freesh(compiler, result);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create semaphores");
+    ck_abort_msg(NULL);
+  }
+
   err = wlu_start_cmd_buff_record(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
@@ -321,24 +344,42 @@ START_TEST(test_vulkan_client_create) {
   clear_color.color.float32[1] = 0.0f;
   clear_color.color.float32[2] = 0.0f;
   clear_color.color.float32[3] = 1.0f;
-
   clear_color.color.int32[0] = 0.0f;
   clear_color.color.int32[1] = 0.0f;
   clear_color.color.int32[2] = 0.0f;
   clear_color.color.int32[3] = 1.0f;
-
-
   clear_color.color.uint32[0] = 0.0f;
   clear_color.color.uint32[1] = 0.0f;
   clear_color.color.uint32[2] = 0.0f;
   clear_color.color.uint32[3] = 1.0f;
-
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
+
   wlu_start_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);
+
+  // VkSemaphore wait_semaphores[] = {app->img_semaphore};
+  // VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+  // VkSemaphore signal_semaphores[] = {app->render_semaphore};
+  // VkSwapchainKHR swap_chains[] = {app->swap_chain};
+  //
+  // /* Used to aquire an image from the swapchain */
+  // uint32_t image_index;
+  // err = wlu_draw_frame(
+  //   app, &image_index, 1, wait_semaphores,
+  //   wait_stages, 1, 1, signal_semaphores,
+  //   1, swap_chains, NULL
+  // );
+  // if (err) {
+  //   wlu_freeup_shader(app, frag_shader_module);
+  //   wlu_freeup_shader(app, vert_shader_module);
+  //   freesh(compiler, result);
+  //   freeme(app, wc);
+  //   wlu_log_me(WLU_SUCCESS, "[x] failed to draw frame, ERROR CODE: %d", err);
+  //   ck_abort_msg(NULL);
+  // }
 
   if (wlu_run_client(wc)) {
     wlu_freeup_shader(app, frag_shader_module);

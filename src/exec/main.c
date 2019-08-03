@@ -31,16 +31,11 @@ int main(int argc, char **argv) {
         if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
         if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
         if (!strcmp(long_options[option_index].name, "pde")) {
-          if (optarg) {
-            char **tokens = str_split(optarg, ',');
-            if (tokens) {
-              print_device_extensions(ret_qfambit(*tokens), ret_dtype(*(tokens + 1)));
-              free(*tokens); free(*(tokens + 1));
-              free(tokens);
-              tokens = NULL;
+          if (!strcmp(long_options[option_index].name, "pde")) {
+            if (optarg) {
+              print_device_extensions(ret_dtype(optarg));
             } else {
-              fprintf(stdout, "[x] usage example: lucur --pde VK_QUEUE_GRAPHICS_BIT,1\n");
-              fprintf(stdout, "[x] must add ',' to delimit the string\n");
+              fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
             }
           }
         }
@@ -61,15 +56,12 @@ int main(int argc, char **argv) {
         break;
       case 'd':
         if (optarg) {
-          char **tokens = str_split(optarg, ',');
-          if (tokens) {
-            print_device_extensions(ret_qfambit(*tokens), ret_dtype(*(tokens + 1)));
-            free(*tokens); free(*(tokens + 1));
-            free(tokens);
-            tokens = NULL;
-          } else {
-            fprintf(stdout, "[x] usage example: lucur --pde VK_QUEUE_GRAPHICS_BIT,1\n");
-            fprintf(stdout, "[x] must add ',' to delimit the string\n");
+          if (!strcmp(long_options[option_index].name, "pde")) {
+            if (optarg) {
+              print_device_extensions(ret_dtype(optarg));
+            } else {
+              fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
+            }
           }
         }
         break;

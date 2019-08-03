@@ -22,7 +22,8 @@ static void set_values(vkcomp *app) {
   app->indices.graphics_family = UINT32_MAX;
   app->indices.present_family = UINT32_MAX;
   app->device = VK_FALSE;
-  app->graphics_queue = VK_FALSE;
+  app->graphics_queue = VK_NULL_HANDLE;
+  app->present_queue = VK_NULL_HANDLE;
   app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
   app->sc_buff_size = VK_NULL_HANDLE;
@@ -31,6 +32,8 @@ static void set_values(vkcomp *app) {
   app->sc_frame_buffs = VK_NULL_HANDLE;
   app->cmd_pool = VK_NULL_HANDLE;
   app->cmd_buffs = VK_NULL_HANDLE;
+  app->img_semaphore = VK_NULL_HANDLE;
+  app->render_semaphore = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -100,7 +103,16 @@ finish_vk_props:
 }
 
 /* Create connection between app and the vulkan api */
-VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
+VkResult wlu_create_instance(
+  vkcomp *app,
+  char *app_name,
+  char *engine_name,
+  uint32_t enabledLayerCount,
+  const char* const* ppEnabledLayerNames,
+  uint32_t enabledExtensionCount,
+  const char* const* ppEnabledExtensionNames
+) {
+
   VkResult res = VK_INCOMPLETE;
 
   /* initialize the VkApplicationInfo structure */
@@ -120,10 +132,10 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
   create_info.pNext = NULL;
   create_info.flags = 0;
   create_info.pApplicationInfo = &app_info;
-  create_info.enabledLayerCount = 0;
-  create_info.ppEnabledLayerNames = NULL;
-  create_info.enabledExtensionCount = 3;
-  create_info.ppEnabledExtensionNames = instance_extensions;
+  create_info.enabledLayerCount = enabledLayerCount;
+  create_info.ppEnabledLayerNames = ppEnabledLayerNames;
+  create_info.enabledExtensionCount = enabledExtensionCount;
+  create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
@@ -142,7 +154,7 @@ VkResult wlu_create_instance(vkcomp *app, char *app_name, char *engine_name) {
 }
 
 /* Get user physical device */
-VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysicalDeviceType vkpdtype) {
+VkResult wlu_enumerate_devices(vkcomp *app, VkPhysicalDeviceType vkpdtype) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -186,10 +198,9 @@ VkResult wlu_enumerate_devices(vkcomp *app, VkQueueFlagBits vkqfbits, VkPhysical
   */
   for (uint32_t i = 0; i < device_count; i++) {
     if (is_device_suitable(app, devices[i], vkpdtype) &&
-        find_queue_families(app, devices[i], vkqfbits) &&
         /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, devices[i])) {
-      app->physical_device = devices[i];
+      memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
       /* Query device properties */
       vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
       wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", app->device_properties.deviceName);
@@ -215,14 +226,27 @@ finish_devices:
  * After selecting a physical device to use.
  *  Set up a logical device to interface with it
  */
-VkResult wlu_create_logical_device(vkcomp *app) {
+VkResult wlu_create_logical_device(
+  vkcomp *app,
+  uint32_t enabledLayerCount,
+  const char* const* ppEnabledLayerNames,
+  uint32_t enabledExtensionCount,
+  const char* const* ppEnabledExtensionNames
+) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkQueue present_queue;
   float queue_priorities[1] = {1.0};
 
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_enumerate_devices(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  if (!app->queue_families) {
+    wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return res;
   }
@@ -248,13 +272,13 @@ VkResult wlu_create_logical_device(vkcomp *app) {
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
-  create_info.pQueueCreateInfos = app->queue_create_infos;
   create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
+  create_info.pQueueCreateInfos = app->queue_create_infos;
+  create_info.enabledLayerCount = enabledLayerCount;
+  create_info.ppEnabledLayerNames = ppEnabledLayerNames;
+  create_info.enabledExtensionCount = enabledExtensionCount;
+  create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
   create_info.pEnabledFeatures = &app->device_features;
-  create_info.enabledExtensionCount = 1;
-  create_info.ppEnabledExtensionNames = device_extensions;
-  create_info.ppEnabledLayerNames = NULL;
-  create_info.enabledLayerCount = 0;
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
@@ -268,8 +292,10 @@ VkResult wlu_create_logical_device(vkcomp *app) {
    * the logical device, but you need a queue
    * handle to interface with them
    */
-  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
-  vkGetDeviceQueue(app->device, app->indices.present_family, 0, &present_queue);
+  if (app->indices.graphics_family == UINT32_MAX)
+    vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+  if (app->indices.present_family == UINT32_MAX)
+    vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
 
   return res;
 }
@@ -533,6 +559,22 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
   return res;
 }
 
+VkResult wlu_create_semaphores(vkcomp *app) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  VkSemaphoreCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+
+  res = vkCreateSemaphore(app->device, &create_info, NULL, &app->img_semaphore);
+  if (res) return res;
+
+  res = vkCreateSemaphore(app->device, &create_info, NULL, &app->render_semaphore);
+
+  return res;
+}
+
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
@@ -546,6 +588,10 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->render_semaphore)
+    vkDestroySemaphore(app->device, app->render_semaphore, NULL);
+  if (app->img_semaphore)
+    vkDestroySemaphore(app->device, app->img_semaphore, NULL);
   if (app->cmd_buffs)
     vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_buff_size, app->cmd_buffs);
   if (app->cmd_pool)

@@ -60,7 +60,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -75,14 +75,21 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_logical_device(app);
+  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -320,20 +327,17 @@ int main(void) {
   clear_color.color.float32[1] = 0.0f;
   clear_color.color.float32[2] = 0.0f;
   clear_color.color.float32[3] = 1.0f;
-
   clear_color.color.int32[0] = 0.0f;
   clear_color.color.int32[1] = 0.0f;
   clear_color.color.int32[2] = 0.0f;
   clear_color.color.int32[3] = 1.0f;
-
-
   clear_color.color.uint32[0] = 0.0f;
   clear_color.color.uint32[1] = 0.0f;
   clear_color.color.uint32[2] = 0.0f;
   clear_color.color.uint32[3] = 1.0f;
-
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
+
   wlu_start_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);

@@ -242,3 +242,59 @@ VkResult wlu_stop_cmd_buff_record(vkcomp *app) {
 
   return res;
 }
+
+VkResult wlu_draw_frame(
+  vkcomp *app,
+  uint32_t *image_index,
+  uint32_t waitSemaphoreCount,
+  VkSemaphore *pWaitSemaphores,
+  VkPipelineStageFlags *pWaitDstStageMask,
+  uint32_t commandBufferCount,
+  uint32_t signalSemaphoreCount,
+  VkSemaphore *pSignalSemaphores,
+  uint32_t swapchainCount,
+  VkSwapchainKHR *pSwapchains,
+  VkResult *pResults
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->img_semaphore) {
+    wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  /* UINT64_MAX disables timeout */
+  res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
+                              app->img_semaphore, VK_NULL_HANDLE, image_index);
+
+  VkSubmitInfo submit_info = {};
+  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit_info.pNext = NULL;
+  submit_info.waitSemaphoreCount = waitSemaphoreCount;
+  submit_info.pWaitSemaphores = pWaitSemaphores;
+  submit_info.pWaitDstStageMask = pWaitDstStageMask;
+  submit_info.commandBufferCount = commandBufferCount;
+  submit_info.pCommandBuffers = &app->cmd_buffs[*image_index];
+  submit_info.signalSemaphoreCount = signalSemaphoreCount;
+  submit_info.pSignalSemaphores = pSignalSemaphores;
+
+  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
+  if (res) return res;
+
+  VkPresentInfoKHR present_info = {};
+  present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  present_info.pNext = NULL;
+  present_info.waitSemaphoreCount = waitSemaphoreCount;
+  present_info.pWaitSemaphores = pWaitSemaphores;
+  present_info.swapchainCount = swapchainCount;
+  present_info.pSwapchains = pSwapchains;
+  present_info.pImageIndices = image_index;
+  present_info.pResults = pResults;
+
+  res = vkQueuePresentKHR(app->present_queue, &present_info);
+
+  return res;
+}

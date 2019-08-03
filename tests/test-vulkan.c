@@ -2,15 +2,7 @@
 #include <wlu/utils/log.h>
 #include <check.h>
 
-const char *enabled_validation_layers[] = {
-  "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
-  "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
-  "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
-  "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects",
-  "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
-  "VK_LAYER_LUNARG_device_simulation"
-};
+#include "test-extras.h"
 
 START_TEST(test_init_vulkan) {
   vkcomp *app = NULL;
@@ -50,7 +42,7 @@ START_TEST(test_create_instance) {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -70,14 +62,14 @@ START_TEST(test_enumerate_device) {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
@@ -96,21 +88,28 @@ START_TEST(test_set_logical_device) {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app);
+  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  if (err) {
+    wlu_freeup_vk(app);
+    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -126,21 +125,28 @@ START_TEST(test_swap_chain_fail_no_surface) {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine");
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_QUEUE_GRAPHICS_BIT, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app);
+  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  if (err) {
+    wlu_freeup_vk(app);
+    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");

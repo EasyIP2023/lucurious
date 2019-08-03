@@ -37,6 +37,14 @@ VkResult wlu_create_graphics_pipeline(
   uint32_t basePipelineIndex
 );
 
+VkResult wlu_create_pipeline_layout(
+  vkcomp *app,
+  uint32_t setLayoutCount,
+  const VkDescriptorSetLayout *pSetLayouts,
+  uint32_t pushConstantRangeCount,
+  const VkPushConstantRange *pPushConstantRanges
+);
+
 void wlu_start_render_pass(
   vkcomp *app,
   uint32_t x,
@@ -85,12 +93,14 @@ VkSubpassDescription wlu_set_subpass_desc(
   const uint32_t *pPreserveAttachments
 );
 
-VkResult wlu_create_pipeline_layout(
-  vkcomp *app,
-  uint32_t setLayoutCount,
-  const VkDescriptorSetLayout *pSetLayouts,
-  uint32_t pushConstantRangeCount,
-  const VkPushConstantRange *pPushConstantRanges
+VkSubpassDependency wlu_set_subpass_dep(
+  uint32_t srcSubpass,
+  uint32_t dstSubpass,
+  VkPipelineStageFlags srcStageMask,
+  VkPipelineStageFlags dstStageMask,
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  VkDependencyFlags dependencyFlags
 );
 
 VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(

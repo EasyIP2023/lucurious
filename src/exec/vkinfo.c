@@ -2,14 +2,24 @@
 #include <wlu/vlucur/vkall.h>
 #include <exec/vkinfo.h>
 
+const char *device_extensions[] = {
+  VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+const char *instance_extensions[] = {
+  VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+  VK_KHR_SURFACE_EXTENSION_NAME,
+  VK_KHR_DISPLAY_EXTENSION_NAME
+};
+
 void help_message() {
   fprintf(stdout, "Usage: lucur [options]\n");
-  fprintf(stdout, "Example: lucur --pde VK_QUEUE_GRAPHICS_BIT,1\n");
+  fprintf(stdout, "Example: lucur --pde lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
 
   fprintf(stdout, "Options:\n");
   fprintf(stdout, "\t-l, --pgvl\tPrint global validation layers\n");
   fprintf(stdout, "\t-i, --pie\tPrint instance extenstion list\n");
-  fprintf(stdout, "\t-d, --pde <VkQueueFlagBits,VkPhysicalDeviceType>\n\t\t\tPrint device extenstion list\n");
+  fprintf(stdout, "\t-d, --pde <VkPhysicalDeviceType>\n\t\t\tPrint device extenstion list\n");
   fprintf(stdout, "\t-v, --version\tPrint lucurious library version\n");
   fprintf(stdout, "\t-h, --help\tShow this message\n");
 }
@@ -56,7 +66,7 @@ void print_instance_extensions() {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "PrintStmt", "PrintStmt");
+  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
   if (err) {
     fprintf(stdout, "[x] Failed to create instance\n");
     wlu_freeup_vk(app);
@@ -75,18 +85,18 @@ void print_instance_extensions() {
   wlu_freeup_vk(app);
 }
 
-void print_device_extensions(VkQueueFlagBits vkqfbits, VkPhysicalDeviceType dt) {
+void print_device_extensions(VkPhysicalDeviceType dt) {
   VkResult err;
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "PrintStmt", "PrintStmt");
+  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     return;
   }
 
-  err = wlu_enumerate_devices(app, vkqfbits, dt);
+  err = wlu_enumerate_devices(app, dt);
   if (err) {
     wlu_freeup_vk(app);
     return;

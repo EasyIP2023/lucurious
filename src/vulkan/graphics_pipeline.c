@@ -130,6 +130,30 @@ VkResult wlu_create_graphics_pipeline(
   return res;
 }
 
+VkResult wlu_create_pipeline_layout(
+  vkcomp *app,
+  uint32_t setLayoutCount,
+  const VkDescriptorSetLayout *pSetLayouts,
+  uint32_t pushConstantRangeCount,
+  const VkPushConstantRange *pPushConstantRanges
+) {
+
+  VkResult res;
+
+  VkPipelineLayoutCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.setLayoutCount = setLayoutCount;
+  create_info.pSetLayouts = pSetLayouts;
+  create_info.pushConstantRangeCount = pushConstantRangeCount;
+  create_info.pPushConstantRanges = pPushConstantRanges;
+
+  res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->pipeline_layout);
+
+  return res;
+}
+
 void wlu_start_render_pass(
   vkcomp *app,
   uint32_t x,
@@ -235,29 +259,29 @@ VkSubpassDescription wlu_set_subpass_desc(
   return subpass;
 }
 
-VkResult wlu_create_pipeline_layout(
-  vkcomp *app,
-  uint32_t setLayoutCount,
-  const VkDescriptorSetLayout *pSetLayouts,
-  uint32_t pushConstantRangeCount,
-  const VkPushConstantRange *pPushConstantRanges
-) {
+VkSubpassDependency wlu_set_subpass_dep(
+  uint32_t srcSubpass,
+  uint32_t dstSubpass,
+  VkPipelineStageFlags srcStageMask,
+  VkPipelineStageFlags dstStageMask,
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  VkDependencyFlags dependencyFlags
+){
 
-  VkResult res;
+  VkSubpassDependency dep = {};
+  dep.srcSubpass = srcSubpass;
+  dep.dstSubpass = dstSubpass;
+  dep.srcStageMask = srcStageMask;
+  dep.dstStageMask = dstStageMask;
+  dep.srcAccessMask = srcAccessMask;
+  dep.dstAccessMask = dstAccessMask;
+  dep.dependencyFlags = dependencyFlags;
 
-  VkPipelineLayoutCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.setLayoutCount = setLayoutCount;
-  create_info.pSetLayouts = pSetLayouts;
-  create_info.pushConstantRangeCount = pushConstantRangeCount;
-  create_info.pPushConstantRanges = pPushConstantRanges;
-
-  res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->pipeline_layout);
-
-  return res;
+  return dep;
 }
+
+
 
 /* Allows for actual use of the shaders we created */
 VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(

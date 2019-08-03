@@ -3,28 +3,6 @@
 #include <wlu/utils/log.h>
 #include <vlucur/devices.h>
 
-const char *device_extensions[] = {
-  VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-const char *instance_extensions[] = {
-  VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
-  VK_KHR_SURFACE_EXTENSION_NAME,
-  VK_KHR_DISPLAY_EXTENSION_NAME
-};
-
-/* All of the useful standard validation is
-  bundled into a layer included in the SDK */
-const char *enabled_validation_layers[] = {
-  "VK_LAYER_LUNARG_core_validation", "VK_LAYER_KHRONOS_validation",
-  "VK_LAYER_LUNARG_monitor", "VK_LAYER_LUNARG_api_dump",
-  "VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_parameter_validation", "VK_LAYER_LUNARG_vktrace",
-  "VK_LAYER_LUNARG_standard_validation", "VK_LAYER_GOOGLE_unique_objects",
-  "VK_LAYER_LUNARG_assistant_layer", "VK_LAYER_LUNARG_screenshot",
-  "VK_LAYER_LUNARG_device_simulation"
-};
-
 /*
  * Almost every operation in Vulkan, anything from drawing to
  * uploading textures, requires commands to be submitted
@@ -33,19 +11,26 @@ const char *enabled_validation_layers[] = {
  * by the device and which one of these supports the
  * commands that we want to use
  */
-VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBits vkqfbits) {
-  VkBool32 ret = VK_FALSE;
+VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
+  VkBool32 ret = VK_TRUE;
   VkBool32 present_support = VK_FALSE;
 
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, NULL);
-  app->queue_families = (VkQueueFamilyProperties *) realloc(app->queue_families,
+  if (!app->physical_device) {
+    wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_enumerate_devices(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return ret;
+  }
+
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, NULL);
+  app->queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
       app->queue_family_count * sizeof(VkQueueFamilyProperties));
   if (!app->queue_families) {
     wlu_log_me(WLU_DANGER, "[x] realloc of app->queue_families failed");
     return ret;
   }
 
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &app->queue_family_count, app->queue_families);
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, app->queue_families);
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     if (app->queue_families[i].queueFlags & vkqfbits) {
@@ -55,15 +40,15 @@ VkBool32 find_queue_families(vkcomp *app, VkPhysicalDevice device, VkQueueFlagBi
 
     /* Check to see if a device can create images on the surface we may have created */
     if (app->surface)
-      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, app->surface, &present_support);
+      vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support);
 
     if (app->indices.graphics_family != UINT32_MAX && present_support) {
       app->indices.present_family = i;
-      ret = VK_TRUE;
+      ret = VK_FALSE;
       wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
       break;
     } else if (app->indices.graphics_family != UINT32_MAX) {
-      ret = VK_TRUE;
+      ret = VK_FALSE;
       break;
     }
   }
@@ -151,7 +136,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
 
     /* check for swap chain support */
     for (uint32_t i = 0; i < app->ep_device_count; i++) {
-      if (!strcmp(app->ep_device_props[i].extensionName, device_extensions[0])) {
+      if (!strcmp(app->ep_device_props[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
         res = VK_TRUE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has swap chain support");
         break;

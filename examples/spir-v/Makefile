@@ -11,3 +11,4 @@ glslang_to_spirv:
 
 clean:
 	$(RM) se
+	$(RM) *.spv
