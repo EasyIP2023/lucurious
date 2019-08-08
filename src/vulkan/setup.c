@@ -1,6 +1,7 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
+#include <vlucur/utils.h>
 #include <vlucur/devices.h>
 
 static void set_values(vkcomp *app) {
@@ -34,6 +35,9 @@ static void set_values(vkcomp *app) {
   app->cmd_buffs = VK_NULL_HANDLE;
   app->img_semaphore = VK_NULL_HANDLE;
   app->render_semaphore = VK_NULL_HANDLE;
+  app->depth.view = VK_NULL_HANDLE;
+  app->depth.image = VK_NULL_HANDLE;
+  app->depth.mem = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -102,7 +106,6 @@ finish_vk_props:
   return res;
 }
 
-/* Create connection between app and the vulkan api */
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -222,10 +225,6 @@ finish_devices:
   return res;
 }
 
-/*
- * After selecting a physical device to use.
- *  Set up a logical device to interface with it
- */
 VkResult wlu_create_logical_device(
   vkcomp *app,
   uint32_t enabledLayerCount,
@@ -321,6 +320,7 @@ VkResult wlu_create_swap_chain(
     wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
   }
 
   /*
@@ -370,7 +370,7 @@ VkResult wlu_create_swap_chain(
   /* specify that I currently do not want any transformation */
   create_info.compositeAlpha = composite_alpha;
   create_info.presentMode = pres_mode;
-  create_info.clipped = VK_TRUE;
+  create_info.clipped = VK_FALSE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   if (app->indices.graphics_family != app->indices.present_family) {
@@ -379,7 +379,7 @@ VkResult wlu_create_swap_chain(
       app->indices.present_family
     };
     create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    create_info.queueFamilyIndexCount = sizeof(queue_family_indices);
+    create_info.queueFamilyIndexCount = 2;
     create_info.pQueueFamilyIndices = queue_family_indices;
   } else {
     create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -466,8 +466,121 @@ finish_create_img_views:
   return res;
 }
 
+VkResult wlu_create_depth_buffs(
+  vkcomp *app,
+  VkFormat depth_format,
+  VkFormatFeatureFlags linearTilingFeatures,
+  VkFormatFeatureFlags optimalTilingFeatures,
+  VkImageType imageType,
+  VkExtent3D extent,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  VkImageLayout initialLayout,
+  VkImageViewType viewType
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+  VkBool32 pass;
+
+  app->depth.format = depth_format;
+
+  VkImageCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.imageType = imageType;
+  create_info.format = app->depth.format;
+  create_info.extent.width = extent.width;
+  create_info.extent.height = extent.height;
+  create_info.extent.depth = extent.depth;
+  create_info.mipLevels = 1;
+  create_info.arrayLayers = 1;
+  create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+
+  VkFormatProperties props;
+  vkGetPhysicalDeviceFormatProperties(app->physical_device, app->depth.format, &props);
+  if (props.linearTilingFeatures & linearTilingFeatures) {
+    create_info.tiling = VK_IMAGE_TILING_LINEAR;
+  } else if (props.optimalTilingFeatures & optimalTilingFeatures) {
+    create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+  } else {
+    wlu_log_me(WLU_DANGER, "[x] Depth format currently not supported.\n");
+    return res;
+  }
+
+  create_info.usage = usage;
+  create_info.sharingMode = sharingMode;
+  /* Come back to me */
+  create_info.queueFamilyIndexCount = 0;
+  create_info.pQueueFamilyIndices = NULL;
+  /* Come back to me */
+  create_info.initialLayout = initialLayout;
+
+  VkMemoryAllocateInfo mem_alloc = {};
+  mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  mem_alloc.pNext = NULL;
+  mem_alloc.allocationSize = 0;
+  mem_alloc.memoryTypeIndex = 0;
+
+  VkImageViewCreateInfo create_view_info = {};
+  create_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  create_view_info.pNext = NULL;
+  create_view_info.flags = 0;
+  create_view_info.image = VK_NULL_HANDLE;
+  create_view_info.format = app->depth.format;
+  create_view_info.components.r = VK_COMPONENT_SWIZZLE_R;
+  create_view_info.components.g = VK_COMPONENT_SWIZZLE_G;
+  create_view_info.components.b = VK_COMPONENT_SWIZZLE_B;
+  create_view_info.components.a = VK_COMPONENT_SWIZZLE_A;
+  create_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+  create_view_info.subresourceRange.baseMipLevel = 0;
+  create_view_info.subresourceRange.levelCount = 1;
+  create_view_info.subresourceRange.baseArrayLayer = 0;
+  create_view_info.subresourceRange.layerCount = 1;
+  create_view_info.viewType = viewType;
+
+  if (app->depth.format == VK_FORMAT_D16_UNORM_S8_UINT ||
+      app->depth.format == VK_FORMAT_D24_UNORM_S8_UINT ||
+      app->depth.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+      create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+  VkMemoryRequirements mem_reqs;
+
+  /* Create image object */
+  res = vkCreateImage(app->device, &create_info, NULL, &app->depth.image);
+  if (res) return res;
+
+  /* Although you know the width, height, and the size of a buffer element,
+   * there is no way to determine exactly how much memory is needed to allocate.
+   * This is because alignment constraints that may be placed by the GPU hardware.
+   * This function allows you to find out everything you need to allocate the
+   * memory for an image.
+   */
+  vkGetImageMemoryRequirements(app->device, app->depth.image, &mem_reqs);
+
+  mem_alloc.allocationSize = mem_reqs.size;
+  /* Use the memory properties to determine the type of memory required */
+  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &mem_alloc.memoryTypeIndex);
+  if (pass) return res;
+
+  /* Allocate memory */
+  res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->depth.mem);
+  if (res) return res;
+
+  /* Associate memory with image object by binding */
+  res = vkBindImageMemory(app->device, app->depth.image, app->depth.mem, 0);
+  if (res) return res;
+
+  /* Create image view object */
+  create_view_info.image = app->depth.image;
+  res = vkCreateImageView(app->device, &create_view_info, NULL, &app->depth.view);
+  if (res) return res;
+
+  return res;
+}
+
 /*
- * This function creates the framebuffers
+ * This function creates the framebuffers.
  * Attachments specified when creating the render pass
  * are bounded by wrapping them into a VkFramebuffer object.
  * A framebuffer object references all VkImageView objects this
@@ -526,6 +639,13 @@ VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExten
 VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
+  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) {
+    wlu_log_me(WLU_DANGER, "[x] graphics or present family index not set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   create_info.pNext = NULL;
@@ -540,7 +660,7 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
 VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->cmd_buffs = (VkCommandBuffer * ) calloc(sizeof(VkCommandBuffer),
+  app->cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
         app->sc_buff_size * sizeof(VkCommandBuffer));
   if (!app->cmd_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkCommandBuffer *cmd_buffs failed");
@@ -588,6 +708,12 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->depth.view)
+    vkDestroyImageView(app->device, app->depth.view, NULL);
+  if (app->depth.image)
+    vkDestroyImage(app->device, app->depth.image, NULL);
+  if (app->depth.mem)
+    vkFreeMemory(app->device, app->depth.mem, NULL);
   if (app->render_semaphore)
     vkDestroySemaphore(app->device, app->render_semaphore, NULL);
   if (app->img_semaphore)

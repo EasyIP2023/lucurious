@@ -114,7 +114,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
+  VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent.width == UINT32_MAX) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
@@ -312,7 +312,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_start_cmd_buff_record(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = wlu_exec_begin_cmd_buff(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
@@ -338,7 +338,7 @@ int main(void) {
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
 
-  wlu_start_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);
@@ -352,7 +352,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_stop_cmd_buff_record(app);
+  err = wlu_exec_stop_cmd_buff(app);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
@@ -361,7 +361,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  wlu_stop_render_pass(app);
+  wlu_exec_stop_render_pass(app);
 
   wlu_freeup_shader(app, frag_shader_module);
   wlu_freeup_shader(app, vert_shader_module);

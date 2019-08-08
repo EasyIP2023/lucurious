@@ -108,7 +108,7 @@ START_TEST(test_set_logical_device) {
     wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
     ck_abort_msg(NULL);
   }
-
+  
   err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     wlu_freeup_vk(app);

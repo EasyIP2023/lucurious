@@ -45,7 +45,7 @@ VkResult wlu_create_pipeline_layout(
   const VkPushConstantRange *pPushConstantRanges
 );
 
-void wlu_start_render_pass(
+void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t x,
   uint32_t y,
@@ -55,7 +55,7 @@ void wlu_start_render_pass(
   VkSubpassContents contents
 );
 
-void wlu_stop_render_pass(vkcomp *app);
+void wlu_exec_stop_render_pass(vkcomp *app);
 
 void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint);
 

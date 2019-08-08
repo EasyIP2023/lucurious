@@ -48,12 +48,6 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  if (wlu_connect_client(wc)) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to connect client");
-    ck_abort_msg(NULL);
-  }
-
   err = wlu_set_global_layers(app);
   if (err) {
     freeme(app, wc);
@@ -68,18 +62,24 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
+  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
+    ck_abort_msg(NULL);
+  }
+
+  if (wlu_connect_client(wc)) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to connect client");
+    ck_abort_msg(NULL);
+  }
+
   /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
-    ck_abort_msg(NULL);
-  }
-
-  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 
@@ -103,6 +103,12 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
+  /*
+   * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
+   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
+   * SRGB if used for colorSpace if available, because it
+   * results in more accurate perceived colors
+   */
   VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
     freeme(app, wc);
@@ -115,7 +121,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
+  VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent.width == UINT32_MAX) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
@@ -329,7 +335,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_start_cmd_buff_record(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = wlu_exec_begin_cmd_buff(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
@@ -355,7 +361,7 @@ START_TEST(test_vulkan_client_create) {
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
 
-  wlu_start_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);
@@ -390,7 +396,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_stop_cmd_buff_record(app);
+  err = wlu_exec_stop_cmd_buff(app);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
@@ -399,7 +405,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  wlu_stop_render_pass(app);
+  wlu_exec_stop_render_pass(app);
 
   wlu_freeup_shader(app, frag_shader_module);
   wlu_freeup_shader(app, vert_shader_module);

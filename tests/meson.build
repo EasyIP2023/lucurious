@@ -58,6 +58,18 @@ lucur_shade_test = executable('lucur-shade-test',
 
 test('lucur-shade-test', lucur_shade_test, suite: ['all'])
 
+# Testing main 3d wayland client later compositor build with executable
+lucur_main_3d_test = executable('lucur-main-3d-test',
+  'test-3D-main.c',
+  include_directories : lucur_inc,
+  dependencies : [check,shaderc],
+  link_with : lib_lucur,
+  link_args : extra_args,
+  install : false
+)
+
+test('lucur-main-3d-test', lucur_main_3d_test, suite: ['all'])
+
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',
   'test-main.c',
@@ -68,6 +80,4 @@ lucur_main_test = executable('lucur-main-test',
   install : false
 )
 
-test('lucur-main-test',
-    lucur_main_test,
-    suite: ['all'])
+test('lucur-main-test', lucur_main_test, suite: ['all'])

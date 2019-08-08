@@ -1,4 +1,3 @@
-#include <lucom.h>
 #include <wlu/utils/log.h>
 #include <time.h>
 #include <unistd.h>
@@ -13,7 +12,7 @@ static const char *term_colors[] = {
 	[WLU_RESET]   = "\x1b[0m",
 };
 
-void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
+void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...) {
 	char buffer[26];
 	va_list args; /* type that holds variable arguments */
 
@@ -24,18 +23,18 @@ void _wlu_log_me(wlu_log_type type, const char *fmt, ...) {
 
 	/* generate time */
 	strftime(buffer, sizeof(buffer), "%F %T - ", tm_info);
-	fprintf(stdout, "%s", buffer);
+	fprintf(stream, "%s", buffer);
 
 	unsigned c = (type < WLU_MAX_LOG_ENUM) ? type : WLU_MAX_LOG_ENUM - 1;
 
-	fprintf(stdout, "%s", term_colors[c]);
+	fprintf(stream, "%s", term_colors[c]);
 
 	va_start(args, fmt);
-	vfprintf(stdout, fmt, args);
+	vfprintf(stream, fmt, args);
 	va_end(args);
 
 	/* Reset terminal color */
-	fprintf(stdout, "%s\n", term_colors[WLU_RESET]);
+	fprintf(stream, "%s\n", term_colors[WLU_RESET]);
 }
 
 const char *_wlu_strip_path(const char *filepath) {

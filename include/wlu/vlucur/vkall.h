@@ -62,13 +62,25 @@ typedef struct vkcomp {
 
   VkSemaphore img_semaphore;
   VkSemaphore render_semaphore;
+
+  struct {
+    VkFormat format;
+    VkImage image;
+    VkDeviceMemory mem;
+    VkImageView view;
+  } depth;
+
 } vkcomp;
 
-/* Function protypes */
 vkcomp *wlu_init_vk();
 
+/* Set vulkan validation layers properties.
+ * To get these validation layers you must install
+ * vulkan sdk
+ */
 VkResult wlu_set_global_layers(vkcomp *app);
 
+/* Create connection between app and the vulkan api */
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -79,10 +91,27 @@ VkResult wlu_create_instance(
   const char* const* ppEnabledExtensionNames
 );
 
+/*
+ * This function will select the physical device of
+ * your choosing based off of VkPhysicalDeviceType
+ */
 VkResult wlu_enumerate_devices(vkcomp *app, VkPhysicalDeviceType vkpdtype);
 
+/*
+ * Almost every operation in Vulkan, from submitting command buffers
+ * to presenting images to a surface, requires commands to be submitted
+ * to a hardware queue. This will create multiple queue families
+ * that are supported by the VkQueueFlagBits set and assign the
+ * available graphics and present queues
+ */
 VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
 
+/*
+ * After selecting a physical device to use.
+ * Set up a logical device to interface with your physical device
+ * This function is also used to set Vulkan Device Level Extensions
+ * that entail what a device does
+ */
 VkResult wlu_create_logical_device(
   vkcomp *app,
   uint32_t enabledLayerCount,
@@ -91,16 +120,44 @@ VkResult wlu_create_logical_device(
   const char* const* ppEnabledExtensionNames
 );
 
+/* How wayland display's and surface's connect to your vulkan application */
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 
+/*
+ * Needed to create the swap chain. This function queries your physical device's
+ * capabilities. Mainly used to get minImageCount and the extent/resolution
+ * that a particular physical device
+ */
 VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
 
+/*
+ * Needed to create the swap chain. This will specify the format and
+ * the surace of an image. The "format" variable refers to the pixel
+ * formats and the "colorSpace" variable refers to the Color Depth 
+ */
 VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace);
 
+/*
+ * Needed to create the swap chain
+ * This function chooses the best presentation mode for swapchain
+ * (Conditions required for swapping images to the screen)
+ */
 VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app);
 
-VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
+/*
+ * Needed to create the swap chain. Pick the resolution
+ * for the images in the swap chain
+ */
+VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
 
+/*
+ * Needed to create the swap chain. Pick the resolution
+ * for the images in the swap chain along with the depth
+ * of the 3D object
+ */
+VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
+
+/* Create the actual swap chain used to present images to a surface */
 VkResult wlu_create_swap_chain(
   vkcomp *app,
   VkSurfaceCapabilitiesKHR capabilities,
@@ -109,7 +166,24 @@ VkResult wlu_create_swap_chain(
   VkExtent2D extent
 );
 
+/*
+ * Create image views which is the way you communicate to vulkan
+ * on how you intend to use the images in the swap chain
+ */
 VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type);
+
+VkResult wlu_create_depth_buffs(
+  vkcomp *app,
+  VkFormat depth_format,
+  VkFormatFeatureFlags linearTilingFeatures,
+  VkFormatFeatureFlags optimalTilingFeatures,
+  VkImageType imageType,
+  VkExtent3D extent,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  VkImageLayout initialLayout,
+  VkImageViewType viewType
+);
 
 VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers);
 
@@ -117,13 +191,13 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
 
 VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
 
-VkResult wlu_start_cmd_buff_record(
+VkResult wlu_exec_begin_cmd_buff(
   vkcomp *app,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
-VkResult wlu_stop_cmd_buff_record(vkcomp *app);
+VkResult wlu_exec_stop_cmd_buff(vkcomp *app);
 
 VkResult wlu_draw_frame(
   vkcomp *app,

@@ -1,6 +1,9 @@
 #ifndef WLU_LOG_H
 #define WLU_LOG_H
 
+#include <stdio.h>
+#include <stdarg.h>
+
 typedef enum wlu_log_type {
   WLU_NONE = 0,
   WLU_SUCCESS = 1,
@@ -11,10 +14,13 @@ typedef enum wlu_log_type {
   WLU_MAX_LOG_ENUM
 } wlu_log_type;
 
-void _wlu_log_me(wlu_log_type type, const char *fmt, ...);
+void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...);
 const char *_wlu_strip_path(const char *filepath);
 
 #define wlu_log_me(log_type, fmt, ...) \
-  _wlu_log_me(log_type, "[%s:%d] " fmt, _wlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
+  _wlu_log_me(log_type, stdout, "[%s:%d] " fmt, _wlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
+
+#define wlu_log_err(log_type, fmt, ...) \
+  _wlu_log_me(log_type, stderr, "[%s:%d] " fmt, _wlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
 
 #endif

@@ -154,7 +154,7 @@ VkResult wlu_create_pipeline_layout(
   return res;
 }
 
-void wlu_start_render_pass(
+void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t x,
   uint32_t y,
@@ -180,7 +180,7 @@ void wlu_start_render_pass(
   }
 }
 
-void wlu_stop_render_pass(vkcomp *app) {
+void wlu_exec_stop_render_pass(vkcomp *app) {
   for (uint32_t i = 0; i < app->sc_buff_size; i++)
     vkCmdEndRenderPass(app->cmd_buffs[i]);
 }
