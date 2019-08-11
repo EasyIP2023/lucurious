@@ -70,6 +70,20 @@ typedef struct vkcomp {
     VkImageView view;
   } depth;
 
+  /* Start of uniform buffer section */
+  struct {
+    VkBuffer buff;
+    VkDeviceMemory mem;
+    VkDescriptorBufferInfo buff_info;
+  } uniform_data;
+
+  mat4 proj;
+  mat4 view;
+  mat4 model;
+  mat4 clip;
+  mat4 mvp;
+  /* End of uniform buffer section */
+
 } vkcomp;
 
 vkcomp *wlu_init_vk();
@@ -133,7 +147,7 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
 /*
  * Needed to create the swap chain. This will specify the format and
  * the surace of an image. The "format" variable refers to the pixel
- * formats and the "colorSpace" variable refers to the Color Depth 
+ * formats and the "colorSpace" variable refers to the Color Depth
  */
 VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace);
 
@@ -172,7 +186,8 @@ VkResult wlu_create_swap_chain(
  */
 VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type);
 
-VkResult wlu_create_depth_buffs(
+/* Need to depth buffer to render 3D images (only need one) */
+VkResult wlu_create_depth_buff(
   vkcomp *app,
   VkFormat depth_format,
   VkFormatFeatureFlags linearTilingFeatures,
@@ -185,10 +200,21 @@ VkResult wlu_create_depth_buffs(
   VkImageViewType viewType
 );
 
+/*
+ * Function creates a uniform buffer so that shaders can access
+ * in a read-only fashion constant parameter data.
+ */
+VkResult wlu_create_uniform_buff(vkcomp *app, VkBufferCreateFlagBits flags, VkBufferUsageFlags usage);
+
 VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers);
 
+/*
+ * Allows for your app to create a command pool to store your
+ * command buffers before being committed to main memory
+ */
 VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
 
+/* Allows for your app to submmit graphics commands to render and image */
 VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
 
 VkResult wlu_exec_begin_cmd_buff(

@@ -39,3 +39,4 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * [vulkan](https://vulkan.lunarg.com)
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)
 * [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-2)
+* [MVP](https://jsantell.com/model-view-projection)

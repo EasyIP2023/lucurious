@@ -14,14 +14,14 @@ const char *instance_extensions[] = {
 
 void help_message() {
   fprintf(stdout, "Usage: lucur [options]\n");
-  fprintf(stdout, "Example: lucur --pde lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
+  fprintf(stdout, "Example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
 
   fprintf(stdout, "Options:\n");
-  fprintf(stdout, "\t-l, --pgvl\tPrint global validation layers\n");
-  fprintf(stdout, "\t-i, --pie\tPrint instance extenstion list\n");
-  fprintf(stdout, "\t-d, --pde <VkPhysicalDeviceType>\n\t\t\tPrint device extenstion list\n");
-  fprintf(stdout, "\t-v, --version\tPrint lucurious library version\n");
-  fprintf(stdout, "\t-h, --help\tShow this message\n");
+  fprintf(stdout, "\t-l, --pgvl\t\t\t Print global validation layers\n");
+  fprintf(stdout, "\t-i, --pie\t\t\t Print instance extenstion list\n");
+  fprintf(stdout, "\t-d, --pde <VkPhysicalDeviceType> Print device extenstion list\n");
+  fprintf(stdout, "\t-v, --version\t\t\t Print lucurious library version\n");
+  fprintf(stdout, "\t-h, --help\t\t\t Show this message\n");
 }
 
 void version_num() {

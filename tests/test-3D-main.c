@@ -4,6 +4,7 @@
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
+#include <wlu/vlucur/matrix.h>
 
 #include <check.h>
 
@@ -120,13 +121,45 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_depth_buffs(app,
-    VK_FORMAT_D16_UNORM, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_TYPE_2D,
-    extent, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+  err = wlu_create_depth_buff(app, VK_FORMAT_D16_UNORM,
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_IMAGE_TYPE_2D, extent,
+    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_VIEW_TYPE_2D
   );
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_depth_buff failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_set_perspective(app, 45.0f, 1.0f, 0.1f, 100.0f);
+
+  float dir[3] = {-5, 3, -10};
+  float eye[3] = {0, 0, 0};
+  float up[3] = {0, -1, 0};
+  wlu_set_lookat(app, dir, eye, up);
+
+  wlu_set_model_matrix(app, 1.0f);
+
+  float clip_matrix[4][4] = {
+    { 1.0f, 0.0f, 0.0f, 0.0f },
+    { 0.0f,-1.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 0.5f, 0.0f },
+    { 0.0f, 0.0f, 0.5f, 1.0f }
+  };
+  wlu_set_clip_matrix(app, clip_matrix);
+  wlu_set_mvp_matrix(app);
+  wlu_print_matrices(app);
+
+  err = wlu_create_uniform_buff(app, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
 
   // wlu_freeup_shader(app, frag_shader_module);
   // wlu_freeup_shader(app, vert_shader_module);

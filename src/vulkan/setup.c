@@ -466,7 +466,7 @@ finish_create_img_views:
   return res;
 }
 
-VkResult wlu_create_depth_buffs(
+VkResult wlu_create_depth_buff(
   vkcomp *app,
   VkFormat depth_format,
   VkFormatFeatureFlags linearTilingFeatures,
@@ -548,7 +548,10 @@ VkResult wlu_create_depth_buffs(
 
   /* Create image object */
   res = vkCreateImage(app->device, &create_info, NULL, &app->depth.image);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateImage failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   /* Although you know the width, height, and the size of a buffer element,
    * there is no way to determine exactly how much memory is needed to allocate.
@@ -561,20 +564,121 @@ VkResult wlu_create_depth_buffs(
   mem_alloc.allocationSize = mem_reqs.size;
   /* Use the memory properties to determine the type of memory required */
   pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &mem_alloc.memoryTypeIndex);
-  if (pass) return res;
+  if (!pass) {
+    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
+    return pass;
+  }
 
   /* Allocate memory */
   res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->depth.mem);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   /* Associate memory with image object by binding */
   res = vkBindImageMemory(app->device, app->depth.image, app->depth.mem, 0);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkBindImageMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   /* Create image view object */
   create_view_info.image = app->depth.image;
   res = vkCreateImageView(app->device, &create_view_info, NULL, &app->depth.view);
-  if (res) return res;
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateImageView failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  return res;
+}
+
+VkResult wlu_create_uniform_buff(vkcomp *app, VkBufferCreateFlagBits flags, VkBufferUsageFlags usage) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+  bool pass = false;
+
+  if (!app->mvp) {
+    wlu_log_me(WLU_DANGER, "[x] Modal, View, Projection not setup");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_mvp_matrix(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  VkBufferCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.size = sizeof(app->mvp);
+  create_info.usage = usage;
+  create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  create_info.queueFamilyIndexCount = 0;
+  create_info.pQueueFamilyIndices = NULL;
+
+  res = vkCreateBuffer(app->device, &create_info, NULL, &app->uniform_data.buff);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateBuffer failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  VkMemoryRequirements mem_reqs;
+  vkGetBufferMemoryRequirements(app->device, app->uniform_data.buff, &mem_reqs);
+
+  VkMemoryAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  alloc_info.pNext = NULL;
+  alloc_info.allocationSize = mem_reqs.size;
+  alloc_info.memoryTypeIndex = 0;
+
+  /*
+   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+   * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+   * should be mapped so that the CPU (host) can access it.
+   * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+   * writes to the memory by the host are visible to the device
+   * (and vice-versa) without the need to flush memory caches.
+   */
+  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits,
+                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                     &alloc_info.memoryTypeIndex);
+  if (!pass) {
+    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
+    return pass;
+  }
+
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->uniform_data.mem);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  /*
+   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+   * With a uniform buffer, you need to populate it with the data that
+   * you want the shader to read. In this case, the data is the MVP matrix.
+   * In order to get CPU access to the memory, you need to map it
+   */
+  uint8_t *p_data;
+  res = vkMapMemory(app->device, app->uniform_data.mem, 0, mem_reqs.size, 0, (void **) &p_data);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  memcpy(p_data, &app->mvp, sizeof(app->mvp));
+
+  vkUnmapMemory(app->device, app->uniform_data.mem);
+
+  /* associate the memory allocated with the buffer object */
+  res = vkBindBufferMemory(app->device, app->uniform_data.buff, app->uniform_data.mem, 0);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  app->uniform_data.buff_info.buffer = app->uniform_data.buff;
+  app->uniform_data.buff_info.offset = 0;
+  app->uniform_data.buff_info.range = sizeof(app->mvp);
 
   return res;
 }
@@ -708,6 +812,10 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
+  if (app->uniform_data.buff)
+    vkDestroyBuffer(app->device, app->uniform_data.buff, NULL);
+  if (app->uniform_data.mem)
+    vkFreeMemory(app->device, app->uniform_data.mem, NULL);
   if (app->depth.view)
     vkDestroyImageView(app->device, app->depth.view, NULL);
   if (app->depth.image)

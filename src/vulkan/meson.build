@@ -1,5 +1,6 @@
 vulkan = dependency('vulkan')
 cglm = dependency('cglm')
+math = cc.find_library('m')
 
 lib_vulkan = static_library(
 	'lvulkan',
@@ -8,8 +9,9 @@ lib_vulkan = static_library(
 		'display.c',
 		'devices.c',
 		'graphics_pipeline.c',
-		'utils.c'
+		'utils.c',
+		'matrix.c'
 	),
 	include_directories: lucur_inc,
-	dependencies: [vulkan,cglm]
+	dependencies: [vulkan,cglm,math]
 )
