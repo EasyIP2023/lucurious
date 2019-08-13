@@ -38,6 +38,8 @@ static void set_values(vkcomp *app) {
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
   app->depth.mem = VK_NULL_HANDLE;
+  app->desc_count = VK_NULL_HANDLE;
+  app->desc_layout = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -839,6 +841,11 @@ void wlu_freeup_vk(void *data) {
   }
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
+  if (app->desc_layout) {
+    for (uint32_t i = 0; i < app->desc_count; i++)
+      vkDestroyDescriptorSetLayout(app->device, app->desc_layout[i], NULL);
+    free(app->desc_layout);
+  }
   if (app->pipeline_layout)
     vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->render_pass)

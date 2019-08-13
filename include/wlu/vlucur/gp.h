@@ -1,11 +1,7 @@
 #ifndef WLU_GRAPHICS_PIPELINE_H
 #define WLU_GRAPHICS_PIPELINE_H
 
-VkShaderModule wlu_create_shader_module(
-  vkcomp *app,
-  const char *code,
-  size_t code_size
-);
+VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size);
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module);
 
@@ -39,8 +35,6 @@ VkResult wlu_create_graphics_pipeline(
 
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
-  uint32_t setLayoutCount,
-  const VkDescriptorSetLayout *pSetLayouts,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 );
@@ -192,6 +186,26 @@ VkPipelineColorBlendStateCreateInfo wlu_set_color_blend_attachment_state_info(
 VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
   uint32_t dynamicStateCount,
   const VkDynamicState *pDynamicStates
+);
+
+VkDescriptorSetLayoutBinding wlu_set_desc_set(
+  uint32_t binding,
+  VkDescriptorType descriptorType,
+  uint32_t descriptorCount,
+  VkShaderStageFlags stageFlags,
+  const VkSampler* pImmutableSamplers
+);
+
+VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
+  vkcomp *app,
+  VkDescriptorSetLayoutCreateFlags flags,
+  uint32_t bindingCount,
+  const VkDescriptorSetLayoutBinding* pBindings
+);
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  VkDescriptorSetLayoutCreateInfo *desc_set_info
 );
 
 #endif

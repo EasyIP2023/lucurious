@@ -11,6 +11,7 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
+#define NUM_DESCRIPTOR_SETS 1
 #define WIDTH 1920
 #define HEIGHT 1080
 #define DEPTH 1
@@ -158,6 +159,26 @@ START_TEST(test_vulkan_client_create_3D) {
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
+
+  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(0,
+    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL
+  );
+
+  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(app, 0, NUM_DESCRIPTOR_SETS, &desc_set);
+
+  err = wlu_create_desc_set(app, &desc_set_info);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_pipeline_layout(app, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
     ck_abort_msg(NULL);
   }
 

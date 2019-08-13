@@ -267,7 +267,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
 
-  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
+  err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);

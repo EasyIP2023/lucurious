@@ -132,8 +132,6 @@ VkResult wlu_create_graphics_pipeline(
 
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
-  uint32_t setLayoutCount,
-  const VkDescriptorSetLayout *pSetLayouts,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 ) {
@@ -144,8 +142,8 @@ VkResult wlu_create_pipeline_layout(
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.setLayoutCount = setLayoutCount;
-  create_info.pSetLayouts = pSetLayouts;
+  create_info.setLayoutCount = app->desc_count;
+  create_info.pSetLayouts = app->desc_layout;
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
@@ -552,4 +550,62 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
   create_info.pDynamicStates = pDynamicStates;
 
   return create_info;
+}
+
+VkDescriptorSetLayoutBinding wlu_set_desc_set(
+  uint32_t binding,
+  VkDescriptorType descriptorType,
+  uint32_t descriptorCount,
+  VkShaderStageFlags stageFlags,
+  const VkSampler* pImmutableSamplers
+) {
+
+  VkDescriptorSetLayoutBinding create_info = {};
+  create_info.binding = binding;
+  create_info.descriptorType = descriptorType;
+  create_info.descriptorCount = descriptorCount;
+  create_info.stageFlags = stageFlags;
+  create_info.pImmutableSamplers = pImmutableSamplers;
+
+  return create_info;
+}
+
+VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
+  vkcomp *app,
+  VkDescriptorSetLayoutCreateFlags flags,
+  uint32_t bindingCount,
+  const VkDescriptorSetLayoutBinding* pBindings
+) {
+
+  VkDescriptorSetLayoutCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.bindingCount = app->desc_count = bindingCount;
+  create_info.pBindings = pBindings;
+
+  return create_info;
+}
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  VkDescriptorSetLayoutCreateInfo *desc_set_info
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  app->desc_layout = (VkDescriptorSetLayout *) calloc(sizeof(VkDescriptorSetLayout),
+        app->desc_count * sizeof(VkDescriptorSetLayout));
+  if (!app->desc_layout) {
+    wlu_log_me(WLU_DANGER, "[x] calloc VkDescriptorSetLayout *desc_layout failed");
+    return res;
+  }
+
+  res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, app->desc_layout);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed");
+    return res;
+  }
+
+  return res;
 }

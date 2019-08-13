@@ -84,6 +84,8 @@ typedef struct vkcomp {
   mat4 mvp;
   /* End of uniform buffer section */
 
+  uint32_t desc_count;
+  VkDescriptorSetLayout *desc_layout;
 } vkcomp;
 
 vkcomp *wlu_init_vk();
