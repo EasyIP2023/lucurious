@@ -587,7 +587,7 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   return create_info;
 }
 
-VkResult wlu_create_desc_set(
+VkResult wlu_create_desc_set_layout(
   vkcomp *app,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 ) {
@@ -603,9 +603,81 @@ VkResult wlu_create_desc_set(
 
   res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, app->desc_layout);
   if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed");
+    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed, ERROR CODE: %d", res);
     return res;
   }
+
+  return res;
+}
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  uint32_t psize,
+  VkDescriptorPoolCreateFlags flags,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  VkDescriptorType descriptorType
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->desc_layout) {
+    wlu_log_me(WLU_DANGER, "[x] Descriptor Set Layout not defined");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layout(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+  }
+
+  VkDescriptorPoolSize pool_sizes[psize];
+  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  pool_sizes[0].descriptorCount = app->desc_count;
+
+  VkDescriptorPoolCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.maxSets = app->desc_count;
+  create_info.poolSizeCount = psize;
+  create_info.pPoolSizes = pool_sizes;
+
+  res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_pool);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorPool failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  VkDescriptorSetAllocateInfo alloc_info[psize];
+  alloc_info[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info[0].pNext = NULL;
+  alloc_info[0].descriptorPool = app->desc_pool;
+  alloc_info[0].descriptorSetCount = app->desc_count;
+  alloc_info[0].pSetLayouts = app->desc_layout;
+
+  app->desc_set = (VkDescriptorSet *) calloc(sizeof(VkDescriptorSet),
+        app->desc_count * sizeof(VkDescriptorSet));
+  if (!app->desc_set) {
+    wlu_log_me(WLU_DANGER, "[x] calloc VkDescriptorSet *desc_set failed");
+    return res = VK_RESULT_MAX_ENUM;
+  }
+
+  res = vkAllocateDescriptorSets(app->device, alloc_info, app->desc_set);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkAllocateDescriptorSets failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  VkWriteDescriptorSet writes[psize];
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].pNext = NULL;
+  writes[0].dstSet = app->desc_set[0];
+  writes[0].dstBinding = dstBinding;
+  writes[0].dstArrayElement = dstArrayElement;
+  writes[0].descriptorCount = app->desc_count;
+  writes[0].descriptorType = descriptorType;
+  writes[0].pImageInfo = NULL;
+  writes[0].pBufferInfo = &app->uniform_data.buff_info;
+  writes[0].pImageInfo = NULL;
+
+  vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
 
   return res;
 }

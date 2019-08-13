@@ -86,6 +86,8 @@ typedef struct vkcomp {
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layout;
+  VkDescriptorPool desc_pool;
+  VkDescriptorSet *desc_set;
 } vkcomp;
 
 vkcomp *wlu_init_vk();

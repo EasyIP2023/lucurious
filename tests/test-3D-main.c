@@ -1,11 +1,13 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/wclient/client.h>
+#include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
 #include <wlu/vlucur/matrix.h>
 
+#include <signal.h>
 #include <check.h>
 
 #include "test-extras.h"
@@ -39,6 +41,13 @@ START_TEST(test_vulkan_client_create_3D) {
   if (!app) {
     freeme(NULL, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
+    ck_abort_msg(NULL);
+  }
+
+  /* Signal handler for this process */
+  err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
+  if (err) {
+    freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
@@ -168,7 +177,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(app, 0, NUM_DESCRIPTOR_SETS, &desc_set);
 
-  err = wlu_create_desc_set(app, &desc_set_info);
+  err = wlu_create_desc_set_layout(app, &desc_set_info);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
@@ -179,6 +188,13 @@ START_TEST(test_vulkan_client_create_3D) {
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_desc_set(app, 1, 0, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set failed");
     ck_abort_msg(NULL);
   }
 

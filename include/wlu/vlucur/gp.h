@@ -203,9 +203,18 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   const VkDescriptorSetLayoutBinding* pBindings
 );
 
-VkResult wlu_create_desc_set(
+VkResult wlu_create_desc_set_layout(
   vkcomp *app,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
+);
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  uint32_t psize,
+  VkDescriptorPoolCreateFlags flags,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  VkDescriptorType descriptorType
 );
 
 #endif

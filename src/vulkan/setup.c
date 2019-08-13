@@ -40,6 +40,8 @@ static void set_values(vkcomp *app) {
   app->depth.mem = VK_NULL_HANDLE;
   app->desc_count = VK_NULL_HANDLE;
   app->desc_layout = VK_NULL_HANDLE;
+  app->desc_pool = VK_NULL_HANDLE;
+  app->desc_set = VK_NULL_HANDLE;
 }
 
 vkcomp *wlu_init_vk() {
@@ -814,10 +816,6 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
-  if (app->uniform_data.buff)
-    vkDestroyBuffer(app->device, app->uniform_data.buff, NULL);
-  if (app->uniform_data.mem)
-    vkFreeMemory(app->device, app->uniform_data.mem, NULL);
   if (app->depth.view)
     vkDestroyImageView(app->device, app->depth.view, NULL);
   if (app->depth.image)
@@ -846,6 +844,14 @@ void wlu_freeup_vk(void *data) {
       vkDestroyDescriptorSetLayout(app->device, app->desc_layout[i], NULL);
     free(app->desc_layout);
   }
+  if (app->desc_set)
+    free(app->desc_set);
+  if (app->desc_pool)
+    vkDestroyDescriptorPool(app->device, app->desc_pool, NULL);
+  if (app->uniform_data.buff)
+    vkDestroyBuffer(app->device, app->uniform_data.buff, NULL);
+  if (app->uniform_data.mem)
+    vkFreeMemory(app->device, app->uniform_data.mem, NULL);
   if (app->pipeline_layout)
     vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->render_pass)
