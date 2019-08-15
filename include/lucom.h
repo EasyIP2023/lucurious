@@ -9,11 +9,10 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-/* Can find in vulkan-sdk samples/API-Samples/utils/util.hpp */
-#if defined(NDEBUG) && defined(__GNUC__)
-#define U_ASSERT_ONLY __attribute__((unused))
+#ifdef DEBUG
+  #define ENABLE_VALIDATION_LAYERS 1
 #else
-#define U_ASSERT_ONLY
+  #define ENABLE_VALIDATION_LAYERS 0
 #endif
 
 /*

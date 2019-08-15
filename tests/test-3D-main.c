@@ -24,6 +24,7 @@ void freesh(shaderc_compiler_t compiler, shaderc_compilation_result_t result) {
 }
 
 void freeme(vkcomp *app, wclient *wc) {
+  wlu_freeup_drc(app, 1);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
 }
@@ -58,10 +59,17 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 4, instance_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_set_debug_message(app, 1);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
     ck_abort_msg(NULL);
   }
 
@@ -124,17 +132,34 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent3D extent = wlu_choose_3D_swap_extent(capabilities, WIDTH, HEIGHT, DEPTH);
-  if (extent.width == UINT32_MAX) {
+  VkExtent2D extent2D = { UINT32_MAX, UINT32_MAX };
+  VkExtent3D extent3D = wlu_choose_3D_swap_extent(capabilities, WIDTH, HEIGHT, DEPTH);
+  if (extent3D.width == UINT32_MAX) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
+    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent3D.width equals %d", extent3D.width);
+    ck_abort_msg(NULL);
+  }
+
+  wlu_retrieve_device_queue(app);
+
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D, extent3D);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create image views");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_depth_buff(app, VK_FORMAT_D16_UNORM,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    VK_IMAGE_TYPE_2D, extent,
+    VK_IMAGE_TYPE_2D, extent3D,
     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_VIEW_TYPE_2D
@@ -183,6 +208,8 @@ START_TEST(test_vulkan_client_create_3D) {
     wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
     ck_abort_msg(NULL);
   }
+
+  /* This is where creation of the graphics pipeline begins */
 
   err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {

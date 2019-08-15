@@ -55,7 +55,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -90,7 +90,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
+  err = wlu_create_logical_device(app, 3, enabled_validation_layers, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -121,14 +121,17 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
-  if (extent.width == UINT32_MAX) {
+  VkExtent3D extent3D = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
+  VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
+  if (extent2D.width == UINT32_MAX) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent.width equals %d", extent.width);
+    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent2D.width equals %d", extent2D.width);
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent);
+  wlu_retrieve_device_queue(app);
+
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D, extent3D);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
@@ -234,9 +237,9 @@ START_TEST(test_vulkan_client_create) {
     VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
   );
 
-  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f);
+  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
 
-  VkRect2D scissor = wlu_set_rect2D(0, 0, extent);
+  VkRect2D scissor = wlu_set_rect2D(0, 0, extent2D);
 
   VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(&viewport, 1, &scissor, 1);
 
@@ -295,7 +298,7 @@ START_TEST(test_vulkan_client_create) {
 
   /* Ending setup for graphics pipeline */
 
-  err = wlu_create_framebuffers(app, 1, extent, 1);
+  err = wlu_create_framebuffers(app, 1, extent2D, 1);
   if (err) {
     wlu_freeup_shader(app, frag_shader_module);
     wlu_freeup_shader(app, vert_shader_module);
@@ -361,7 +364,7 @@ START_TEST(test_vulkan_client_create) {
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
 
-  wlu_exec_begin_render_pass(app, 0, 0, extent, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, 0, 0, extent2D, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);

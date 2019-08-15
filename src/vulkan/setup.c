@@ -120,7 +120,7 @@ VkResult wlu_create_instance(
   const char* const* ppEnabledExtensionNames
 ) {
 
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
 
   /* initialize the VkApplicationInfo structure */
   VkApplicationInfo app_info = {};
@@ -266,7 +266,7 @@ VkResult wlu_create_logical_device(
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     app->queue_create_infos[i].pNext = NULL;
     app->queue_create_infos[i].flags = 0;
-    app->queue_create_infos[i].queueFamilyIndex = i;
+    app->queue_create_infos[i].queueFamilyIndex = app->indices.present_family;
     app->queue_create_infos[i].queueCount = app->queue_family_count;
     app->queue_create_infos[i].pQueuePriorities = queue_priorities;
   }
@@ -274,7 +274,7 @@ VkResult wlu_create_logical_device(
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
-  create_info.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
+  create_info.flags = 0;
   create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
   create_info.pQueueCreateInfos = app->queue_create_infos;
   create_info.enabledLayerCount = enabledLayerCount;
@@ -308,7 +308,8 @@ VkResult wlu_create_swap_chain(
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
   VkPresentModeKHR pres_mode,
-  VkExtent2D extent
+  VkExtent2D extent2D,
+  VkExtent3D extent3D
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -365,8 +366,13 @@ VkResult wlu_create_swap_chain(
   create_info.minImageCount = app->sc_buff_size;
   create_info.imageFormat = surface_fmt.format;
   create_info.imageColorSpace = surface_fmt.colorSpace;
-  create_info.imageExtent.width = extent.width;
-  create_info.imageExtent.height = extent.height;
+  if (extent2D.width != UINT32_MAX) {
+    create_info.imageExtent.width = extent2D.width;
+    create_info.imageExtent.height = extent2D.height;
+  } else {
+    create_info.imageExtent.width = extent3D.width;
+    create_info.imageExtent.height = extent3D.height;
+  }
   create_info.imageArrayLayers = 1;
   create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   /* current transform should be applied to images in the swap chain */
@@ -806,6 +812,8 @@ VkResult wlu_create_semaphores(vkcomp *app) {
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
+  if (app->debug_report_callbacks)
+    free(app->debug_report_callbacks);
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)

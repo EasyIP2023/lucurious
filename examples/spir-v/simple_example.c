@@ -48,13 +48,6 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_set_global_layers(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    return EXIT_FAILURE;
-  }
-
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 3, instance_extensions);
   if (err) {
     freeme(app, wc);
@@ -109,6 +102,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
+  VkExtent3D extent3D = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
   VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent.width == UINT32_MAX) {
     freeme(app, wc);
@@ -116,7 +110,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent, extent3D);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");

@@ -628,8 +628,10 @@ VkResult wlu_create_desc_set(
   }
 
   VkDescriptorPoolSize pool_sizes[psize];
-  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  pool_sizes[0].descriptorCount = app->desc_count;
+  for (uint32_t i = 0; i < psize; i++) {
+    pool_sizes[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    pool_sizes[i].descriptorCount = app->desc_count;
+  }
 
   VkDescriptorPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -646,11 +648,13 @@ VkResult wlu_create_desc_set(
   }
 
   VkDescriptorSetAllocateInfo alloc_info[psize];
-  alloc_info[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  alloc_info[0].pNext = NULL;
-  alloc_info[0].descriptorPool = app->desc_pool;
-  alloc_info[0].descriptorSetCount = app->desc_count;
-  alloc_info[0].pSetLayouts = app->desc_layout;
+  for (uint32_t i = 0; i < psize; i++) {
+    alloc_info[i].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info[i].pNext = NULL;
+    alloc_info[i].descriptorPool = app->desc_pool;
+    alloc_info[i].descriptorSetCount = app->desc_count;
+    alloc_info[i].pSetLayouts = app->desc_layout;
+  }
 
   app->desc_set = (VkDescriptorSet *) calloc(sizeof(VkDescriptorSet),
         app->desc_count * sizeof(VkDescriptorSet));
@@ -665,19 +669,24 @@ VkResult wlu_create_desc_set(
     return res;
   }
 
+  /* Copy Uniform Buffer Info */
   VkWriteDescriptorSet writes[psize];
-  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writes[0].pNext = NULL;
-  writes[0].dstSet = app->desc_set[0];
-  writes[0].dstBinding = dstBinding;
-  writes[0].dstArrayElement = dstArrayElement;
-  writes[0].descriptorCount = app->desc_count;
-  writes[0].descriptorType = descriptorType;
-  writes[0].pImageInfo = NULL;
-  writes[0].pBufferInfo = &app->uniform_data.buff_info;
-  writes[0].pImageInfo = NULL;
+  for (uint32_t i = 0; i < psize; i++) {
+    writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writes[i].pNext = NULL;
+    writes[i].dstSet = app->desc_set[i];
+    writes[i].dstBinding = dstBinding;
+    writes[i].dstArrayElement = dstArrayElement;
+    writes[i].descriptorCount = app->desc_count;
+    writes[i].descriptorType = descriptorType;
+    writes[i].pImageInfo = NULL;
+    writes[i].pBufferInfo = &app->uniform_data.buff_info;
+    writes[i].pImageInfo = NULL;
+  }
 
   vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
+
+  wlu_log_me(WLU_SUCCESS, "Successfully created Descriptor Set");
 
   return res;
 }

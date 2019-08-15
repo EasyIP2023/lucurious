@@ -19,7 +19,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   app->queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
       app->queue_family_count * sizeof(VkQueueFamilyProperties));
   if (!app->queue_families) {
-    wlu_log_me(WLU_DANGER, "[x] calloc of app->queue_families failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc of VkQueueFamilyProperties *queue_families failed");
     goto finish_queue_family;
   }
 
@@ -119,15 +119,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
     if (res) return res;
 
     /* Rare but may happen for instances. If so continue on with the app */
-    if (extension_count == 0) {
-      if (app && !device)
-        wlu_log_me(WLU_WARNING, "[x] Failed to find instance extensions, extension_count equals 0");
-      else if (prop)
-        wlu_log_me(WLU_WARNING, "[x] Failed to find validation layers, extension_count equals 0");
-      else
-        wlu_log_me(WLU_WARNING, "[x] Failed to find device extensions, extension_count equals 0");
-      goto finish_extensions;
-    }
+    if (extension_count == 0) goto finish_extensions;
 
     extensions = (VkExtensionProperties *) realloc(extensions,
       extension_count * sizeof(VkExtensionProperties));
@@ -144,8 +136,8 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
 
   /* set available instance extensions */
   if (app && !device) {
-    app->ep_instance_props = (VkExtensionProperties *) \
-      calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
+    app->ep_instance_props = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties),
+            extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_instance_props) {
       res = VK_RESULT_MAX_ENUM;
       wlu_log_me(WLU_DANGER, "[x] calloc of app->ep_instance_props failed");
@@ -189,4 +181,12 @@ finish_extensions:
     extensions = NULL;
   }
   return res;
+}
+
+void wlu_retrieve_device_queue(vkcomp *app) {
+  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+  if (app->indices.graphics_family == app->indices.present_family)
+    app->present_queue = app->graphics_queue;
+  else
+    vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
 }

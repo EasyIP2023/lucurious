@@ -17,6 +17,11 @@ typedef struct queue_family_indices {
 } queue_family_indices;
 
 typedef struct vkcomp {
+  PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
+  PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
+  PFN_vkDebugReportMessageEXT debug_messenger;
+  VkDebugReportCallbackEXT *debug_report_callbacks;
+
   VkInstance instance;
   VkSurfaceKHR surface;
 
@@ -97,6 +102,8 @@ vkcomp *wlu_init_vk();
  * vulkan sdk
  */
 VkResult wlu_set_global_layers(vkcomp *app);
+
+VkResult wlu_set_debug_message(vkcomp *app, uint32_t size);
 
 /* Create connection between app and the vulkan api */
 VkResult wlu_create_instance(
@@ -181,8 +188,11 @@ VkResult wlu_create_swap_chain(
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
   VkPresentModeKHR pres_mode,
-  VkExtent2D extent
+  VkExtent2D extent,
+  VkExtent3D extent3D
 );
+
+void wlu_retrieve_device_queue(vkcomp *app);
 
 /*
  * Create image views which is the way you communicate to vulkan
@@ -246,5 +256,7 @@ VkResult wlu_draw_frame(
 VkResult wlu_create_semaphores(vkcomp *app);
 
 void wlu_freeup_vk(void *data);
+
+void wlu_freeup_drc(vkcomp *app, uint32_t size);
 
 #endif
