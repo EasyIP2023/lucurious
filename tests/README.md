@@ -2,8 +2,7 @@
 
 **Running test**
 ```bash
-mkdir -v build/
-meson build/ -Dc_args=-DDEBUG
+meson build/
 ninja test -C build
 cat build/meson-logs/testlog.txt
 ```

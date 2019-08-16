@@ -36,7 +36,7 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * [Swaywm](https://github.com/swaywm)
 * [Emersion Hello Wayland](https://github.com/emersion/hello-wayland)
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
-* [vulkan](https://vulkan.lunarg.com)
+* [Vulkan](https://vulkan.lunarg.com)
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)
 * [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-2)
 * [Vulkan Validation Layers](https://gpuopen.com/using-the-vulkan-validation-layers/)
