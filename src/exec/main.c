@@ -55,12 +55,10 @@ int main(int argc, char **argv) {
         if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
         if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
         if (!strcmp(long_options[option_index].name, "pde")) {
-          if (!strcmp(long_options[option_index].name, "pde")) {
-            if (optarg) {
-              print_device_extensions(ret_dtype(optarg));
-            } else {
-              fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
-            }
+          if (optarg) {
+            print_device_extensions(ret_dtype(optarg));
+          } else {
+            fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
           }
         }
         break;

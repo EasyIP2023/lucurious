@@ -27,7 +27,7 @@
 
 VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size);
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module);
+void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module);
 
 VkResult wlu_create_render_pass(
   vkcomp *app,
@@ -68,7 +68,7 @@ void wlu_exec_begin_render_pass(
   uint32_t x,
   uint32_t y,
   VkExtent2D extent,
-  uint32_t clear_value_count,
+  uint32_t clearValueCount,
   const VkClearValue *pClearValues,
   VkSubpassContents contents
 );

@@ -240,6 +240,22 @@ VkResult wlu_exec_stop_cmd_buff(vkcomp *app) {
   return res;
 }
 
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->img_semaphore) {
+    wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  /* UINT64_MAX disables timeout */
+  res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
+                              app->img_semaphore, VK_NULL_HANDLE, current_buffer);
+  return res;
+}
+
 VkResult wlu_draw_frame(
   vkcomp *app,
   uint32_t *image_index,

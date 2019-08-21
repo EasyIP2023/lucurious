@@ -29,7 +29,6 @@
 #include "test-extras.h"
 
 void freeme(vkcomp *app) {
-  wlu_freeup_drc(app, 1);
   wlu_freeup_vk(app);
 }
 

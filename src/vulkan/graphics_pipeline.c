@@ -40,7 +40,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
 
   VkShaderModuleCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  create_info.codeSize = code_size;
+  create_info.codeSize = code_size * sizeof(unsigned int);
   create_info.pCode = (const uint32_t *) code;
 
   err = vkCreateShaderModule(app->device, &create_info, NULL, &shader_module);
@@ -65,8 +65,8 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
   return shader_module;
 }
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module) {
-  vkDestroyShaderModule(app->device, shader_module, NULL);
+void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
+  vkDestroyShaderModule(app->device, *shader_module, NULL);
   shader_module = NULL;
 }
 
@@ -183,7 +183,7 @@ void wlu_exec_begin_render_pass(
   uint32_t x,
   uint32_t y,
   VkExtent2D extent,
-  uint32_t clear_value_count,
+  uint32_t clearValueCount,
   const VkClearValue *pClearValues,
   VkSubpassContents contents
 ) {
@@ -197,9 +197,10 @@ void wlu_exec_begin_render_pass(
     render_pass_info.renderArea.offset.x = x;
     render_pass_info.renderArea.offset.y = y;
     render_pass_info.renderArea.extent = extent;
-    render_pass_info.clearValueCount = clear_value_count;
+    render_pass_info.clearValueCount = clearValueCount;
     render_pass_info.pClearValues = pClearValues;
 
+    /* Instert render pass into command buffer */
     vkCmdBeginRenderPass(app->cmd_buffs[i], &render_pass_info, contents);
   }
 }
@@ -269,7 +270,8 @@ VkSubpassDescription wlu_set_subpass_desc(
 ) {
 
   VkSubpassDescription subpass = {};
-  // subpass.flags = flags;
+  subpass.flags = 0;
+  /* used to indicate if this is a graphics or a compute subpass */
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.inputAttachmentCount = inputAttachmentCount;
   subpass.pInputAttachments = pInputAttachments;

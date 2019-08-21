@@ -37,19 +37,14 @@ START_TEST(shade_multi_error) {
 
   wlu_log_me(WLU_WARNING, "The first example has a compilation problem. The second does not.");
 
-  shaderc_compiler_t compiler = shaderc_compiler_initialize();
-
   for (int i = 0; i < 2; ++i) {
     wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", source[i]);
-    shaderc_compilation_result_t result = 0;
-    wlu_shader_info shinfo = wlu_compile_to_spirv(compiler, result,
-                             shaderc_glsl_vertex_shader, source[i],
-                             "main.vert", "main", true);
+    wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000001,
+                             source[i], "main.vert", "main", true);
     if (!shinfo.bytes)
       wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    shaderc_result_release(result);
+    wlu_freeup_shi(&shinfo);
   }
-  shaderc_compiler_release(compiler);
 } END_TEST;
 
 START_TEST(shade_error) {
@@ -57,18 +52,13 @@ START_TEST(shade_error) {
     "#version 310 es\n"
     "int main() { int main_should_be_void; }\n";
 
-  shaderc_compiler_t compiler = shaderc_compiler_initialize();
-  shaderc_compilation_result_t result = 0;
-
   wlu_log_me(WLU_WARNING, "Compiling a bad shader:");
-  wlu_shader_info shinfo = wlu_compile_to_spirv(compiler, result,
-                           shaderc_glsl_vertex_shader, bad_shader_src,
-                           "bad_src", "main", false);
+  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000001,
+                           bad_shader_src, "bad_src", "main", false);
   if (!shinfo.bytes)
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
 
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
+  wlu_freeup_shi(&shinfo);
 } END_TEST;
 
 

@@ -85,10 +85,12 @@ executable(
 subdir('tests')
 
 pkg_mod = import('pkgconfig')
-pkg_mod.generate(libraries: lib_lucur,
-                 version: meson.project_version(),
-                 name: meson.project_name(),
-                 filebase:  meson.project_name(),
-								 extra_cflags: '-lshaderc_shared',
-								 install_dir: '/usr/lib/pkgconfig',
-                 description: 'Library for building and styling 2D/3D Wayland Compositors')
+pkg_mod.generate(
+	libraries: lib_lucur,
+	version: meson.project_version(),
+	name: meson.project_name(),
+	filebase:  meson.project_name(),
+	extra_cflags: '-lshaderc_shared',
+	install_dir: '/usr/lib/pkgconfig',
+	description: 'Library for building and styling 2D/3D Wayland Compositors'
+)

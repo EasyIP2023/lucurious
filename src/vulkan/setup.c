@@ -32,6 +32,7 @@ static void set_values(vkcomp *app) {
   app->dbg_create_report_callback = VK_NULL_HANDLE;
   app->dbg_destroy_report_callback = VK_NULL_HANDLE;
   app->debug_messenger = VK_NULL_HANDLE;
+  app->dbg_size = VK_NULL_HANDLE;
   app->debug_report_callbacks = VK_NULL_HANDLE;
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
@@ -840,8 +841,13 @@ VkResult wlu_create_semaphores(vkcomp *app) {
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
-  if (app->debug_report_callbacks)
+  if (app->debug_report_callbacks) {
+    for (uint32_t i = 0; i < app->dbg_size; i++) {
+      app->dbg_destroy_report_callback(app->instance, app->debug_report_callbacks[i], NULL);
+      app->debug_report_callbacks[i] = NULL;
+    }
     free(app->debug_report_callbacks);
+  }
   if (app->vk_layer_props)
     free(app->vk_layer_props);
   if (app->ep_instance_props)

@@ -25,12 +25,17 @@
 #ifndef WLU_ERRORS_H
 #define WLU_ERRORS_H
 
-int wlu_watch_me(
-  int sig,
-  int num_called,
-  pid_t pid,
-  void *app,
-  void *wc
+int wlu_watch_me(int sig, pid_t pid);
+
+void wlu_add_watchme_info(
+  uint32_t app_pos,
+  vkcomp *app,
+  uint32_t wc_pos,
+  wclient *wc,
+  uint32_t shi_pos,
+  void *shi,
+  uint32_t shader_mod_pos,
+  VkShaderModule *shader_mod
 );
 
 #endif

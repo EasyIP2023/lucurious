@@ -44,6 +44,7 @@ typedef struct vkcomp {
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
   PFN_vkDebugReportMessageEXT debug_messenger;
+  uint32_t dbg_size;
   VkDebugReportCallbackEXT *debug_report_callbacks;
 
   VkInstance instance;
@@ -263,6 +264,9 @@ VkResult wlu_exec_begin_cmd_buff(
 
 VkResult wlu_exec_stop_cmd_buff(vkcomp *app);
 
+/* Acquire the swapchain image in order to set its layout */
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
+
 VkResult wlu_draw_frame(
   vkcomp *app,
   uint32_t *image_index,
@@ -277,10 +281,16 @@ VkResult wlu_draw_frame(
   VkResult *pResults
 );
 
+/*
+ * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass
+ * A semaphore (or fence) is required in order to acquire a
+ * swapchain image to prepare it for use in a render pass.
+ * The semaphore is normally used to hold back the rendering
+ * operation until the image is actually available. This function
+ * creates semaphores
+ */
 VkResult wlu_create_semaphores(vkcomp *app);
 
 void wlu_freeup_vk(void *data);
-
-void wlu_freeup_drc(vkcomp *app, uint32_t size);
 
 #endif

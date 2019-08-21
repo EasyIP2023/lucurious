@@ -39,13 +39,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-void freesh(shaderc_compiler_t compiler, shaderc_compilation_result_t result) {
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
-}
-
 void freeme(vkcomp *app, wclient *wc) {
-  wlu_freeup_drc(app, 1);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
 }
@@ -67,11 +61,13 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Signal handler for this process */
-  err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
+  err = wlu_watch_me(SIGSEGV, getpid());
   if (err) {
     freeme(app, wc);
     ck_abort_msg(NULL);
   }
+
+  wlu_add_watchme_info(1, app, 1, wc, 0, NULL, 0, NULL);
 
   err = wlu_set_global_layers(app);
   if (err) {
@@ -204,50 +200,55 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
     ck_abort_msg(NULL);
   }
+  wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
   /* ending point for render pass creation */
-
-  shaderc_compiler_t compiler = shaderc_compiler_initialize();
-  shaderc_compilation_result_t result = 0;
 
   wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
 
-  wlu_shader_info shi_frag = wlu_compile_to_spirv(compiler, result,
-                             shaderc_glsl_fragment_shader, shader_frag_src,
-                             "frag.spv", "main", false);
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
+                             shader_frag_src, "frag.spv", "main", false);
   if (!shi_frag.bytes) {
-    freesh(compiler, result);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
   }
 
+  wlu_add_watchme_info(0, NULL, 0, NULL, 2, &shi_frag, 0, NULL);
+
   wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
-  wlu_shader_info shi_vert = wlu_compile_to_spirv(compiler, result,
-                             shaderc_glsl_vertex_shader, shader_vert_src,
-                             "vert.spv", "main", false);
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
+                             shader_vert_src, "vert.spv", "main", false);
   if (!shi_vert.bytes) {
-    freesh(compiler, result);
+    wlu_freeup_shi(&shi_frag);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
   }
+
+  wlu_add_watchme_info(0, NULL, 0, NULL, 2, &shi_vert, 0, NULL);
 
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
   if (!vert_shader_module) {
-    freesh(compiler, result);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
 
+  wlu_add_watchme_info(1, app, 0, NULL, 0, NULL, 1, &vert_shader_module);
+
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
+
+  wlu_add_watchme_info(1, app, 0, NULL, 0, NULL, 1, &frag_shader_module);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -304,9 +305,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create pipeline layout");
     ck_abort_msg(NULL);
@@ -318,9 +320,10 @@ START_TEST(test_vulkan_client_create) {
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
   );
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
     ck_abort_msg(NULL);
@@ -332,9 +335,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_framebuffers(app, 1, extent2D, 1);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create framebuffers, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
@@ -342,9 +346,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_cmd_pool(app, 0);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
@@ -352,9 +357,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
@@ -362,9 +368,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_semaphores(app);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create semaphores");
     ck_abort_msg(NULL);
@@ -372,9 +379,10 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_exec_begin_cmd_buff(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
     ck_abort_msg(NULL);
@@ -401,50 +409,22 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);
 
-  // VkSemaphore wait_semaphores[] = {app->img_semaphore};
-  // VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-  // VkSemaphore signal_semaphores[] = {app->render_semaphore};
-  // VkSwapchainKHR swap_chains[] = {app->swap_chain};
-  //
-  // /* Used to aquire an image from the swapchain */
-  // uint32_t image_index;
-  // err = wlu_draw_frame(
-  //   app, &image_index, 1, wait_semaphores,
-  //   wait_stages, 1, 1, signal_semaphores,
-  //   1, swap_chains, NULL
-  // );
-  // if (err) {
-  //   wlu_freeup_shader(app, frag_shader_module);
-  //   wlu_freeup_shader(app, vert_shader_module);
-  //   freesh(compiler, result);
-  //   freeme(app, wc);
-  //   wlu_log_me(WLU_SUCCESS, "[x] failed to draw frame, ERROR CODE: %d", err);
-  //   ck_abort_msg(NULL);
-  // }
-
-  if (wlu_run_client(wc)) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
-    freeme(app, wc);
-    wlu_log_me(WLU_SUCCESS, "[x] failed to run wayland client");
-    ck_abort_msg(NULL);
-  }
-
   err = wlu_exec_stop_cmd_buff(app);
   if (err) {
-    wlu_freeup_shader(app, frag_shader_module);
-    wlu_freeup_shader(app, vert_shader_module);
-    freesh(compiler, result);
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_frag);
+    wlu_freeup_shi(&shi_vert);
     freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
   wlu_exec_stop_render_pass(app);
 
-  wlu_freeup_shader(app, frag_shader_module);
-  wlu_freeup_shader(app, vert_shader_module);
-  freesh(compiler, result);
+  wlu_freeup_shader(app, &frag_shader_module);
+  wlu_freeup_shader(app, &vert_shader_module);
+  wlu_freeup_shi(&shi_frag);
+  wlu_freeup_shi(&shi_vert);
   freeme(app, wc);
 } END_TEST;
 

@@ -64,6 +64,7 @@ VkResult wlu_set_debug_message(vkcomp *app, uint32_t size) {
     return res;
   }
 
+  app->dbg_size = size;
   app->dbg_create_report_callback = (PFN_vkCreateDebugReportCallbackEXT) \
       vkGetInstanceProcAddr(app->instance, "vkCreateDebugReportCallbackEXT");
   if (!app->dbg_create_report_callback) {
@@ -105,23 +106,14 @@ VkResult wlu_set_debug_message(vkcomp *app, uint32_t size) {
   wlu_log_me(WLU_SUCCESS, "Successfully created debug report callback object");
 
   app->debug_report_callbacks = (VkDebugReportCallbackEXT *) calloc(
-      sizeof(VkDebugReportCallbackEXT), size * sizeof(VkDebugReportCallbackEXT));
+      sizeof(VkDebugReportCallbackEXT), app->dbg_size * sizeof(VkDebugReportCallbackEXT));
   if (!app->debug_report_callbacks) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkDebugReportCallbackEXT *debug_report_callbacks failed");
     return VK_RESULT_MAX_ENUM;
   }
 
-  for (uint32_t i = 0; i < size; i++)
+  for (uint32_t i = 0; i < app->dbg_size; i++)
     app->debug_report_callbacks[i] = debug_report_callback;
 
   return res;
-}
-
-void wlu_freeup_drc(vkcomp *app, uint32_t size) {
-  if (app->debug_report_callbacks) {
-    for (uint32_t i = 0; i < size; i++) {
-      app->dbg_destroy_report_callback(app->instance, app->debug_report_callbacks[i], NULL);
-      app->debug_report_callbacks[i] = NULL;
-    }
-  }
 }

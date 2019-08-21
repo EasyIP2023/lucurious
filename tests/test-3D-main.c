@@ -42,13 +42,7 @@
 #define HEIGHT 1080
 #define DEPTH 1
 
-void freesh(shaderc_compiler_t compiler, shaderc_compilation_result_t result) {
-  shaderc_result_release(result);
-  shaderc_compiler_release(compiler);
-}
-
 void freeme(vkcomp *app, wclient *wc) {
-  wlu_freeup_drc(app, 1);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
 }
@@ -70,11 +64,13 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   /* Signal handler for this process */
-  err = wlu_watch_me(SIGSEGV, 0, getpid(), app, wc);
+  err = wlu_watch_me(SIGSEGV, getpid());
   if (err) {
     freeme(app, wc);
     ck_abort_msg(NULL);
   }
+
+  wlu_add_watchme_info(1, app, 1, wc, 0, NULL, 0, NULL);
 
   err = wlu_set_global_layers(app);
   if (err) {
@@ -249,9 +245,119 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  // wlu_freeup_shader(app, frag_shader_module);
-  // wlu_freeup_shader(app, vert_shader_module);
-  // freesh(compiler, result);
+  /* start of render pass creation */
+
+  err = wlu_create_semaphores(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
+    ck_abort_msg(NULL);
+  }
+
+  uint32_t cur_buff = 0;
+  /* Acquire the swapchain image in order to set its layout */
+  err = wlu_retrieve_swapchain_img(app, &cur_buff);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
+    ck_abort_msg(NULL);
+  }
+
+  VkAttachmentDescription attachments[2];
+  /* Create render pass color attachment for swapchain images */
+  attachments[0] = wlu_set_attachment_desc(surface_fmt.format,
+    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+  );
+
+  /* Create render pass stencil/depth attachment for depth buffer */
+  attachments[1] = wlu_set_attachment_desc(app->depth.format,
+    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+  );
+
+  VkAttachmentReference color_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+  VkAttachmentReference depth_ref = wlu_set_attachment_ref(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+  VkSubpassDescription subpass = wlu_set_subpass_desc(0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
+
+  err = wlu_create_render_pass(app, 2, attachments, 1, &subpass, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_render_pass failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_log_me(WLU_SUCCESS, "Successfully created the render pass!!!");
+  /* End of render pass creation */
+
+  wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
+                             fragShaderText, "frag.spv", "main", false);
+  if (!shi_frag.bytes) {
+    wlu_freeup_shi(&shi_frag);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_add_watchme_info(0, NULL, 0, NULL, 1, &shi_frag, 0, NULL);
+
+  wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
+                             vertShaderText, "vert.spv", "main", false);
+  if (!shi_vert.bytes) {
+    wlu_freeup_shi(&shi_frag);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_add_watchme_info(0, NULL, 0, NULL, 2, &shi_vert, 0, NULL);
+
+  VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
+  if (!vert_shader_module) {
+    wlu_freeup_shi(&shi_vert);
+    wlu_freeup_shi(&shi_vert);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_add_watchme_info(1, app, 0, NULL, 0, NULL, 1, &vert_shader_module);
+
+  VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
+  if (!frag_shader_module) {
+    wlu_freeup_shader(app, &vert_shader_module);
+    wlu_freeup_shi(&shi_vert);
+    wlu_freeup_shi(&shi_vert);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_add_watchme_info(1, app, 0, NULL, 0, NULL, 2, &frag_shader_module);
+
+  VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
+    vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
+  );
+
+  VkPipelineShaderStageCreateInfo frag_shader_stage_info = wlu_set_shader_stage_info(
+    frag_shader_module, "main", VK_SHADER_STAGE_FRAGMENT_BIT, NULL
+  );
+
+  VkPipelineShaderStageCreateInfo shader_stages[] = {
+    vert_shader_stage_info, frag_shader_stage_info
+  };
+
+  ALL_UNUSED(shader_stages);
+
+  wlu_freeup_shader(app, &frag_shader_module);
+  wlu_freeup_shader(app, &vert_shader_module);
+  wlu_freeup_shi(&shi_vert);
+  wlu_freeup_shi(&shi_frag);
   freeme(app, wc);
 } END_TEST;
 
