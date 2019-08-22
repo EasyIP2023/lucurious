@@ -49,11 +49,7 @@ static struct wlu_sig_info {
   uint32_t wc_pos;
   wclient **wc;
 
-  uint32_t shi_pos;
-  wlu_shader_info **shi;
-
   uint32_t shader_mod_pos;
-
   struct app_shader {
     vkcomp *app;
     VkShaderModule *shader_mod;
@@ -67,35 +63,42 @@ static void signal_handler(int sig) {
   wlu_log_me(WLU_DANGER, "[x] Caught and freeing memory for");
 
   for (uint32_t i = 0; i < wsi.shader_mod_pos; i++) {
-    if (wsi.apsh[i].shader_mod) {
+    if (wsi.apsh && wsi.apsh[i].shader_mod) {
       wlu_log_me(WLU_DANGER, "[x] shader module: %p", wsi.apsh[i].shader_mod);
       wlu_freeup_shader(wsi.apsh[i].app, wsi.apsh[i].shader_mod);
     }
   }
 
-  for (uint32_t i = 0; i < wsi.shi_pos; i++) {
-    if (wsi.shi[i]) {
-      wlu_log_me(WLU_DANGER, "[x] shader info: %p - %p", &wsi.shi[i], wsi.shi[i]);
-      wlu_freeup_shi(wsi.shi[i]);
-      wsi.shi[i] = NULL;
-    }
+  if (wsi.apsh) {
+    free(wsi.apsh);
+    wsi.apsh = NULL;
   }
 
   for (uint32_t i = 0; i < wsi.app_pos; i++) {
-    if (wsi.app[i]) {
+    if (wsi.app && wsi.app[i]) {
       wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p - %p", &wsi.app[i], wsi.app[i]);
       wlu_freeup_vk(wsi.app[i]);
     }
   }
 
+  if (wsi.app) {
+    free(wsi.app);
+    wsi.app = NULL;
+  }
+
   for (uint32_t i = 0; i < wsi.wc_pos; i++) {
-    if (wsi.wc[i]) {
+    if (wsi.wc && wsi.wc[i]) {
       wlu_log_me(WLU_DANGER, "[x] wclient struct: %p - %p", &wsi.wc[i], wsi.wc[i]);
       wlu_freeup_wc(wsi.wc[i]);
     }
   }
 
-  wlu_log_me(WLU_SUCCESS, "Successfully freed up allocated memory :)");
+  if (wsi.wc) {
+    free(wsi.wc);
+    wsi.wc = NULL;
+  }
+
+  wlu_log_me(WLU_SUCCESS, "Successfully freed up most allocated memory :)");
 
   exit(EXIT_FAILURE);
 }
@@ -110,13 +113,12 @@ int wlu_watch_me(int sig, pid_t pid) {
   return EXIT_SUCCESS;
 }
 
+/* Leave this the way it is future me... */
 void wlu_add_watchme_info(
   uint32_t app_pos,
   vkcomp *app,
   uint32_t wc_pos,
   wclient *wc,
-  uint32_t shi_pos,
-  void *shi,
   uint32_t shader_mod_pos,
   VkShaderModule *shader_mod
 ) {
@@ -131,12 +133,6 @@ void wlu_add_watchme_info(
     wsi.wc_pos = wc_pos;
     wsi.wc = realloc(wsi.wc, wsi.wc_pos * sizeof(wclient));
     wsi.wc[wsi.wc_pos-1] = wc;
-  }
-
-  if (shi) {
-    wsi.shi_pos = shi_pos;
-    wsi.shi = realloc(wsi.shi, wsi.shi_pos * sizeof(wlu_shader_info));
-    wsi.shi[wsi.shi_pos-1] = (wlu_shader_info *) shi;
   }
 
   if (shader_mod) {

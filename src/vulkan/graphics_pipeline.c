@@ -32,7 +32,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
   VkShaderModule shader_module = VK_NULL_HANDLE;
 
   if (!app->device) {
-    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] A logical device must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return shader_module;
@@ -40,14 +40,16 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
 
   VkShaderModuleCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  create_info.codeSize = code_size * sizeof(unsigned int);
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.codeSize = code_size;
   create_info.pCode = (const uint32_t *) code;
 
   err = vkCreateShaderModule(app->device, &create_info, NULL, &shader_module);
 
   switch (err) {
     case VK_SUCCESS:
-      wlu_log_me(WLU_SUCCESS, "Shader module Successfully created");
+      wlu_log_me(WLU_SUCCESS, "Shader module successfully created");
       break;
     case VK_ERROR_OUT_OF_HOST_MEMORY:
       wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_OUT_OF_HOST_MEMORY");
@@ -67,7 +69,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
   vkDestroyShaderModule(app->device, *shader_module, NULL);
-  shader_module = NULL;
+  shader_module = VK_NULL_HANDLE;
 }
 
 VkResult wlu_create_render_pass(

@@ -390,7 +390,7 @@ VkResult wlu_create_swap_chain(
   VkSwapchainCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   create_info.pNext = NULL;
-  create_info.flags = VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR;
+  create_info.flags = 0;
   create_info.surface = app->surface;
   create_info.minImageCount = app->sc_buff_size;
   create_info.imageFormat = surface_fmt.format;

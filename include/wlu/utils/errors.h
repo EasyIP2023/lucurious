@@ -32,8 +32,6 @@ void wlu_add_watchme_info(
   vkcomp *app,
   uint32_t wc_pos,
   wclient *wc,
-  uint32_t shi_pos,
-  void *shi,
   uint32_t shader_mod_pos,
   VkShaderModule *shader_mod
 );

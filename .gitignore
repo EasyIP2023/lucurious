@@ -10,6 +10,9 @@
 # Ignore SPIR-V Files
 **/*.spv
 
+# Ignore all gdb history files
+**/*.gdb_history
+
 # Ignore all se executables in examples
 examples/**/*se
 

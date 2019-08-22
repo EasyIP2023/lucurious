@@ -23,10 +23,11 @@
  */
 
 #include <lucom.h>
-#include <wlu/shader/shade.h>
 #include <wlu/utils/log.h>
+#include <wlu/shader/shade.h>
 
 static const unsigned int shader_map_table[] = {
+  [0x00000000] = shaderc_glsl_infer_from_source,
   [0x00000001] = shaderc_glsl_vertex_shader,
   [0x00000002] = shaderc_glsl_tess_control_shader,
   [0x00000004] = shaderc_glsl_tess_evaluation_shader,
@@ -35,46 +36,64 @@ static const unsigned int shader_map_table[] = {
   [0x00000020] = shaderc_glsl_compute_shader,
 };
 
+void wlu_shaderc_release(
+  shaderc_compiler_t compiler,
+  shaderc_compilation_result_t result,
+  shaderc_compile_options_t options
+) {
+  if (options) shaderc_compile_options_release(options);
+  if (result) shaderc_result_release(result);
+  if (compiler) shaderc_compiler_release(compiler);
+}
+
+void wlu_freeup_shi(wlu_shader_info *shi) {
+  if (shi)
+    wlu_shaderc_release(NULL, shi->result, NULL);
+}
+
 /* Returns GLSL shader source text after preprocessing */
 wlu_shader_info wlu_preprocess_shader(
   unsigned int kind,
   const char *source,
-  const char *source_name,
+  const char *input_file_name,
   const char *entry_point_name
 ) {
 
-  wlu_shader_info shinfo = {NULL, 0, NULL, 0};
+  wlu_shader_info shinfo = {NULL, 0, NULL};
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
 
-  shinfo.compiler = shaderc_compiler_initialize();
-
+  shaderc_compiler_t compiler = shaderc_compiler_initialize();
   shaderc_compile_options_t options = shaderc_compile_options_initialize();
+  shaderc_compilation_result_t result = 0;
 
   shaderc_compile_options_add_macro_definition(options, name, strlen(name), value, strlen(value));
 
-  shinfo.result = shaderc_compile_into_preprocessed_text(
-                  shinfo.compiler, source, strlen(source),
-                  shader_map_table[kind], source_name,
-                  entry_point_name, options);
+  result = shaderc_compile_into_preprocessed_text(
+           compiler, source, strlen(source),
+           shader_map_table[kind], input_file_name,
+           entry_point_name, options);
 
-  if (!shinfo.result) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_preprocessed_text failed, ERROR code: %d", shinfo.result);
+  if (!result) {
+    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_preprocessed_text failed, ERROR code: %d", result);
+    wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
-  if (shaderc_result_get_compilation_status(shinfo.result) != shaderc_compilation_status_success) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(shinfo.result));
+  if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
+    wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(result));
+    wlu_shaderc_release(compiler, result, options);
     return shinfo;
   }
 
-  shaderc_compile_options_release(options);
+  shinfo.byte_size = shaderc_result_get_length(result);
+  shinfo.bytes = shaderc_result_get_bytes(result);
+  shinfo.result = result;
 
-  shinfo.bytes = shaderc_result_get_bytes(shinfo.result);
-  shinfo.byte_size = shaderc_result_get_length(shinfo.result);
+  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
+
+  wlu_shaderc_release(compiler, NULL, options);
 
   return shinfo;
 }
@@ -83,46 +102,47 @@ wlu_shader_info wlu_preprocess_shader(
 wlu_shader_info wlu_compile_to_assembly(
   unsigned int kind,
   const char *source,
-  const char *source_name,
-  const char *entry_point_name,
-  bool optimize
+  const char *input_file_name,
+  const char *entry_point_name
 ) {
 
-  wlu_shader_info shinfo = {NULL, 0, NULL, 0};
+  wlu_shader_info shinfo = {NULL, 0, NULL};
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
 
-  shinfo.compiler = shaderc_compiler_initialize();
-
+  shaderc_compiler_t compiler = shaderc_compiler_initialize();
   shaderc_compile_options_t options = shaderc_compile_options_initialize();
+  shaderc_compilation_result_t result = 0;
 
   shaderc_compile_options_add_macro_definition(options, name, strlen(name), value, strlen(value));
 
-  if (optimize)
-    shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
+  shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
 
-  shinfo.result = shaderc_compile_into_spv_assembly(
-                  shinfo.compiler, source, strlen(source),
-                  shader_map_table[kind], source_name,
-                  entry_point_name, options);
+  result = shaderc_compile_into_spv_assembly(
+           compiler, source, strlen(source),
+           shader_map_table[kind], input_file_name,
+           entry_point_name, options);
 
-  if (!shinfo.result) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv_assembly failed, ERROR code: %d", shinfo.result);
+  if (!result) {
+    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv_assembly failed, ERROR code: %d", result);
+    wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
-  if (shaderc_result_get_compilation_status(shinfo.result) != shaderc_compilation_status_success) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(shinfo.result));
+  if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
+    wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(result));
+    wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
-  shaderc_compile_options_release(options);
+  shinfo.byte_size = shaderc_result_get_length(result);
+  shinfo.bytes = shaderc_result_get_bytes(result);
+  shinfo.result = result;
 
-  shinfo.bytes = shaderc_result_get_bytes(shinfo.result);
-  shinfo.byte_size = shaderc_result_get_length(shinfo.result);
+  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
+
+  wlu_shaderc_release(compiler, NULL, options);
 
   return shinfo;
 }
@@ -131,58 +151,47 @@ wlu_shader_info wlu_compile_to_assembly(
 wlu_shader_info wlu_compile_to_spirv(
   unsigned int kind,
   const char *source,
-  const char *source_name,
-  const char *entry_point_name,
-  bool optimize
+  const char *input_file_name,
+  const char *entry_point_name
 ) {
 
-  wlu_shader_info shinfo = {NULL, 0, NULL, 0};
+  wlu_shader_info shinfo = {NULL, 0, NULL};
 
   const char *name = "MY_DEFINE";
   const char *value = "1";
 
-  shinfo.compiler = shaderc_compiler_initialize();
-
+  shaderc_compiler_t compiler = shaderc_compiler_initialize();
   shaderc_compile_options_t options = shaderc_compile_options_initialize();
+  shaderc_compilation_result_t result = 0;
 
   shaderc_compile_options_add_macro_definition(options, name, strlen(name), value, strlen(value));
 
-  if (optimize)
-    shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
+  shaderc_compile_options_set_optimization_level(options, shaderc_optimization_level_size);
 
-  shinfo.result = shaderc_compile_into_spv(
-                  shinfo.compiler, source, strlen(source),
-                  shader_map_table[kind], source_name,
-                  entry_point_name, options);
+  result = shaderc_compile_into_spv(
+           compiler, source, strlen(source),
+           shader_map_table[kind], input_file_name,
+           entry_point_name, options);
 
-  if (!shinfo.result) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv failed, ERROR code: %d", shinfo.result);
+  if (!result) {
+    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv failed, ERROR code: %d", result);
+    wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
-  if (shaderc_result_get_compilation_status(shinfo.result) != shaderc_compilation_status_success) {
-    shaderc_compile_options_release(options);
-    wlu_log_me(WLU_DANGER, "[x]\n%s", shaderc_result_get_error_message(shinfo.result));
+  if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
+    wlu_log_me(WLU_DANGER, "%s", shaderc_result_get_error_message(result));
+    wlu_shaderc_release(compiler, result, options);
     return shinfo;
   }
 
-  shaderc_compile_options_release(options);
+  shinfo.byte_size = shaderc_result_get_length(result);
+  shinfo.bytes = shaderc_result_get_bytes(result);
+  shinfo.result = result;
 
-  shinfo.bytes = shaderc_result_get_bytes(shinfo.result);
-  shinfo.byte_size = shaderc_result_get_length(shinfo.result);
+  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
+
+  wlu_shaderc_release(compiler, NULL, options);
 
   return shinfo;
-}
-
-void wlu_freeup_shi(wlu_shader_info *info) {
-  if (info->result) {
-    shaderc_result_release(info->result);
-    info->result = 0;
-  }
-  if (info->compiler) {
-    shaderc_compiler_release(info->compiler);
-    info->compiler = NULL;
-  }
-  info = NULL;
 }

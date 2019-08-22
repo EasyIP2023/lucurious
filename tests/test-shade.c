@@ -28,6 +28,8 @@
 #include <check.h>
 #include <stdbool.h>
 
+#include "test-shade.h"
+
 START_TEST(shade_multi_error) {
   const char source[2][80] = {
     "void main() {}",
@@ -39,10 +41,11 @@ START_TEST(shade_multi_error) {
 
   for (int i = 0; i < 2; ++i) {
     wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", source[i]);
-    wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000001,
-                             source[i], "main.vert", "main", true);
+    wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000000,
+                             source[i], "vert.spv", "main");
     if (!shinfo.bytes)
       wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    wlu_log_me(WLU_INFO, "Bytes for file %ld - %ld", shinfo.bytes, shinfo.byte_size);
     wlu_freeup_shi(&shinfo);
   }
 } END_TEST;
@@ -53,14 +56,34 @@ START_TEST(shade_error) {
     "int main() { int main_should_be_void; }\n";
 
   wlu_log_me(WLU_WARNING, "Compiling a bad shader:");
-  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000001,
-                           bad_shader_src, "bad_src", "main", false);
-  if (!shinfo.bytes)
-    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+  wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", bad_shader_src);
 
+  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000000,
+                           bad_shader_src, "vert.spv", "main");
+  if (!shinfo.bytes) {
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    wlu_log_me(WLU_INFO, "Bytes for file shoulde be 0 - 0");
+    wlu_log_me(WLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
+  }
   wlu_freeup_shi(&shinfo);
+
 } END_TEST;
 
+START_TEST(shade_frag) {
+  wlu_log_me(WLU_WARNING, "Compiling a fragmentation shader");
+  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000010,
+                           shader_frag_src, "frag.spv", "main");
+  wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", shader_frag_src);
+  if (!shinfo.bytes) {
+    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
+    wlu_log_me(WLU_INFO, "Bytes for file shoulde be 0 - 0");
+    wlu_log_me(WLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
+    ck_abort_msg(NULL);
+  }
+  wlu_log_me(WLU_SUCCESS, "Successful Compilation of fragement shader");
+  wlu_freeup_shi(&shinfo);
+
+} END_TEST;
 
 Suite *shade_suite(void) {
   Suite *s = NULL;
@@ -73,6 +96,7 @@ Suite *shade_suite(void) {
 
   tcase_add_test(tc_core, shade_error);
   tcase_add_test(tc_core, shade_multi_error);
+  tcase_add_test(tc_core, shade_frag);
   suite_add_tcase(s, tc_core);
 
   return s;

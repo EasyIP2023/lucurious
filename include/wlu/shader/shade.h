@@ -28,35 +28,32 @@
 #include <shaderc/shaderc.h>
 
 typedef struct wlu_shader_info {
-  shaderc_compiler_t compiler;
-  shaderc_compilation_result_t result;
   const char *bytes;
   long byte_size;
+  shaderc_compilation_result_t result;
 } wlu_shader_info;
 
 wlu_shader_info wlu_preprocess_shader(
   unsigned int kind,
   const char *source,
-  const char *source_name,
+  const char *input_file_name,
   const char *entry_point_name
 );
 
 wlu_shader_info wlu_compile_to_assembly(
   unsigned int kind,
   const char *source,
-  const char *source_name,
-  const char *entry_point_name,
-  bool optimize
+  const char *input_file_name,
+  const char *entry_point_name
 );
 
 wlu_shader_info wlu_compile_to_spirv(
   unsigned int kind,
   const char *source,
-  const char *source_name,
-  const char *entry_point_name,
-  bool optimize
+  const char *input_file_name,
+  const char *entry_point_name
 );
 
-void wlu_freeup_shi(wlu_shader_info *info);
+void wlu_freeup_shi(wlu_shader_info *shi);
 
 #endif

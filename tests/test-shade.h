@@ -41,22 +41,21 @@ const char shader_vert_src[] =
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "layout(location = 0) out vec3 fragColor;\n"
   "vec2 positions[3] = vec2[](\n"
-  "\tvec2(0.0, -0.5),\n"
-  "\tvec2(0.5, 0.5),\n"
-  "\tvec2(-0.5, 0.5)\n"
+  "   vec2(0.0, -0.5),\n"
+  "   vec2(0.5, 0.5),\n"
+  "   vec2(-0.5, 0.5)\n"
   ");\n"
   "vec3 colors[3] = vec3[](\n"
-  "\tvec3(1.0, 0.0, 0.0),\n"
-  "\tvec3(0.0, 1.0, 0.0),\n"
-  "\tvec3(0.0, 0.0, 1.0)\n"
+  "   vec3(1.0, 0.0, 0.0),\n"
+  "   vec3(0.0, 1.0, 0.0),\n"
+  "   vec3(0.0, 0.0, 1.0)\n"
   ");\n"
   "void main() {\n"
-  "\tgl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
-  "\tfragColor = colors[gl_VertexIndex];\n"
+  "   gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
+  "   fragColor = colors[gl_VertexIndex];\n"
   "}";
 
-
-const char *vertShaderText =
+const char vertShaderText[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"
@@ -71,7 +70,7 @@ const char *vertShaderText =
   "   gl_Position = myBufferVals.mvp * pos;\n"
   "}\n";
 
-const char *fragShaderText =
+const char fragShaderText[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"
