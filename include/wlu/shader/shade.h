@@ -25,12 +25,10 @@
 #ifndef SHADE_H
 #define SHADE_H
 
-#include <shaderc/shaderc.h>
-
 typedef struct wlu_shader_info {
   const char *bytes;
   long byte_size;
-  shaderc_compilation_result_t result;
+  void *result;
 } wlu_shader_info;
 
 wlu_shader_info wlu_preprocess_shader(

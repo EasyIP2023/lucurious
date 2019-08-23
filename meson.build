@@ -90,7 +90,6 @@ pkg_mod.generate(
 	version: meson.project_version(),
 	name: meson.project_name(),
 	filebase:  meson.project_name(),
-	extra_cflags: '-lshaderc_shared',
 	install_dir: '/usr/lib/pkgconfig',
 	description: 'Library for building and styling 2D/3D Wayland Compositors'
 )
