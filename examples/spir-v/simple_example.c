@@ -66,7 +66,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
+  wlu_add_watchme_info(1, app, 1, wc, 0, NULL, 0, NULL);
 
   err = wlu_set_global_layers(app);
   if (err) {
@@ -205,14 +205,15 @@ int main(void) {
   wlu_file_info shi_vert = wlu_read_file("vert.spv");
   wlu_file_info shi_frag = wlu_read_file("frag.spv");
 
+  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 1, &shi_frag);
+  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 2, &shi_vert);
+
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
   if (!vert_shader_module) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     return EXIT_FAILURE;
   }
-
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &vert_shader_module);
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
@@ -222,7 +223,8 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module);
+  wlu_add_watchme_info(1, app, 0, NULL, 1, &vert_shader_module, 0, NULL);
+  wlu_add_watchme_info(1, app, 0, NULL, 2, &frag_shader_module, 0, NULL);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL

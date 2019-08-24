@@ -64,13 +64,13 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Signal handler for this process */
-  // err = wlu_watch_me(SIGSEGV, getpid());
-  // if (err) {
-  //   freeme(app, wc, NULL, NULL);
-  //   ck_abort_msg(NULL);
-  // }
+  err = wlu_watch_me(SIGSEGV, getpid());
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    ck_abort_msg(NULL);
+  }
 
-  wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
+  wlu_add_watchme_info(1, app, 1, wc, 0, NULL, 0, NULL);
 
   err = wlu_set_global_layers(app);
   if (err) {
@@ -225,14 +225,15 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
+  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 1, &shi_frag);
+  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 2, &shi_vert);
+
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
     freeme(app, wc, &shi_frag, &shi_vert);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
-
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module);
 
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
   if (!vert_shader_module) {
@@ -242,7 +243,8 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module);
+  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module, 0, NULL);
+  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module, 0, NULL);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL

@@ -44,16 +44,19 @@ static struct wlu_sig_info {
   pid_t pid;
 
   uint32_t app_pos;
-  vkcomp **app;
+  vkcomp **apps;
 
   uint32_t wc_pos;
-  wclient **wc;
+  wclient **wcs;
 
   uint32_t shader_mod_pos;
   struct app_shader {
     vkcomp *app;
     VkShaderModule *shader_mod;
   } *apsh;
+
+  uint32_t shi_pos;
+  wlu_shader_info **shinfos;
 } wsi;
 
 static void signal_handler(int sig) {
@@ -74,28 +77,40 @@ static void signal_handler(int sig) {
     wsi.apsh = NULL;
   }
 
-  for (uint32_t i = 0; i < wsi.app_pos; i++) {
-    if (wsi.app && wsi.app[i]) {
-      wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p - %p", &wsi.app[i], wsi.app[i]);
-      wlu_freeup_vk(wsi.app[i]);
+  for (uint32_t i = 0; i < wsi.shi_pos; i++) {
+    if (wsi.shinfos && wsi.shinfos[i]) {
+      wlu_log_me(WLU_DANGER, "[x] shader info: %p", wsi.shinfos[i]);
+      wlu_freeup_shi(wsi.shinfos[i]);
     }
   }
 
-  if (wsi.app) {
-    free(wsi.app);
-    wsi.app = NULL;
+  if (wsi.shinfos) {
+    free(wsi.shinfos);
+    wsi.shinfos = NULL;
+  }
+
+  for (uint32_t i = 0; i < wsi.app_pos; i++) {
+    if (wsi.apps && wsi.apps[i]) {
+      wlu_log_me(WLU_DANGER, "[x] vkcomp struct: %p", wsi.apps[i]);
+      wlu_freeup_vk(wsi.apps[i]);
+    }
+  }
+
+  if (wsi.apps) {
+    free(wsi.apps);
+    wsi.apps = NULL;
   }
 
   for (uint32_t i = 0; i < wsi.wc_pos; i++) {
-    if (wsi.wc && wsi.wc[i]) {
-      wlu_log_me(WLU_DANGER, "[x] wclient struct: %p - %p", &wsi.wc[i], wsi.wc[i]);
-      wlu_freeup_wc(wsi.wc[i]);
+    if (wsi.wcs && wsi.wcs[i]) {
+      wlu_log_me(WLU_DANGER, "[x] wclient struct: %p", wsi.wcs[i]);
+      wlu_freeup_wc(wsi.wcs[i]);
     }
   }
 
-  if (wsi.wc) {
-    free(wsi.wc);
-    wsi.wc = NULL;
+  if (wsi.wcs) {
+    free(wsi.wcs);
+    wsi.wcs = NULL;
   }
 
   wlu_log_me(WLU_SUCCESS, "Successfully freed up most allocated memory :)");
@@ -120,19 +135,21 @@ void wlu_add_watchme_info(
   uint32_t wc_pos,
   wclient *wc,
   uint32_t shader_mod_pos,
-  VkShaderModule *shader_mod
+  VkShaderModule *shader_mod,
+  uint32_t shi_pos,
+  void *shinfo
 ) {
 
   if (app) {
     wsi.app_pos = app_pos;
-    wsi.app = realloc(wsi.app, wsi.app_pos * sizeof(vkcomp));
-    wsi.app[wsi.app_pos-1] = app;
+    wsi.apps = realloc(wsi.apps, wsi.app_pos * sizeof(vkcomp));
+    wsi.apps[wsi.app_pos-1] = app;
   }
 
   if (wc) {
     wsi.wc_pos = wc_pos;
-    wsi.wc = realloc(wsi.wc, wsi.wc_pos * sizeof(wclient));
-    wsi.wc[wsi.wc_pos-1] = wc;
+    wsi.wcs = realloc(wsi.wcs, wsi.wc_pos * sizeof(wclient));
+    wsi.wcs[wsi.wc_pos-1] = wc;
   }
 
   if (shader_mod) {
@@ -140,5 +157,11 @@ void wlu_add_watchme_info(
     wsi.apsh = realloc(wsi.apsh, wsi.shader_mod_pos * sizeof(struct app_shader));
     wsi.apsh[wsi.shader_mod_pos-1].app = app;
     wsi.apsh[wsi.shader_mod_pos-1].shader_mod = shader_mod;
+  }
+
+  if (shinfo) {
+    wsi.shi_pos = shi_pos;
+    wsi.shinfos = realloc(wsi.shinfos, wsi.shi_pos * sizeof(wclient));
+    wsi.shinfos[wsi.shi_pos-1] = shinfo;
   }
 }
