@@ -231,10 +231,8 @@ START_TEST(test_swap_chain_fail_no_surface) {
 
   VkSurfaceFormatKHR surface_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkExtent2D extent2D = {1920, 1080};
-  VkExtent3D extent3D = {0, 0, 0};
   VkSurfaceCapabilitiesKHR capabilities;
-
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, VK_PRESENT_MODE_MAX_ENUM_KHR, extent2D, extent3D);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, VK_PRESENT_MODE_MAX_ENUM_KHR, extent2D.width, extent2D.height);
   if (err) wlu_log_me(WLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   wlu_freeup_vk(app);

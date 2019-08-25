@@ -152,7 +152,6 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent3D extent3D = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
   VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent2D.width == UINT32_MAX) {
     freeme(app, wc, NULL, NULL);
@@ -162,7 +161,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_retrieve_device_queue(app);
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D, extent3D);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {
     freeme(app, wc, NULL, NULL);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
@@ -325,12 +324,11 @@ START_TEST(test_vulkan_client_create) {
 
   /* Ending setup for graphics pipeline */
 
-  err = wlu_create_framebuffers(app, 1, extent2D, 1);
+  VkImageView vkimg_attach[1];
+  err = wlu_create_framebuffers(app, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
-    wlu_log_me(WLU_DANGER, "[x] failed to create framebuffers, ERROR CODE: %d", err);
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_render_pass failed");
     ck_abort_msg(NULL);
   }
 
@@ -386,7 +384,8 @@ START_TEST(test_vulkan_client_create) {
   clear_color.depthStencil.depth = 0.0f;
   clear_color.depthStencil.stencil = 0;
 
-  wlu_exec_begin_render_pass(app, 0, 0, extent2D, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
+                             1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
 
   wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_draw(app, 3, 1, 0, 0);

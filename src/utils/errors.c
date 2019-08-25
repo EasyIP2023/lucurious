@@ -61,7 +61,6 @@ static struct wlu_sig_info {
 
 static void signal_handler(int sig) {
 
-  wlu_log_me(WLU_DANGER, "");
   wlu_log_me(WLU_DANGER, "[x] Process ID: %d | Received signal: %i", wsi.pid, sig);
   wlu_log_me(WLU_DANGER, "[x] Caught and freeing memory for");
 

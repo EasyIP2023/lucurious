@@ -79,7 +79,7 @@ typedef struct vkcomp {
 
   swap_chain_buffers *sc_buffs;
   VkSwapchainKHR swap_chain;
-  uint32_t sc_buff_size;
+  uint32_t sc_img_count;
 
   VkRenderPass render_pass;
   VkPipelineLayout pipeline_layout;
@@ -113,6 +113,15 @@ typedef struct vkcomp {
   mat4 clip;
   mat4 mvp;
   /* End of uniform buffer section */
+
+  struct {
+    VkBuffer buff;
+    VkDeviceMemory mem;
+    VkDescriptorBufferInfo buff_info;
+  } vertex_data;
+
+  VkVertexInputBindingDescription vi_binding;
+  VkVertexInputAttributeDescription vi_attribs[2];
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layout;
@@ -213,8 +222,8 @@ VkResult wlu_create_swap_chain(
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
   VkPresentModeKHR pres_mode,
-  VkExtent2D extent,
-  VkExtent3D extent3D
+  uint32_t width,
+  uint32_t height
 );
 
 void wlu_retrieve_device_queue(vkcomp *app);
@@ -243,9 +252,22 @@ VkResult wlu_create_depth_buff(
  * Function creates a uniform buffer so that shaders can access
  * in a read-only fashion constant parameter data.
  */
-VkResult wlu_create_uniform_buff(vkcomp *app, VkBufferCreateFlagBits flags, VkBufferUsageFlags usage);
+VkResult wlu_create_uorv_buff(
+  vkcomp *app,
+  VkDeviceSize size,
+  const void *data,
+  VkBufferCreateFlagBits flags,
+  VkBufferUsageFlags usage
+);
 
-VkResult wlu_create_framebuffers(vkcomp *app, uint32_t attachment_count, VkExtent2D extent, uint32_t layers);
+VkResult wlu_create_framebuffers(
+  vkcomp *app,
+  uint32_t attachmentCount,
+  VkImageView *attachments,
+  uint32_t width,
+  uint32_t height,
+  uint32_t layers
+);
 
 /*
  * Allows for your app to create a command pool to store your
@@ -262,24 +284,19 @@ VkResult wlu_exec_begin_cmd_buff(
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
+VkResult wlu_exec_queue_cmd_buff(
+  vkcomp *app,
+  uint32_t waitSemaphoreCount,
+  const VkSemaphore *pWaitSemaphores,
+  const VkPipelineStageFlags *pWaitDstStageMask,
+  uint32_t signalSemaphoreCount,
+  const VkSemaphore *pSignalSemaphores
+);
+
 VkResult wlu_exec_stop_cmd_buff(vkcomp *app);
 
 /* Acquire the swapchain image in order to set its layout */
 VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
-
-VkResult wlu_draw_frame(
-  vkcomp *app,
-  uint32_t *image_index,
-  uint32_t waitSemaphoreCount,
-  VkSemaphore *pWaitSemaphores,
-  VkPipelineStageFlags *pWaitDstStageMask,
-  uint32_t commandBufferCount,
-  uint32_t signalSemaphoreCount,
-  VkSemaphore *pSignalSemaphores,
-  uint32_t swapchainCount,
-  VkSwapchainKHR *pSwapchains,
-  VkResult *pResults
-);
 
 /*
  * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass

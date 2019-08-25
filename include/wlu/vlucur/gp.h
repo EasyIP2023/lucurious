@@ -67,7 +67,8 @@ void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t x,
   uint32_t y,
-  VkExtent2D extent,
+  uint32_t width,
+  uint32_t height,
   uint32_t clearValueCount,
   const VkClearValue *pClearValues,
   VkSubpassContents contents
@@ -83,6 +84,14 @@ void wlu_draw(
   uint32_t instanceCount,
   uint32_t firstVertex,
   uint32_t firstInstance
+);
+
+void wlu_bind_vertex_buff_to_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_buf,
+  uint32_t firstBinding,
+  uint32_t bindingCount,
+  const VkDeviceSize *offsets
 );
 
 VkAttachmentDescription wlu_set_attachment_desc(
@@ -240,5 +249,7 @@ VkResult wlu_create_desc_set(
   uint32_t dstArrayElement,
   VkDescriptorType descriptorType
 );
+
+void wlu_set_vi_bindings_attribs_desc(vkcomp *app, uint32_t stride);
 
 #endif

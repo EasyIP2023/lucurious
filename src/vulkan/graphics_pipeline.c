@@ -184,13 +184,21 @@ void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t x,
   uint32_t y,
-  VkExtent2D extent,
+  uint32_t width,
+  uint32_t height,
   uint32_t clearValueCount,
   const VkClearValue *pClearValues,
   VkSubpassContents contents
 ) {
 
-  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+  if (!app->sc_frame_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] Frame Buffers weren't created");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return;
+  }
+
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
     VkRenderPassBeginInfo render_pass_info = {};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     render_pass_info.pNext = NULL;
@@ -198,7 +206,8 @@ void wlu_exec_begin_render_pass(
     render_pass_info.framebuffer = app->sc_frame_buffs[i];
     render_pass_info.renderArea.offset.x = x;
     render_pass_info.renderArea.offset.y = y;
-    render_pass_info.renderArea.extent = extent;
+    render_pass_info.renderArea.extent.width = width;
+    render_pass_info.renderArea.extent.height = height;
     render_pass_info.clearValueCount = clearValueCount;
     render_pass_info.pClearValues = pClearValues;
 
@@ -208,12 +217,12 @@ void wlu_exec_begin_render_pass(
 }
 
 void wlu_exec_stop_render_pass(vkcomp *app) {
-  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+  for (uint32_t i = 0; i < app->sc_img_count; i++)
     vkCmdEndRenderPass(app->cmd_buffs[i]);
 }
 
 void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint) {
-  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+  for (uint32_t i = 0; i < app->sc_img_count; i++)
     vkCmdBindPipeline(app->cmd_buffs[i], pipelineBindPoint, app->graphics_pipeline);
 }
 
@@ -224,8 +233,22 @@ void wlu_draw(
   uint32_t firstVertex,
   uint32_t firstInstance
 ) {
-  for (uint32_t i = 0; i < app->sc_buff_size; i++)
+  for (uint32_t i = 0; i < app->sc_img_count; i++)
     vkCmdDraw(app->cmd_buffs[i], vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+void wlu_bind_vertex_buff_to_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_buf,
+  uint32_t firstBinding,
+  uint32_t bindingCount,
+  const VkDeviceSize *offsets
+) {
+  vkCmdBindVertexBuffers(app->cmd_buffs[cur_buf], /* Start Binding */
+                        firstBinding,
+                        bindingCount, /* Binding Count */
+                        &app->vertex_data.buff, /* pBuffers */
+                        offsets);
 }
 
 VkAttachmentDescription wlu_set_attachment_desc(
@@ -719,4 +742,20 @@ VkResult wlu_create_desc_set(
   wlu_log_me(WLU_SUCCESS, "Successfully created Descriptor Set");
 
   return res;
+}
+
+/* Creating this just for now */
+void wlu_set_vi_bindings_attribs_desc(vkcomp *app, uint32_t stride) {
+  app->vi_binding.binding = 0;
+  app->vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+  app->vi_binding.stride = stride;
+
+  app->vi_attribs[0].binding = 0;
+  app->vi_attribs[0].location = 0;
+  app->vi_attribs[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  app->vi_attribs[0].offset = 0;
+  app->vi_attribs[1].binding = 0;
+  app->vi_attribs[1].location = 1;
+  app->vi_attribs[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  app->vi_attribs[1].offset = 16;
 }

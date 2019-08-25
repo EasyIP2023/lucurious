@@ -154,7 +154,6 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  VkExtent2D extent2D = { UINT32_MAX, UINT32_MAX };
   VkExtent3D extent3D = wlu_choose_3D_swap_extent(capabilities, WIDTH, HEIGHT, DEPTH);
   if (extent3D.width == UINT32_MAX) {
     freeme(app, wc, NULL, NULL);
@@ -164,10 +163,31 @@ START_TEST(test_vulkan_client_create_3D) {
 
   wlu_retrieve_device_queue(app);
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D, extent3D);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent3D.width, extent3D.height);
   if (err) {
     freeme(app, wc, NULL, NULL);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_cmd_pool(app, 0);
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_exec_begin_cmd_buff(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
     ck_abort_msg(NULL);
   }
 
@@ -211,7 +231,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
-  err = wlu_create_uniform_buff(app, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+  err = wlu_create_uorv_buff(app, sizeof(app->mvp), &app->mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
   if (err) {
     freeme(app, wc, NULL, NULL);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
@@ -256,7 +276,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_buff = 0;
+  uint32_t cur_buff;
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
@@ -294,6 +314,39 @@ START_TEST(test_vulkan_client_create_3D) {
 
   wlu_log_me(WLU_SUCCESS, "Successfully created the render pass!!!");
   /* End of render pass creation */
+
+  VkImageView vkimg_attach[2];
+  vkimg_attach[1] = app->depth.view;
+  err = wlu_create_framebuffers(app, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_uorv_buff(app, sizeof(g_vb_solid_face_colors_Data), g_vb_solid_face_colors_Data, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+  if (err) {
+    freeme(app, wc, NULL, NULL);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_set_vi_bindings_attribs_desc(app, sizeof(g_vb_solid_face_colors_Data[0]));
+
+  /* We cannot bind the vertex buffer until we begin a renderpass */
+  VkClearValue clear_values[2];
+  clear_values[0].color.float32[0] = 0.2f;
+  clear_values[0].color.float32[1] = 0.2f;
+  clear_values[0].color.float32[2] = 0.2f;
+  clear_values[0].color.float32[3] = 0.2f;
+  clear_values[1].depthStencil.depth = 1.0f;
+  clear_values[1].depthStencil.stencil = 0;
+
+  wlu_exec_begin_render_pass(app, 0, 0, extent3D.width, extent3D.height,
+                             2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
+
+  const VkDeviceSize offsets[1] = {0};
+  wlu_bind_vertex_buff_to_cmd_buffs(app, 0, 0, 1, offsets);
 
   wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
   wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -347,6 +400,18 @@ START_TEST(test_vulkan_client_create_3D) {
   };
 
   ALL_UNUSED(shader_stages);
+
+  wlu_exec_stop_render_pass(app);
+  wlu_exec_stop_cmd_buff(app);
+  VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  err = wlu_exec_queue_cmd_buff(app, 0, NULL, &pipe_stage_flags, 0, NULL);
+  if (err) {
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    freeme(app, wc, &shi_frag, &shi_vert);
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    ck_abort_msg(NULL);
+  }
 
   wlu_freeup_shader(app, &frag_shader_module);
   wlu_freeup_shader(app, &vert_shader_module);

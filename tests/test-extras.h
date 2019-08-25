@@ -44,4 +44,58 @@ const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation"
 };
 
+/* Can find in Vulkan SDK samples/API-Samples/data/cube_data.h */
+typedef struct _vertex {
+  float posX, posY, posZ, posW;  // Position data
+  float r, g, b, a;              // Color
+} vertex;
+
+#define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
+
+static const vertex g_vb_solid_face_colors_Data[] = {
+  // red face
+  {XYZ1(-1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+  {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+  {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+  {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+  // green face
+  {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+  {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+  {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+  {XYZ1(1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+  // blue face
+  {XYZ1(-1, 1, 1), XYZ1(0.f, 0.f, 1.f)},
+  {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
+  {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
+  {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
+  {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
+  {XYZ1(-1, -1, -1), XYZ1(0.f, 0.f, 1.f)},
+  // yellow face
+  {XYZ1(1, 1, 1), XYZ1(1.f, 1.f, 0.f)},
+  {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
+  {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
+  {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
+  {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
+  {XYZ1(1, -1, -1), XYZ1(1.f, 1.f, 0.f)},
+  // magenta face
+  {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+  {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+  {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+  {XYZ1(-1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+  // cyan face
+  {XYZ1(1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+  {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+  {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+  {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+};
+/* End of samples/API-Samples/data/cube_data.h */
+
 #endif

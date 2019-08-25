@@ -209,7 +209,7 @@ VkResult wlu_exec_begin_cmd_buff(
     return res;
   }
 
-  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
     VkCommandBufferBeginInfo begin_info = {};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.pNext = NULL;
@@ -229,7 +229,7 @@ VkResult wlu_exec_begin_cmd_buff(
 VkResult wlu_exec_stop_cmd_buff(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  for (uint32_t i = 0; i < app->sc_buff_size; i++) {
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
     res = vkEndCommandBuffer(app->cmd_buffs[i]);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] Failed to stop recording command buffer [%d], ERROR CODE: %d", i, res);
@@ -256,58 +256,56 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer) {
   return res;
 }
 
-VkResult wlu_draw_frame(
+VkResult wlu_exec_queue_cmd_buff(
   vkcomp *app,
-  uint32_t *image_index,
   uint32_t waitSemaphoreCount,
-  VkSemaphore *pWaitSemaphores,
-  VkPipelineStageFlags *pWaitDstStageMask,
-  uint32_t commandBufferCount,
+  const VkSemaphore *pWaitSemaphores,
+  const VkPipelineStageFlags *pWaitDstStageMask,
   uint32_t signalSemaphoreCount,
-  VkSemaphore *pSignalSemaphores,
-  uint32_t swapchainCount,
-  VkSwapchainKHR *pSwapchains,
-  VkResult *pResults
+  const VkSemaphore *pSignalSemaphores
 ) {
-
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->img_semaphore) {
-    wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+  /* Queue the command buffer for execution */
+  VkFence draw_fence;
+  VkFenceCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+
+  res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateFence failed, ERROR CODE: %d", res);
     return res;
   }
 
-  /* UINT64_MAX disables timeout */
-  res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
-                              app->img_semaphore, VK_NULL_HANDLE, image_index);
-
   VkSubmitInfo submit_info = {};
-  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.pNext = NULL;
+  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.waitSemaphoreCount = waitSemaphoreCount;
   submit_info.pWaitSemaphores = pWaitSemaphores;
   submit_info.pWaitDstStageMask = pWaitDstStageMask;
-  submit_info.commandBufferCount = commandBufferCount;
-  submit_info.pCommandBuffers = &app->cmd_buffs[*image_index];
+  submit_info.commandBufferCount = app->sc_img_count;
+  submit_info.pCommandBuffers = app->cmd_buffs;
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
-  if (res) return res;
+  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
+    return res;
+  }
 
-  VkPresentInfoKHR present_info = {};
-  present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-  present_info.pNext = NULL;
-  present_info.waitSemaphoreCount = waitSemaphoreCount;
-  present_info.pWaitSemaphores = pWaitSemaphores;
-  present_info.swapchainCount = swapchainCount;
-  present_info.pSwapchains = pSwapchains;
-  present_info.pImageIndices = image_index;
-  present_info.pResults = pResults;
+  do {
+    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
+      return res;
+    }
+  } while (res == VK_TIMEOUT);
 
-  res = vkQueuePresentKHR(app->present_queue, &present_info);
+  vkDestroyFence(app->device, draw_fence, NULL);
+  draw_fence = VK_NULL_HANDLE;
 
   return res;
 }

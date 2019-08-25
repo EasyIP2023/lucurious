@@ -34,6 +34,12 @@
 #include <stdbool.h>
 
 /*
+ * The amount of time, one waits for a command buffer
+ * to complete unit measured in nanoseconds
+ */
+#define FENCE_TIMEOUT 100000000
+
+/*
  * http://efesx.com/2010/07/17/variadic-macro-to-count-number-of-arguments/
  * https://stackoverflow.com/questions/23235910/variadic-unused-function-macro
  */
