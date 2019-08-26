@@ -394,7 +394,6 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
   // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);

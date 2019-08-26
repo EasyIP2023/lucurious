@@ -491,7 +491,6 @@ int main(void) {
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, offsets);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
   // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
