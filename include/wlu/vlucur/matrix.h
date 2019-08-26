@@ -25,6 +25,8 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+float wlu_set_fovy(float fovy);
+
 void wlu_set_perspective(
   vkcomp *app,
   float fovy,

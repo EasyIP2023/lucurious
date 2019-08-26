@@ -55,8 +55,6 @@ lucur_vulkan_test = executable('lucur-vulkan-test',
   install : false
 )
 
-test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
-
 # Testing Wayland suite
 lucur_wclient_test = executable('lucur-wclient-test',
   'test-wclient.c',
@@ -66,8 +64,6 @@ lucur_wclient_test = executable('lucur-wclient-test',
   link_args: extra_args,
   install : false
 )
-
-test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
 
 # Testing shade suite
 lucur_shade_test = executable('lucur-shade-test',
@@ -79,8 +75,6 @@ lucur_shade_test = executable('lucur-shade-test',
   install : false
 )
 
-test('lucur-shade-test', lucur_shade_test, suite: ['all'])
-
 # Testing main 3d wayland client later compositor build with executable
 lucur_main_3d_test = executable('lucur-main-3d-test',
   'test-3D-main.c',
@@ -90,8 +84,6 @@ lucur_main_3d_test = executable('lucur-main-3d-test',
   link_args : extra_args,
   install : false
 )
-
-test('lucur-main-3d-test', lucur_main_3d_test, suite: ['all'])
 
 # Testing main wayland client later compositor build with executable
 lucur_main_test = executable('lucur-main-test',
@@ -103,4 +95,8 @@ lucur_main_test = executable('lucur-main-test',
   install : false
 )
 
+test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
+test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
+test('lucur-shade-test', lucur_shade_test, suite: ['all'])
+test('lucur-main-3d-test', lucur_main_3d_test, suite: ['all'])
 test('lucur-main-test', lucur_main_test, suite: ['all'])

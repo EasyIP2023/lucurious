@@ -24,6 +24,7 @@
 
 headers = ['wlu/vlucur/vkall.h',
            'wlu/vlucur/gp.h',
+           'wlu/vlucur/matrix.h',
            'wlu/wclient/client.h',
            'wlu/utils/log.h',
            'wlu/utils/file.h',

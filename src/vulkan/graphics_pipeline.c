@@ -158,6 +158,21 @@ VkResult wlu_create_graphics_pipeline(
   return res;
 }
 
+VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData) {
+  VkResult res;
+
+  VkPipelineCacheCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+  create_info.flags = 0;
+  create_info.pNext = NULL;
+  create_info.initialDataSize = initialDataSize;
+  create_info.pInitialData = pInitialData;
+
+  res = vkCreatePipelineCache(app->device, &create_info, NULL, &app->pipeline_cache);
+
+  return res;
+}
+
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t pushConstantRangeCount,
@@ -221,20 +236,22 @@ void wlu_exec_stop_render_pass(vkcomp *app) {
     vkCmdEndRenderPass(app->cmd_buffs[i]);
 }
 
-void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint) {
-  for (uint32_t i = 0; i < app->sc_img_count; i++)
-    vkCmdBindPipeline(app->cmd_buffs[i], pipelineBindPoint, app->graphics_pipeline);
+void wlu_bind_gp(vkcomp *app, uint32_t cur_buf, VkPipelineBindPoint pipelineBindPoint) {
+  vkCmdBindPipeline(app->cmd_buffs[cur_buf], pipelineBindPoint, app->graphics_pipeline);
 }
 
-void wlu_draw(
+void wlu_bind_desc_set(
   vkcomp *app,
-  uint32_t vertexCount,
-  uint32_t instanceCount,
-  uint32_t firstVertex,
-  uint32_t firstInstance
+  uint32_t cur_buf,
+  VkPipelineBindPoint pipelineBindPoint,
+  uint32_t firstSet,
+  uint32_t dynamicOffsetCount,
+  const uint32_t *pDynamicOffsets
 ) {
-  for (uint32_t i = 0; i < app->sc_img_count; i++)
-    vkCmdDraw(app->cmd_buffs[i], vertexCount, instanceCount, firstVertex, firstInstance);
+  vkCmdBindDescriptorSets(app->cmd_buffs[cur_buf],  pipelineBindPoint,
+                          app->pipeline_layout, firstSet,
+                          app->desc_count, app->desc_set,
+                          dynamicOffsetCount, pDynamicOffsets);
 }
 
 void wlu_bind_vertex_buff_to_cmd_buffs(
@@ -249,6 +266,42 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
                         bindingCount, /* Binding Count */
                         &app->vertex_data.buff, /* pBuffers */
                         offsets);
+}
+
+void wlu_cmd_draw(
+  vkcomp *app,
+  uint32_t cur_buff,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
+) {
+  vkCmdDraw(app->cmd_buffs[cur_buff], vertexCount,
+            instanceCount, firstVertex, firstInstance);
+}
+
+void wlu_cmd_set_viewport(
+  vkcomp *app,
+  VkViewport viewport,
+  uint32_t cur_buff,
+  uint32_t firstViewport,
+  uint32_t viewportCount
+) {
+  app->viewport = viewport;
+  vkCmdSetViewport(app->cmd_buffs[cur_buff], firstViewport,
+                  viewportCount, &app->viewport);
+}
+
+void wlu_cmd_set_scissor(
+  vkcomp *app,
+  VkRect2D scissor,
+  uint32_t cur_buff,
+  uint32_t firstScissor,
+  uint32_t scissorCount
+) {
+  app->scissor = scissor;
+  vkCmdSetScissor(app->cmd_buffs[cur_buff], firstScissor,
+                  scissorCount, &app->scissor);
 }
 
 VkAttachmentDescription wlu_set_attachment_desc(
@@ -369,6 +422,30 @@ VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(VkPrimi
   return create_info;
 }
 
+VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
+  uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
+) {
+
+  VkVertexInputBindingDescription binding_desc = {};
+  binding_desc.binding = binding;
+  binding_desc.stride = stride;
+  binding_desc.inputRate = inputRate;
+
+  return binding_desc;
+}
+
+VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
+  uint32_t location, uint32_t binding, VkFormat format, uint32_t offset
+) {
+
+  VkVertexInputAttributeDescription attrib_desc = {};
+  attrib_desc.location = location;
+  attrib_desc.binding = binding;
+  attrib_desc.format = format;
+  attrib_desc.offset = offset;
+
+  return attrib_desc;
+}
 /*
  * Describes the format of the vertex data passed to the vertex shader
  * two ways:
@@ -409,10 +486,10 @@ VkViewport wlu_set_view_port(float x, float y, float width, float height, float 
 }
 
 VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
-  VkViewport *viewport,
   uint32_t viewportCount,
-  VkRect2D *scissor,
-  uint32_t scissorCount
+  VkViewport *viewport,
+  uint32_t scissorCount,
+  VkRect2D *scissor
 ) {
 
   VkPipelineViewportStateCreateInfo create_info = {};
@@ -427,11 +504,12 @@ VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
   return create_info;
 }
 
-VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, VkExtent2D extent) {
+VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
   VkRect2D scissor = {};
   scissor.offset.x = x;
   scissor.offset.y = y;
-  scissor.extent = extent;
+  scissor.extent.width = width;
+  scissor.extent.height = height;
 
   return scissor;
 }
@@ -504,6 +582,28 @@ VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
   create_info.alphaToOneEnable = alphaToOneEnable;
 
   return create_info;
+}
+
+VkStencilOpState wlu_set_stencil_op_state(
+  VkStencilOp failOp,
+  VkStencilOp passOp,
+  VkStencilOp depthFailOp,
+  VkCompareOp compareOp,
+  uint32_t compareMask,
+  uint32_t writeMask,
+  uint32_t reference
+) {
+
+  VkStencilOpState stencil_state = {};
+  stencil_state.failOp = failOp;
+  stencil_state.passOp = passOp;
+  stencil_state.depthFailOp = depthFailOp;
+  stencil_state.compareOp = compareOp;
+  stencil_state.compareMask = compareMask;
+  stencil_state.writeMask = writeMask;
+  stencil_state.reference = reference;
+
+  return stencil_state;
 }
 
 VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
@@ -742,20 +842,4 @@ VkResult wlu_create_desc_set(
   wlu_log_me(WLU_SUCCESS, "Successfully created Descriptor Set");
 
   return res;
-}
-
-/* Creating this just for now */
-void wlu_set_vi_bindings_attribs_desc(vkcomp *app, uint32_t stride) {
-  app->vi_binding.binding = 0;
-  app->vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-  app->vi_binding.stride = stride;
-
-  app->vi_attribs[0].binding = 0;
-  app->vi_attribs[0].location = 0;
-  app->vi_attribs[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-  app->vi_attribs[0].offset = 0;
-  app->vi_attribs[1].binding = 0;
-  app->vi_attribs[1].location = 1;
-  app->vi_attribs[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-  app->vi_attribs[1].offset = 16;
 }

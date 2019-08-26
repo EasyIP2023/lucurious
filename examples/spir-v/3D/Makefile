@@ -6,8 +6,8 @@ all: glslang_to_spirv
 	$(CC) $(FLAGS) simple_example.c -o se
 
 glslang_to_spirv:
-	glslangValidator -V shaders/shader.frag
-	glslangValidator -V shaders/shader.vert
+	glslangValidator -V ../shaders/3Dshader.frag
+	glslangValidator -V ../shaders/3Dshader.vert
 
 clean:
 	$(RM) se

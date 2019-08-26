@@ -57,6 +57,8 @@ VkResult wlu_create_graphics_pipeline(
   uint32_t basePipelineIndex
 );
 
+VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
+
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t pushConstantRangeCount,
@@ -76,14 +78,15 @@ void wlu_exec_begin_render_pass(
 
 void wlu_exec_stop_render_pass(vkcomp *app);
 
-void wlu_bind_gp(vkcomp *app, VkPipelineBindPoint pipelineBindPoint);
+void wlu_bind_gp(vkcomp *app, uint32_t cur_buff, VkPipelineBindPoint pipelineBindPoint);
 
-void wlu_draw(
+void wlu_bind_desc_set(
   vkcomp *app,
-  uint32_t vertexCount,
-  uint32_t instanceCount,
-  uint32_t firstVertex,
-  uint32_t firstInstance
+  uint32_t cur_buf,
+  VkPipelineBindPoint pipelineBindPoint,
+  uint32_t firstSet,
+  uint32_t dynamicOffsetCount,
+  const uint32_t *pDynamicOffsets
 );
 
 void wlu_bind_vertex_buff_to_cmd_buffs(
@@ -92,6 +95,31 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
   uint32_t firstBinding,
   uint32_t bindingCount,
   const VkDeviceSize *offsets
+);
+
+void wlu_cmd_draw(
+  vkcomp *app,
+  uint32_t cur_buff,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
+);
+
+void wlu_cmd_set_viewport(
+  vkcomp *app,
+  VkViewport viewport,
+  uint32_t cur_buff,
+  uint32_t firstViewport,
+  uint32_t viewportCount
+);
+
+void wlu_cmd_set_scissor(
+  vkcomp *app,
+  VkRect2D scissor,
+  uint32_t cur_buff,
+  uint32_t firstScissor,
+  uint32_t scissorCount
 );
 
 VkAttachmentDescription wlu_set_attachment_desc(
@@ -141,6 +169,14 @@ VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 );
 
+VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
+  uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
+);
+
+VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
+  uint32_t location, uint32_t binding, VkFormat format, uint32_t offset
+);
+
 VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,
@@ -155,13 +191,13 @@ VkViewport wlu_set_view_port(
 );
 
 VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
-  VkViewport *viewport,
   uint32_t viewportCount,
-  VkRect2D *scissor,
-  uint32_t scissorCount
+  VkViewport *viewport,
+  uint32_t scissorCount,
+  VkRect2D *scissor
 );
 
-VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, VkExtent2D extent);
+VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
 VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
   VkBool32 depthClampEnable,
@@ -183,6 +219,16 @@ VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
   const VkSampleMask *pSampleMask,
   VkBool32 alphaToCoverageEnable,
   VkBool32 alphaToOneEnable
+);
+
+VkStencilOpState wlu_set_stencil_op_state(
+  VkStencilOp failOp,
+  VkStencilOp passOp,
+  VkStencilOp depthFailOp,
+  VkCompareOp compareOp,
+  uint32_t compareMask,
+  uint32_t writeMask,
+  uint32_t reference
 );
 
 VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
@@ -249,7 +295,5 @@ VkResult wlu_create_desc_set(
   uint32_t dstArrayElement,
   VkDescriptorType descriptorType
 );
-
-void wlu_set_vi_bindings_attribs_desc(vkcomp *app, uint32_t stride);
 
 #endif

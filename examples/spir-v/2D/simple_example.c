@@ -148,7 +148,6 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  VkExtent3D extent3D = { UINT32_MAX, UINT32_MAX, UINT32_MAX };
   VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent2D.width == UINT32_MAX) {
     freeme(app, wc);
@@ -158,10 +157,31 @@ int main(void) {
 
   wlu_retrieve_device_queue(app);
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D, extent3D);
+  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_cmd_pool(app, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_exec_begin_cmd_buffs(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
     return EXIT_FAILURE;
   }
 
@@ -173,6 +193,12 @@ int main(void) {
   }
 
   /* This is where creation of the graphics pipeline begins */
+  err = wlu_create_pipeline_layout(app, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
+    return EXIT_FAILURE;
+  }
 
   /* Starting point for render pass creation */
   VkAttachmentDescription color_attachment = wlu_set_attachment_desc(surface_fmt.format,
@@ -202,29 +228,47 @@ int main(void) {
   wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
   /* ending point for render pass creation */
 
+  wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
+
   wlu_file_info shi_vert = wlu_read_file("vert.spv");
   wlu_file_info shi_frag = wlu_read_file("frag.spv");
 
   wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 1, &shi_frag);
   wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 2, &shi_vert);
+  wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
 
-  VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
-  if (!vert_shader_module) {
+  VkImageView vkimg_attach[1];
+  err = wlu_create_framebuffers(app, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
+  if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_pipeline_cache(app, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_cache failed");
     return EXIT_FAILURE;
   }
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
+    return EXIT_FAILURE;
+  }
+
+  VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
+  if (!vert_shader_module) {
     wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     return EXIT_FAILURE;
   }
 
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &vert_shader_module, 0, NULL);
-  wlu_add_watchme_info(1, app, 0, NULL, 2, &frag_shader_module, 0, NULL);
+  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module, 0, NULL);
+  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module, 0, NULL);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -238,6 +282,13 @@ int main(void) {
     vert_shader_stage_info, frag_shader_stage_info
   };
 
+  VkDynamicState dynamic_states[2] = {
+    VK_DYNAMIC_STATE_VIEWPORT,
+    VK_DYNAMIC_STATE_LINE_WIDTH
+  };
+
+  VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
+
   VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertex_input_state_info(
     0, NULL, 0, NULL
   );
@@ -247,10 +298,8 @@ int main(void) {
   );
 
   VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
-
-  VkRect2D scissor = wlu_set_rect2D(0, 0, extent2D);
-
-  VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(&viewport, 1, &scissor, 1);
+  VkRect2D scissor = wlu_set_rect2D(0, 0, extent2D.width, extent2D.height);
+  VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(1, &viewport, 1, &scissor);
 
   VkPipelineRasterizationStateCreateInfo rasterizer = wlu_set_rasterization_state_info(
     VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT,
@@ -272,22 +321,6 @@ int main(void) {
     VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  VkDynamicState dynamic_states[2] = {
-    VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_LINE_WIDTH
-  };
-
-  VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
-
-  err = wlu_create_pipeline_layout(app, 0, NULL);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create pipeline layout");
-    return EXIT_FAILURE;
-  }
-
   err = wlu_create_graphics_pipeline(app, 2, shader_stages,
     &vertext_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
@@ -304,90 +337,80 @@ int main(void) {
   wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
 
   /* Ending setup for graphics pipeline */
-
-  err = wlu_create_framebuffers(app, 1, extent2D, 1);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create framebuffers, ERROR CODE: %d", err);
-    return EXIT_FAILURE;
-  }
-
-  err = wlu_create_cmd_pool(app, 0);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
-    return EXIT_FAILURE;
-  }
-
-  err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
-    return EXIT_FAILURE;
-  }
-
   err = wlu_create_semaphores(app);
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create semaphores");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     return EXIT_FAILURE;
   }
 
-  err = wlu_exec_begin_cmd_buff(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  uint32_t cur_buff;
+  /* Acquire the swapchain image in order to set its layout */
+  err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
+    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
     return EXIT_FAILURE;
   }
 
-  VkClearValue clear_color;
-  clear_color.color.float32[0] = 0.0f;
-  clear_color.color.float32[1] = 0.0f;
-  clear_color.color.float32[2] = 0.0f;
-  clear_color.color.float32[3] = 1.0f;
-  clear_color.color.int32[0] = 0.0f;
-  clear_color.color.int32[1] = 0.0f;
-  clear_color.color.int32[2] = 0.0f;
-  clear_color.color.int32[3] = 1.0f;
-  clear_color.color.uint32[0] = 0.0f;
-  clear_color.color.uint32[1] = 0.0f;
-  clear_color.color.uint32[2] = 0.0f;
-  clear_color.color.uint32[3] = 1.0f;
-  clear_color.depthStencil.depth = 0.0f;
-  clear_color.depthStencil.stencil = 0;
+  VkClearValue clear_values;
+  clear_values.color.float32[0] = 0.0f;
+  clear_values.color.float32[1] = 0.0f;
+  clear_values.color.float32[2] = 0.0f;
+  clear_values.color.float32[3] = 1.0f;
+  clear_values.color.int32[0] = 0.0f;
+  clear_values.color.int32[1] = 0.0f;
+  clear_values.color.int32[2] = 0.0f;
+  clear_values.color.int32[3] = 1.0f;
+  clear_values.color.uint32[0] = 0.0f;
+  clear_values.color.uint32[1] = 0.0f;
+  clear_values.color.uint32[2] = 0.0f;
+  clear_values.color.uint32[3] = 1.0f;
+  clear_values.depthStencil.depth = 0.0f;
+  clear_values.depthStencil.stencil = 0;
 
-  wlu_exec_begin_render_pass(app, 0, 0, extent2D, 1, &clear_color, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
+                             1, &clear_values, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-  wlu_bind_gp(app, VK_PIPELINE_BIND_POINT_GRAPHICS);
-  wlu_draw(app, 3, 1, 0, 0);
-
-  err = wlu_run_client(wc);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    return EXIT_FAILURE;
-  }
-
-  err = wlu_exec_stop_cmd_buff(app);
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    return EXIT_FAILURE;
-  }
+  wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
+  wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
+  // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
+  err = wlu_exec_stop_cmd_buffs(app);
+  if (err) {
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    return EXIT_FAILURE;
+  }
+
+  VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
+  if (err) {
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
+  if (err) {
+    wlu_freeup_shader(app, &frag_shader_module);
+    wlu_freeup_shader(app, &vert_shader_module);
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    return EXIT_FAILURE;
+  }
+
+  wait_seconds(1);
 
   wlu_freeup_shader(app, &frag_shader_module);
   wlu_freeup_shader(app, &vert_shader_module);

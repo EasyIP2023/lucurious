@@ -194,7 +194,7 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
-VkResult wlu_exec_begin_cmd_buff(
+VkResult wlu_exec_begin_cmd_buffs(
   vkcomp *app,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
@@ -226,7 +226,7 @@ VkResult wlu_exec_begin_cmd_buff(
   return res;
 }
 
-VkResult wlu_exec_stop_cmd_buff(vkcomp *app) {
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   for (uint32_t i = 0; i < app->sc_img_count; i++) {
@@ -256,8 +256,10 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer) {
   return res;
 }
 
-VkResult wlu_exec_queue_cmd_buff(
+VkResult wlu_queue_graphics_queue(
   vkcomp *app,
+  uint32_t cmd_buff_count,
+  uint32_t cur_buff,
   uint32_t waitSemaphoreCount,
   const VkSemaphore *pWaitSemaphores,
   const VkPipelineStageFlags *pWaitDstStageMask,
@@ -267,13 +269,12 @@ VkResult wlu_exec_queue_cmd_buff(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   /* Queue the command buffer for execution */
-  VkFence draw_fence;
   VkFenceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
 
-  res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
+  res = vkCreateFence(app->device, &create_info, NULL, &app->draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateFence failed, ERROR CODE: %d", res);
     return res;
@@ -285,27 +286,50 @@ VkResult wlu_exec_queue_cmd_buff(
   submit_info.waitSemaphoreCount = waitSemaphoreCount;
   submit_info.pWaitSemaphores = pWaitSemaphores;
   submit_info.pWaitDstStageMask = pWaitDstStageMask;
-  submit_info.commandBufferCount = app->sc_img_count;
-  submit_info.pCommandBuffers = app->cmd_buffs;
+  submit_info.commandBufferCount = cmd_buff_count;
+  submit_info.pCommandBuffers = &app->cmd_buffs[cur_buff];
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
+  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, app->draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
     return res;
   }
 
   do {
-    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
+    res = vkWaitForFences(app->device, 1, &app->draw_fence, VK_TRUE, FENCE_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
       return res;
     }
   } while (res == VK_TIMEOUT);
 
-  vkDestroyFence(app->device, draw_fence, NULL);
-  draw_fence = VK_NULL_HANDLE;
+  return res;
+}
+
+VkResult wlu_queue_present_queue(
+  vkcomp *app,
+  uint32_t waitSemaphoreCount,
+  const VkSemaphore *pWaitSemaphores,
+  uint32_t swapchainCount,
+  const VkSwapchainKHR *Swapchains,
+  const uint32_t *pImageIndices,
+  VkResult *pResults
+) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  VkPresentInfoKHR present;
+  present.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  present.pNext = NULL;
+  present.waitSemaphoreCount = waitSemaphoreCount;
+  present.pWaitSemaphores = pWaitSemaphores;
+  present.swapchainCount = swapchainCount;
+  present.pSwapchains = Swapchains;
+  present.pImageIndices = pImageIndices;
+  present.pResults = pResults;
+
+  res = vkQueuePresentKHR(app->present_queue, &present);
 
   return res;
 }

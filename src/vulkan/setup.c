@@ -57,13 +57,17 @@ static void set_values(vkcomp *app) {
   app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
   app->sc_img_count = VK_NULL_HANDLE;
+  app->render_pass = VK_NULL_HANDLE;
+  app->pipeline_cache = VK_NULL_HANDLE;
   app->pipeline_layout = VK_NULL_HANDLE;
+  app->graphics_pipeline = VK_NULL_HANDLE;
   app->render_pass = VK_NULL_HANDLE;
   app->sc_frame_buffs = VK_NULL_HANDLE;
   app->cmd_pool = VK_NULL_HANDLE;
   app->cmd_buffs = VK_NULL_HANDLE;
   app->img_semaphore = VK_NULL_HANDLE;
   app->render_semaphore = VK_NULL_HANDLE;
+  app->draw_fence = VK_NULL_HANDLE;
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
   app->depth.mem = VK_NULL_HANDLE;
@@ -723,7 +727,11 @@ VkResult wlu_create_uorv_buff(
     return res;
   }
 
-  if (usage != VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) {
+  if (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) {
+    app->vertex_data.buff_info.buffer = app->vertex_data.buff;
+    app->vertex_data.buff_info.offset = 0;
+    app->vertex_data.buff_info.range = mem_reqs.size;
+  } else {
     app->uniform_data.buff_info.buffer = app->uniform_data.buff;
     app->uniform_data.buff_info.offset = 0;
     app->uniform_data.buff_info.range = size;
@@ -890,6 +898,8 @@ void wlu_freeup_vk(void *data) {
     vkDestroySemaphore(app->device, app->render_semaphore, NULL);
   if (app->img_semaphore)
     vkDestroySemaphore(app->device, app->img_semaphore, NULL);
+  if (app->draw_fence)
+    vkDestroyFence(app->device, app->draw_fence, NULL);
   if (app->cmd_buffs)
     vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
   if (app->cmd_pool)
@@ -901,6 +911,10 @@ void wlu_freeup_vk(void *data) {
     }
     free(app->sc_frame_buffs);
   }
+  if (app->pipeline_cache)
+    vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+  if (app->pipeline_layout)
+    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
   if (app->desc_layout) {
@@ -920,8 +934,6 @@ void wlu_freeup_vk(void *data) {
     vkDestroyBuffer(app->device, app->uniform_data.buff, NULL);
   if (app->uniform_data.mem)
     vkFreeMemory(app->device, app->uniform_data.mem, NULL);
-  if (app->pipeline_layout)
-    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->render_pass)
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {

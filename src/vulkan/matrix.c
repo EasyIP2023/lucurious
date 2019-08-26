@@ -28,6 +28,10 @@
 #include <wlu/utils/log.h>
 #include <cglm/mat4.h>
 
+float wlu_set_fovy(float fovy) {
+  return glm_rad(fovy);
+}
+
 void wlu_set_perspective(
   vkcomp *app,
   float fovy,
@@ -35,7 +39,7 @@ void wlu_set_perspective(
   float nearVal,
   float farVal
 ) {
-  glmc_perspective(glm_rad(fovy), aspect, nearVal, farVal, app->proj);
+  glmc_perspective(fovy, aspect, nearVal, farVal, app->proj);
 }
 
 void wlu_set_lookat(vkcomp *app, float dir[3], float eye[3], float up[3]) {

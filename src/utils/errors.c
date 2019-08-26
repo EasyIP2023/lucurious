@@ -164,3 +164,7 @@ void wlu_add_watchme_info(
     wsi.shinfos[wsi.shi_pos-1] = shinfo;
   }
 }
+
+void wait_seconds(int seconds) {
+  sleep(seconds);
+}

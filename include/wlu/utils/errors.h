@@ -38,4 +38,6 @@ void wlu_add_watchme_info(
   void *shinfo
 );
 
+void wait_seconds(int seconds);
+
 #endif

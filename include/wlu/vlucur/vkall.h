@@ -82,6 +82,7 @@ typedef struct vkcomp {
   uint32_t sc_img_count;
 
   VkRenderPass render_pass;
+  VkPipelineCache pipeline_cache;
   VkPipelineLayout pipeline_layout;
   VkPipeline graphics_pipeline;
 
@@ -92,6 +93,10 @@ typedef struct vkcomp {
 
   VkSemaphore img_semaphore;
   VkSemaphore render_semaphore;
+  VkFence draw_fence;
+
+  VkViewport viewport;
+  VkRect2D scissor;
 
   struct {
     VkFormat format;
@@ -119,9 +124,6 @@ typedef struct vkcomp {
     VkDeviceMemory mem;
     VkDescriptorBufferInfo buff_info;
   } vertex_data;
-
-  VkVertexInputBindingDescription vi_binding;
-  VkVertexInputAttributeDescription vi_attribs[2];
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layout;
@@ -278,22 +280,13 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
 /* Allows for your app to submmit graphics commands to render and image */
 VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
 
-VkResult wlu_exec_begin_cmd_buff(
+VkResult wlu_exec_begin_cmd_buffs(
   vkcomp *app,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
-VkResult wlu_exec_queue_cmd_buff(
-  vkcomp *app,
-  uint32_t waitSemaphoreCount,
-  const VkSemaphore *pWaitSemaphores,
-  const VkPipelineStageFlags *pWaitDstStageMask,
-  uint32_t signalSemaphoreCount,
-  const VkSemaphore *pSignalSemaphores
-);
-
-VkResult wlu_exec_stop_cmd_buff(vkcomp *app);
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app);
 
 /* Acquire the swapchain image in order to set its layout */
 VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
@@ -307,6 +300,27 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
  * creates semaphores
  */
 VkResult wlu_create_semaphores(vkcomp *app);
+
+VkResult wlu_queue_graphics_queue(
+  vkcomp *app,
+  uint32_t cmd_buff_count,
+  uint32_t cur_buff,
+  uint32_t waitSemaphoreCount,
+  const VkSemaphore *pWaitSemaphores,
+  const VkPipelineStageFlags *pWaitDstStageMask,
+  uint32_t signalSemaphoreCount,
+  const VkSemaphore *pSignalSemaphores
+);
+
+VkResult wlu_queue_present_queue(
+  vkcomp *app,
+  uint32_t waitSemaphoreCount,
+  const VkSemaphore *pWaitSemaphores,
+  uint32_t swapchainCount,
+  const VkSwapchainKHR *Swapchains,
+  const uint32_t *pImageIndices,
+  VkResult *pResults
+);
 
 void wlu_freeup_vk(void *data);
 
