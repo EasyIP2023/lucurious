@@ -39,7 +39,6 @@
  * I'm assuming that the user called the signal
  * handler each time a new process is created
  */
-
 static struct wlu_sig_info {
   pid_t pid;
 

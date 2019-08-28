@@ -25,13 +25,13 @@
 #ifndef WLU_GRAPHICS_PIPELINE_H
 #define WLU_GRAPHICS_PIPELINE_H
 
-VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size);
-
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module);
+
+VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size);
 
 VkResult wlu_create_render_pass(
   vkcomp *app,
-  uint32_t  attachmentCount,
+  uint32_t attachmentCount,
   const VkAttachmentDescription *pAttachments,
   uint32_t subpassCount,
   const VkSubpassDescription *pSubpasses,
@@ -59,10 +59,20 @@ VkResult wlu_create_graphics_pipeline(
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
 
-VkResult wlu_create_pipeline_layout(
+VkResult wlu_create_pipeline_layout(vkcomp *app, uint32_t pushConstantRangeCount, const VkPushConstantRange *pPushConstantRanges);
+
+VkResult wlu_create_desc_set_layout(
   vkcomp *app,
-  uint32_t pushConstantRangeCount,
-  const VkPushConstantRange *pPushConstantRanges
+  VkDescriptorSetLayoutCreateInfo *desc_set_info
+);
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  uint32_t psize,
+  VkDescriptorPoolCreateFlags flags,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  VkDescriptorType descriptorType
 );
 
 void wlu_exec_begin_render_pass(
@@ -185,9 +195,8 @@ VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
 );
 
 VkViewport wlu_set_view_port(
-  float x, float y, float width,
-  float height, float minDepth,
-  float maxDepth
+  float x, float y, float width, float height,
+  float minDepth, float maxDepth
 );
 
 VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
@@ -280,20 +289,6 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding* pBindings
-);
-
-VkResult wlu_create_desc_set_layout(
-  vkcomp *app,
-  VkDescriptorSetLayoutCreateInfo *desc_set_info
-);
-
-VkResult wlu_create_desc_set(
-  vkcomp *app,
-  uint32_t psize,
-  VkDescriptorPoolCreateFlags flags,
-  uint32_t dstBinding,
-  uint32_t dstArrayElement,
-  VkDescriptorType descriptorType
 );
 
 #endif

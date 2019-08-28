@@ -1,7 +1,3 @@
-#include <lucom.h>
-#include <wlu/vlucur/vkall.h>
-#include <wlu/utils/log.h>
-
 /*
  * The MIT License (MIT)
  *
@@ -26,6 +22,11 @@
  * THE SOFTWARE.
  */
 
+#include <lucom.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/utils/log.h>
+#include <vlucur/device.h>
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
   VkDebugReportFlagsEXT flags,
   VkDebugReportObjectTypeEXT objectType,
@@ -44,6 +45,65 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
   wlu_log_me(WLU_DANGER, "%s", pMessage);
 
   return VK_FALSE;
+}
+
+/*
+ * Gets all you're validation layers extensions
+ * that comes installed with the vulkan sdk
+ */
+VkResult wlu_set_global_layers(vkcomp *app) {
+  uint32_t layer_count = 0;
+  VkLayerProperties *vk_props = NULL;
+  VkResult res = VK_INCOMPLETE;
+
+  do {
+    res = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkEnumerateInstanceLayerProperties, ERROR CODE: %d", res);
+      goto finish_vk_props;
+    }
+
+    /* layer count will only be zero if vulkan sdk not installed */
+    if (layer_count == 0) {
+      wlu_log_me(WLU_WARNING, "[x] failed to find Validation Layers, layer_count equals 0");
+      goto finish_vk_props;
+    }
+
+    vk_props = (VkLayerProperties *) realloc(vk_props, layer_count * sizeof(VkLayerProperties));
+    if (!vk_props) {
+      res = VK_RESULT_MAX_ENUM;
+      wlu_log_me(WLU_DANGER, "[x] realloc VkLayerProperties *vk_props failed");
+      goto finish_vk_props;
+    }
+
+    res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
+  } while (res == VK_INCOMPLETE);
+
+  app->vk_layer_props = (VkLayerProperties *) \
+    calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
+  if (!app->vk_layer_props) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] calloc for app->vk_layer_props failed");
+    goto finish_vk_props;
+  }
+
+  /* Gather the extension list for each instance layer. */
+  for (uint32_t i = 0; i < layer_count; i++) {
+    res = get_extension_properties(NULL, &vk_props[i], NULL);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
+      goto finish_vk_props;
+    }
+    app->vk_layer_props[i] = vk_props[i];
+    app->vk_layer_count = i;
+  }
+
+finish_vk_props:
+  if (vk_props) {
+    free(vk_props);
+    vk_props = NULL;
+  }
+  return res;
 }
 
 VkResult wlu_set_debug_message(vkcomp *app, uint32_t size) {

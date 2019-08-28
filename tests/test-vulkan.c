@@ -115,7 +115,7 @@ START_TEST(test_enumerate_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
@@ -154,7 +154,7 @@ START_TEST(test_set_logical_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
@@ -205,7 +205,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_enumerate_devices(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");

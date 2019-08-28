@@ -26,13 +26,24 @@ vulkan = dependency('vulkan')
 cglm = dependency('cglm')
 math = cc.find_library('m')
 
+gp_files = [
+	'gp/bind.c', 'gp/cmd.c',
+	'gp/create.c', 'gp/exec.c',
+	'gp/set.c'
+]
+
+cglm_files = ['matrix/matrix.c']
+
+vkcomp_files = [
+	'vkcomp/create.c', 'vkcomp/device.c',
+	'vkcomp/display.c', 'vkcomp/exec.c',
+	'vkcomp/setup.c', 'vkcomp/utils.c',
+	'vkcomp/vlayer.c'
+]
+
 lib_vulkan = static_library(
 	'lvulkan',
-	files(
-		'setup.c', 'display.c', 'devices.c',
-		'graphics_pipeline.c', 'utils.c',
-		'matrix.c', 'vlayer.c'
-	),
+	files(vkcomp_files, cglm_files, gp_files),
 	include_directories: lucur_inc,
 	dependencies: [vulkan,cglm,math]
 )

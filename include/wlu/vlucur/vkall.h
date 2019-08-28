@@ -133,6 +133,8 @@ typedef struct vkcomp {
 
 vkcomp *wlu_init_vk();
 
+void wlu_freeup_vk(void *data);
+
 /* Set vulkan validation layers properties.
  * To get these validation layers you must install
  * vulkan sdk
@@ -140,6 +142,24 @@ vkcomp *wlu_init_vk();
 VkResult wlu_set_global_layers(vkcomp *app);
 
 VkResult wlu_set_debug_message(vkcomp *app, uint32_t size);
+
+/*
+ * Almost every operation in Vulkan, from submitting command buffers
+ * to presenting images to a surface, requires commands to be submitted
+ * to a hardware queue. This will create multiple queue families
+ * that are supported by the VkQueueFlagBits set and assign the
+ * available graphics and present queues
+ */
+VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
+
+/*
+ * Needed to create the swap chain. This function queries your physical device's
+ * capabilities. Mainly used to get minImageCount and the extent/resolution
+ * that a particular physical device
+ */
+VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
+
+void wlu_retrieve_device_queue(vkcomp *app);
 
 /* Create connection between app and the vulkan api */
 VkResult wlu_create_instance(
@@ -156,16 +176,7 @@ VkResult wlu_create_instance(
  * This function will select the physical device of
  * your choosing based off of VkPhysicalDeviceType
  */
-VkResult wlu_enumerate_devices(vkcomp *app, VkPhysicalDeviceType vkpdtype);
-
-/*
- * Almost every operation in Vulkan, from submitting command buffers
- * to presenting images to a surface, requires commands to be submitted
- * to a hardware queue. This will create multiple queue families
- * that are supported by the VkQueueFlagBits set and assign the
- * available graphics and present queues
- */
-VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
+VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype);
 
 /*
  * After selecting a physical device to use.
@@ -181,15 +192,88 @@ VkResult wlu_create_logical_device(
   const char* const* ppEnabledExtensionNames
 );
 
+/* Create the actual swap chain used to present images to a surface */
+VkResult wlu_create_swap_chain(
+  vkcomp *app,
+  VkSurfaceCapabilitiesKHR capabilities,
+  VkSurfaceFormatKHR surface_fmt,
+  VkPresentModeKHR pres_mode,
+  uint32_t width,
+  uint32_t height
+);
+
+/*
+ * Create image views which is the way you communicate to vulkan
+ * on how you intend to use the images in the swap chain
+ */
+VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type);
+
+/* Need to depth buffer to render 3D images (only need one) */
+VkResult wlu_create_depth_buff(
+  vkcomp *app,
+  VkFormat depth_format,
+  VkFormatFeatureFlags linearTilingFeatures,
+  VkFormatFeatureFlags optimalTilingFeatures,
+  VkImageType imageType,
+  VkExtent3D extent,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  VkImageLayout initialLayout,
+  VkImageViewType viewType
+);
+
+/*
+ * Function creates a uniform buffer so that shaders can access
+ * in a read-only fashion constant parameter data. Function also
+ * creates a vertex buffer
+ */
+VkResult wlu_create_uorv_buff(
+  vkcomp *app,
+  VkDeviceSize size,
+  const void *data,
+  VkBufferCreateFlagBits flags,
+  VkBufferUsageFlags usage
+);
+
+VkResult wlu_create_framebuffers(
+  vkcomp *app,
+  uint32_t attachmentCount,
+  VkImageView *attachments,
+  uint32_t width,
+  uint32_t height,
+  uint32_t layers
+);
+
+/*
+ * Allows for your app to create a command pool to store your
+ * command buffers before being committed to main memory
+ */
+VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
+
+/* Allows for your app to submmit graphics commands to render and image */
+VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
+
+/*
+ * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass
+ * A semaphore (or fence) is required in order to acquire a
+ * swapchain image to prepare it for use in a render pass.
+ * The semaphore is normally used to hold back the rendering
+ * operation until the image is actually available. This function
+ * creates semaphores
+ */
+VkResult wlu_create_semaphores(vkcomp *app);
+
+VkResult wlu_exec_begin_cmd_buffs(
+  vkcomp *app,
+  VkCommandBufferUsageFlags flags,
+  const VkCommandBufferInheritanceInfo *pInheritanceInfo
+);
+
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app);
+
 /* How wayland display's and surface's connect to your vulkan application */
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 
-/*
- * Needed to create the swap chain. This function queries your physical device's
- * capabilities. Mainly used to get minImageCount and the extent/resolution
- * that a particular physical device
- */
-VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
 
 /*
  * Needed to create the swap chain. This will specify the format and
@@ -218,88 +302,8 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
  */
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
 
-/* Create the actual swap chain used to present images to a surface */
-VkResult wlu_create_swap_chain(
-  vkcomp *app,
-  VkSurfaceCapabilitiesKHR capabilities,
-  VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR pres_mode,
-  uint32_t width,
-  uint32_t height
-);
-
-void wlu_retrieve_device_queue(vkcomp *app);
-
-/*
- * Create image views which is the way you communicate to vulkan
- * on how you intend to use the images in the swap chain
- */
-VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type);
-
-/* Need to depth buffer to render 3D images (only need one) */
-VkResult wlu_create_depth_buff(
-  vkcomp *app,
-  VkFormat depth_format,
-  VkFormatFeatureFlags linearTilingFeatures,
-  VkFormatFeatureFlags optimalTilingFeatures,
-  VkImageType imageType,
-  VkExtent3D extent,
-  VkImageUsageFlags usage,
-  VkSharingMode sharingMode,
-  VkImageLayout initialLayout,
-  VkImageViewType viewType
-);
-
-/*
- * Function creates a uniform buffer so that shaders can access
- * in a read-only fashion constant parameter data.
- */
-VkResult wlu_create_uorv_buff(
-  vkcomp *app,
-  VkDeviceSize size,
-  const void *data,
-  VkBufferCreateFlagBits flags,
-  VkBufferUsageFlags usage
-);
-
-VkResult wlu_create_framebuffers(
-  vkcomp *app,
-  uint32_t attachmentCount,
-  VkImageView *attachments,
-  uint32_t width,
-  uint32_t height,
-  uint32_t layers
-);
-
-/*
- * Allows for your app to create a command pool to store your
- * command buffers before being committed to main memory
- */
-VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
-
-/* Allows for your app to submmit graphics commands to render and image */
-VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
-
-VkResult wlu_exec_begin_cmd_buffs(
-  vkcomp *app,
-  VkCommandBufferUsageFlags flags,
-  const VkCommandBufferInheritanceInfo *pInheritanceInfo
-);
-
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app);
-
 /* Acquire the swapchain image in order to set its layout */
 VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
-
-/*
- * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass
- * A semaphore (or fence) is required in order to acquire a
- * swapchain image to prepare it for use in a render pass.
- * The semaphore is normally used to hold back the rendering
- * operation until the image is actually available. This function
- * creates semaphores
- */
-VkResult wlu_create_semaphores(vkcomp *app);
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
@@ -321,7 +325,5 @@ VkResult wlu_queue_present_queue(
   const uint32_t *pImageIndices,
   VkResult *pResults
 );
-
-void wlu_freeup_vk(void *data);
 
 #endif

@@ -145,7 +145,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
     return;
   }
 
-  err = wlu_enumerate_devices(app, dt);
+  err = wlu_create_physical_device(app, dt);
   if (err) {
     fprintf(stdout, "%s", colors[WLU_DANGER]);
     fprintf(stdout, "[x] Failed to find physical device\n");

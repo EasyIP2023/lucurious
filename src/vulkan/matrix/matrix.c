@@ -78,35 +78,8 @@ void wlu_set_clip_matrix(vkcomp *app, float model[4][4]) {
 }
 
 void wlu_set_mvp_matrix(vkcomp *app) {
-  if (!app->clip) {
-    wlu_log_me(WLU_DANGER, "[x] Clip Matrix not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_clip_matrix(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-    return;
-  }
-
-  if (!app->proj) {
-    wlu_log_me(WLU_DANGER, "[x] Proection Matrix not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_perspective(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-    return;
-  }
-
-  if (!app->view) {
-    wlu_log_me(WLU_DANGER, "[x] View Matrix not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_lookat(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-    return;
-  }
-
-  if (!app->model) {
-    wlu_log_me(WLU_DANGER, "[x] Model Matrix not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_model_matrix(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-    return;
-  }
-
-  glm_mat4_mulN((mat4 *[]){&app->clip, &app->proj, &app->view, &app->model}, 4, app->mvp);
+  glm_mat4_mulN((mat4 *[]){&app->clip, &app->proj,
+                &app->view, &app->model}, 4, app->mvp);
 }
 
 void wlu_print_matrices(vkcomp *app) {

@@ -22,16 +22,39 @@
  * THE SOFTWARE.
  */
 
-#ifndef DEVICE_H
-#define DEVICE_H
+#include <lucom.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/vlucur/gp.h>
+#include <wlu/utils/log.h>
 
-VkBool32 set_queue_family(vkcomp *app,
-    VkPhysicalDevice device, VkQueueFlagBits vkqfbits);
+void wlu_bind_gp(vkcomp *app, uint32_t cur_buf, VkPipelineBindPoint pipelineBindPoint) {
+  vkCmdBindPipeline(app->cmd_buffs[cur_buf], pipelineBindPoint, app->graphics_pipeline);
+}
 
-VkBool32 is_device_suitable(vkcomp *app,
-    VkPhysicalDevice device, VkPhysicalDeviceType vkpdtype);
+void wlu_bind_desc_set(
+  vkcomp *app,
+  uint32_t cur_buf,
+  VkPipelineBindPoint pipelineBindPoint,
+  uint32_t firstSet,
+  uint32_t dynamicOffsetCount,
+  const uint32_t *pDynamicOffsets
+) {
+  vkCmdBindDescriptorSets(app->cmd_buffs[cur_buf],  pipelineBindPoint,
+                          app->pipeline_layout, firstSet,
+                          app->desc_count, app->desc_set,
+                          dynamicOffsetCount, pDynamicOffsets);
+}
 
-VkResult get_extension_properties(vkcomp *app,
-    VkLayerProperties *prop, VkPhysicalDevice device);
-
-#endif
+void wlu_bind_vertex_buff_to_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_buf,
+  uint32_t firstBinding,
+  uint32_t bindingCount,
+  const VkDeviceSize *offsets
+) {
+  vkCmdBindVertexBuffers(app->cmd_buffs[cur_buf], /* Start Binding */
+                        firstBinding,
+                        bindingCount, /* Binding Count */
+                        &app->vertex_data.buff, /* pBuffers */
+                        offsets);
+}
