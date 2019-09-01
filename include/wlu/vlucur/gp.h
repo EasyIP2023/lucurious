@@ -291,4 +291,12 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   const VkDescriptorSetLayoutBinding* pBindings
 );
 
+VkClearValue wlu_set_clear_value(
+  float float32[4],
+  int32_t int32[4],
+  uint32_t uint32[4],
+  float depth,
+  uint32_t stencil
+);
+
 #endif

@@ -468,3 +468,30 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
 
   return create_info;
 }
+
+VkClearValue wlu_set_clear_value(
+  float float32[4],
+  int32_t int32[4],
+  uint32_t uint32[4],
+  float depth,
+  uint32_t stencil
+) {
+
+  VkClearValue clear_value;
+  clear_value.color.float32[0] = float32[0];
+  clear_value.color.float32[1] = float32[1];
+  clear_value.color.float32[2] = float32[2];
+  clear_value.color.float32[3] = float32[3];
+  clear_value.color.int32[0] = int32[0];
+  clear_value.color.int32[1] = int32[1];
+  clear_value.color.int32[2] = int32[2];
+  clear_value.color.int32[3] = int32[3];
+  clear_value.color.uint32[0] = uint32[0];
+  clear_value.color.uint32[1] = uint32[1];
+  clear_value.color.uint32[2] = uint32[2];
+  clear_value.color.uint32[3] = uint32[3];
+  clear_value.depthStencil.depth   = depth;
+  clear_value.depthStencil.stencil = stencil;
+
+  return clear_value;
+}

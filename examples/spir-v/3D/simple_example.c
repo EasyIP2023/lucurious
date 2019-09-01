@@ -37,8 +37,8 @@
 #include "simple_example.h"
 
 #define NUM_DESCRIPTOR_SETS 1
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 500
+#define HEIGHT 500
 #define DEPTH 1
 
 void freeme(vkcomp *app, wclient *wc) {
@@ -455,12 +455,11 @@ int main(void) {
 
   /* We cannot bind the vertex buffer until we begin a renderpass */
   VkClearValue clear_values[2];
-  clear_values[0].color.float32[0] = 0.2f;
-  clear_values[0].color.float32[1] = 0.2f;
-  clear_values[0].color.float32[2] = 0.2f;
-  clear_values[0].color.float32[3] = 0.2f;
-  clear_values[1].depthStencil.depth = 1.0f;
-  clear_values[1].depthStencil.stencil = 0;
+  float float32[4] = {0.2f, 0.2f, 0.2f, 0.2f};
+  int32_t int32[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+  uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+  clear_values[0] = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
+  clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);

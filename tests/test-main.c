@@ -36,8 +36,8 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 500
+#define HEIGHT 500
 
 void freeme(vkcomp *app, wclient *wc, wlu_shader_info *shinfo, wlu_shader_info *shinfo_two) {
   wlu_freeup_shi(shinfo);
@@ -373,24 +373,13 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkClearValue clear_values;
-  clear_values.color.float32[0] = 0.0f;
-  clear_values.color.float32[1] = 0.0f;
-  clear_values.color.float32[2] = 0.0f;
-  clear_values.color.float32[3] = 1.0f;
-  clear_values.color.int32[0] = 0.0f;
-  clear_values.color.int32[1] = 0.0f;
-  clear_values.color.int32[2] = 0.0f;
-  clear_values.color.int32[3] = 1.0f;
-  clear_values.color.uint32[0] = 0.0f;
-  clear_values.color.uint32[1] = 0.0f;
-  clear_values.color.uint32[2] = 0.0f;
-  clear_values.color.uint32[3] = 1.0f;
-  clear_values.depthStencil.depth = 0.0f;
-  clear_values.depthStencil.stencil = 0;
+  float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+  int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+  uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
-                             1, &clear_values, VK_SUBPASS_CONTENTS_INLINE);
+                             1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);

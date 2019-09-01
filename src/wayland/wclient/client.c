@@ -111,32 +111,32 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-static struct wl_buffer *create_buffer(wclient *wc) {
-	int stride = 1024 * 4;
-	int size = stride * 681;
-
-	int fd = create_shm_file(size);
-	if (fd < 0) {
-		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
-		return NULL;
-	}
-
-	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	if (wc->shm_data == MAP_FAILED) {
-		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
-		close(fd);
-		return NULL;
-	}
-
-	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
-	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
-		stride, WL_SHM_FORMAT_ARGB8888);
-	wl_shm_pool_destroy(pool);
-
-	// MagickImage is from waves.h
-	// memcpy(wc->shm_data, MagickImage, size);
-	return buffer;
-}
+// static struct wl_buffer *create_buffer(wclient *wc) {
+// 	int stride = 1024 * 4;
+// 	int size = stride * 681;
+//
+// 	int fd = create_shm_file(size);
+// 	if (fd < 0) {
+// 		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
+// 		return NULL;
+// 	}
+//
+// 	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+// 	if (wc->shm_data == MAP_FAILED) {
+// 		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
+// 		close(fd);
+// 		return NULL;
+// 	}
+//
+// 	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
+// 	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
+// 		stride, WL_SHM_FORMAT_ARGB8888);
+// 	wl_shm_pool_destroy(pool);
+//
+// 	// MagickImage is from waves.h
+// 	// memcpy(wc->shm_data, MagickImage, size);
+// 	return buffer;
+// }
 
 int wlu_connect_client(wclient *wc) {
   int err = 0;
@@ -169,9 +169,6 @@ int wlu_connect_client(wclient *wc) {
     wlu_log_me(WLU_DANGER, "[x] No xdg_wm_base support");
     return EXIT_FAILURE;
   }
-
-  wc->buffer = create_buffer(wc);
-  if (!wc->buffer) return EXIT_FAILURE;
 
   wc->surface = wl_compositor_create_surface(wc->compositor);
   if (!wc->surface) return EXIT_FAILURE;
