@@ -1,10 +1,10 @@
 # Lucurious
-![Example 1](http://hellodave.co/wp-content/uploads/2017/08/livtablet_render_002a_2K.jpg)
+![Example 1](https://s3files.core77.com/blog/images/2015/01/0movieUI006.jpg)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
 Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) and the Wayland protocol to turn the science fiction UI into reality.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) and the Wayland protocol to move towards more general purpose 3D user interfaces.
 
 I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to learn more about the inner workings of the wayland protocol and how the linux graphics stack works, plus I'm working on this for my master thesis. [Wlroots](https://github.com/swaywm/wlroots) could be used in this project as it is an extremely good wayland compositing library and I recommend usage if you want to build your own compositor without dealing with the underlying wayland compositing features.
 

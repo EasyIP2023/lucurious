@@ -25,3 +25,5 @@ vgcore.*
 src2man
 txt2man
 userdel.8
+
+peda*

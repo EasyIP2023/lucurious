@@ -40,4 +40,6 @@ void wlu_add_watchme_info(
 
 void wait_seconds(int seconds);
 
+void wlu_freeup_watchme();
+
 #endif

@@ -43,6 +43,7 @@ void freeme(vkcomp *app, wclient *wc, wlu_shader_info *shinfo, wlu_shader_info *
   wlu_freeup_shi(shinfo_two);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
+  wlu_freeup_watchme();
 }
 
 int main(void) {

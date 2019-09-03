@@ -44,6 +44,7 @@
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
+  wlu_freeup_watchme();
 }
 
 int main(void) {
@@ -351,6 +352,9 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
+  free(shi_vert.bytes);
+  shi_vert.bytes = NULL;
+
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
     wlu_freeup_shader(app, &vert_shader_module);
@@ -358,6 +362,9 @@ int main(void) {
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     return EXIT_FAILURE;
   }
+
+  free(shi_frag.bytes);
+  shi_frag.bytes = NULL;
 
   wlu_add_watchme_info(1, app, 0, NULL, 1, &vert_shader_module, 0, NULL);
   wlu_add_watchme_info(1, app, 0, NULL, 2, &frag_shader_module, 0, NULL);

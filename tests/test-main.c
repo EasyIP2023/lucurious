@@ -44,6 +44,7 @@ void freeme(vkcomp *app, wclient *wc, wlu_shader_info *shinfo, wlu_shader_info *
   wlu_freeup_shi(shinfo_two);
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
+  wlu_freeup_watchme();
 }
 
 START_TEST(test_vulkan_client_create) {
@@ -376,7 +377,7 @@ START_TEST(test_vulkan_client_create) {
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
+  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 1.0f, 0);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);

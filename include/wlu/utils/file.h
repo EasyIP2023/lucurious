@@ -30,6 +30,7 @@ typedef struct wlu_file_info {
   long byte_size;
 } wlu_file_info;
 
+/* A way to load byte code */
 wlu_file_info wlu_read_file(const char *filename);
 
 #endif

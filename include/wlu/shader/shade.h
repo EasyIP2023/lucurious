@@ -45,6 +45,7 @@ wlu_shader_info wlu_compile_to_assembly(
   const char *entry_point_name
 );
 
+/* Compile GLSL/HLSL into spirv byte code */
 wlu_shader_info wlu_compile_to_spirv(
   unsigned int kind,
   const char *source,

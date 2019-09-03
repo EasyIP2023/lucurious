@@ -70,21 +70,11 @@ static void signal_handler(int sig) {
     }
   }
 
-  if (wsi.apsh) {
-    free(wsi.apsh);
-    wsi.apsh = NULL;
-  }
-
   for (uint32_t i = 0; i < wsi.shi_pos; i++) {
     if (wsi.shinfos && wsi.shinfos[i]) {
       wlu_log_me(WLU_DANGER, "[x] shader info: %p", wsi.shinfos[i]);
       wlu_freeup_shi(wsi.shinfos[i]);
     }
-  }
-
-  if (wsi.shinfos) {
-    free(wsi.shinfos);
-    wsi.shinfos = NULL;
   }
 
   for (uint32_t i = 0; i < wsi.app_pos; i++) {
@@ -94,11 +84,6 @@ static void signal_handler(int sig) {
     }
   }
 
-  if (wsi.apps) {
-    free(wsi.apps);
-    wsi.apps = NULL;
-  }
-
   for (uint32_t i = 0; i < wsi.wc_pos; i++) {
     if (wsi.wcs && wsi.wcs[i]) {
       wlu_log_me(WLU_DANGER, "[x] wclient struct: %p", wsi.wcs[i]);
@@ -106,10 +91,7 @@ static void signal_handler(int sig) {
     }
   }
 
-  if (wsi.wcs) {
-    free(wsi.wcs);
-    wsi.wcs = NULL;
-  }
+  wlu_freeup_watchme();
 
   wlu_log_me(WLU_SUCCESS, "Successfully freed up most allocated memory :)");
 
@@ -166,4 +148,11 @@ void wlu_add_watchme_info(
 
 void wait_seconds(int seconds) {
   sleep(seconds);
+}
+
+void wlu_freeup_watchme() {
+  if (wsi.apsh) { free(wsi.apsh); wsi.apsh = NULL; }
+  if (wsi.shinfos) { free(wsi.shinfos); wsi.shinfos = NULL; }
+  if (wsi.apps) { free(wsi.apps); wsi.apps = NULL; }
+  if (wsi.wcs) { free(wsi.wcs); wsi.wcs = NULL; }
 }

@@ -45,7 +45,11 @@ wlu_file_info wlu_read_file(const char *filename) {
     return fileinfo;
   }
 
-  /* Get the current byte offset in the file */
+  /*
+   * Get the current byte offset in the file.
+   * Used read position to find the size of the
+   * buffer we need to allocate
+   */
   fileinfo.byte_size = ftell(stream);
   if (fileinfo.byte_size == -1) {
     wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
