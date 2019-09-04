@@ -27,7 +27,7 @@
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module);
 
-VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size);
+VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
 
 VkResult wlu_create_render_pass(
   vkcomp *app,

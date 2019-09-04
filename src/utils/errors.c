@@ -53,9 +53,6 @@ static struct wlu_sig_info {
     vkcomp *app;
     VkShaderModule *shader_mod;
   } *apsh;
-
-  uint32_t shi_pos;
-  wlu_shader_info **shinfos;
 } wsi;
 
 static void signal_handler(int sig) {
@@ -67,13 +64,6 @@ static void signal_handler(int sig) {
     if (wsi.apsh && wsi.apsh[i].shader_mod) {
       wlu_log_me(WLU_DANGER, "[x] shader module: %p", wsi.apsh[i].shader_mod);
       wlu_freeup_shader(wsi.apsh[i].app, wsi.apsh[i].shader_mod);
-    }
-  }
-
-  for (uint32_t i = 0; i < wsi.shi_pos; i++) {
-    if (wsi.shinfos && wsi.shinfos[i]) {
-      wlu_log_me(WLU_DANGER, "[x] shader info: %p", wsi.shinfos[i]);
-      wlu_freeup_shi(wsi.shinfos[i]);
     }
   }
 
@@ -115,9 +105,7 @@ void wlu_add_watchme_info(
   uint32_t wc_pos,
   wclient *wc,
   uint32_t shader_mod_pos,
-  VkShaderModule *shader_mod,
-  uint32_t shi_pos,
-  void *shinfo
+  VkShaderModule *shader_mod
 ) {
 
   if (app) {
@@ -138,12 +126,6 @@ void wlu_add_watchme_info(
     wsi.apsh[wsi.shader_mod_pos-1].app = app;
     wsi.apsh[wsi.shader_mod_pos-1].shader_mod = shader_mod;
   }
-
-  if (shinfo) {
-    wsi.shi_pos = shi_pos;
-    wsi.shinfos = realloc(wsi.shinfos, wsi.shi_pos * sizeof(wclient));
-    wsi.shinfos[wsi.shi_pos-1] = shinfo;
-  }
 }
 
 void wait_seconds(int seconds) {
@@ -152,7 +134,6 @@ void wait_seconds(int seconds) {
 
 void wlu_freeup_watchme() {
   if (wsi.apsh) { free(wsi.apsh); wsi.apsh = NULL; }
-  if (wsi.shinfos) { free(wsi.shinfos); wsi.shinfos = NULL; }
   if (wsi.apps) { free(wsi.apps); wsi.apps = NULL; }
   if (wsi.wcs) { free(wsi.wcs); wsi.wcs = NULL; }
 }

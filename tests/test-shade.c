@@ -22,10 +22,11 @@
  * THE SOFTWARE.
  */
 
-#include <stdlib.h>
 #include <wlu/shader/shade.h>
 #include <wlu/utils/log.h>
+
 #include <check.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 #include "test-shade.h"
@@ -46,7 +47,8 @@ START_TEST(shade_multi_error) {
     if (!shinfo.bytes)
       wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     wlu_log_me(WLU_INFO, "Bytes for file %ld - %ld", shinfo.bytes, shinfo.byte_size);
-    wlu_freeup_shi(&shinfo);
+    free(shinfo.bytes);
+    shinfo.bytes = NULL;
   }
 } END_TEST;
 
@@ -65,7 +67,8 @@ START_TEST(shade_error) {
     wlu_log_me(WLU_INFO, "Bytes for file shoulde be 0 - 0");
     wlu_log_me(WLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
   }
-  wlu_freeup_shi(&shinfo);
+  free(shinfo.bytes);
+  shinfo.bytes = NULL;
 
 } END_TEST;
 
@@ -81,7 +84,8 @@ START_TEST(shade_frag) {
     ck_abort_msg(NULL);
   }
   wlu_log_me(WLU_SUCCESS, "Successful Compilation of fragement shader");
-  wlu_freeup_shi(&shinfo);
+  free(shinfo.bytes);
+  shinfo.bytes = NULL;
 
 } END_TEST;
 

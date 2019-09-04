@@ -114,8 +114,10 @@ void wlu_freeup_vk(void *data) {
     vkDestroySemaphore(app->device, app->img_semaphore, NULL);
   if (app->draw_fence)
     vkDestroyFence(app->device, app->draw_fence, NULL);
-  if (app->cmd_buffs)
+  if (app->cmd_buffs) {
     vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
+    free(app->cmd_buffs);
+  }
   if (app->cmd_pool)
     vkDestroyCommandPool(app->device, app->cmd_pool, NULL);
   if (app->sc_frame_buffs) {

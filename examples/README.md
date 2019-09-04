@@ -21,7 +21,9 @@ pkttyagent -p $(echo $$) | pkexec ninja uninstall -C $(pwd)/build/
 
 **Usage:**
 
-**When using acutal SPIR-V files** compile them yourself before use, using ```glslangValidator```. Lucurious has two different methods of getting SPIR-V bytes libshaderc and wlu_read_file.
+**When using acutal SPIR-V files** compile them yourself before use, using ```glslangValidator```. Lucurious has two different methods of getting SPIR-V bytes libshaderc and wlu_read_file().
+
+**NOTE:** If memory leaks are in issue use glslangValidator to compile then wlu_read_file() to read the spirv bytes.
 ```bash
 glslangValidator -V shaders/shader.frag
 glslangValidator -V shaders/shader.vert

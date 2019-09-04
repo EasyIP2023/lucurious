@@ -26,9 +26,8 @@
 #define SHADE_H
 
 typedef struct wlu_shader_info {
-  const char *bytes;
+  char *bytes;
   long byte_size;
-  void *result;
 } wlu_shader_info;
 
 wlu_shader_info wlu_preprocess_shader(
@@ -52,7 +51,5 @@ wlu_shader_info wlu_compile_to_spirv(
   const char *input_file_name,
   const char *entry_point_name
 );
-
-void wlu_freeup_shi(wlu_shader_info *shi);
 
 #endif

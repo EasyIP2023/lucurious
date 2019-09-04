@@ -39,9 +39,7 @@
 #define WIDTH 500
 #define HEIGHT 500
 
-void freeme(vkcomp *app, wclient *wc, wlu_shader_info *shinfo, wlu_shader_info *shinfo_two) {
-  wlu_freeup_shi(shinfo);
-  wlu_freeup_shi(shinfo_two);
+void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
   wlu_freeup_watchme();
@@ -58,7 +56,7 @@ START_TEST(test_vulkan_client_create) {
 
   vkcomp *app = wlu_init_vk();
   if (!app) {
-    freeme(NULL, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
     ck_abort_msg(NULL);
   }
@@ -66,42 +64,42 @@ START_TEST(test_vulkan_client_create) {
   /* Signal handler for this process */
   err = wlu_watch_me(SIGSEGV, getpid());
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
-  wlu_add_watchme_info(1, app, 1, wc, 0, NULL, 0, NULL);
+  wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
   err = wlu_set_global_layers(app);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
     ck_abort_msg(NULL);
   }
 
   err = wlu_set_debug_message(app, 1);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 
   if (wlu_connect_client(wc)) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect client");
     ck_abort_msg(NULL);
   }
@@ -109,28 +107,28 @@ START_TEST(test_vulkan_client_create) {
   /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
     ck_abort_msg(NULL);
   }
 
   err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_logical_device(app, 3, enabled_validation_layers, 1, device_extensions);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
     ck_abort_msg(NULL);
   }
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
   if (capabilities.minImageCount == UINT32_MAX) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
@@ -142,19 +140,19 @@ START_TEST(test_vulkan_client_create) {
    */
   VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     ck_abort_msg(NULL);
   }
 
   VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   if (extent2D.width == UINT32_MAX) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent2D.width equals %d", extent2D.width);
     ck_abort_msg(NULL);
   }
@@ -163,35 +161,35 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_cmd_pool(app, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
   }
 
   err = wlu_exec_begin_cmd_buffs(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create image views");
     ck_abort_msg(NULL);
   }
@@ -199,7 +197,7 @@ START_TEST(test_vulkan_client_create) {
   /* This is where creation of the graphics pipeline begins */
   err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
     ck_abort_msg(NULL);
   }
@@ -225,7 +223,7 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 1, &subdep);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
     ck_abort_msg(NULL);
   }
@@ -237,7 +235,7 @@ START_TEST(test_vulkan_client_create) {
   wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
                              shader_frag_src, "frag.spv", "main");
   if (!shi_frag.bytes) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
   }
@@ -246,32 +244,29 @@ START_TEST(test_vulkan_client_create) {
   wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
                              shader_vert_src, "vert.spv", "main");
   if (!shi_vert.bytes) {
-    freeme(app, wc, &shi_frag, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
     ck_abort_msg(NULL);
   }
 
-  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 1, &shi_frag);
-  wlu_add_watchme_info(0, NULL, 0, NULL, 0, NULL, 2, &shi_vert);
-
   VkImageView vkimg_attach[1];
   err = wlu_create_framebuffers(app, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   if (err) {
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
     ck_abort_msg(NULL);
   }
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
   if (err) {
-    freeme(app, wc, NULL, NULL);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_cache failed");
     ck_abort_msg(NULL);
   }
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
@@ -279,13 +274,13 @@ START_TEST(test_vulkan_client_create) {
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
   if (!vert_shader_module) {
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
 
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module, 0, NULL);
-  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module, 0, NULL);
+  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module);
+  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -346,7 +341,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
     ck_abort_msg(NULL);
   }
@@ -358,7 +353,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     ck_abort_msg(NULL);
   }
@@ -369,7 +364,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
     ck_abort_msg(NULL);
   }
@@ -391,7 +386,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     ck_abort_msg(NULL);
   }
@@ -401,7 +396,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     ck_abort_msg(NULL);
   }
@@ -410,7 +405,7 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc, &shi_frag, &shi_vert);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     ck_abort_msg(NULL);
   }
@@ -419,7 +414,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_freeup_shader(app, &frag_shader_module);
   wlu_freeup_shader(app, &vert_shader_module);
-  freeme(app, wc, &shi_frag, &shi_vert);
+  freeme(app, wc);
 } END_TEST;
 
 Suite *main_suite(void) {

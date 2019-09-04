@@ -32,7 +32,7 @@ void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
   shader_module = VK_NULL_HANDLE;
 }
 
-VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t code_size) {
+VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size) {
   VkResult err;
   VkShaderModule shader_module = VK_NULL_HANDLE;
 
@@ -68,6 +68,9 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, const char *code, size_t co
     default:
       break;
   }
+  
+  free(code);
+  code = NULL;
 
   return shader_module;
 }
