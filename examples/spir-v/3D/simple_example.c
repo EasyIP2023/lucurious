@@ -302,7 +302,6 @@ int main(void) {
 
   wlu_file_info shi_vert = wlu_read_file("vert.spv");
   wlu_file_info shi_frag = wlu_read_file("frag.spv");
-
   wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
 
   VkImageView vkimg_attach[2];
@@ -431,11 +430,11 @@ int main(void) {
   }
 
   wlu_log_me(WLU_SUCCESS, "Successfully created graphics pipeline");
+  wlu_freeup_shader(app, &frag_shader_module);
+  wlu_freeup_shader(app, &vert_shader_module);
 
   err = wlu_create_semaphores(app);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     return EXIT_FAILURE;
@@ -445,8 +444,6 @@ int main(void) {
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
     return EXIT_FAILURE;
@@ -478,8 +475,6 @@ int main(void) {
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     return EXIT_FAILURE;
@@ -487,17 +482,12 @@ int main(void) {
 
   err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     return EXIT_FAILURE;
   }
 
   wait_seconds(1);
-
-  wlu_freeup_shader(app, &frag_shader_module);
-  wlu_freeup_shader(app, &vert_shader_module);
   freeme(app, wc);
 
   return EXIT_SUCCESS;

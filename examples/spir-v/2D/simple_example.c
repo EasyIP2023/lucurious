@@ -35,8 +35,8 @@
 
 #include "simple_example.h"
 
-#define WIDTH 500
-#define HEIGHT 500
+#define WIDTH 600
+#define HEIGHT 600
 
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
@@ -55,7 +55,7 @@ int main(void) {
 
   vkcomp *app = wlu_init_vk();
   if (!app) {
-    freeme(NULL, wc);
+    freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
     return EXIT_FAILURE;
   }
@@ -229,11 +229,8 @@ int main(void) {
   wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
   /* ending point for render pass creation */
 
-  wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
-
   wlu_file_info shi_vert = wlu_read_file("vert.spv");
   wlu_file_info shi_frag = wlu_read_file("frag.spv");
-
   wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
 
   VkImageView vkimg_attach[1];
@@ -310,7 +307,7 @@ int main(void) {
   );
 
   VkPipelineColorBlendAttachmentState color_blend_attachment = wlu_set_color_blend_attachment_state(
-    VK_FALSE, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
+    VK_FALSE, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
   );
@@ -334,12 +331,12 @@ int main(void) {
   }
 
   wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
+  wlu_freeup_shader(app, &frag_shader_module);
+  wlu_freeup_shader(app, &vert_shader_module);
 
   /* Ending setup for graphics pipeline */
   err = wlu_create_semaphores(app);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     return EXIT_FAILURE;
@@ -359,20 +356,18 @@ int main(void) {
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
+  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 1.0f, 0);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     return EXIT_FAILURE;
@@ -381,8 +376,6 @@ int main(void) {
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     return EXIT_FAILURE;
@@ -390,17 +383,12 @@ int main(void) {
 
   err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
     return EXIT_FAILURE;
   }
 
   wait_seconds(1);
-
-  wlu_freeup_shader(app, &frag_shader_module);
-  wlu_freeup_shader(app, &vert_shader_module);
   freeme(app, wc);
 
   return EXIT_SUCCESS;
