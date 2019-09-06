@@ -349,8 +349,8 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(0, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(2, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
     0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(g_vb_solid_face_colors_Data[0])
@@ -461,7 +461,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_buff;
+  uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
@@ -488,7 +488,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
-  // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

@@ -342,7 +342,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  uint32_t cur_buff;
+  uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
@@ -374,7 +374,9 @@ int main(void) {
   }
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
+  VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
+  err = wlu_queue_graphics_queue(app, 1, cur_buff, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

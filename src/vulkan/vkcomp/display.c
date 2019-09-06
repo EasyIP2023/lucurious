@@ -194,10 +194,10 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer) {
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->img_semaphore) {
+  if (!app->sems) {
     wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
@@ -206,7 +206,7 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer) {
 
   /* UINT64_MAX disables timeout */
   res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
-                              app->img_semaphore, VK_NULL_HANDLE, current_buffer);
+                              app->sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
   return res;
 }
 
@@ -221,6 +221,7 @@ VkResult wlu_queue_graphics_queue(
   const VkSemaphore *pSignalSemaphores
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
+  VkFence draw_fence = VK_NULL_HANDLE;
 
   /* Queue the command buffer for execution */
   VkFenceCreateInfo create_info = {};
@@ -228,10 +229,10 @@ VkResult wlu_queue_graphics_queue(
   create_info.pNext = NULL;
   create_info.flags = 0;
 
-  res = vkCreateFence(app->device, &create_info, NULL, &app->draw_fence);
+  res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateFence failed, ERROR CODE: %d", res);
-    return res;
+    goto finish_gq_submit;
   }
 
   VkSubmitInfo submit_info = {};
@@ -245,20 +246,25 @@ VkResult wlu_queue_graphics_queue(
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, app->draw_fence);
+  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
-    return res;
+    goto finish_gq_submit;
   }
 
   do {
-    res = vkWaitForFences(app->device, 1, &app->draw_fence, VK_TRUE, FENCE_TIMEOUT);
+    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
-      return res;
+      goto finish_gq_submit;
     }
   } while (res == VK_TIMEOUT);
 
+finish_gq_submit:
+  if (draw_fence) {
+    vkDestroyFence(app->device, draw_fence, NULL);
+    draw_fence = VK_NULL_HANDLE;
+  }
   return res;
 }
 
@@ -284,6 +290,13 @@ VkResult wlu_queue_present_queue(
   present.pResults = pResults;
 
   res = vkQueuePresentKHR(app->present_queue, &present);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkQueuePresentKHR failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  /* Make sure work gets finished */
+  vkQueueWaitIdle(app->present_queue);
 
   return res;
 }

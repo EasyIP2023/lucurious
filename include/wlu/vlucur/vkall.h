@@ -40,6 +40,11 @@ typedef struct queue_family_indices {
   uint32_t present_family;
 } queue_family_indices;
 
+typedef struct semaphores {
+  VkSemaphore image;
+  VkSemaphore render;
+} semaphores;
+
 typedef struct vkcomp {
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
@@ -91,9 +96,7 @@ typedef struct vkcomp {
   VkCommandPool cmd_pool;
   VkCommandBuffer *cmd_buffs;
 
-  VkSemaphore img_semaphore;
-  VkSemaphore render_semaphore;
-  VkFence draw_fence;
+  semaphores *sems;
 
   VkViewport viewport;
   VkRect2D scissor;
@@ -303,7 +306,7 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
 
 /* Acquire the swapchain image in order to set its layout */
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *current_buffer);
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff);
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,

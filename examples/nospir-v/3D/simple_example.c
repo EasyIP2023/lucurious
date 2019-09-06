@@ -348,8 +348,8 @@ int main(void) {
   }
 
   VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(0, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(2, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
     0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(g_vb_solid_face_colors_Data[0])
@@ -459,7 +459,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  uint32_t cur_buff;
+  uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
@@ -485,13 +485,16 @@ int main(void) {
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, offsets);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  // wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
+  wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
+  wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   wlu_exec_stop_cmd_buffs(app);
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
+  VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
+  err = wlu_queue_graphics_queue(app, 1, cur_buff, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

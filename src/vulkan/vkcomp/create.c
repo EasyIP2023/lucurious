@@ -740,15 +740,31 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
 VkResult wlu_create_semaphores(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
+  app->sems = (semaphores *) calloc(sizeof(semaphores),
+      app->sc_img_count * sizeof(semaphores));
+  if (!app->sems) {
+    wlu_log_me(WLU_DANGER, "[x] calloc semaphores *sems failed");
+    return res;
+  }
+
   VkSemaphoreCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
 
-  res = vkCreateSemaphore(app->device, &create_info, NULL, &app->img_semaphore);
-  if (res) return res;
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sems[i].image);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkCreateSemaphore failed to create image semaphore, ERROR CODE: %d", res);
+      return res;
+    }
 
-  res = vkCreateSemaphore(app->device, &create_info, NULL, &app->render_semaphore);
+    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sems[i].render);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkCreateSemaphore failed to create render semaphore, ERROR CODE: %d", res);
+      return res;
+    }
+  }
 
   return res;
 }

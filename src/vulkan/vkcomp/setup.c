@@ -63,9 +63,7 @@ static void set_values(vkcomp *app) {
   app->sc_frame_buffs = VK_NULL_HANDLE;
   app->cmd_pool = VK_NULL_HANDLE;
   app->cmd_buffs = VK_NULL_HANDLE;
-  app->img_semaphore = VK_NULL_HANDLE;
-  app->render_semaphore = VK_NULL_HANDLE;
-  app->draw_fence = VK_NULL_HANDLE;
+  app->sems = VK_NULL_HANDLE;
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
   app->depth.mem = VK_NULL_HANDLE;
@@ -108,12 +106,15 @@ void wlu_freeup_vk(void *data) {
     vkDestroyImage(app->device, app->depth.image, NULL);
   if (app->depth.mem)
     vkFreeMemory(app->device, app->depth.mem, NULL);
-  if (app->render_semaphore)
-    vkDestroySemaphore(app->device, app->render_semaphore, NULL);
-  if (app->img_semaphore)
-    vkDestroySemaphore(app->device, app->img_semaphore, NULL);
-  if (app->draw_fence)
-    vkDestroyFence(app->device, app->draw_fence, NULL);
+  if (app->sems) {
+    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+      vkDestroySemaphore(app->device, app->sems[i].image, NULL);
+      vkDestroySemaphore(app->device, app->sems[i].render, NULL);
+      app->sems[i].image = VK_NULL_HANDLE;
+      app->sems[i].render = VK_NULL_HANDLE;
+    }
+    free(app->sems);
+  }
   if (app->cmd_buffs) {
     vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
     free(app->cmd_buffs);
