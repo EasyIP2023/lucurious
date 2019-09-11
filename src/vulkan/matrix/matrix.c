@@ -47,7 +47,7 @@ void wlu_set_lookat(vkcomp *app, float dir[3], float eye[3], float up[3]) {
        looks = { eye[0], eye[1], eye[2] },
        heads_up = { up[0], up[1], up[2] };
 
-  //glm_vec3_add(loc, looks, center);
+  // glm_vec3_add(loc, looks, center);
   glm_lookat(loc, looks, heads_up, app->view);
   // glm_look(loc, looks, heads_up, app->view);
 }
@@ -60,6 +60,21 @@ void wlu_set_model_matrix(vkcomp *app, float m) {
     { m, m, m, m },
   };
   memcpy(&app->model, &model, sizeof(mat4));
+}
+
+void wlu_set_vec2_matrix(void *vector, const float vec[2]) {
+  vec2 vec_2 = { vec[0], vec[1] };
+  memcpy(vector, &vec_2, sizeof(vec2));
+}
+
+void wlu_set_vec3_matrix(void *vector, const float vec[3]) {
+  vec3 vec_3 = { vec[0], vec[1], vec[2] };
+  memcpy(vector, &vec_3, sizeof(vec_3));
+}
+
+void wlu_print_vec3(void *vector) {
+  vec3 *vec = (vec3*) vector;
+  glm_vec3_print(*vec, stdout);
 }
 
 /*

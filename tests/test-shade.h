@@ -39,20 +39,12 @@ const char shader_frag_src[] =
 const char shader_vert_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
+  "layout(location = 0) in vec2 inPosition;\n"
+  "layout(location = 1) in vec3 inColor;\n"
   "layout(location = 0) out vec3 fragColor;\n"
-  "vec2 positions[3] = vec2[](\n"
-  "   vec2(0.0, -0.5),\n"
-  "   vec2(0.5, 0.5),\n"
-  "   vec2(-0.5, 0.5)\n"
-  ");\n"
-  "vec3 colors[3] = vec3[](\n"
-  "   vec3(1.0, 0.0, 0.0),\n"
-  "   vec3(0.0, 1.0, 0.0),\n"
-  "   vec3(0.0, 0.0, 1.0)\n"
-  ");\n"
   "void main() {\n"
-  "   gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);\n"
-  "   fragColor = colors[gl_VertexIndex];\n"
+  "   gl_Position = vec4(inPosition, 0.0, 1.0);\n"
+  "   fragColor = inColor;\n"
   "}";
 
 const char vertShaderText[] =

@@ -517,12 +517,14 @@ VkResult wlu_create_depth_buff(
   return res;
 }
 
-VkResult wlu_create_uorv_buff(
+VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   const void *data,
   VkBufferCreateFlagBits flags,
-  VkBufferUsageFlags usage
+  VkBufferUsageFlags usage,
+  buff_data *buffer,
+  VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
   bool pass = false;
@@ -533,23 +535,18 @@ VkResult wlu_create_uorv_buff(
   create_info.flags = flags;
   create_info.size = size;
   create_info.usage = usage;
-  create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE; /* buffers are only used for graphics queue */
   create_info.queueFamilyIndexCount = 0;
   create_info.pQueueFamilyIndices = NULL;
 
-  res = (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) ? \
-        vkCreateBuffer(app->device, &create_info, NULL, &app->vertex_data.buff) :
-        vkCreateBuffer(app->device, &create_info, NULL, &app->uniform_data.buff);
+  res = vkCreateBuffer(app->device, &create_info, NULL, &buffer->buff);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateBuffer failed, ERROR CODE: %d", res);
     return res;
   }
 
   VkMemoryRequirements mem_reqs;
-  if (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-    vkGetBufferMemoryRequirements(app->device, app->vertex_data.buff, &mem_reqs);
-  else
-    vkGetBufferMemoryRequirements(app->device, app->uniform_data.buff, &mem_reqs);
+  vkGetBufferMemoryRequirements(app->device, buffer->buff, &mem_reqs);
 
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -557,70 +554,49 @@ VkResult wlu_create_uorv_buff(
   alloc_info.allocationSize = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
-  /*
-   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-   * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
-   * should be mapped so that the CPU (host) can access it.
-   * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
-   * writes to the memory by the host are visible to the device
-   * (and vice-versa) without the need to flush memory caches.
-   */
-  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits,
-                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                     &alloc_info.memoryTypeIndex);
+  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
   if (!pass) {
     wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
     return pass;
   }
 
-  res = (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) ? \
-        vkAllocateMemory(app->device, &alloc_info, NULL, &app->vertex_data.mem) :
-        vkAllocateMemory(app->device, &alloc_info, NULL, &app->uniform_data.mem);
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &buffer->mem);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
-  /*
-   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-   * With a uniform buffer, you need to populate it with the data that
-   * you want the shader to read. In this case, the data is the MVP matrix.
-   * In order to get CPU access to the memory, you need to map it
-   */
-  uint8_t *p_data;
-  res = (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) ? \
-        vkMapMemory(app->device, app->vertex_data.mem, 0, mem_reqs.size, 0, (void **) &p_data) :
-        vkMapMemory(app->device, app->uniform_data.mem, 0, mem_reqs.size, 0, (void **) &p_data);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
-    return res;
-  }
-
-  memcpy(p_data, data, size);
-
-  if (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-    vkUnmapMemory(app->device, app->vertex_data.mem);
-  else
-    vkUnmapMemory(app->device, app->uniform_data.mem);
-
   /* associate the memory allocated with the buffer object */
-  res = (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) ? \
-        vkBindBufferMemory(app->device, app->vertex_data.buff, app->vertex_data.mem, 0) :
-        vkBindBufferMemory(app->device, app->uniform_data.buff, app->uniform_data.mem, 0);
+  res = vkBindBufferMemory(app->device, buffer->buff, buffer->mem, 0);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
-  if (usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) {
-    app->vertex_data.buff_info.buffer = app->vertex_data.buff;
-    app->vertex_data.buff_info.offset = 0;
-    app->vertex_data.buff_info.range = mem_reqs.size;
-  } else {
-    app->uniform_data.buff_info.buffer = app->uniform_data.buff;
-    app->uniform_data.buff_info.offset = 0;
-    app->uniform_data.buff_info.range = size;
+  /*
+   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+   * With any buffer, you need to populate it with the data that
+   * you want the shader to read. In order to get CPU access to
+   * the memory, you need to map it
+   */
+  void *p_data;
+  res = vkMapMemory(app->device, buffer->mem, 0, mem_reqs.size, 0, &p_data);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
+    return res;
   }
+
+  p_data = memcpy(p_data, data, size);
+  if (!p_data) {
+    wlu_log_me(WLU_DANGER, "[x] memcpy failed, p_data is %p", p_data);
+    return res;
+  }
+
+  vkUnmapMemory(app->device, buffer->mem);
+
+  buffer->buff_info.buffer = buffer->buff;
+  buffer->buff_info.offset = 0;
+  buffer->buff_info.range = size;
 
   return res;
 }

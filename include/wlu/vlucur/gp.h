@@ -179,6 +179,7 @@ VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 );
 
+/* Describe at which rate to load data from memory throughout the vertices */
 VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
   uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
 );

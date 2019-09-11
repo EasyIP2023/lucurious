@@ -44,6 +44,18 @@ const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation"
 };
 
+static const float pos_vertices[3][2] = {
+  {0.0f, -0.5f},
+  {0.5f, 0.5f},
+  {-0.5f, 0.5f}
+};
+
+static const float color_vertices[3][3] = {
+  {1.0f, 0.0f, 0.0f},
+  {0.0f, 1.0f, 0.0f},
+  {0.0f, 0.0f, 1.0f}
+};
+
 /* Can find in Vulkan SDK samples/API-Samples/data/cube_data.h */
 typedef struct _vertex {
   float posX, posY, posZ, posW;  // Position data

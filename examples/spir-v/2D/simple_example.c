@@ -35,7 +35,7 @@
 
 #include "simple_example.h"
 
-#define WIDTH 600
+#define WIDTH 800
 #define HEIGHT 600
 
 void freeme(vkcomp *app, wclient *wc) {
@@ -285,7 +285,7 @@ int main(void) {
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
 
-  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertex_input_state_info(
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
     0, NULL, 0, NULL
   );
 
@@ -318,7 +318,7 @@ int main(void) {
   );
 
   err = wlu_create_graphics_pipeline(app, 2, shader_stages,
-    &vertext_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
+    &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
   );
@@ -376,7 +376,8 @@ int main(void) {
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
   VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
-  err = wlu_queue_graphics_queue(app, 1, cur_buff, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};
+  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

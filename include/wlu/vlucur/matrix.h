@@ -39,6 +39,12 @@ void wlu_set_lookat(vkcomp *app, float dir[3], float eye[3], float up[3]);
 
 void wlu_set_model_matrix(vkcomp *app, float m);
 
+void wlu_set_vec2_matrix(void *vector, const float vec[2]);
+
+void wlu_set_vec3_matrix(void *vector, const float vec[2]);
+
+void wlu_print_vec3(void *vector);
+
 void wlu_set_clip_matrix(vkcomp *app, float model[4][4]);
 
 void wlu_set_mvp_matrix(vkcomp *app);

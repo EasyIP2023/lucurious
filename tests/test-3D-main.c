@@ -211,7 +211,7 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   float fovy = wlu_set_fovy(45.0f);
-  float hw = extent3D.height / (float) extent3D.width;
+  float hw = (float) extent3D.height / (float) extent3D.width;
   if (extent3D.width > extent3D.height) fovy *= hw;
 
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
@@ -233,7 +233,11 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
-  err = wlu_create_uorv_buff(app, sizeof(app->mvp), &app->mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+  err = wlu_create_buffer(
+    app, sizeof(app->mvp), &app->mvp, 0,
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &app->uniform_data,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
@@ -341,7 +345,11 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   /* Start of vertex buffer */
-  err = wlu_create_uorv_buff(app, sizeof(g_vb_solid_face_colors_Data), g_vb_solid_face_colors_Data, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+  err = wlu_create_buffer(
+    app, sizeof(g_vb_solid_face_colors_Data[0]) * 36, g_vb_solid_face_colors_Data, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &app->vertex_data,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
@@ -349,14 +357,14 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(2, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
     0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(g_vb_solid_face_colors_Data[0])
   );
 
-  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertex_input_state_info(
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
     1, &vi_binding, 2, vi_attribs
   );
 
@@ -438,7 +446,7 @@ START_TEST(test_vulkan_client_create_3D) {
   );
 
   err = wlu_create_graphics_pipeline(app, 2, shader_stages,
-    &vertext_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
+    &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, &ds_info, &color_blending,
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
   );
@@ -499,7 +507,10 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  err = wlu_queue_graphics_queue(app, 1, cur_buff, 0, NULL, &pipe_stage_flags, 0, NULL);
+  VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};
+  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

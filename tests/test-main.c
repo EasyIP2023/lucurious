@@ -29,6 +29,7 @@
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
+#include <wlu/vlucur/matrix.h>
 
 #include <signal.h>
 #include <check.h>
@@ -36,7 +37,7 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
-#define WIDTH 600
+#define WIDTH 800
 #define HEIGHT 600
 
 void freeme(vkcomp *app, wclient *wc) {
@@ -257,12 +258,45 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_pipeline_cache(app, 0, NULL);
+  /* Start of vertex buffer */
+  vertex_2D vertices[3];
+  for (uint32_t i = 0; i < 3; i++) {
+    wlu_set_vec2_matrix(&vertices[i].pos, pos_vertices[i]);
+    wlu_set_vec3_matrix(&vertices[i].color, color_vertices[i]);
+  }
+
+  /*
+   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+   * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+   * should be mapped so that the CPU (host) can access it.
+   * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+   * writes to the memory by the host are visible to the device
+   * (and vice-versa) without the need to flush memory caches.
+   */
+  err = wlu_create_buffer(
+    app, sizeof(vertices[0]) * 3, vertices, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &app->vertex_data,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_cache failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
     ck_abort_msg(NULL);
   }
+
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
+    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
+  );
+
+  VkVertexInputAttributeDescription vi_attribs[2];
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_2D, color));
+
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
+    1, &vi_binding, 2, vi_attribs
+  );
+
+  /* End of vertex buffer */
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   if (!frag_shader_module) {
@@ -301,10 +335,6 @@ START_TEST(test_vulkan_client_create) {
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
 
-  VkPipelineVertexInputStateCreateInfo vertext_input_info = wlu_set_vertex_input_state_info(
-    0, NULL, 0, NULL
-  );
-
   VkPipelineInputAssemblyStateCreateInfo input_assembly = wlu_set_input_assembly_state_info(
     VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
   );
@@ -333,8 +363,15 @@ START_TEST(test_vulkan_client_create) {
     VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
+  err = wlu_create_pipeline_cache(app, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_cache failed");
+    ck_abort_msg(NULL);
+  }
+
   err = wlu_create_graphics_pipeline(app, 2, shader_stages,
-    &vertext_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
+    &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
   );
@@ -362,8 +399,6 @@ START_TEST(test_vulkan_client_create) {
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
   if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
     ck_abort_msg(NULL);
@@ -378,6 +413,9 @@ START_TEST(test_vulkan_client_create) {
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
+  const VkDeviceSize offsets[] = {0};
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, offsets);
+
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);
 
@@ -389,10 +427,11 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
   VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
-  err = wlu_queue_graphics_queue(app, 1, cur_buff, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};
+  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, wait_stages, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

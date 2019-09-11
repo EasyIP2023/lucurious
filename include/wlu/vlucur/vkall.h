@@ -40,6 +40,29 @@ typedef struct queue_family_indices {
   uint32_t present_family;
 } queue_family_indices;
 
+typedef struct buff_data {
+  VkBuffer buff;
+  VkDeviceMemory mem;
+  VkDescriptorBufferInfo buff_info;
+} buff_data;
+
+/* One will need to manage space for this them selves */
+typedef struct vertex_2D {
+  vec2 pos;
+  vec3 color;
+} vertex_2D;
+
+typedef struct vertex_3D {
+  mat4 pos;
+  mat4 color;
+} vertex_3D;
+
+/*
+ * Use a image semaphore to signal that an image
+ * has been acquired and is ready for rendering.
+ * Use a render semaphore to singal that rendering
+ * has finished and presentation can happen.
+ */
 typedef struct semaphores {
   VkSemaphore image;
   VkSemaphore render;
@@ -108,25 +131,14 @@ typedef struct vkcomp {
     VkImageView view;
   } depth;
 
-  /* Start of uniform buffer section */
-  struct {
-    VkBuffer buff;
-    VkDeviceMemory mem;
-    VkDescriptorBufferInfo buff_info;
-  } uniform_data;
-
   mat4 proj;
   mat4 view;
   mat4 model;
   mat4 clip;
   mat4 mvp;
-  /* End of uniform buffer section */
 
-  struct {
-    VkBuffer buff;
-    VkDeviceMemory mem;
-    VkDescriptorBufferInfo buff_info;
-  } vertex_data;
+  buff_data uniform_data;
+  buff_data vertex_data;
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layout;
@@ -135,6 +147,9 @@ typedef struct vkcomp {
 } vkcomp;
 
 vkcomp *wlu_init_vk();
+
+/* Free up swap chain */
+void wlu_freeup_sc(void *data);
 
 void wlu_freeup_vk(void *data);
 
@@ -226,16 +241,18 @@ VkResult wlu_create_depth_buff(
 );
 
 /*
- * Function creates a uniform buffer so that shaders can access
+ * Function creates buffers like a uniform buffer so that shaders can access
  * in a read-only fashion constant parameter data. Function also
- * creates a vertex buffer
+ * creates buffers like a vertex buffer so that it's visible to the CPU
  */
-VkResult wlu_create_uorv_buff(
+VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   const void *data,
   VkBufferCreateFlagBits flags,
-  VkBufferUsageFlags usage
+  VkBufferUsageFlags usage,
+  buff_data *buffer,
+  VkFlags requirements_mask
 );
 
 VkResult wlu_create_framebuffers(
@@ -310,8 +327,8 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff);
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
-  uint32_t cmd_buff_count,
-  uint32_t cur_buff,
+  uint32_t commandBufferCount,
+  VkCommandBuffer *pCommandBuffers,
   uint32_t waitSemaphoreCount,
   const VkSemaphore *pWaitSemaphores,
   const VkPipelineStageFlags *pWaitDstStageMask,
@@ -319,6 +336,7 @@ VkResult wlu_queue_graphics_queue(
   const VkSemaphore *pSignalSemaphores
 );
 
+/* Submit results back to the swap chain */
 VkResult wlu_queue_present_queue(
   vkcomp *app,
   uint32_t waitSemaphoreCount,

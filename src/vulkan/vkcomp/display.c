@@ -207,13 +207,18 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff) {
   /* UINT64_MAX disables timeout */
   res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
                               app->sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
+  if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+    wlu_freeup_sc(app);
+    return res;
+  }
+
   return res;
 }
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
-  uint32_t cmd_buff_count,
-  uint32_t cur_buff,
+  uint32_t commandBufferCount,
+  VkCommandBuffer *pCommandBuffers,
   uint32_t waitSemaphoreCount,
   const VkSemaphore *pWaitSemaphores,
   const VkPipelineStageFlags *pWaitDstStageMask,
@@ -227,8 +232,9 @@ VkResult wlu_queue_graphics_queue(
   VkFenceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   create_info.pNext = NULL;
-  create_info.flags = 0;
+  create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
+  /* Use fence to synchronize application with rendering operation */
   res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateFence failed, ERROR CODE: %d", res);
@@ -241,11 +247,19 @@ VkResult wlu_queue_graphics_queue(
   submit_info.waitSemaphoreCount = waitSemaphoreCount;
   submit_info.pWaitSemaphores = pWaitSemaphores;
   submit_info.pWaitDstStageMask = pWaitDstStageMask;
-  submit_info.commandBufferCount = cmd_buff_count;
-  submit_info.pCommandBuffers = &app->cmd_buffs[cur_buff];
+  submit_info.commandBufferCount = commandBufferCount;
+  submit_info.pCommandBuffers = pCommandBuffers;
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
+  /* set fence to unsignaled state */
+  res = vkResetFences(app->device, 1, &draw_fence);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
+    goto finish_gq_submit;
+  }
+
+  /* The fence should be signaled when command buffer is finished */
   res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
@@ -253,9 +267,17 @@ VkResult wlu_queue_graphics_queue(
   }
 
   do {
+    /* Use fence to synchronize application with rendering operation */
     res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
+      goto finish_gq_submit;
+    }
+
+    /* Restore fence to unsignaled state */
+    res = vkResetFences(app->device, 1, &draw_fence);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
       goto finish_gq_submit;
     }
   } while (res == VK_TIMEOUT);
@@ -295,7 +317,10 @@ VkResult wlu_queue_present_queue(
     return res;
   }
 
-  /* Make sure work gets finished */
+  if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
+    wlu_freeup_sc(app);
+
+  /* Wait for operations in present queue to finish */
   vkQueueWaitIdle(app->present_queue);
 
   return res;

@@ -80,6 +80,36 @@ vkcomp *wlu_init_vk() {
   return app;
 }
 
+void wlu_freeup_sc(void *data) {
+  vkcomp *app = (vkcomp *) data;
+
+  if (app->sc_frame_buffs) {
+    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+      vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
+      app->sc_frame_buffs[i] = VK_NULL_HANDLE;
+    }
+  }
+  if (app->cmd_buffs)
+    vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
+  if (app->graphics_pipeline)
+    vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
+  if (app->pipeline_cache)
+    vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+  if (app->pipeline_layout)
+    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
+  if (app->render_pass)
+    vkDestroyRenderPass(app->device, app->render_pass, NULL);
+  if (app->sc_buffs) {
+    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+      vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
+      app->sc_buffs[i].view = VK_NULL_HANDLE;
+    }
+    free(app->sc_buffs);
+  }
+  if (app->swap_chain)
+    vkDestroySwapchainKHR(app->device, app->swap_chain, NULL);
+}
+
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
@@ -123,8 +153,10 @@ void wlu_freeup_vk(void *data) {
     vkDestroyCommandPool(app->device, app->cmd_pool, NULL);
   if (app->sc_frame_buffs) {
     for (uint32_t i = 0; i < app->sc_img_count; i++) {
-      vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
-      app->sc_frame_buffs[i] = VK_NULL_HANDLE;
+      if (app->sc_frame_buffs[i]) {
+        vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
+        app->sc_frame_buffs[i] = VK_NULL_HANDLE;
+      }
     }
     free(app->sc_frame_buffs);
   }
@@ -155,8 +187,10 @@ void wlu_freeup_vk(void *data) {
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {
     for (uint32_t i = 0; i < app->sc_img_count; i++) {
-      vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
-      app->sc_buffs[i].view = VK_NULL_HANDLE;
+      if (app->sc_buffs[i].view) {
+        vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
+        app->sc_buffs[i].view = VK_NULL_HANDLE;
+      }
     }
     free(app->sc_buffs);
   }
