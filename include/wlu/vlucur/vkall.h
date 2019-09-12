@@ -53,8 +53,8 @@ typedef struct vertex_2D {
 } vertex_2D;
 
 typedef struct vertex_3D {
-  mat4 pos;
-  mat4 color;
+  vec4 pos;
+  vec4 color;
 } vertex_3D;
 
 /*

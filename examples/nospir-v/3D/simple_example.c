@@ -37,8 +37,8 @@
 #include "simple_example.h"
 
 #define NUM_DESCRIPTOR_SETS 1
-#define WIDTH 500
-#define HEIGHT 500
+#define WIDTH 800
+#define HEIGHT 600
 #define DEPTH 1
 
 void freeme(vkcomp *app, wclient *wc) {
@@ -212,23 +212,10 @@ int main(void) {
   float fovy = wlu_set_fovy(45.0f);
   float hw = extent3D.height / (float) extent3D.width;
   if (extent3D.width > extent3D.height) fovy *= hw;
-
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
-
-  float dir[3] = {-5, 3, -10};
-  float eye[3] = {0, 0, 0};
-  float up[3] = {0, -1, 0};
   wlu_set_lookat(app, dir, eye, up);
-
-  wlu_set_model_matrix(app, 1.0f);
-
-  float clip_matrix[4][4] = {
-    { 1.0f, 0.0f, 0.0f, 0.0f },
-    { 0.0f,-1.0f, 0.0f, 0.0f },
-    { 0.0f, 0.0f, 0.5f, 0.0f },
-    { 0.0f, 0.0f, 0.5f, 1.0f }
-  };
-  wlu_set_clip_matrix(app, clip_matrix);
+  wlu_set_matrix(&app->model, model_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->clip, clip_matrix, WLU_MAT4);
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
@@ -344,8 +331,15 @@ int main(void) {
   }
 
   /* Start of vertex buffer */
+  vertex_3D vertices[36];
+  for (uint32_t i = 0; i < 36; i++) {
+    wlu_set_vector(&vertices[i].pos, pos3D_vertices[i], WLU_VEC4);
+    wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
+    wlu_print_vector(&vertices[i].pos, WLU_VEC4);
+  }
+
   err = wlu_create_buffer(
-    app, sizeof(g_vb_solid_face_colors_Data), g_vb_solid_face_colors_Data, 0,
+    app, sizeof(vertices[0]) * 3, vertices, 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &app->vertex_data,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
@@ -360,7 +354,7 @@ int main(void) {
   vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
-    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(g_vb_solid_face_colors_Data[0])
+    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
   );
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(

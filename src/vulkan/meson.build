@@ -32,7 +32,7 @@ gp_files = [
 	'gp/set.c'
 ]
 
-cglm_files = ['matrix/matrix.c']
+cglm_files = ['matrix/print.c', 'matrix/set.c']
 
 vkcomp_files = [
 	'vkcomp/create.c', 'vkcomp/device.c',

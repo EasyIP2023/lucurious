@@ -261,8 +261,9 @@ START_TEST(test_vulkan_client_create) {
   /* Start of vertex buffer */
   vertex_2D vertices[3];
   for (uint32_t i = 0; i < 3; i++) {
-    wlu_set_vec2_matrix(&vertices[i].pos, pos_vertices[i]);
-    wlu_set_vec3_matrix(&vertices[i].color, color_vertices[i]);
+    wlu_set_vector(&vertices[i].pos, pos_vertices[i], WLU_VEC2);
+    wlu_set_vector(&vertices[i].color, color_vertices[i], WLU_VEC3);
+    wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
   /*

@@ -25,6 +25,17 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+typedef enum wlu_vec_type {
+  WLU_VEC2 = 0,
+  WLU_VEC3 = 1,
+  WLU_VEC4 = 2
+} wlu_vec_type;
+
+typedef enum wlu_matrix_type {
+  WLU_MAT3 = 0,
+  WLU_MAT4 = 1
+} wlu_matrix_type;
+
 float wlu_set_fovy(float fovy);
 
 void wlu_set_perspective(
@@ -35,20 +46,16 @@ void wlu_set_perspective(
   float farVal
 );
 
-void wlu_set_lookat(vkcomp *app, float dir[3], float eye[3], float up[3]);
+void wlu_set_lookat(vkcomp *app, const float *dir, const float *eye, const float *up);
 
-void wlu_set_model_matrix(vkcomp *app, float m);
+void wlu_set_matrix(mat4 *matrix, const void *model, wlu_matrix_type type);
 
-void wlu_set_vec2_matrix(void *vector, const float vec[2]);
-
-void wlu_set_vec3_matrix(void *vector, const float vec[2]);
-
-void wlu_print_vec3(void *vector);
-
-void wlu_set_clip_matrix(vkcomp *app, float model[4][4]);
+void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type);
 
 void wlu_set_mvp_matrix(vkcomp *app);
 
 void wlu_print_matrices(vkcomp *app);
+
+void wlu_print_vector(void *vector, wlu_vec_type type);
 
 #endif

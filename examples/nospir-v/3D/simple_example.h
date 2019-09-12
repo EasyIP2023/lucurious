@@ -69,57 +69,78 @@ const char shader_vert_src[] =
   "   gl_Position = myBufferVals.mvp * pos;\n"
   "}\n";
 
-/* Can find in Vulkan SDK samples/API-Samples/data/cube_data.h */
-typedef struct _vertex {
-  float posX, posY, posZ, posW;  // Position data
-  float r, g, b, a;              // Color
-} vertex;
+static const float dir[3] = {-5, 3, -10};
+static const float eye[3] = {0, 0, 0};
+static const float up[3] = {0, -1, 0};
 
-#define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
-
-static const vertex g_vb_solid_face_colors_Data[] = {
-  // red face
-  {XYZ1(-1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-  {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-  {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-  {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-  // green face
-  {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-  {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-  {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-  {XYZ1(1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-  // blue face
-  {XYZ1(-1, 1, 1), XYZ1(0.f, 0.f, 1.f)},
-  {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
-  {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
-  {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
-  {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
-  {XYZ1(-1, -1, -1), XYZ1(0.f, 0.f, 1.f)},
-  // yellow face
-  {XYZ1(1, 1, 1), XYZ1(1.f, 1.f, 0.f)},
-  {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
-  {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
-  {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
-  {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
-  {XYZ1(1, -1, -1), XYZ1(1.f, 1.f, 0.f)},
-  // magenta face
-  {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-  {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-  {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-  {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-  {XYZ1(-1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-  // cyan face
-  {XYZ1(1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
-  {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-  {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-  {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
-  {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+static const float clip_matrix[4][4] = {
+  { 1.0f, 0.0f, 0.0f, 0.0f },
+  { 0.0f,-1.0f, 0.0f, 0.0f },
+  { 0.0f, 0.0f, 0.5f, 0.0f },
+  { 0.0f, 0.0f, 0.5f, 1.0f },
 };
-/* End of samples/API-Samples/data/cube_data.h */
+
+static const float model_matrix[4][4] = {
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f }
+};
+
+// posX, posY, posZ, posW
+static const float pos3D_vertices[36][4] = {
+  // Red Face
+  {-1.f, -1.f, 1.f, 1.f}, {-1.f, 1.f, 1.f, 1.f},
+  {1.f, -1.f, 1.f, 1.f}, {1.f, -1.f, 1.f, 1.f},
+  {-1.f, 1.f, 1.f, 1.f}, {1.f, 1.f, 1.f, 1.f},
+  // Green face
+  {-1.f, -1.f, -1.f, 1.f}, {1.f, -1.f, -1.f, 1.f},
+  {-1.f, 1.f, -1.f, 1.f}, {-1.f, 1.f, -1.f, 1.f},
+  {1.f, -1.f, -1.f, 1.f}, {1.f, 1.f, -1.f, 1.f},
+  // blue face
+  {-1.f, 1.f, 1.f, 1.f}, {-1.f, -1.f, 1.f, 1.f},
+  {-1.f, 1.f, -1.f, 1.f}, {-1.f, 1.f, -1.f, 1.f},
+  {-1.f, -1.f, 1.f, 1.f}, {-1.f, -1.f, -1.f, 1.f},
+  // yellow face
+  {1.f, 1.f, 1.f, 1.f}, {1.f, 1.f, -1.f, 1.f},
+  {1.f, -1.f, 1.f, 1.f}, {1.f, -1.f, 1.f, 1.f},
+  {1.f, 1.f, -1.f, 1.f}, {1.f, -1.f, -1.f, 1.f},
+  // magenta face
+  {1.f, 1.f, 1.f, 1.f}, {-1.f, 1.f, 1.f, 1.f},
+  {1.f, 1.f, -1.f, 1.f}, {1.f, 1.f, -1.f, 1.f},
+  {-1.f, 1.f, 1.f, 1.f}, {-1.f, 1.f, -1.f, 1.f},
+  // cyan face
+  {1.f, -1.f, 1.f, 1.f}, {1.f, -1.f, -1.f, 1.f},
+  {-1.f, -1.f, 1.f, 1.f}, {-1.f, -1.f, 1.f, 1.f},
+  {1.f, -1.f, -1.f, 1.f}, {-1.f, -1.f, -1.f, 1.f}
+};
+
+// r, g, b, a colors
+static const float color3D_vertices[36][4] = {
+  // Red face
+  {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
+  {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
+  {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
+  // Green face
+  {0.f, 1.f, 0.f, 1.f}, {0.f, 1.f, 0.f, 1.f},
+  {0.f, 1.f, 0.f, 1.f}, {0.f, 1.f, 0.f, 1.f},
+  {0.f, 1.f, 0.f, 1.f}, {0.f, 1.f, 0.f, 1.f},
+  // blue face
+  {0.f, 0.f, 1.f, 1.f}, {0.f, 0.f, 1.f, 1.f},
+  {0.f, 0.f, 1.f, 1.f}, {0.f, 0.f, 1.f, 1.f},
+  {0.f, 0.f, 1.f, 1.f}, {0.f, 0.f, 1.f, 1.f},
+  // yellow face
+  {1.f, 1.f, 0.f, 1.f}, {1.f, 1.f, 0.f, 1.f},
+  {1.f, 1.f, 0.f, 1.f}, {1.f, 1.f, 0.f, 1.f},
+  {1.f, 1.f, 0.f, 1.f}, {1.f, 1.f, 0.f, 1.f},
+  // magenta face
+  {1.f, 0.f, 1.f, 1.f}, {1.f, 0.f, 1.f, 1.f},
+  {1.f, 0.f, 1.f, 1.f}, {1.f, 0.f, 1.f, 1.f},
+  {1.f, 0.f, 1.f, 1.f}, {1.f, 0.f, 1.f, 1.f},
+  // cyan face
+  {0.f, 1.f, 1.f, 1.f}, {0.f, 1.f, 1.f, 1.f},
+  {0.f, 1.f, 1.f, 1.f}, {0.f, 1.f, 1.f, 1.f},
+  {0.f, 1.f, 1.f, 1.f}, {0.f, 1.f, 1.f, 1.f}
+};
+
 #endif
