@@ -66,13 +66,20 @@ VkResult wlu_create_desc_set_layout(
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 );
 
+/*
+ * Function creates a descriptor set that you can use to
+ * inform the GPU how the data contained in a buffer (Uniform)
+ * is mapped to the shader program's variables
+ */
 VkResult wlu_create_desc_set(
   vkcomp *app,
   uint32_t psize,
+  uint32_t maxSets,
   VkDescriptorPoolCreateFlags flags,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
-  VkDescriptorType descriptorType
+  VkDescriptorType descriptorType,
+  VkDescriptorBufferInfo *pBufferInfo
 );
 
 void wlu_exec_begin_render_pass(
@@ -278,18 +285,18 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
 );
 
 VkDescriptorSetLayoutBinding wlu_set_desc_set(
+  vkcomp *app,
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
   VkShaderStageFlags stageFlags,
-  const VkSampler* pImmutableSamplers
+  const VkSampler *pImmutableSamplers
 );
 
 VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
-  vkcomp *app,
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
-  const VkDescriptorSetLayoutBinding* pBindings
+  const VkDescriptorSetLayoutBinding *pBindings
 );
 
 VkClearValue wlu_set_clear_value(

@@ -141,7 +141,7 @@ typedef struct vkcomp {
   buff_data vertex_data;
 
   uint32_t desc_count;
-  VkDescriptorSetLayout *desc_layout;
+  VkDescriptorSetLayout *desc_layouts;
   VkDescriptorPool desc_pool;
   VkDescriptorSet *desc_set;
 } vkcomp;

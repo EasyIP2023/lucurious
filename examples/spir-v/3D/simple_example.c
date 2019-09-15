@@ -136,12 +136,11 @@ int main(void) {
     return EXIT_FAILURE;
   }
   /*
-  * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
-  * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
-  * SRGB if used for colorSpace if available, because it
-  * results in more accurate perceived colors
-  */
-
+   * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
+   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
+   * SRGB if used for colorSpace if available, because it
+   * results in more accurate perceived colors
+   */
   VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
     freeme(app, wc);
@@ -197,28 +196,46 @@ int main(void) {
   }
 
   err = wlu_create_depth_buff(app, VK_FORMAT_D16_UNORM,
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_IMAGE_TYPE_2D, extent3D,
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_VIEW_TYPE_2D);
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_IMAGE_TYPE_2D, extent3D,
+    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_VIEW_TYPE_2D
+  );
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_depth_buff failed");
     return EXIT_FAILURE;
   }
 
+  err = wlu_create_semaphores(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
+    return EXIT_FAILURE;
+  }
+
+  uint32_t cur_buff = 0;
+  /* Acquire the swapchain image in order to set its layout */
+  err = wlu_retrieve_swapchain_img(app, &cur_buff);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
+    return EXIT_FAILURE;
+  }
+
   float fovy = wlu_set_fovy(45.0f);
-  float hw = extent3D.height / (float) extent3D.width;
+  float hw = (float) extent3D.width / (float) extent3D.height;
   if (extent3D.width > extent3D.height) fovy *= hw;
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
-  wlu_set_lookat(app, dir, eye, up);
+  wlu_set_lookat(app, eye, center, up);
   wlu_set_matrix(&app->model, model_matrix, WLU_MAT4);
   wlu_set_matrix(&app->clip, clip_matrix, WLU_MAT4);
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
+  /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
     app, sizeof(app->mvp), &app->mvp, 0,
     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &app->uniform_data,
@@ -230,11 +247,12 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(0,
-    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL
+  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(app,
+    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS,
+    VK_SHADER_STAGE_VERTEX_BIT, NULL
   );
 
-  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(app, 0, NUM_DESCRIPTOR_SETS, &desc_set);
+  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(0, 1, &desc_set);
 
   err = wlu_create_desc_set_layout(app, &desc_set_info);
   if (err) {
@@ -244,7 +262,6 @@ int main(void) {
   }
 
   /* This is where creation of the graphics pipeline begins */
-
   err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {
     freeme(app, wc);
@@ -252,7 +269,9 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_desc_set(app, 1, 0, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+  err = wlu_create_desc_set(app, 1, 1, 0, 0, 0,
+    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &app->uniform_data.buff_info
+  );
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set failed");
@@ -291,6 +310,7 @@ int main(void) {
   wlu_log_me(WLU_SUCCESS, "Successfully created the render pass!!!");
   /* End of render pass creation */
 
+  wlu_log_me(WLU_INFO, "Start of shader creation");
   wlu_file_info shi_vert = wlu_read_file("vert.spv");
   wlu_file_info shi_frag = wlu_read_file("frag.spv");
   wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
@@ -316,7 +336,6 @@ int main(void) {
   for (uint32_t i = 0; i < 36; i++) {
     wlu_set_vector(&vertices[i].pos, pos3D_vertices[i], WLU_VEC4);
     wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
-    wlu_print_vector(&vertices[i].pos, WLU_VEC4);
   }
 
   err = wlu_create_buffer(
@@ -422,7 +441,8 @@ int main(void) {
   err = wlu_create_graphics_pipeline(app, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, &ds_info, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX);
+    &dynamic_state, 0, VK_NULL_HANDLE, 0
+  );
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
     wlu_freeup_shader(app, &vert_shader_module);
@@ -435,23 +455,6 @@ int main(void) {
   wlu_freeup_shader(app, &frag_shader_module);
   wlu_freeup_shader(app, &vert_shader_module);
 
-  err = wlu_create_semaphores(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
-    return EXIT_FAILURE;
-  }
-
-  uint32_t cur_buff = 0;
-  /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
-    return EXIT_FAILURE;
-  }
-
-  /* We cannot bind the vertex buffer until we begin a renderpass */
   VkClearValue clear_values[2];
   float float32[4] = {0.2f, 0.2f, 0.2f, 0.2f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -459,6 +462,7 @@ int main(void) {
   clear_values[0] = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
   clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
+  /* Vertex buffer cannot be binded until we begin a renderpass */
   wlu_exec_begin_render_pass(app, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
@@ -469,10 +473,15 @@ int main(void) {
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, 12 * 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, 36, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
-  wlu_exec_stop_cmd_buffs(app);
+  err = wlu_exec_stop_cmd_buffs(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    return EXIT_FAILURE;
+  }
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};

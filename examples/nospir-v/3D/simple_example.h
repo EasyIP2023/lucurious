@@ -69,8 +69,8 @@ const char shader_vert_src[] =
   "   gl_Position = myBufferVals.mvp * pos;\n"
   "}\n";
 
-static const float dir[3] = {-5, 3, -10};
-static const float eye[3] = {0, 0, 0};
+static const float eye[3] = {-5, 3, -10};
+static const float center[3] = {0, 0, 0};
 static const float up[3] = {0, -1, 0};
 
 static const float clip_matrix[4][4] = {
@@ -81,10 +81,10 @@ static const float clip_matrix[4][4] = {
 };
 
 static const float model_matrix[4][4] = {
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f }
+  { 1.0f, 0.0f, 0.0f, 0.0f },
+  { 0.0f, 1.0f, 0.0f, 0.0f },
+  { 0.0f, 0.0f, 1.0f, 0.0f },
+  { 0.0f, 0.0f, 0.0f, 1.0f }
 };
 
 // posX, posY, posZ, posW

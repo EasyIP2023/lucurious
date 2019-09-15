@@ -566,13 +566,6 @@ VkResult wlu_create_buffer(
     return res;
   }
 
-  /* associate the memory allocated with the buffer object */
-  res = vkBindBufferMemory(app->device, buffer->buff, buffer->mem, 0);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
-    return res;
-  }
-
   /*
    * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
    * With any buffer, you need to populate it with the data that
@@ -592,11 +585,18 @@ VkResult wlu_create_buffer(
     return res;
   }
 
+  /* associate the memory allocated with the buffer object */
+  res = vkBindBufferMemory(app->device, buffer->buff, buffer->mem, 0);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
+
   vkUnmapMemory(app->device, buffer->mem);
 
   buffer->buff_info.buffer = buffer->buff;
   buffer->buff_info.offset = 0;
-  buffer->buff_info.range = size;
+  buffer->buff_info.range = mem_reqs.size;
 
   return res;
 }

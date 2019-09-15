@@ -43,16 +43,12 @@ void wlu_set_perspective(
   glmc_perspective(fovy, aspect, nearVal, farVal, app->proj);
 }
 
-void wlu_set_lookat(vkcomp *app, const float *dir, const float *eye, const float *up) {
-  vec3 loc, looks, heads_up;
-
-  memcpy(loc, dir, sizeof(vec3));
-  memcpy(looks, eye, sizeof(vec3));
-  memcpy(heads_up, up, sizeof(vec3));
-
-  // glm_vec3_add(loc, looks, center);
-  glm_lookat(loc, looks, heads_up, app->view);
-  // glm_look(loc, looks, heads_up, app->view);
+void wlu_set_lookat(vkcomp *app, const float *eye, const float *center, const float *up) {
+  vec3 eye2, center2, up2;
+  memcpy(eye2, eye, sizeof(vec3));
+  memcpy(center2, center, sizeof(vec3));
+  memcpy(up2, up, sizeof(vec3));
+  glm_lookat(eye2, center2, up2, app->view);
 }
 
 void wlu_set_matrix(mat4 *matrix, const void *model, wlu_matrix_type type) {

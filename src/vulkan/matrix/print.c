@@ -29,15 +29,15 @@
 #include <cglm/mat4.h>
 
 void wlu_print_matrices(vkcomp *app) {
-  wlu_log_me(WLU_INFO, "Model Matrix");
-  wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
-  glm_mat4_print(app->model, stdout);
-  wlu_log_me(WLU_INFO, "View Matrix");
-  wlu_log_me(WLU_INFO, "View from world space to camera space");
-  glm_mat4_print(app->view, stdout);
   wlu_log_me(WLU_INFO, "Perspective Matrix");
   wlu_log_me(WLU_INFO, "Projection from camera to screen");
   glm_mat4_print(app->proj, stdout);
+  wlu_log_me(WLU_INFO, "View Matrix");
+  wlu_log_me(WLU_INFO, "View from world space to camera space");
+  glm_mat4_print(app->view, stdout);
+  wlu_log_me(WLU_INFO, "Model Matrix");
+  wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
+  glm_mat4_print(app->model, stdout);
   wlu_log_me(WLU_INFO, "Clip Matrix");
   glm_mat4_print(app->clip, stdout);
   wlu_log_me(WLU_INFO, "MVP Matrix");
