@@ -30,6 +30,12 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
+typedef enum wlu_map_data_type {
+  WLU_VERTEX_2D = 0,
+  WLU_VERTEX_3D = 1,
+  WLU_MAT4_MATRIX = 2
+} wlu_map_data_type;
+
 typedef struct swap_chain_buffers {
   VkImage image;
   VkImageView view;
@@ -46,7 +52,6 @@ typedef struct buff_data {
   VkDescriptorBufferInfo buff_info;
 } buff_data;
 
-/* One will need to manage space for this them selves */
 typedef struct vertex_2D {
   vec2 pos;
   vec3 color;
@@ -137,8 +142,11 @@ typedef struct vkcomp {
   mat4 clip;
   mat4 mvp;
 
-  buff_data uniform_data;
-  buff_data vertex_data;
+  uint32_t udata_count;
+  buff_data *uniform_data;
+
+  uint32_t vdata_count;
+  buff_data *vertex_data;
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layouts;
@@ -249,9 +257,11 @@ VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   const void *data,
+  wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
-  buff_data *buffer,
+  uint32_t buff_count,
+  buff_data **buffer,
   VkFlags requirements_mask
 );
 

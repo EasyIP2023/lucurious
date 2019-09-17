@@ -238,13 +238,13 @@ START_TEST(test_vulkan_client_create_3D) {
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(app->mvp), &app->mvp, 0,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &app->uniform_data,
+    app, sizeof(app->mvp), &app->mvp, WLU_MAT4_MATRIX, 0,
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 1, &app->uniform_data,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_buffer failed");
     ck_abort_msg(NULL);
   }
 
@@ -271,7 +271,7 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   err = wlu_create_desc_set(app, 1, 1, 0, 0, 0,
-    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &app->uniform_data.buff_info
+    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &app->uniform_data[0].buff_info
   );
   if (err) {
     freeme(app, wc);
@@ -358,13 +358,13 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 36, vertices, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &app->vertex_data,
+    app, sizeof(vertices[0]) * 36, vertices, WLU_VERTEX_3D, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 1, &app->vertex_data,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_buffer failed");
     ck_abort_msg(NULL);
   }
 
@@ -488,7 +488,8 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_bind_desc_set(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, offsets);
+  const VkBuffer *vertex_buffer = &app->vertex_data[0].buff;
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, vertex_buffer, offsets);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);

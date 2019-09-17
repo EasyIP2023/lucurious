@@ -111,6 +111,7 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
   uint32_t cur_buf,
   uint32_t firstBinding,
   uint32_t bindingCount,
+  const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 );
 

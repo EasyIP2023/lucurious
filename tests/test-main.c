@@ -63,11 +63,11 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Signal handler for this process */
-  err = wlu_watch_me(SIGSEGV, getpid());
-  if (err) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
+  // err = wlu_watch_me(SIGSEGV, getpid());
+  // if (err) {
+  //   freeme(app, wc);
+  //   ck_abort_msg(NULL);
+  // }
 
   wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
@@ -275,8 +275,8 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 3, vertices, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &app->vertex_data,
+    app, sizeof(vertices[0]) * 3, vertices, WLU_VERTEX_2D, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 1, &app->vertex_data,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -415,7 +415,8 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
   const VkDeviceSize offsets[] = {0};
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, offsets);
+  const VkBuffer *vertex_buffers = &app->vertex_data[0].buff_info.buffer;
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, vertex_buffers, offsets);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);

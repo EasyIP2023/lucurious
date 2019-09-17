@@ -521,9 +521,11 @@ VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   const void *data,
+  wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
-  buff_data *buffer,
+  uint32_t buff_count,
+  buff_data **buffer,
   VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -539,14 +541,35 @@ VkResult wlu_create_buffer(
   create_info.queueFamilyIndexCount = 0;
   create_info.pQueueFamilyIndices = NULL;
 
-  res = vkCreateBuffer(app->device, &create_info, NULL, &buffer->buff);
+  switch (usage) {
+    case VK_BUFFER_USAGE_VERTEX_BUFFER_BIT:
+      app->vdata_count = buff_count; break;
+    case VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT:
+      app->udata_count = buff_count; break;
+    default: break;
+  }
+
+  /*
+   * &buffer will give you the stack address of the function argument variable
+   * buffer will give you the address of (stack address) the pointer you are passing
+   * *buffer will give you the address pointed to by buffer
+   * wlu_log_me(WLU_INFO, "buffer addr: %p - %p - %p", &buffer, buffer, *buffer);
+   */
+  *buffer = (buff_data *) realloc(*buffer, buff_count * sizeof(buff_data));
+  if (!buffer) {
+    wlu_log_me(WLU_DANGER, "[x] realloc buff_info *buffer failed!");
+    return res;
+  }
+
+  /* &buffer[buff_count-1]->buff is equal to the address of *buffer */
+  res = vkCreateBuffer(app->device, &create_info, NULL, &buffer[buff_count-1]->buff);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateBuffer failed, ERROR CODE: %d", res);
     return res;
   }
 
   VkMemoryRequirements mem_reqs;
-  vkGetBufferMemoryRequirements(app->device, buffer->buff, &mem_reqs);
+  vkGetBufferMemoryRequirements(app->device, buffer[buff_count-1]->buff, &mem_reqs);
 
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -560,9 +583,16 @@ VkResult wlu_create_buffer(
     return pass;
   }
 
-  res = vkAllocateMemory(app->device, &alloc_info, NULL, &buffer->mem);
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &buffer[buff_count-1]->mem);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
+    return res;
+  }
+
+  /* associate the memory allocated with the buffer object */
+  res = vkBindBufferMemory(app->device, buffer[buff_count-1]->buff, buffer[buff_count-1]->mem, 0);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
@@ -573,30 +603,32 @@ VkResult wlu_create_buffer(
    * the memory, you need to map it
    */
   void *p_data;
-  res = vkMapMemory(app->device, buffer->mem, 0, mem_reqs.size, 0, &p_data);
+  res = vkMapMemory(app->device, buffer[buff_count-1]->mem, 0, mem_reqs.size, 0, &p_data);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
-  p_data = memcpy(p_data, data, size);
+  switch (type) {
+    case WLU_VERTEX_2D:
+      p_data = memcpy(p_data, (vec2 *) data, size); break;
+    case WLU_VERTEX_3D:
+      p_data = memcpy(p_data, (vec3 *) data, size); break;
+    case WLU_MAT4_MATRIX:
+      p_data = memcpy(p_data, (mat4 *) data, size); break;
+    default: break;
+  }
+
   if (!p_data) {
-    wlu_log_me(WLU_DANGER, "[x] memcpy failed, p_data is %p", p_data);
+    wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");
     return res;
   }
 
-  /* associate the memory allocated with the buffer object */
-  res = vkBindBufferMemory(app->device, buffer->buff, buffer->mem, 0);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
-    return res;
-  }
+  vkUnmapMemory(app->device, buffer[buff_count-1]->mem);
 
-  vkUnmapMemory(app->device, buffer->mem);
-
-  buffer->buff_info.buffer = buffer->buff;
-  buffer->buff_info.offset = 0;
-  buffer->buff_info.range = mem_reqs.size;
+  buffer[buff_count-1]->buff_info.buffer = buffer[buff_count-1]->buff;
+  buffer[buff_count-1]->buff_info.offset = 0;
+  buffer[buff_count-1]->buff_info.range = mem_reqs.size;
 
   return res;
 }

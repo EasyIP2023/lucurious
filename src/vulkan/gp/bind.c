@@ -50,11 +50,10 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
   uint32_t cur_buf,
   uint32_t firstBinding,
   uint32_t bindingCount,
+  const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 ) {
-  vkCmdBindVertexBuffers(app->cmd_buffs[cur_buf], /* Start Binding */
-                        firstBinding,
-                        bindingCount, /* Binding Count */
-                        &app->vertex_data.buff, /* pBuffers */
-                        offsets);
+  vkCmdBindVertexBuffers(app->cmd_buffs[cur_buf],
+                        firstBinding, bindingCount,
+                        pBuffers, offsets);
 }
