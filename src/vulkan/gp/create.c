@@ -28,7 +28,7 @@
 #include <wlu/utils/log.h>
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
-  if (shader_module) {
+  if (shader_module != VK_NULL_HANDLE) {
     vkDestroyShaderModule(app->device, *shader_module, NULL);
     shader_module = VK_NULL_HANDLE;
   }
@@ -131,8 +131,13 @@ VkResult wlu_create_graphics_pipeline(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->pipeline_layout || !app->render_pass) {
+  if (!app->render_pass) {
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass(3)");
+    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    return res;
+  }
+
+  if (!app->pipeline_layout) {
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return res;
@@ -158,7 +163,7 @@ VkResult wlu_create_graphics_pipeline(
   pipeline_info.basePipelineHandle = basePipelineHandle;
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
-  res = vkCreateGraphicsPipelines(app->device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &app->graphics_pipeline);
+  res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, &app->graphics_pipeline);
 
   return res;
 }

@@ -63,11 +63,11 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Signal handler for this process */
-  // err = wlu_watch_me(SIGSEGV, getpid());
-  // if (err) {
-  //   freeme(app, wc);
-  //   ck_abort_msg(NULL);
-  // }
+  err = wlu_watch_me(SIGSEGV, getpid());
+  if (err) {
+    freeme(app, wc);
+    ck_abort_msg(NULL);
+  }
 
   wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
@@ -266,6 +266,17 @@ START_TEST(test_vulkan_client_create) {
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
+  err = wlu_create_buffer(
+    app, sizeof(vertices[0]) * 3, vertices, WLU_VERTEX_2D, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 1, "staging",
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
+
   /*
    * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
    * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
@@ -275,13 +286,20 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 3, vertices, WLU_VERTEX_2D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 1, &app->vertex_data,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    app, sizeof(vertices[0]) * 3, NULL, WLU_VERTEX_2D, 0,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    2, "vertex", VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_copy_buffer(app, app->buffs_data[0].buff, app->buffs_data[1].buff, sizeof(vertices[0]) * 3);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
     ck_abort_msg(NULL);
   }
 
@@ -361,7 +379,7 @@ START_TEST(test_vulkan_client_create) {
 
   float blend_const[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   VkPipelineColorBlendStateCreateInfo color_blending = wlu_set_color_blend_attachment_state_info(
-    VK_FALSE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
+    VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
@@ -415,11 +433,11 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
   const VkDeviceSize offsets[] = {0};
-  const VkBuffer *vertex_buffers = &app->vertex_data[0].buff_info.buffer;
+  const VkBuffer *vertex_buffers = &app->buffs_data[1].buff;
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, vertex_buffers, offsets);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, sizeof(vertices[0]) * 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

@@ -203,6 +203,7 @@ VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
   const VkVertexInputAttributeDescription *pVertexAttributeDescriptions
 );
 
+/* specify which region of a framebuffer to an output should render to */
 VkViewport wlu_set_view_port(
   float x, float y, float width, float height,
   float minDepth, float maxDepth
@@ -230,6 +231,7 @@ VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
   float lineWidth
 );
 
+/* Used for anti-aliasing */
 VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
   VkSampleCountFlagBits rasterizationSamples,
   VkBool32 sampleShadingEnable,
@@ -261,6 +263,10 @@ VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
   float maxDepthBounds
 );
 
+/*
+ * After fragment shader returns color one needs to combine it
+ * with a color that is already in the framebuffer
+ */
 VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
   VkBool32 blendEnable,
   VkBlendFactor srcColorBlendFactor,

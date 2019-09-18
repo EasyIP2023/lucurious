@@ -180,11 +180,12 @@ VkResult wlu_create_logical_device(
   }
 
   /* For creation of the presentation queue */
+  uint32_t queue_fam_indices[] = {app->indices.graphics_family, app->indices.present_family};
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     app->queue_create_infos[i].pNext = NULL;
     app->queue_create_infos[i].flags = 0;
-    app->queue_create_infos[i].queueFamilyIndex = app->indices.present_family;
+    app->queue_create_infos[i].queueFamilyIndex = queue_fam_indices[i];
     app->queue_create_infos[i].queueCount = app->queue_family_count;
     app->queue_create_infos[i].pQueuePriorities = queue_priorities;
   }
@@ -296,15 +297,18 @@ VkResult wlu_create_swap_chain(
   create_info.clipped = VK_FALSE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
+  /* specify how to handle swap chain images that will be used across multiple queue families */
   if (app->indices.graphics_family != app->indices.present_family) {
     const uint32_t queue_family_indices[2] = {
       app->indices.graphics_family,
       app->indices.present_family
     };
+    /* images can be used across multiple queue families */
     create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
     create_info.queueFamilyIndexCount = 2;
     create_info.pQueueFamilyIndices = queue_family_indices;
   } else {
+    /* image is owned by one queue family at a time, Best for performance */
     create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     create_info.queueFamilyIndexCount = 0;
     create_info.pQueueFamilyIndices = NULL;
@@ -467,8 +471,6 @@ VkResult wlu_create_depth_buff(
       app->depth.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
       create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
-  VkMemoryRequirements mem_reqs;
-
   /* Create image object */
   res = vkCreateImage(app->device, &create_info, NULL, &app->depth.image);
   if (res) {
@@ -482,6 +484,7 @@ VkResult wlu_create_depth_buff(
    * This function allows you to find out everything you need to allocate the
    * memory for an image.
    */
+  VkMemoryRequirements mem_reqs;
   vkGetImageMemoryRequirements(app->device, app->depth.image, &mem_reqs);
 
   mem_alloc.allocationSize = mem_reqs.size;
@@ -525,11 +528,13 @@ VkResult wlu_create_buffer(
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   uint32_t buff_count,
-  buff_data **buffer,
+  char *buff_name,
   VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
   bool pass = false;
+
+  int bc = app->buffs_data_count = buff_count; bc--;
 
   VkBufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -541,35 +546,21 @@ VkResult wlu_create_buffer(
   create_info.queueFamilyIndexCount = 0;
   create_info.pQueueFamilyIndices = NULL;
 
-  switch (usage) {
-    case VK_BUFFER_USAGE_VERTEX_BUFFER_BIT:
-      app->vdata_count = buff_count; break;
-    case VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT:
-      app->udata_count = buff_count; break;
-    default: break;
-  }
-
-  /*
-   * &buffer will give you the stack address of the function argument variable
-   * buffer will give you the address of (stack address) the pointer you are passing
-   * *buffer will give you the address pointed to by buffer
-   * wlu_log_me(WLU_INFO, "buffer addr: %p - %p - %p", &buffer, buffer, *buffer);
-   */
-  *buffer = (buff_data *) realloc(*buffer, buff_count * sizeof(buff_data));
-  if (!buffer) {
+  app->buffs_data = (struct buffs_data *) realloc(app->buffs_data, buff_count * sizeof(struct buffs_data));
+  if (!app->buffs_data) {
     wlu_log_me(WLU_DANGER, "[x] realloc buff_info *buffer failed!");
     return res;
   }
 
-  /* &buffer[buff_count-1]->buff is equal to the address of *buffer */
-  res = vkCreateBuffer(app->device, &create_info, NULL, &buffer[buff_count-1]->buff);
+  app->buffs_data[bc].name = buff_name;
+  res = vkCreateBuffer(app->device, &create_info, NULL, &app->buffs_data[bc].buff);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateBuffer failed, ERROR CODE: %d", res);
     return res;
   }
 
   VkMemoryRequirements mem_reqs;
-  vkGetBufferMemoryRequirements(app->device, buffer[buff_count-1]->buff, &mem_reqs);
+  vkGetBufferMemoryRequirements(app->device, app->buffs_data[bc].buff, &mem_reqs);
 
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -583,14 +574,14 @@ VkResult wlu_create_buffer(
     return pass;
   }
 
-  res = vkAllocateMemory(app->device, &alloc_info, NULL, &buffer[buff_count-1]->mem);
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buffs_data[bc].mem);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
   /* associate the memory allocated with the buffer object */
-  res = vkBindBufferMemory(app->device, buffer[buff_count-1]->buff, buffer[buff_count-1]->mem, 0);
+  res = vkBindBufferMemory(app->device, app->buffs_data[bc].buff, app->buffs_data[bc].mem, 0);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
     return res;
@@ -602,33 +593,34 @@ VkResult wlu_create_buffer(
    * you want the shader to read. In order to get CPU access to
    * the memory, you need to map it
    */
-  void *p_data;
-  res = vkMapMemory(app->device, buffer[buff_count-1]->mem, 0, mem_reqs.size, 0, &p_data);
+  void *p_data = NULL;
+  res = vkMapMemory(app->device, app->buffs_data[bc].mem, 0, mem_reqs.size, 0, &p_data);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
-  switch (type) {
-    case WLU_VERTEX_2D:
-      p_data = memcpy(p_data, (vec2 *) data, size); break;
-    case WLU_VERTEX_3D:
-      p_data = memcpy(p_data, (vec3 *) data, size); break;
-    case WLU_MAT4_MATRIX:
-      p_data = memcpy(p_data, (mat4 *) data, size); break;
-    default: break;
+  if (data) {
+    switch (type) {
+      case WLU_VERTEX_2D:
+        p_data = memcpy(p_data, (vec2 *) data, size); break;
+      case WLU_VERTEX_3D:
+        p_data = memcpy(p_data, (vec3 *) data, size); break;
+      case WLU_MAT4_MATRIX:
+        p_data = memcpy(p_data, (mat4 *) data, size); break;
+      default: break;
+    }
+    if (!p_data) {
+      wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");
+      return res;
+    }
   }
 
-  if (!p_data) {
-    wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");
-    return res;
-  }
+  vkUnmapMemory(app->device, app->buffs_data[bc].mem);
 
-  vkUnmapMemory(app->device, buffer[buff_count-1]->mem);
-
-  buffer[buff_count-1]->buff_info.buffer = buffer[buff_count-1]->buff;
-  buffer[buff_count-1]->buff_info.offset = 0;
-  buffer[buff_count-1]->buff_info.range = mem_reqs.size;
+  app->buffs_data[bc].buff_info.buffer = app->buffs_data[bc].buff;
+  app->buffs_data[bc].buff_info.offset = 0;
+  app->buffs_data[bc].buff_info.range = mem_reqs.size;
 
   return res;
 }

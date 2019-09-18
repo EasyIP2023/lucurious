@@ -1,5 +1,5 @@
 # Lucurious
-![Example 1](https://s3files.core77.com/blog/images/2015/01/0movieUI006.jpg)
+![Example 1](https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/7a5c6e29103939.55e2a529c1970.jpg)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
 Inspired by the t.v series expanse and other syfy t.v shows/movies.

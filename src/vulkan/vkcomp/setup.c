@@ -42,7 +42,6 @@ static void set_values(vkcomp *app) {
   app->ep_device_count = VK_NULL_HANDLE;
   // app->device_properties;
   // app->device_features;
-  // app->memory_properties;
   app->physical_device = VK_NULL_HANDLE;
   app->queue_create_infos = NULL;
   app->queue_families = NULL;
@@ -67,10 +66,8 @@ static void set_values(vkcomp *app) {
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
   app->depth.mem = VK_NULL_HANDLE;
-  app->udata_count = VK_NULL_HANDLE;
-  app->uniform_data = VK_NULL_HANDLE;
-  app->vdata_count = VK_NULL_HANDLE;
-  app->vertex_data = VK_NULL_HANDLE;
+  app->buffs_data_count = VK_NULL_HANDLE;
+  app->buffs_data = VK_NULL_HANDLE;
   app->desc_count = VK_NULL_HANDLE;
   app->desc_layouts = VK_NULL_HANDLE;
   app->desc_pool = VK_NULL_HANDLE;
@@ -179,23 +176,14 @@ void wlu_freeup_vk(void *data) {
     free(app->desc_set);
   if (app->desc_pool)
     vkDestroyDescriptorPool(app->device, app->desc_pool, NULL);
-  if (app->vertex_data) {
-    for (uint32_t i = 0; i < app->vdata_count; i++) {
-      if (app->vertex_data[i].buff)
-        vkDestroyBuffer(app->device, app->vertex_data[i].buff, NULL);
-      if (app->vertex_data[i].mem)
-        vkFreeMemory(app->device, app->vertex_data[i].mem, NULL);
+  if (app->buffs_data) {
+    for (uint32_t i = 0; i < app->buffs_data_count; i++) {
+      if (app->buffs_data[i].buff)
+        vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
+      if (app->buffs_data[i].mem)
+        vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
     }
-    free(app->vertex_data);
-  }
-  if (app->uniform_data) {
-    for (uint32_t i = 0; i < app->udata_count; i++) {
-      if (app->uniform_data[i].buff)
-        vkDestroyBuffer(app->device, app->uniform_data[i].buff, NULL);
-      if (app->uniform_data[i].mem)
-        vkFreeMemory(app->device, app->uniform_data[i].mem, NULL);
-    }
-    free(app->uniform_data);
+    free(app->buffs_data);
   }
   if (app->render_pass)
     vkDestroyRenderPass(app->device, app->render_pass, NULL);

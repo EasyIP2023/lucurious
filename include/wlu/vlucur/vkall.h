@@ -46,12 +46,6 @@ typedef struct queue_family_indices {
   uint32_t present_family;
 } queue_family_indices;
 
-typedef struct buff_data {
-  VkBuffer buff;
-  VkDeviceMemory mem;
-  VkDescriptorBufferInfo buff_info;
-} buff_data;
-
 typedef struct vertex_2D {
   vec2 pos;
   vec3 color;
@@ -98,7 +92,6 @@ typedef struct vkcomp {
   /* For optional features like texture compression,
     64 bit floats and multi viewport rendering */
   VkPhysicalDeviceFeatures device_features;
-  VkPhysicalDeviceMemoryProperties memory_properties;
   VkPhysicalDevice physical_device;
 
   VkDeviceQueueCreateInfo *queue_create_infos;
@@ -142,11 +135,14 @@ typedef struct vkcomp {
   mat4 clip;
   mat4 mvp;
 
-  uint32_t udata_count;
-  buff_data *uniform_data;
+  uint32_t buffs_data_count;
 
-  uint32_t vdata_count;
-  buff_data *vertex_data;
+  struct buffs_data {
+    VkBuffer buff;
+    VkDeviceMemory mem;
+    VkDescriptorBufferInfo buff_info;
+    char *name;
+  } *buffs_data;
 
   uint32_t desc_count;
   VkDescriptorSetLayout *desc_layouts;
@@ -261,7 +257,7 @@ VkResult wlu_create_buffer(
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   uint32_t buff_count,
-  buff_data **buffer,
+  char *buff_name,
   VkFlags requirements_mask
 );
 
@@ -301,7 +297,12 @@ VkResult wlu_exec_begin_cmd_buffs(
 
 VkResult wlu_exec_stop_cmd_buffs(vkcomp *app);
 
-/* How wayland display's and surface's connect to your vulkan application */
+/*
+ * How Vulkan establishes connection with window system.
+ * Through the use of Window System Integration (WSI).
+ * This fuction exposes a VkSurfaceKHR object that represents
+ * a surface to present rendered images to.
+ */
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 
 
@@ -355,6 +356,13 @@ VkResult wlu_queue_present_queue(
   const VkSwapchainKHR *Swapchains,
   const uint32_t *pImageIndices,
   VkResult *pResults
+);
+
+VkResult wlu_copy_buffer(
+  vkcomp *app,
+  VkBuffer src_buffer,
+  VkBuffer dst_buffer,
+  VkDeviceSize size
 );
 
 #endif
