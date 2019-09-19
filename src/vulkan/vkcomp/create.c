@@ -603,9 +603,9 @@ VkResult wlu_create_buffer(
   if (data) {
     switch (type) {
       case WLU_VERTEX_2D:
-        p_data = memcpy(p_data, (vec2 *) data, size); break;
+        p_data = memcpy(p_data, (vertex_2D *) data, size); break;
       case WLU_VERTEX_3D:
-        p_data = memcpy(p_data, (vec3 *) data, size); break;
+        p_data = memcpy(p_data, (vertex_3D *) data, size); break;
       case WLU_MAT4_MATRIX:
         p_data = memcpy(p_data, (mat4 *) data, size); break;
       default: break;
