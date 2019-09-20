@@ -28,6 +28,8 @@
 #include <vlucur/utils.h>
 #include <vlucur/device.h>
 
+#include <wlu/vlucur/matrix.h>
+
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -334,8 +336,8 @@ VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type
     goto finish_create_img_views;
   }
 
-  app->sc_buffs = (swap_chain_buffers *) calloc(sizeof(swap_chain_buffers),
-      app->sc_img_count * sizeof(swap_chain_buffers));
+  app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
+      app->sc_img_count * sizeof(struct swap_chain_buffers));
   if (!app->sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
     goto finish_create_img_views;
@@ -523,18 +525,14 @@ VkResult wlu_create_depth_buff(
 VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
-  const void *data,
+  void *data,
   wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
-  uint32_t buff_count,
   char *buff_name,
   VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
-  bool pass = false;
-
-  int bc = app->buffs_data_count = buff_count; bc--;
 
   VkBufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -546,21 +544,21 @@ VkResult wlu_create_buffer(
   create_info.queueFamilyIndexCount = 0;
   create_info.pQueueFamilyIndices = NULL;
 
-  app->buffs_data = (struct buffs_data *) realloc(app->buffs_data, buff_count * sizeof(struct buffs_data));
+  app->buffs_data = (struct buffs_data *) realloc(app->buffs_data, (app->bdc+1) * sizeof(struct buffs_data));
   if (!app->buffs_data) {
     wlu_log_me(WLU_DANGER, "[x] realloc buff_info *buffer failed!");
     return res;
   }
 
-  app->buffs_data[bc].name = buff_name;
-  res = vkCreateBuffer(app->device, &create_info, NULL, &app->buffs_data[bc].buff);
+  app->buffs_data[app->bdc].name = buff_name;
+  res = vkCreateBuffer(app->device, &create_info, NULL, &app->buffs_data[app->bdc].buff);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateBuffer failed, ERROR CODE: %d", res);
     return res;
   }
 
   VkMemoryRequirements mem_reqs;
-  vkGetBufferMemoryRequirements(app->device, app->buffs_data[bc].buff, &mem_reqs);
+  vkGetBufferMemoryRequirements(app->device, app->buffs_data[app->bdc].buff, &mem_reqs);
 
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -568,20 +566,20 @@ VkResult wlu_create_buffer(
   alloc_info.allocationSize = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
-  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
-  if (!pass) {
+  res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
+  if (!res) {
     wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
-    return pass;
+    return res;
   }
 
-  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buffs_data[bc].mem);
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buffs_data[app->bdc].mem);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
   /* associate the memory allocated with the buffer object */
-  res = vkBindBufferMemory(app->device, app->buffs_data[bc].buff, app->buffs_data[bc].mem, 0);
+  res = vkBindBufferMemory(app->device, app->buffs_data[app->bdc].buff, app->buffs_data[app->bdc].mem, 0);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkBindBufferMemory failed, ERROR CODE: %d", res);
     return res;
@@ -594,7 +592,7 @@ VkResult wlu_create_buffer(
    * the memory, you need to map it
    */
   void *p_data = NULL;
-  res = vkMapMemory(app->device, app->buffs_data[bc].mem, 0, mem_reqs.size, 0, &p_data);
+  res = vkMapMemory(app->device, app->buffs_data[app->bdc].mem, 0, mem_reqs.size, 0, &p_data);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
     return res;
@@ -602,13 +600,9 @@ VkResult wlu_create_buffer(
 
   if (data) {
     switch (type) {
-      case WLU_VERTEX_2D:
-        p_data = memcpy(p_data, (vertex_2D *) data, size); break;
-      case WLU_VERTEX_3D:
-        p_data = memcpy(p_data, (vertex_3D *) data, size); break;
-      case WLU_MAT4_MATRIX:
-        p_data = memcpy(p_data, (mat4 *) data, size); break;
-      default: break;
+      case WLU_VERTEX_2D: p_data = memcpy(p_data, (vertex_2D *) data, size); break;
+      case WLU_VERTEX_3D: p_data = memcpy(p_data, (vertex_3D *) data, size); break;
+      case WLU_MAT4_MATRIX: p_data = memcpy(p_data, (mat4 *) data, size); break;
     }
     if (!p_data) {
       wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");
@@ -616,11 +610,12 @@ VkResult wlu_create_buffer(
     }
   }
 
-  vkUnmapMemory(app->device, app->buffs_data[bc].mem);
+  vkUnmapMemory(app->device, app->buffs_data[app->bdc].mem);
 
-  app->buffs_data[bc].buff_info.buffer = app->buffs_data[bc].buff;
-  app->buffs_data[bc].buff_info.offset = 0;
-  app->buffs_data[bc].buff_info.range = mem_reqs.size;
+  app->buffs_data[app->bdc].buff_info.buffer = app->buffs_data[app->bdc].buff;
+  app->buffs_data[app->bdc].buff_info.offset = 0;
+  app->buffs_data[app->bdc].buff_info.range = mem_reqs.size;
+  app->bdc++;
 
   return res;
 }

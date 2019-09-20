@@ -28,31 +28,73 @@
 #include <wlu/utils/log.h>
 #include <cglm/mat4.h>
 
+void mat3_print(mat3 mat) {
+  uint32_t mat_num = 3;
+
+  wlu_log_me(WLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
+
+  for (uint32_t i = 0; i < mat_num; i++) {
+    for (uint32_t j = 0; j < mat_num; j++)
+      fprintf(stdout, "\x1B[30;1m" "|\t%0.4f\t", mat[i][j]);
+    fprintf(stdout, "\n");
+  }
+
+  fprintf(stdout, "\x1b[0m" "\n");
+}
+
+void mat4_print(mat4 mat) {
+  uint32_t mat_num = 4;
+
+  wlu_log_me(WLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
+
+  for (uint32_t i = 0; i < mat_num; i++) {
+    for (uint32_t j = 0; j < mat_num; j++)
+      fprintf(stdout, "\x1B[30;1m" "|\t%0.3f\t", mat[i][j]);
+    fprintf(stdout, " |\n");
+  }
+
+  fprintf(stdout, "\x1b[0m" "\n");
+}
+
+void vec_print(vec2 vec, wlu_vec_type type) {
+  int vec_num = type + 2;
+
+  wlu_log_me(WLU_WARNING, "%dD vector:\n", vec_num);
+
+  for (int i = 0; i < vec_num; i++)
+    fprintf(stdout, "\x1B[30;1m" "|\t%0.3f\t", vec[i]);
+  fprintf(stdout, "|\n");
+
+  fprintf(stdout, "\x1b[0m" "\n");
+}
+
 void wlu_print_matrices(vkcomp *app) {
   wlu_log_me(WLU_INFO, "Perspective Matrix");
   wlu_log_me(WLU_INFO, "Projection from camera to screen");
-  glm_mat4_print(app->proj, stdout);
+  wlu_print_matrix(app->proj, WLU_MAT4);
   wlu_log_me(WLU_INFO, "View Matrix");
   wlu_log_me(WLU_INFO, "View from world space to camera space");
-  glm_mat4_print(app->view, stdout);
+  wlu_print_matrix(app->view, WLU_MAT4);
   wlu_log_me(WLU_INFO, "Model Matrix");
   wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
-  glm_mat4_print(app->model, stdout);
+  wlu_print_matrix(app->model, WLU_MAT4);
   wlu_log_me(WLU_INFO, "Clip Matrix");
-  glm_mat4_print(app->clip, stdout);
+  wlu_print_matrix(app->clip, WLU_MAT4);
   wlu_log_me(WLU_INFO, "MVP Matrix");
-  glm_mat4_print(app->mvp, stdout);
+  wlu_print_matrix(app->mvp, WLU_MAT4);
 }
 
 void wlu_print_vector(void *vector, wlu_vec_type type) {
   switch (type) {
-    case WLU_VEC3:
-      glm_vec3_print(*((vec3*) vector), stdout);
-      break;
-    case WLU_VEC4:
-      glm_vec4_print(*((vec4*) vector), stdout);
-      break;
-    default:
-      break;
+    case WLU_VEC2: vec_print(*((vec2*) vector), type); break;
+    case WLU_VEC3: vec_print(*((vec3*) vector), type); break;
+    case WLU_VEC4: vec_print(*((vec4*) vector), type); break;
+  }
+}
+
+void wlu_print_matrix(void *matrix, wlu_matrix_type type) {
+  switch (type) {
+    case WLU_MAT3: mat3_print(*((mat3*) matrix)); break;
+    case WLU_MAT4: mat4_print(*((mat4*) matrix)); break;
   }
 }

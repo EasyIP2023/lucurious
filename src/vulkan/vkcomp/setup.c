@@ -66,7 +66,7 @@ static void set_values(vkcomp *app) {
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
   app->depth.mem = VK_NULL_HANDLE;
-  app->buffs_data_count = VK_NULL_HANDLE;
+  app->bdc = VK_NULL_HANDLE;
   app->buffs_data = VK_NULL_HANDLE;
   app->desc_count = VK_NULL_HANDLE;
   app->desc_layouts = VK_NULL_HANDLE;
@@ -177,7 +177,7 @@ void wlu_freeup_vk(void *data) {
   if (app->desc_pool)
     vkDestroyDescriptorPool(app->device, app->desc_pool, NULL);
   if (app->buffs_data) {
-    for (uint32_t i = 0; i < app->buffs_data_count; i++) {
+    for (uint32_t i = 0; i < app->bdc; i++) {
       if (app->buffs_data[i].buff)
         vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
       if (app->buffs_data[i].mem)

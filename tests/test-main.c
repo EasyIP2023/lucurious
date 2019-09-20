@@ -158,8 +158,6 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  wlu_retrieve_device_queue(app);
-
   err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {
     freeme(app, wc);
@@ -181,7 +179,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_exec_begin_cmd_buffs(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = wlu_exec_begin_cmd_buffs(app, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
@@ -196,6 +194,22 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* This is where creation of the graphics pipeline begins */
+  err = wlu_create_semaphores(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
+    ck_abort_msg(NULL);
+  }
+
+  uint32_t cur_buff = 0;
+  /* Acquire the swapchain image in order to set its layout */
+  err = wlu_retrieve_swapchain_img(app, &cur_buff);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
+    ck_abort_msg(NULL);
+  }
+
   err = wlu_create_pipeline_layout(app, 0, NULL);
   if (err) {
     freeme(app, wc);
@@ -263,19 +277,21 @@ START_TEST(test_vulkan_client_create) {
   for (uint32_t i = 0; i < 3; i++) {
     wlu_set_vector(&vertices[i].pos, pos_vertices[i], WLU_VEC2);
     wlu_set_vector(&vertices[i].color, color_vertices[i], WLU_VEC3);
+    wlu_print_vector(&vertices[i].pos, WLU_VEC2);
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
-  err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 3, vertices, WLU_VERTEX_2D, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 1, "staging",
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  );
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
-    ck_abort_msg(NULL);
-  }
+  VkDeviceSize vsize = sizeof(vertices[0]) * 3;
+  // err = wlu_create_buffer(
+  //   app, vsize, vertices, WLU_VERTEX_2D, 0,
+  //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT, "staging",
+  //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  // );
+  // if (err) {
+  //   freeme(app, wc);
+  //   wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+  //   ck_abort_msg(NULL);
+  // }
 
   /*
    * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -286,9 +302,9 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 3, NULL, WLU_VERTEX_2D, 0,
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    2, "vertex", VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    app, vsize, vertices, WLU_VERTEX_2D, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, "vertex",
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
     freeme(app, wc);
@@ -296,12 +312,12 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_copy_buffer(app, app->buffs_data[0].buff, app->buffs_data[1].buff, sizeof(vertices[0]) * 3);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
-    ck_abort_msg(NULL);
-  }
+  // err = wlu_copy_buffer(app, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
+  // if (err) {
+  //   freeme(app, wc);
+  //   wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
+  //   ck_abort_msg(NULL);
+  // }
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
     0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
@@ -407,37 +423,27 @@ START_TEST(test_vulkan_client_create) {
   wlu_freeup_shader(app, &vert_shader_module);
 
   /* Ending setup for graphics pipeline */
-  err = wlu_create_semaphores(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
-    ck_abort_msg(NULL);
-  }
-
-  uint32_t cur_buff = 0;
-  /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
-    ck_abort_msg(NULL);
-  }
 
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 1.0f, 0);
+  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
+
+  wlu_retrieve_device_queue(app);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-  const VkDeviceSize offsets[] = {0};
-  const VkBuffer *vertex_buffers = &app->buffs_data[1].buff;
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, vertex_buffers, offsets);
+  for (uint32_t i = 0; i < app->bdc; i++) {
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
+  }
 
+  const VkDeviceSize offsets[] = {0};
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, sizeof(vertices[0]) * 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);
@@ -447,7 +453,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  VkPipelineStageFlags wait_stages[2] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
   VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};

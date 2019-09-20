@@ -58,4 +58,6 @@ void wlu_print_matrices(vkcomp *app);
 
 void wlu_print_vector(void *vector, wlu_vec_type type);
 
+void wlu_print_matrix(void *matrix, wlu_matrix_type type);
+
 #endif

@@ -238,7 +238,7 @@ int main(void) {
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
     app, sizeof(app->mvp), &app->mvp, WLU_MAT4_MATRIX, 0,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 1, "uniform",
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -337,9 +337,10 @@ int main(void) {
     wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
   }
 
+  VkDeviceSize vsize = sizeof(vertices[0]) * 36;
   err = wlu_create_buffer(
-    app, sizeof(vertices[0]) * 36, vertices, WLU_VERTEX_3D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 2, "vertex",
+    app, vsize, vertices, WLU_VERTEX_3D, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -467,13 +468,16 @@ int main(void) {
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
   wlu_bind_desc_set(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
-  const VkDeviceSize offsets[1] = {0};
-  const VkBuffer *vertex_buffer = &app->buffs_data[1].buff;
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, vertex_buffer, offsets);
+  for (uint32_t i = 0; i < app->bdc; i++) {
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
+  }
 
+  const VkDeviceSize offsets[1] = {0};
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, 36, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

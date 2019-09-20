@@ -36,16 +36,6 @@ typedef enum wlu_map_data_type {
   WLU_MAT4_MATRIX = 2
 } wlu_map_data_type;
 
-typedef struct swap_chain_buffers {
-  VkImage image;
-  VkImageView view;
-} swap_chain_buffers;
-
-typedef struct queue_family_indices {
-  uint32_t graphics_family;
-  uint32_t present_family;
-} queue_family_indices;
-
 typedef struct vertex_2D {
   vec2 pos;
   vec3 color;
@@ -97,13 +87,21 @@ typedef struct vkcomp {
   VkDeviceQueueCreateInfo *queue_create_infos;
   VkQueueFamilyProperties *queue_families;
   uint32_t queue_family_count;
-  queue_family_indices indices;
+
+  struct queue_family_indices {
+    uint32_t graphics_family;
+    uint32_t present_family;
+  } indices;
 
   VkDevice device; /* logical device */
   VkQueue graphics_queue;
   VkQueue present_queue;
 
-  swap_chain_buffers *sc_buffs;
+  struct swap_chain_buffers {
+    VkImage image;
+    VkImageView view;
+  } *sc_buffs;
+
   VkSwapchainKHR swap_chain;
   uint32_t sc_img_count;
 
@@ -135,7 +133,8 @@ typedef struct vkcomp {
   mat4 clip;
   mat4 mvp;
 
-  uint32_t buffs_data_count;
+  /* Buffer Data Count */
+  uint32_t bdc;
 
   struct buffs_data {
     VkBuffer buff;
@@ -252,11 +251,10 @@ VkResult wlu_create_depth_buff(
 VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
-  const void *data,
+  void *data,
   wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
-  uint32_t buff_count,
   char *buff_name,
   VkFlags requirements_mask
 );

@@ -356,7 +356,7 @@ int main(void) {
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 1.0f, 0);
+  VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);

@@ -67,8 +67,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
     case VK_ERROR_INVALID_SHADER_NV:
       wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_INVALID_SHADER_NV");
       break;
-    default:
-      break;
+    default: break;
   }
 
   free(code);

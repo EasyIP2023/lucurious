@@ -53,30 +53,16 @@ void wlu_set_lookat(vkcomp *app, const float *eye, const float *center, const fl
 
 void wlu_set_matrix(mat4 *matrix, const void *model, wlu_matrix_type type) {
   switch (type) {
-    case WLU_MAT3:
-      memcpy(matrix, model, sizeof(mat3));
-      break;
-    case WLU_MAT4:
-      memcpy(matrix, model, sizeof(mat4));
-      break;
-    default:
-      break;
+    case WLU_MAT3: memcpy(matrix, (mat3 *) model, sizeof(mat3)); break;
+    case WLU_MAT4: memcpy(matrix, (mat4 *) model, sizeof(mat4)); break;
   }
 }
 
 void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type) {
   switch (type) {
-    case WLU_VEC2:
-      memcpy(vector, vec, sizeof(vec2));
-      break;
-    case WLU_VEC3:
-      memcpy(vector, vec, sizeof(vec3));
-      break;
-    case WLU_VEC4:
-      memcpy(vector, vec, sizeof(vec4));
-      break;
-    default:
-      break;
+    case WLU_VEC2: memcpy(vector, vec, sizeof(vec2)); break;
+    case WLU_VEC3: memcpy(vector, vec, sizeof(vec3)); break;
+    case WLU_VEC4: memcpy(vector, vec, sizeof(vec4)); break;
   }
 }
 
