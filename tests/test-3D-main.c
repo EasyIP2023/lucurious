@@ -94,13 +94,6 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    ck_abort_msg(NULL);
-  }
-
   if (wlu_connect_client(wc)) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect client");
@@ -112,6 +105,13 @@ START_TEST(test_vulkan_client_create_3D) {
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     ck_abort_msg(NULL);
   }
 

@@ -35,9 +35,9 @@ VkResult wlu_create_instance(
   char *app_name,
   char *engine_name,
   uint32_t enabledLayerCount,
-  const char* const* ppEnabledLayerNames,
+  const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
-  const char* const* ppEnabledExtensionNames
+  const char *const *ppEnabledExtensionNames
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -152,9 +152,9 @@ finish_devices:
 VkResult wlu_create_logical_device(
   vkcomp *app,
   uint32_t enabledLayerCount,
-  const char* const* ppEnabledLayerNames,
+  const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
-  const char* const* ppEnabledExtensionNames
+  const char *const *ppEnabledExtensionNames
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -600,9 +600,9 @@ VkResult wlu_create_buffer(
 
   if (data) {
     switch (type) {
-      case WLU_VERTEX_2D: p_data = memcpy(p_data, (vertex_2D *) data, size); break;
-      case WLU_VERTEX_3D: p_data = memcpy(p_data, (vertex_3D *) data, size); break;
-      case WLU_MAT4_MATRIX: p_data = memcpy(p_data, (mat4 *) data, size); break;
+      case WLU_VERTEX_2D: p_data = memcpy((vertex_2D *) p_data, (vertex_2D *) data, size); break;
+      case WLU_VERTEX_3D: p_data = memcpy((vertex_3D *) p_data, (vertex_3D *) data, size); break;
+      case WLU_MAT4_MATRIX: p_data = memcpy((mat4 *) p_data, (mat4 *) data, size); break;
     }
     if (!p_data) {
       wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");

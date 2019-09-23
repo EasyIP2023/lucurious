@@ -45,24 +45,24 @@ void wlu_set_perspective(
 
 void wlu_set_lookat(vkcomp *app, const float *eye, const float *center, const float *up) {
   vec3 eye2, center2, up2;
-  memcpy(eye2, eye, sizeof(vec3));
-  memcpy(center2, center, sizeof(vec3));
-  memcpy(up2, up, sizeof(vec3));
+  memcpy(eye2, (vec3 *) eye, sizeof(vec3));
+  memcpy(center2, (vec3 *) center, sizeof(vec3));
+  memcpy(up2, (vec3 *) up, sizeof(vec3));
   glm_lookat(eye2, center2, up2, app->view);
 }
 
-void wlu_set_matrix(mat4 *matrix, const void *model, wlu_matrix_type type) {
+void wlu_set_matrix(void *matrix, const void *model, wlu_matrix_type type) {
   switch (type) {
-    case WLU_MAT3: memcpy(matrix, (mat3 *) model, sizeof(mat3)); break;
-    case WLU_MAT4: memcpy(matrix, (mat4 *) model, sizeof(mat4)); break;
+    case WLU_MAT3: memcpy((mat3 *) matrix, (mat3 *) model, sizeof(mat3)); break;
+    case WLU_MAT4: memcpy((mat4 *) matrix, (mat4 *) model, sizeof(mat4)); break;
   }
 }
 
 void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type) {
   switch (type) {
-    case WLU_VEC2: memcpy(vector, vec, sizeof(vec2)); break;
-    case WLU_VEC3: memcpy(vector, vec, sizeof(vec3)); break;
-    case WLU_VEC4: memcpy(vector, vec, sizeof(vec4)); break;
+    case WLU_VEC2: memcpy((vec2 *) vector, (vec2 *) vec, sizeof(vec2)); break;
+    case WLU_VEC3: memcpy((vec3 *) vector, (vec3 *) vec, sizeof(vec3)); break;
+    case WLU_VEC4: memcpy((vec4 *) vector, (vec4 *) vec, sizeof(vec4)); break;
   }
 }
 

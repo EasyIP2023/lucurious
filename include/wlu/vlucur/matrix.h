@@ -48,7 +48,7 @@ void wlu_set_perspective(
 
 void wlu_set_lookat(vkcomp *app, const float *dir, const float *eye, const float *up);
 
-void wlu_set_matrix(mat4 *matrix, const void *model, wlu_matrix_type type);
+void wlu_set_matrix(void *matrix, const void *model, wlu_matrix_type type);
 
 void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type);
 
