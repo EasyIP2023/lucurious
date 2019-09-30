@@ -83,7 +83,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -155,8 +155,6 @@ int main(void) {
     wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent2D.width equals %d", extent2D.width);
     return EXIT_FAILURE;
   }
-
-  wlu_retrieve_device_queue(app);
 
   err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {

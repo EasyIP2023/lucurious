@@ -206,11 +206,3 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
 
   return capabilities;
 }
-
-void wlu_retrieve_device_queue(vkcomp *app) {
-  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
-  if (app->indices.graphics_family == app->indices.present_family)
-    app->present_queue = app->graphics_queue;
-  else
-    vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
-}

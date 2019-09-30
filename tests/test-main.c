@@ -85,7 +85,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -429,8 +429,6 @@ START_TEST(test_vulkan_client_create) {
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
-  wlu_retrieve_device_queue(app);
-
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
@@ -453,7 +451,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  VkPipelineStageFlags wait_stages[2] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
   VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};

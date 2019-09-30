@@ -87,7 +87,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -128,8 +128,6 @@ START_TEST(test_vulkan_client_create_3D) {
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
     ck_abort_msg(NULL);
   }
-
-  wlu_retrieve_device_queue(app);
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
   if (capabilities.minImageCount == UINT32_MAX) {

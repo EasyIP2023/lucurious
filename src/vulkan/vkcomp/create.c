@@ -216,9 +216,10 @@ VkResult wlu_create_logical_device(
    * the logical device, but you need a queue
    * handle to interface with them
    */
-  if (app->indices.graphics_family == UINT32_MAX)
-    vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
-  if (app->indices.present_family == UINT32_MAX)
+  vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
+  if (app->indices.graphics_family == app->indices.present_family)
+    app->present_queue = app->graphics_queue;
+  else
     vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
 
   return res;

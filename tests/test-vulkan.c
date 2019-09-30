@@ -76,7 +76,7 @@ START_TEST(test_create_instance) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -108,7 +108,7 @@ START_TEST(test_enumerate_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -147,7 +147,7 @@ START_TEST(test_set_logical_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -198,7 +198,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");

@@ -86,7 +86,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_set_debug_message(app, 1);
+  err = wlu_set_debug_message(app);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
@@ -127,8 +127,6 @@ int main(void) {
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
     return EXIT_FAILURE;
   }
-
-  wlu_retrieve_device_queue(app);
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
   if (capabilities.minImageCount == UINT32_MAX) {

@@ -162,7 +162,7 @@ void wlu_freeup_vk(void *data);
  */
 VkResult wlu_set_global_layers(vkcomp *app);
 
-VkResult wlu_set_debug_message(vkcomp *app, uint32_t size);
+VkResult wlu_set_debug_message(vkcomp *app);
 
 /*
  * Almost every operation in Vulkan, from submitting command buffers
@@ -179,8 +179,6 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
  * that a particular physical device
  */
 VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
-
-void wlu_retrieve_device_queue(vkcomp *app);
 
 /* Create connection between app and the vulkan api */
 VkResult wlu_create_instance(
