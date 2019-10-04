@@ -429,9 +429,10 @@ START_TEST(test_vulkan_client_create) {
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
+  /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
+  wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
@@ -441,13 +442,13 @@ START_TEST(test_vulkan_client_create) {
   const VkDeviceSize offsets[] = {0};
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);
+  wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_exec_stop_cmd_buffs failed");
     ck_abort_msg(NULL);
   }
 
@@ -458,14 +459,14 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, wait_stages, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_queue_graphics_queue failed");
     ck_abort_msg(NULL);
   }
 
   err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_queue_present_queue failed");
     ck_abort_msg(NULL);
   }
 

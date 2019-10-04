@@ -297,7 +297,7 @@ VkResult wlu_create_swap_chain(
   /* specify that I currently do not want any transformation */
   create_info.compositeAlpha = composite_alpha;
   create_info.presentMode = pres_mode;
-  create_info.clipped = VK_FALSE;
+  create_info.clipped = VK_TRUE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   /* specify how to handle swap chain images that will be used across multiple queue families */

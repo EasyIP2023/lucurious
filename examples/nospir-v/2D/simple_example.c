@@ -373,7 +373,7 @@ int main(void) {
 
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
+  wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_draw(app, cur_buff, 3, 1, 0, 0);

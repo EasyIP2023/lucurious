@@ -95,7 +95,12 @@ void wlu_exec_begin_render_pass(
 
 void wlu_exec_stop_render_pass(vkcomp *app);
 
-void wlu_bind_gp(vkcomp *app, uint32_t cur_buff, VkPipelineBindPoint pipelineBindPoint);
+void wlu_bind_pipeline(
+  vkcomp *app,
+  uint32_t cur_buff,
+  VkPipelineBindPoint pipelineBindPoint,
+  VkPipeline pipeline
+);
 
 void wlu_bind_desc_set(
   vkcomp *app,

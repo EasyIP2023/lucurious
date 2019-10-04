@@ -75,8 +75,11 @@ static void set_values(vkcomp *app) {
 }
 
 vkcomp *wlu_init_vk() {
-  vkcomp *app = calloc(sizeof(vkcomp), sizeof(vkcomp));
-  if (!app) return NULL;
+  vkcomp *app = (vkcomp *) calloc(sizeof(vkcomp), sizeof(vkcomp));
+  if (!app) {
+    wlu_log_me(WLU_DANGER, "calloc vkcomp *app failed");
+    return NULL;
+  }
   set_values(app);
   return app;
 }
@@ -208,7 +211,6 @@ void wlu_freeup_vk(void *data) {
     vkDestroyInstance(app->instance, NULL);
 
   set_values(app);
-  if (app)
-    free(app);
+  if (app) free(app);
   app = NULL;
 }

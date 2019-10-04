@@ -463,7 +463,7 @@ int main(void) {
   /* Vertex buffer cannot be binded until we begin a renderpass */
   wlu_exec_begin_render_pass(app, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_bind_gp(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS);
+  wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
   wlu_bind_desc_set(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {

@@ -27,8 +27,13 @@
 #include <wlu/vlucur/gp.h>
 #include <wlu/utils/log.h>
 
-void wlu_bind_gp(vkcomp *app, uint32_t cur_buf, VkPipelineBindPoint pipelineBindPoint) {
-  vkCmdBindPipeline(app->cmd_buffs[cur_buf], pipelineBindPoint, app->graphics_pipeline);
+void wlu_bind_pipeline(
+  vkcomp *app,
+  uint32_t cur_buff,
+  VkPipelineBindPoint pipelineBindPoint,
+  VkPipeline pipeline
+) {
+  vkCmdBindPipeline(app->cmd_buffs[cur_buff], pipelineBindPoint, pipeline);
 }
 
 void wlu_bind_desc_set(
