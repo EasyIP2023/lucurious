@@ -530,6 +530,9 @@ VkResult wlu_create_buffer(
   wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
+  VkSharingMode sharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
   char *buff_name,
   VkFlags requirements_mask
 ) {
@@ -541,9 +544,9 @@ VkResult wlu_create_buffer(
   create_info.flags = flags;
   create_info.size = size;
   create_info.usage = usage;
-  create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE; /* buffers are only used for graphics queue */
-  create_info.queueFamilyIndexCount = 0;
-  create_info.pQueueFamilyIndices = NULL;
+  create_info.sharingMode = sharingMode;
+  create_info.queueFamilyIndexCount = queueFamilyIndexCount;
+  create_info.pQueueFamilyIndices = pQueueFamilyIndices;
 
   app->buffs_data = (struct buffs_data *) realloc(app->buffs_data, (app->bdc+1) * sizeof(struct buffs_data));
   if (!app->buffs_data) {

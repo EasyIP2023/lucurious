@@ -284,7 +284,7 @@ START_TEST(test_vulkan_client_create) {
   VkDeviceSize vsize = sizeof(vertices[0]) * 3;
   // err = wlu_create_buffer(
   //   app, vsize, vertices, WLU_VERTEX_2D, 0,
-  //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT, "staging",
+  //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
   //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   // );
   // if (err) {
@@ -303,7 +303,7 @@ START_TEST(test_vulkan_client_create) {
    */
   err = wlu_create_buffer(
     app, vsize, vertices, WLU_VERTEX_2D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, "vertex",
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -319,16 +319,15 @@ START_TEST(test_vulkan_client_create) {
   //   ck_abort_msg(NULL);
   // }
 
-  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
-    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
-  );
+  VkVertexInputBindingDescription vi_binding[1];
+  vi_binding[0] = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0]));
 
   VkVertexInputAttributeDescription vi_attribs[2];
   vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
   vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_2D, color));
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
-    1, &vi_binding, 2, vi_attribs
+    1, vi_binding, 2, vi_attribs
   );
 
   /* End of vertex buffer */
@@ -439,9 +438,10 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
 
-  const VkDeviceSize offsets[] = {0};
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
+
+  const VkDeviceSize offsets = 0;
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, &offsets);
   wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);

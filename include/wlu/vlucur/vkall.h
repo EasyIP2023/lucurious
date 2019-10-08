@@ -253,6 +253,9 @@ VkResult wlu_create_buffer(
   wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
+  VkSharingMode sharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
   char *buff_name,
   VkFlags requirements_mask
 );

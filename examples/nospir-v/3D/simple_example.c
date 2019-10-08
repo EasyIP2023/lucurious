@@ -236,7 +236,7 @@ int main(void) {
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
     app, sizeof(app->mvp), &app->mvp, WLU_MAT4_MATRIX, 0,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, "uniform",
+    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -357,7 +357,7 @@ int main(void) {
   VkDeviceSize vsize = sizeof(vertices[0]) * 36;
   err = wlu_create_buffer(
     app, vsize, vertices, WLU_VERTEX_3D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, "vertex",
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
