@@ -142,10 +142,14 @@ void wlu_freeup_vk(void *data) {
     vkFreeMemory(app->device, app->depth.mem, NULL);
   if (app->sems) {
     for (uint32_t i = 0; i < app->sc_img_count; i++) {
-      vkDestroySemaphore(app->device, app->sems[i].image, NULL);
-      vkDestroySemaphore(app->device, app->sems[i].render, NULL);
-      app->sems[i].image = VK_NULL_HANDLE;
-      app->sems[i].render = VK_NULL_HANDLE;
+      if (app->sems[i].image) {
+        vkDestroySemaphore(app->device, app->sems[i].image, NULL);
+        app->sems[i].image = VK_NULL_HANDLE;
+      }
+      if (app->sems[i].render) {
+        vkDestroySemaphore(app->device, app->sems[i].render, NULL);
+        app->sems[i].render = VK_NULL_HANDLE;
+      }
     }
     free(app->sems);
   }
@@ -181,10 +185,14 @@ void wlu_freeup_vk(void *data) {
     vkDestroyDescriptorPool(app->device, app->desc_pool, NULL);
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
-      if (app->buffs_data[i].buff)
+      if (app->buffs_data[i].buff) {
         vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
-      if (app->buffs_data[i].mem)
+        app->buffs_data[i].buff = VK_NULL_HANDLE;
+      }
+      if (app->buffs_data[i].mem) {
         vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
+        app->buffs_data[i].mem = VK_NULL_HANDLE;
+      }
     }
     free(app->buffs_data);
   }

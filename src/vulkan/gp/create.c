@@ -28,9 +28,9 @@
 #include <wlu/utils/log.h>
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
-  if (shader_module != VK_NULL_HANDLE) {
+  if (*shader_module) {
     vkDestroyShaderModule(app->device, *shader_module, NULL);
-    shader_module = VK_NULL_HANDLE;
+    *shader_module = VK_NULL_HANDLE;
   }
 }
 

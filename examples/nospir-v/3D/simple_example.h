@@ -69,18 +69,18 @@ const char shader_vert_src[] =
   "   gl_Position = myBufferVals.mvp * pos;\n"
   "}\n";
 
-static const float eye[3] = {-5, 3, -10};
-static const float center[3] = {0, 0, 0};
-static const float up[3] = {0, -1, 0};
+const float eye[3] = {-5, 3, -10};
+const float center[3] = {0, 0, 0};
+const float up[3] = {0, -1, 0};
 
-static const float clip_matrix[4][4] = {
+const float clip_matrix[4][4] = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
   { 0.0f,-1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 1.0f },
 };
 
-static const float model_matrix[4][4] = {
+const float model_matrix[4][4] = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
   { 0.0f, 1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 1.0f, 0.0f },
@@ -88,7 +88,7 @@ static const float model_matrix[4][4] = {
 };
 
 // posX, posY, posZ, posW
-static const float pos3D_vertices[36][4] = {
+const float pos3D_vertices[36][4] = {
   // Red Face
   {-1.f, -1.f, 1.f, 1.f}, {-1.f, 1.f, 1.f, 1.f},
   {1.f, -1.f, 1.f, 1.f}, {1.f, -1.f, 1.f, 1.f},
@@ -116,7 +116,7 @@ static const float pos3D_vertices[36][4] = {
 };
 
 // r, g, b, a colors
-static const float color3D_vertices[36][4] = {
+const float color3D_vertices[36][4] = {
   // Red face
   {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
   {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
