@@ -29,31 +29,33 @@
 #include <getopt.h>
 
 int main(int argc, char **argv) {
-  int c;
+  int c = 0;
+  int8_t track = 0;
 
   while (1) {
     int option_index = 0;
 
     static struct option long_options[] = {
       {"version", no_argument,       0,  0  },
-      {"help",  no_argument,         0,  0  },
-      {"pgvl",  no_argument,         0,  0  },
-      {"pie",   no_argument,         0,  0  },
-      {"pde",   required_argument,   0,  0  },
+      {"help",    no_argument,       0,  0  },
+      {"pgvl",    no_argument,       0,  0  },
+      {"pie",     no_argument,       0,  0  },
+      {"pde",     required_argument, 0,  0  },
       {0,         0,                 0,  0  }
     };
 
     c = getopt_long(argc, argv, "vhlid:d",
         long_options, &option_index);
 
-    if (c == -1) break;
+    if (c == -1) { goto exit_loop; }
+    track++;
 
     switch (c) {
       case 0:
-        if (!strcmp(long_options[option_index].name, "version")) version_num();
-        if (!strcmp(long_options[option_index].name, "help")) help_message();
+        if (!strcmp(long_options[option_index].name, "version")) { version_num(); goto exit_loop; }
+        if (!strcmp(long_options[option_index].name, "help")) { help_message(); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
-        if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
+        if (!strcmp(long_options[option_index].name, "pie"))  print_instance_extensions();
         if (!strcmp(long_options[option_index].name, "pde")) {
           if (optarg) {
             print_device_extensions(ret_dtype(optarg));
@@ -102,5 +104,7 @@ int main(int argc, char **argv) {
     printf("[x] Type lucur --help for help\n");
   }
 
+exit_loop:
+  if (c == -1 && track == 0) help_message();
   return EXIT_SUCCESS;
 }

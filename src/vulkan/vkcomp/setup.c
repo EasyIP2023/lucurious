@@ -30,8 +30,8 @@ static void set_values(vkcomp *app) {
   app->dbg_create_report_callback = VK_NULL_HANDLE;
   app->dbg_destroy_report_callback = VK_NULL_HANDLE;
   app->debug_messenger = VK_NULL_HANDLE;
-  app->dbg_size = VK_NULL_HANDLE;
   app->debug_report_callbacks = VK_NULL_HANDLE;
+  app->dbg_size = VK_NULL_HANDLE;
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
   app->vk_layer_props = NULL;

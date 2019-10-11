@@ -128,8 +128,6 @@ VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype) 
         /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, devices[i])) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
-      /* Query device properties */
-      vkGetPhysicalDeviceProperties(app->physical_device, &app->device_properties);
       wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", app->device_properties.deviceName);
       break;
     }
@@ -181,7 +179,6 @@ VkResult wlu_create_logical_device(
     return VK_RESULT_MAX_ENUM;
   }
 
-  /* For creation of the presentation queue */
   uint32_t queue_fam_indices[] = {app->indices.graphics_family, app->indices.present_family};
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -196,13 +193,14 @@ VkResult wlu_create_logical_device(
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.queueCreateInfoCount = app->queue_create_infos[0].queueCount;
+  create_info.queueCreateInfoCount = app->queue_family_count;
   create_info.pQueueCreateInfos = app->queue_create_infos;
   create_info.enabledLayerCount = enabledLayerCount;
   create_info.ppEnabledLayerNames = ppEnabledLayerNames;
   create_info.enabledExtensionCount = enabledExtensionCount;
   create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
   create_info.pEnabledFeatures = &app->device_features;
+
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);

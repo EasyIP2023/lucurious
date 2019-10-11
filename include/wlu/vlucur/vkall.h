@@ -61,8 +61,8 @@ typedef struct vkcomp {
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
   PFN_vkDebugReportMessageEXT debug_messenger;
-  uint32_t dbg_size;
   VkDebugReportCallbackEXT *debug_report_callbacks;
+  uint32_t dbg_size;
 
   VkInstance instance;
   VkSurfaceKHR surface;

@@ -36,7 +36,8 @@ VkBool32 is_device_suitable(vkcomp *app, VkPhysicalDevice device, VkPhysicalDevi
   return (app->device_properties.deviceType == vkpdtype       &&
           app->device_features.depthClamp                     &&
           app->device_features.depthBiasClamp                 &&
-          app->device_features.logicOp);
+          app->device_features.logicOp                        &&
+          app->device_features.robustBufferAccess);
 }
 
 VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {
