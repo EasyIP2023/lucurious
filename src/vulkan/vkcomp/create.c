@@ -601,10 +601,10 @@ VkResult wlu_create_buffer(
   }
 
   if (data) {
-    switch (type) {
-      case WLU_VERTEX_2D: p_data = memcpy((vertex_2D *) p_data, (vertex_2D *) data, size); break;
-      case WLU_VERTEX_3D: p_data = memcpy((vertex_3D *) p_data, (vertex_3D *) data, size); break;
-      case WLU_MAT4_MATRIX: p_data = memcpy((mat4 *) p_data, (mat4 *) data, size); break;
+    switch (type) { /* could use memcpy doesn't matter */
+      case WLU_VERTEX_2D: p_data = memmove((vertex_2D *) p_data, (vertex_2D *) data, size); break;
+      case WLU_VERTEX_3D: p_data = memmove((vertex_3D *) p_data, (vertex_3D *) data, size); break;
+      case WLU_MAT4_MATRIX: p_data = memmove((mat4 *) p_data, (mat4 *) data, size); break;
     }
     if (!p_data) {
       wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");

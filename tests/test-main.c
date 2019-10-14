@@ -281,7 +281,7 @@ START_TEST(test_vulkan_client_create) {
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
-  VkDeviceSize vsize = sizeof(vertices[0]) * 3;
+  VkDeviceSize vsize = sizeof(vertices);
   // err = wlu_create_buffer(
   //   app, vsize, vertices, WLU_VERTEX_2D, 0,
   //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
@@ -319,15 +319,15 @@ START_TEST(test_vulkan_client_create) {
   //   ck_abort_msg(NULL);
   // }
 
-  VkVertexInputBindingDescription vi_binding[1];
-  vi_binding[0] = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0]));
+  /* 0 is the binding # this is bytes between successive structs */
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, vsize);
 
   VkVertexInputAttributeDescription vi_attribs[2];
   vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
   vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_2D, color));
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
-    1, vi_binding, 2, vi_attribs
+    1, &vi_binding, 2, vi_attribs
   );
 
   /* End of vertex buffer */
@@ -442,7 +442,10 @@ START_TEST(test_vulkan_client_create) {
 
   const VkDeviceSize offsets = 0;
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, &offsets);
-  wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
+
+  /* Let the compiler get the size of your array for you. Don't hard code */
+  const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
+  wlu_cmd_draw(app, cur_buff, vertex_count, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

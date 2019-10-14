@@ -495,7 +495,9 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
+
+  const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
+  wlu_cmd_draw(app, cur_buff, vertex_count, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

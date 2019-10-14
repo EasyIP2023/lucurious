@@ -87,8 +87,6 @@ wlu_shader_info wlu_preprocess_shader(
   shinfo.byte_size = shaderc_result_get_length(result);
   shinfo.bytes = (char *) shaderc_result_get_bytes(result);
 
-  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
-
   wlu_shaderc_release(compiler, NULL, options);
 
   return shinfo;
@@ -135,8 +133,6 @@ wlu_shader_info wlu_compile_to_assembly(
   shinfo.byte_size = shaderc_result_get_length(result);
   shinfo.bytes = (char *) shaderc_result_get_bytes(result);
 
-  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
-
   wlu_shaderc_release(compiler, NULL, options);
 
   return shinfo;
@@ -182,8 +178,6 @@ wlu_shader_info wlu_compile_to_spirv(
 
   shinfo.byte_size = shaderc_result_get_length(result);
   shinfo.bytes = (char *) shaderc_result_get_bytes(result);
-
-  wlu_log_me(WLU_WARNING, "SPIRV BYTES: %ld - %ld bytes", shinfo.bytes, shinfo.byte_size);
 
   /* Results are released in wlu_create_shader_module */
   wlu_shaderc_release(compiler, NULL, options);
