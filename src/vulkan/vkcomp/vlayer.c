@@ -164,15 +164,14 @@ VkResult wlu_set_debug_message(vkcomp *app) {
 
   wlu_log_me(WLU_SUCCESS, "Successfully created debug report callback object");
 
-  app->dbg_size++;
-  app->debug_report_callbacks = (VkDebugReportCallbackEXT *) calloc(
-      sizeof(VkDebugReportCallbackEXT), app->dbg_size * sizeof(VkDebugReportCallbackEXT));
+  app->debug_report_callbacks = (VkDebugReportCallbackEXT *) calloc(sizeof(VkDebugReportCallbackEXT),
+        (app->dbg_size+1) * sizeof(VkDebugReportCallbackEXT));
   if (!app->debug_report_callbacks) {
-    app->dbg_size--;
     wlu_log_me(WLU_DANGER, "[x] calloc VkDebugReportCallbackEXT *debug_report_callbacks failed");
     return VK_RESULT_MAX_ENUM;
   }
 
+  app->dbg_size++;
   for (uint32_t i = 0; i < app->dbg_size; i++)
     app->debug_report_callbacks[i] = debug_report_callback;
 

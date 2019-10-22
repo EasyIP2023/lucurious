@@ -165,7 +165,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_cmd_pool(app, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  err = wlu_create_cmd_pool(app, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
@@ -320,7 +320,7 @@ START_TEST(test_vulkan_client_create) {
   // }
 
   /* 0 is the binding # this is bytes between successive structs */
-  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, vsize);
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertex_2D));
 
   VkVertexInputAttributeDescription vi_attribs[2];
   vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
@@ -466,7 +466,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
+  err = wlu_queue_present_queue(app, 1, signal_semaphores, 1, &app->swap_chain, &cur_buff, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_queue_present_queue failed");

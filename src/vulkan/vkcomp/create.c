@@ -612,6 +612,22 @@ VkResult wlu_create_buffer(
     }
   }
 
+  VkMappedMemoryRange flush_range;
+  flush_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+  flush_range.pNext = NULL;
+  flush_range.memory = app->buffs_data[app->bdc].mem;
+  /* the region that was modified will be flushed */
+  flush_range.offset = 0;
+  flush_range.size = size;
+  /* from offset 0 to size of buffer */
+
+  /* refresh the cache */
+  res = vkFlushMappedMemoryRanges(app->device, 1, &flush_range);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkFlushMappedMemoryRanges failed, ERROR CODE: %d", res);
+    return res;
+  }
+
   vkUnmapMemory(app->device, app->buffs_data[app->bdc].mem);
 
   app->buffs_data[app->bdc].buff_info.buffer = app->buffs_data[app->bdc].buff;
@@ -730,6 +746,10 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
   alloc_info.commandBufferCount = (uint32_t) app->sc_img_count;
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_buffs);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkAllocateCommandBuffers failed to create image semaphore, ERROR CODE: %d", res);
+    return res;
+  }
 
   return res;
 }

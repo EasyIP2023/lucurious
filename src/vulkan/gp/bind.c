@@ -44,7 +44,7 @@ void wlu_bind_desc_set(
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
-  vkCmdBindDescriptorSets(app->cmd_buffs[cur_buf],  pipelineBindPoint,
+  vkCmdBindDescriptorSets(app->cmd_buffs[cur_buf], pipelineBindPoint,
                           app->pipeline_layout, firstSet,
                           app->desc_count, app->desc_set,
                           dynamicOffsetCount, pDynamicOffsets);

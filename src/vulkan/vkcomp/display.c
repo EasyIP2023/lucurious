@@ -252,32 +252,25 @@ VkResult wlu_queue_graphics_queue(
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  /* set fence to unsignaled state */
-  res = vkResetFences(app->device, 1, &draw_fence);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
-    goto finish_gq_submit;
-  }
-
-  /* The fence should be signaled when command buffer is finished */
-  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
-    goto finish_gq_submit;
-  }
-
   do {
+    /* set fence to unsignaled state */
+    res = vkResetFences(app->device, 1, &draw_fence);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
+      goto finish_gq_submit;
+    }
+
+    /* The fence should be signaled when command buffer is finished */
+    res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
+      goto finish_gq_submit;
+    }
+
     /* Use fence to synchronize application with rendering operation */
     res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
-      goto finish_gq_submit;
-    }
-
-    /* Restore fence to unsignaled state */
-    res = vkResetFences(app->device, 1, &draw_fence);
-    if (res) {
-      wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
       goto finish_gq_submit;
     }
   } while (res == VK_TIMEOUT);
