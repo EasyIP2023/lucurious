@@ -67,7 +67,7 @@ VkResult wlu_copy_buffer(
   res = vkEndCommandBuffer(cmd_buff);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkEndCommandBuffer failed, ERROR CODE: %d", res);
-    return res;
+    goto finish_cb_copy;
   }
 
   VkSubmitInfo submit_info = {};
@@ -78,15 +78,16 @@ VkResult wlu_copy_buffer(
   res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
-    return res;
+    goto finish_cb_copy;
   }
 
   res = vkQueueWaitIdle(app->graphics_queue);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkQueueWaitIdle failed, ERROR CODE: %d", res);
-    return res;
+    goto finish_cb_copy;
   }
 
+finish_cb_copy:
   vkFreeCommandBuffers(app->device, app->cmd_pool, 1, &cmd_buff);
 
   return res;

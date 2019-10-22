@@ -79,11 +79,11 @@ VkResult wlu_set_global_layers(vkcomp *app) {
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
-  app->vk_layer_props = (VkLayerProperties *) \
-    calloc(sizeof(VkLayerProperties), layer_count * sizeof(VkLayerProperties));
+  app->vk_layer_props = (VkLayerProperties *) calloc(sizeof(VkLayerProperties),
+      layer_count * sizeof(VkLayerProperties));
   if (!app->vk_layer_props) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc for app->vk_layer_props failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc for VkLayerProperties *vk_layer_props failed");
     goto finish_vk_props;
   }
 

@@ -27,6 +27,7 @@
 #include <wlu/utils/log.h>
 #include <vlucur/device.h>
 
+/* This function is mainly the point where we query a given physical device properties/features */
 VkBool32 is_device_suitable(vkcomp *app, VkPhysicalDevice device, VkPhysicalDeviceType vkpdtype) {
   /* Query device properties */
   vkGetPhysicalDeviceProperties(device, &app->device_properties);
@@ -58,7 +59,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       extension_count * sizeof(VkExtensionProperties));
     if (!extensions) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of extensions failed");
+      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *extensions failed");
       goto finish_extensions;
     }
 
@@ -73,7 +74,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
             extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_instance_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] calloc of app->ep_instance_props failed");
+      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *ep_instance_props failed");
       goto finish_extensions;
     }
 
@@ -89,7 +90,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
     if (!app->ep_device_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of app->ep_device_props failed");
+      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *ep_device_props failed");
       goto finish_extensions;
     }
 
@@ -150,19 +151,16 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   for (uint32_t i = 0; i < app->queue_family_count; i++) {
     if (app->queue_families[i].queueFlags & vkqfbits) {
-      wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
-
       if (app->indices.graphics_family == UINT32_MAX) {
-        app->indices.graphics_family = i;
-        ret = VK_FALSE;
+        app->indices.graphics_family = i; ret = VK_FALSE;
+        wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
       }
 
       /* Check to see if a device can create images on the surface we may have created */
       if (app->surface && present_support[i]) {
-        app->indices.present_family = i;
-        ret = VK_FALSE;
+        app->indices.present_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
-        break;
+        goto finish_queue_family;
       }
     }
   }
@@ -170,8 +168,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   if (app->surface && app->indices.present_family == UINT32_MAX) {
     for (uint32_t i = 0; i < app->queue_family_count; i++) {
       if (present_support[i]) {
-        app->indices.present_family = i;
-        ret = VK_FALSE;
+        app->indices.present_family = i; ret = VK_FALSE;
         break;
       }
     }

@@ -219,10 +219,6 @@ VkResult wlu_create_desc_set_layout(
   }
 
   res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, app->desc_layouts);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed, ERROR CODE: %d", res);
-    return res;
-  }
 
   return res;
 }

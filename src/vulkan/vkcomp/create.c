@@ -28,8 +28,6 @@
 #include <vlucur/utils.h>
 #include <vlucur/device.h>
 
-#include <wlu/vlucur/matrix.h>
-
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -176,7 +174,7 @@ VkResult wlu_create_logical_device(
       app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
   if (!app->queue_create_infos) {
     wlu_log_me(WLU_DANGER, "[x] calloc app->queue_create_infos failed");
-    return VK_RESULT_MAX_ENUM;
+    return res;
   }
 
   uint32_t queue_fam_indices[] = {app->indices.graphics_family, app->indices.present_family};
@@ -479,7 +477,8 @@ VkResult wlu_create_depth_buff(
     return res;
   }
 
-  /* Although you know the width, height, and the size of a buffer element,
+  /*
+   * Although you know the width, height, and the size of a buffer element,
    * there is no way to determine exactly how much memory is needed to allocate.
    * This is because alignment constraints that may be placed by the GPU hardware.
    * This function allows you to find out everything you need to allocate the
@@ -525,7 +524,6 @@ VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   void *data,
-  wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   VkSharingMode sharingMode,
@@ -600,16 +598,10 @@ VkResult wlu_create_buffer(
     return res;
   }
 
-  if (data) {
-    switch (type) { /* could use memcpy doesn't matter */
-      case WLU_VERTEX_2D: p_data = memmove((vertex_2D *) p_data, (vertex_2D *) data, size); break;
-      case WLU_VERTEX_3D: p_data = memmove((vertex_3D *) p_data, (vertex_3D *) data, size); break;
-      case WLU_MAT4_MATRIX: p_data = memmove((mat4 *) p_data, (mat4 *) data, size); break;
-    }
-    if (!p_data) {
-      wlu_log_me(WLU_DANGER, "[x] void *p_data memcpy failed");
-      return res;
-    }
+  p_data = memmove(p_data, data, size);
+  if (!p_data) {
+    wlu_log_me(WLU_DANGER, "[x] void *p_data memmove failed");
+    return res;
   }
 
   VkMappedMemoryRange flush_range;
@@ -617,8 +609,8 @@ VkResult wlu_create_buffer(
   flush_range.pNext = NULL;
   flush_range.memory = app->buffs_data[app->bdc].mem;
   /* the region that was modified will be flushed */
-  flush_range.offset = 0;
-  flush_range.size = size;
+  app->buffs_data[app->bdc].buff_info.offset = flush_range.offset = 0;
+  app->buffs_data[app->bdc].buff_info.range = flush_range.size = size;
   /* from offset 0 to size of buffer */
 
   /* refresh the cache */
@@ -631,8 +623,6 @@ VkResult wlu_create_buffer(
   vkUnmapMemory(app->device, app->buffs_data[app->bdc].mem);
 
   app->buffs_data[app->bdc].buff_info.buffer = app->buffs_data[app->bdc].buff;
-  app->buffs_data[app->bdc].buff_info.offset = 0;
-  app->buffs_data[app->bdc].buff_info.range = mem_reqs.size;
   app->bdc++;
 
   return res;
@@ -694,8 +684,6 @@ VkResult wlu_create_framebuffers(
       return res;
     }
   }
-
-  wlu_log_me(WLU_SUCCESS, "Frame Buffers have been successfully created");
 
   return res;
 }

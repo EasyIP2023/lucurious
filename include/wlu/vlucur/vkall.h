@@ -25,16 +25,14 @@
 #ifndef VKALL_H
 #define VKALL_H
 
-#include <cglm/call.h>
-
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
 
-typedef enum wlu_map_data_type {
-  WLU_VERTEX_2D = 0,
-  WLU_VERTEX_3D = 1,
-  WLU_MAT4_MATRIX = 2
-} wlu_map_data_type;
+typedef float vec2[2];
+typedef float vec3[3];
+typedef float vec4[4];
+typedef float mat3[3][3];
+typedef float mat4[4][4];
 
 typedef struct vertex_2D {
   vec2 pos;
@@ -250,7 +248,6 @@ VkResult wlu_create_buffer(
   vkcomp *app,
   VkDeviceSize size,
   void *data,
-  wlu_map_data_type type,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   VkSharingMode sharingMode,

@@ -26,8 +26,7 @@
 #include <wlu/vlucur/vkall.h>
 #include <wlu/vlucur/matrix.h>
 #include <wlu/utils/log.h>
-#include <cglm/mat4.h>
-#include <cglm/mat3.h>
+#include <cglm/call.h>
 
 float wlu_set_fovy(float fovy) {
   return glm_rad(fovy);
@@ -43,22 +42,18 @@ void wlu_set_perspective(
   glmc_perspective(fovy, aspect, nearVal, farVal, app->proj);
 }
 
-void wlu_set_lookat(vkcomp *app, const float *eye, const float *center, const float *up) {
-  vec3 eye2, center2, up2;
-  memcpy(eye2, (vec3 *) eye, sizeof(vec3));
-  memcpy(center2, (vec3 *) center, sizeof(vec3));
-  memcpy(up2, (vec3 *) up, sizeof(vec3));
-  glm_lookat(eye2, center2, up2, app->view);
+void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up) {
+  glm_lookat(eye, center, up, app->view);
 }
 
-void wlu_set_matrix(void *matrix, const void *model, wlu_matrix_type type) {
+void wlu_set_matrix(void *matrix, void *model, wlu_matrix_type type) {
   switch (type) {
     case WLU_MAT3: memcpy((mat3 *) matrix, (mat3 *) model, sizeof(mat3)); break;
     case WLU_MAT4: memcpy((mat4 *) matrix, (mat4 *) model, sizeof(mat4)); break;
   }
 }
 
-void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type) {
+void wlu_set_vector(void *vector, float *vec, wlu_vec_type type) {
   switch (type) {
     case WLU_VEC2: memcpy((vec2 *) vector, (vec2 *) vec, sizeof(vec2)); break;
     case WLU_VEC3: memcpy((vec3 *) vector, (vec3 *) vec, sizeof(vec3)); break;

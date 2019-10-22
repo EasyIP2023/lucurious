@@ -39,6 +39,19 @@ void wlu_cmd_draw(
             instanceCount, firstVertex, firstInstance);
 }
 
+void wlu_cmd_draw_indexed(
+  vkcomp *app,
+  uint32_t cur_buff,
+  uint32_t indexCount,
+  uint32_t instanceCount,
+  uint32_t firstIndex,
+  int32_t vertexOffset,
+  uint32_t firstInstance
+) {
+  vkCmdDrawIndexed(app->cmd_buffs[cur_buff], indexCount, instanceCount,
+                   firstIndex, vertexOffset, firstInstance);
+}
+
 void wlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport viewport,

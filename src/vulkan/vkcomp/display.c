@@ -72,7 +72,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   }
 
   formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
-    format_count * sizeof(VkSurfaceFormatKHR));
+        format_count * sizeof(VkSurfaceFormatKHR));
   if (!formats) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkSurfaceFormatKHR *formats failed");
     goto finish_format;
@@ -133,7 +133,6 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
 
   present_modes = (VkPresentModeKHR *) calloc(sizeof(VkPresentModeKHR),
       pres_mode_count * sizeof(VkPresentModeKHR));
-
   if (!present_modes) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkPresentModeKHR *present_modes failed");
     goto finish_best_mode;
@@ -149,9 +148,8 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   best_mode = VK_PRESENT_MODE_FIFO_KHR;
 
   for (uint32_t i = 0; i < pres_mode_count; i++) {
-    if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+    if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) { /* For triple buffering */
       best_mode = present_modes[i];
-      /* For triple buffering */
       goto finish_best_mode;
     }
     else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {

@@ -44,18 +44,18 @@ const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation"
 };
 
-const float eye[3] = {-5, 3, -10};
-const float center[3] = {0, 0, 0};
-const float up[3] = {0, -1, 0};
+vec3 eye = {-5, 3, -10};
+vec3 center = {0, 0, 0};
+vec3 up = {0, -1, 0};
 
-const float clip_matrix[4][4] = {
+mat4 clip_matrix = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
   { 0.0f,-1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 1.0f },
 };
 
-const float model_matrix[4][4] = {
+mat4 model_matrix = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
   { 0.0f, 1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 1.0f, 0.0f },
@@ -63,7 +63,7 @@ const float model_matrix[4][4] = {
 };
 
 // posX, posY, posZ, posW
-const float pos3D_vertices[36][4] = {
+float pos3D_vertices[36][4] = {
   // Red Face
   {-1.f, -1.f, 1.f, 1.f}, {-1.f, 1.f, 1.f, 1.f},
   {1.f, -1.f, 1.f, 1.f}, {1.f, -1.f, 1.f, 1.f},
@@ -91,7 +91,7 @@ const float pos3D_vertices[36][4] = {
 };
 
 // r, g, b, a colors
-const float color3D_vertices[36][4] = {
+float color3D_vertices[36][4] = {
   // Red face
   {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},
   {1.f, 0.f, 0.f, 1.f}, {1.f, 0.f, 0.f, 1.f},

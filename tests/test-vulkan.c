@@ -24,6 +24,7 @@
 
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
+#include <stdlib.h>
 #include <check.h>
 
 #include "test-extras.h"

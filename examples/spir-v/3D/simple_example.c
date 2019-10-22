@@ -22,6 +22,11 @@
  * THE SOFTWARE.
  */
 
+#include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
+#include <stdbool.h>
+
 #include <wlu/vkall.h>
 #include <wlu/client.h>
 #include <wlu/log.h>
@@ -29,10 +34,6 @@
 #include <wlu/gp.h>
 #include <wlu/file.h>
 #include <wlu/matrix.h>
-
-#include <signal.h>
-#include <unistd.h>
-#include <stdbool.h>
 
 #include "simple_example.h"
 
@@ -235,8 +236,8 @@ int main(void) {
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(app->mvp), &app->mvp, WLU_MAT4_MATRIX, 0,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
+    app, sizeof(app->mvp), &app->mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -335,10 +336,10 @@ int main(void) {
     wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
   }
 
-  VkDeviceSize vsize = sizeof(vertices[0]) * 36;
+  VkDeviceSize vsize = sizeof(vertices);
   err = wlu_create_buffer(
-    app, vsize, vertices, WLU_VERTEX_3D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
+    app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {

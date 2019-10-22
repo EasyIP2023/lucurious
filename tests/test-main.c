@@ -283,8 +283,8 @@ START_TEST(test_vulkan_client_create) {
 
   VkDeviceSize vsize = sizeof(vertices);
   // err = wlu_create_buffer(
-  //   app, vsize, vertices, WLU_VERTEX_2D, 0,
-  //   VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
+  //   app, vsize, vertices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+  //   VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
   //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   // );
   // if (err) {
@@ -302,8 +302,8 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, vsize, vertices, WLU_VERTEX_2D, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
+    app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
@@ -431,7 +431,10 @@ START_TEST(test_vulkan_client_create) {
   /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+
   wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
+  const VkDeviceSize offsets = 0;
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, &offsets);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
@@ -439,9 +442,6 @@ START_TEST(test_vulkan_client_create) {
   }
 
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-
-  const VkDeviceSize offsets = 0;
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, &offsets);
 
   /* Let the compiler get the size of your array for you. Don't hard code */
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);

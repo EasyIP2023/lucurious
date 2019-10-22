@@ -129,6 +129,16 @@ void wlu_cmd_draw(
   uint32_t firstInstance
 );
 
+void wlu_cmd_draw_indexed(
+  vkcomp *app,
+  uint32_t cur_buff,
+  uint32_t indexCount,
+  uint32_t instanceCount,
+  uint32_t firstIndex,
+  int32_t vertexOffset,
+  uint32_t firstInstance
+);
+
 void wlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport viewport,

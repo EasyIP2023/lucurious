@@ -22,16 +22,17 @@
  * THE SOFTWARE.
  */
 
+#include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
+#include <stdbool.h>
+
 #include <wlu/vkall.h>
 #include <wlu/client.h>
 #include <wlu/log.h>
 #include <wlu/errors.h>
 #include <wlu/shade.h>
 #include <wlu/gp.h>
-
-#include <signal.h>
-#include <unistd.h>
-#include <stdbool.h>
 
 #include "simple_example.h"
 

@@ -64,20 +64,11 @@ int main(int argc, char **argv) {
           }
         }
         break;
-      case 1:
-        break;
-      case 'v':
-        version_num();
-        break;
-      case 'h':
-        help_message();
-        break;
-      case 'l':
-        print_gvalidation_layers();
-        break;
-      case 'i':
-        print_instance_extensions();
-        break;
+      case 1: break;
+      case 'v': version_num(); break;
+      case 'h': help_message(); break;
+      case 'l': print_gvalidation_layers(); break;
+      case 'i': print_instance_extensions(); break;
       case 'd':
         if (optarg) {
           if (!strcmp(long_options[option_index].name, "pde")) {
@@ -89,10 +80,8 @@ int main(int argc, char **argv) {
           }
         }
         break;
-      case '?':
-        break;
-      default:
-        printf("[x] getopt returned character code 0%o ??\n", c);
+      case '?': break;
+      default: fprintf(stdout, "[x] getopt returned character code 0%o ??\n", c); break;
     }
   }
 

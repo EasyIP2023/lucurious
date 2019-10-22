@@ -46,11 +46,11 @@ void wlu_set_perspective(
   float farVal
 );
 
-void wlu_set_lookat(vkcomp *app, const float *dir, const float *eye, const float *up);
+void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up);
 
-void wlu_set_matrix(void *matrix, const void *model, wlu_matrix_type type);
+void wlu_set_matrix(void *matrix, void *model, wlu_matrix_type type);
 
-void wlu_set_vector(void *vector, const float *vec, wlu_vec_type type);
+void wlu_set_vector(void *vector, float *vec, wlu_vec_type type);
 
 void wlu_set_mvp_matrix(vkcomp *app);
 
