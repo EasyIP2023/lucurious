@@ -41,13 +41,13 @@ VkResult wlu_exec_begin_cmd_buffs(
     return res;
   }
 
-  for (uint32_t i = 0; i < app->sc_img_count; i++) {
-    VkCommandBufferBeginInfo begin_info = {};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    begin_info.pNext = NULL;
-    begin_info.flags = flags;
-    begin_info.pInheritanceInfo = pInheritanceInfo;
+  VkCommandBufferBeginInfo begin_info = {};
+  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin_info.pNext = NULL;
+  begin_info.flags = flags;
+  begin_info.pInheritanceInfo = pInheritanceInfo;
 
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
     res = vkBeginCommandBuffer(app->cmd_buffs[i], &begin_info);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] Failed to start recording command buffer [%d], ERROR CODE: %d", i, res);

@@ -229,14 +229,14 @@ START_TEST(test_vulkan_client_create_3D) {
   if (extent3D.width > extent3D.height) fovy *= hw;
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(app, eye, center, up);
-  wlu_set_matrix(&app->model, model_matrix, WLU_MAT4);
-  wlu_set_matrix(&app->clip, clip_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->ubd.model, model_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->ubd.clip, clip_matrix, WLU_MAT4);
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(app->mvp), &app->mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    app, sizeof(app->ubd.mvp), &app->ubd.mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );

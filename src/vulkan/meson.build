@@ -23,7 +23,7 @@
 #
 
 vulkan = dependency('vulkan')
-cglm = dependency('cglm')
+cglm = cc.find_library('cglm')
 math = cc.find_library('m')
 
 gp_files = [
@@ -38,7 +38,8 @@ vkcomp_files = [
 	'vkcomp/create.c', 'vkcomp/device.c',
 	'vkcomp/display.c', 'vkcomp/exec.c',
 	'vkcomp/setup.c', 'vkcomp/utils.c',
-	'vkcomp/vlayer.c', 'vkcomp/copy.c'
+	'vkcomp/vlayer.c', 'vkcomp/copy.c',
+	'vkcomp/set.c'
 ]
 
 lib_vulkan = static_library(

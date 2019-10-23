@@ -179,13 +179,6 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_exec_begin_cmd_buffs(app, 0, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
-    ck_abort_msg(NULL);
-  }
-
   err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   if (err) {
     freeme(app, wc);
@@ -428,9 +421,18 @@ START_TEST(test_vulkan_client_create) {
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
+  /* Set command buffers into recording state */
+  err = wlu_exec_begin_cmd_buffs(app, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
+    ck_abort_msg(NULL);
+  }
+
   /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
 
   wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
   const VkDeviceSize offsets = 0;
@@ -440,8 +442,6 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
-
-  wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
 
   /* Let the compiler get the size of your array for you. Don't hard code */
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);

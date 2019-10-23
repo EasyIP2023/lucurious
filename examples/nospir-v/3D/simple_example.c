@@ -80,7 +80,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_instance(app, "Draw Cube", "Desktop Engine", 3, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Draw Cube", "Desktop Engine", 0, NULL, 4, instance_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -122,7 +122,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_logical_device(app, 3, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -229,14 +229,14 @@ int main(void) {
   if (extent3D.width > extent3D.height) fovy *= hw;
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(app, eye, center, up);
-  wlu_set_matrix(&app->model, model_matrix, WLU_MAT4);
-  wlu_set_matrix(&app->clip, clip_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->ubd.model, model_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->ubd.clip, clip_matrix, WLU_MAT4);
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(app->mvp), &app->mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    app, sizeof(app->ubd.mvp), &app->ubd.mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );

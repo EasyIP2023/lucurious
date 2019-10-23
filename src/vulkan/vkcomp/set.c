@@ -24,44 +24,27 @@
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
-#include <wlu/vlucur/matrix.h>
+#include <wlu/vlucur/gp.h>
 #include <wlu/utils/log.h>
-#include <cglm/call.h>
 
-float wlu_set_fovy(float fovy) {
-  return glm_rad(fovy);
-}
-
-void wlu_set_perspective(
-  vkcomp *app,
-  float fovy,
-  float aspect,
-  float nearVal,
-  float farVal
+VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
+  VkRenderPass renderPass,
+  uint32_t subpass,
+  VkFramebuffer framebuffer,
+  VkBool32 occlusionQueryEnable,
+  VkQueryControlFlags queryFlags,
+  VkQueryPipelineStatisticFlags pipelineStatistics
 ) {
-  glmc_perspective(fovy, aspect, nearVal, farVal, app->ubd.proj);
-}
 
-void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up) {
-  glm_lookat(eye, center, up, app->ubd.view);
-}
+  VkCommandBufferInheritanceInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+  create_info.pNext = NULL;
+  create_info.renderPass = renderPass;
+  create_info.subpass = subpass;
+  create_info.framebuffer = framebuffer;
+  create_info.occlusionQueryEnable = occlusionQueryEnable;
+  create_info.queryFlags = queryFlags;
+  create_info.pipelineStatistics = pipelineStatistics;
 
-void wlu_set_matrix(void *matrix, void *model, wlu_matrix_type type) {
-  switch (type) {
-    case WLU_MAT3: memcpy((mat3 *) matrix, (mat3 *) model, sizeof(mat3)); break;
-    case WLU_MAT4: memcpy((mat4 *) matrix, (mat4 *) model, sizeof(mat4)); break;
-  }
-}
-
-void wlu_set_vector(void *vector, float *vec, wlu_vec_type type) {
-  switch (type) {
-    case WLU_VEC2: memcpy((vec2 *) vector, (vec2 *) vec, sizeof(vec2)); break;
-    case WLU_VEC3: memcpy((vec3 *) vector, (vec3 *) vec, sizeof(vec3)); break;
-    case WLU_VEC4: memcpy((vec4 *) vector, (vec4 *) vec, sizeof(vec4)); break;
-  }
-}
-
-void wlu_set_mvp_matrix(vkcomp *app) {
-  glm_mat4_mulN((mat4 *[]){&app->ubd.clip, &app->ubd.proj,
-                &app->ubd.view, &app->ubd.model}, 4, app->ubd.mvp);
+  return create_info;
 }

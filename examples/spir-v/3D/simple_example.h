@@ -36,14 +36,6 @@ const char *instance_extensions[] = {
   VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 };
 
-/* All of the useful standard validation is
-bundled into a layer included in the SDK */
-const char *enabled_validation_layers[] = {
-  "VK_LAYER_LUNARG_core_validation",
-  "VK_LAYER_LUNARG_standard_validation",
-  "VK_LAYER_KHRONOS_validation"
-};
-
 vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};
 vec3 up = {0, -1, 0};

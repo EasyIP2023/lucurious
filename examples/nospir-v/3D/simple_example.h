@@ -36,14 +36,6 @@ const char *instance_extensions[] = {
   VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 };
 
-/* All of the useful standard validation is
-bundled into a layer included in the SDK */
-const char *enabled_validation_layers[] = {
-  "VK_LAYER_LUNARG_core_validation",
-  "VK_LAYER_LUNARG_standard_validation",
-  "VK_LAYER_KHRONOS_validation"
-};
-
 const char shader_frag_src[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"

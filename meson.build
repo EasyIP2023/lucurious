@@ -41,6 +41,7 @@ cc = meson.get_compiler('c')
 
 add_project_arguments(
 	[
+		'-DLUCUR_VERSION="@0@"'.format(meson.project_version()),
 		'-DWLU_DIR_SRC="@0@"'.format(meson.current_source_dir()),
 		'-D_POSIX_C_SOURCE=200809L'
 	],

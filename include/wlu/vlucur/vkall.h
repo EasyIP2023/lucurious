@@ -125,11 +125,13 @@ typedef struct vkcomp {
     VkImageView view;
   } depth;
 
-  mat4 proj;
-  mat4 view;
-  mat4 model;
-  mat4 clip;
-  mat4 mvp;
+  struct {
+    mat4 proj;
+    mat4 view;
+    mat4 model;
+    mat4 clip;
+    mat4 mvp;
+  } ubd; /* Uniform Block Data */
 
   /* Buffer Data Count */
   uint32_t bdc;
@@ -359,6 +361,15 @@ VkResult wlu_copy_buffer(
   VkBuffer src_buffer,
   VkBuffer dst_buffer,
   VkDeviceSize size
+);
+
+VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
+  VkRenderPass renderPass,
+  uint32_t subpass,
+  VkFramebuffer framebuffer,
+  VkBool32 occlusionQueryEnable,
+  VkQueryControlFlags queryFlags,
+  VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
 #endif

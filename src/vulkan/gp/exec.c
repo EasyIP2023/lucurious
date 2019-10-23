@@ -45,19 +45,19 @@ void wlu_exec_begin_render_pass(
     return;
   }
 
-  for (uint32_t i = 0; i < app->sc_img_count; i++) {
-    VkRenderPassBeginInfo render_pass_info = {};
-    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_info.pNext = NULL;
-    render_pass_info.renderPass = app->render_pass;
-    render_pass_info.framebuffer = app->sc_frame_buffs[i];
-    render_pass_info.renderArea.offset.x = x;
-    render_pass_info.renderArea.offset.y = y;
-    render_pass_info.renderArea.extent.width = width;
-    render_pass_info.renderArea.extent.height = height;
-    render_pass_info.clearValueCount = clearValueCount;
-    render_pass_info.pClearValues = pClearValues;
+  VkRenderPassBeginInfo render_pass_info = {};
+  render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  render_pass_info.pNext = NULL;
+  render_pass_info.renderPass = app->render_pass;
+  render_pass_info.renderArea.offset.x = x;
+  render_pass_info.renderArea.offset.y = y;
+  render_pass_info.renderArea.extent.width = width;
+  render_pass_info.renderArea.extent.height = height;
+  render_pass_info.clearValueCount = clearValueCount;
+  render_pass_info.pClearValues = pClearValues;
 
+  for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    render_pass_info.framebuffer = app->sc_frame_buffs[i];
     /* Instert render pass into command buffer */
     vkCmdBeginRenderPass(app->cmd_buffs[i], &render_pass_info, contents);
   }

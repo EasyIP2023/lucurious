@@ -334,12 +334,16 @@ VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type
   }
 
   app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
-      app->sc_img_count * sizeof(struct swap_chain_buffers));
+        app->sc_img_count * sizeof(struct swap_chain_buffers));
   if (!app->sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
     goto finish_create_img_views;
   }
 
+  /*
+   * It's okay to reuse app->sc_img_count, It'll give same result as minImageCount + 1.
+   * Removal of function will result in validation layer errors
+   */
   res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->sc_img_count, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
@@ -546,7 +550,7 @@ VkResult wlu_create_buffer(
 
   app->buffs_data = (struct buffs_data *) realloc(app->buffs_data, (app->bdc+1) * sizeof(struct buffs_data));
   if (!app->buffs_data) {
-    wlu_log_me(WLU_DANGER, "[x] realloc buff_info *buffer failed!");
+    wlu_log_me(WLU_DANGER, "[x] realloc struct buffs_data *buffs_data failed!");
     return res;
   }
 
@@ -735,7 +739,7 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level) {
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_buffs);
   if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkAllocateCommandBuffers failed to create image semaphore, ERROR CODE: %d", res);
+    wlu_log_me(WLU_DANGER, "[x] vkAllocateCommandBuffers failed, ERROR CODE: %d", res);
     return res;
   }
 

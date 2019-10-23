@@ -60,7 +60,7 @@ void help_message() {
 
 void version_num() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
-  fprintf(stdout, "liblucurious 0.0.1\n");
+  fprintf(stdout, "lucurious %s\n", LUCUR_VERSION);
   fprintf(stdout, "%s", colors[WLU_RESET]);
 }
 

@@ -71,17 +71,17 @@ void vec_print(vec2 vec, wlu_vec_type type) {
 void wlu_print_matrices(vkcomp *app) {
   wlu_log_me(WLU_INFO, "Perspective Matrix");
   wlu_log_me(WLU_INFO, "Projection from camera to screen");
-  wlu_print_matrix(app->proj, WLU_MAT4);
+  wlu_print_matrix(app->ubd.proj, WLU_MAT4);
   wlu_log_me(WLU_INFO, "View Matrix");
   wlu_log_me(WLU_INFO, "View from world space to camera space");
-  wlu_print_matrix(app->view, WLU_MAT4);
+  wlu_print_matrix(app->ubd.view, WLU_MAT4);
   wlu_log_me(WLU_INFO, "Model Matrix");
   wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
-  wlu_print_matrix(app->model, WLU_MAT4);
+  wlu_print_matrix(app->ubd.model, WLU_MAT4);
   wlu_log_me(WLU_INFO, "Clip Matrix");
-  wlu_print_matrix(app->clip, WLU_MAT4);
+  wlu_print_matrix(app->ubd.clip, WLU_MAT4);
   wlu_log_me(WLU_INFO, "MVP Matrix");
-  wlu_print_matrix(app->mvp, WLU_MAT4);
+  wlu_print_matrix(app->ubd.mvp, WLU_MAT4);
 }
 
 void wlu_print_vector(void *vector, wlu_vec_type type) {
