@@ -349,12 +349,6 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   /* Start of vertex buffer */
-  vertex_3D vertices[36];
-  for (uint32_t i = 0; i < 36; i++) {
-    wlu_set_vector(&vertices[i].pos, pos3D_vertices[i], WLU_VEC4);
-    wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
-  }
-
   VkDeviceSize vsize = sizeof(vertices);
   err = wlu_create_buffer(
     app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -367,13 +361,11 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, 16, VK_FORMAT_R32G32B32A32_SFLOAT);
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
-  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
-    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
-  );
+  VkVertexInputAttributeDescription vi_attribs[2];
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(vertex_3D, pos));
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(vertex_3D, color));
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
     1, &vi_binding, 2, vi_attribs

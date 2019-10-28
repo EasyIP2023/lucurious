@@ -94,13 +94,6 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    return EXIT_FAILURE;
-  }
-
   if (wlu_connect_client(wc)) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect client");
@@ -112,6 +105,13 @@ int main(void) {
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
     return EXIT_FAILURE;
   }
 
@@ -349,12 +349,6 @@ int main(void) {
   }
 
   /* Start of vertex buffer */
-  vertex_3D vertices[36];
-  for (uint32_t i = 0; i < 36; i++) {
-    wlu_set_vector(&vertices[i].pos, pos3D_vertices[i], WLU_VEC4);
-    wlu_set_vector(&vertices[i].color, color3D_vertices[i], WLU_VEC4);
-  }
-
   VkDeviceSize vsize = sizeof(vertices);
   err = wlu_create_buffer(
     app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -367,13 +361,11 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
-  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
-    0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
-  );
+  VkVertexInputAttributeDescription vi_attribs[2];
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(vertex_3D, pos));
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(vertex_3D, color));
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
     1, &vi_binding, 2, vi_attribs
@@ -495,7 +487,9 @@ int main(void) {
   wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
-  wlu_cmd_draw(app, cur_buff, vsize, 1, 0, 0);
+
+  const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
+  wlu_cmd_draw(app, cur_buff, vertex_count, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app);
   err = wlu_exec_stop_cmd_buffs(app);

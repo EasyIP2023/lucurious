@@ -20,8 +20,7 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * libinput
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * [libshaderc](https://github.com/google/shaderc)
-* [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
-* [Spirv-Headers](https://github.com/KhronosGroup/SPIRV-Headers)
+* [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang, libshaderc)
 
 ### [Documentation](https://github.com/lucurious-labs/lucurious-docs)
 ### [Installation/Usage/Examples](https://github.com/lucurious-labs/lucurious/tree/development/examples)

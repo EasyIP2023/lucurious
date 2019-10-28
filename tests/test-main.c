@@ -49,6 +49,8 @@ void freeme(vkcomp *app, wclient *wc) {
 START_TEST(test_vulkan_client_create) {
   VkResult err;
 
+  wait_seconds(2);
+  
   wclient *wc = wlu_init_wc();
   if (!wc) {
     wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
