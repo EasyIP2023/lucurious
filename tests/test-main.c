@@ -275,16 +275,16 @@ START_TEST(test_vulkan_client_create) {
   }
 
   VkDeviceSize vsize = sizeof(vertices);
-  // err = wlu_create_buffer(
-  //   app, vsize, vertices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-  //   VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
-  //   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  // );
-  // if (err) {
-  //   freeme(app, wc);
-  //   wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
-  //   ck_abort_msg(NULL);
-  // }
+  err = wlu_create_buffer(
+    app, vsize, vertices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
+    ck_abort_msg(NULL);
+  }
 
   /*
    * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -295,9 +295,10 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    app, vsize, NULL, 0,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   if (err) {
     freeme(app, wc);
@@ -305,15 +306,15 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  // err = wlu_copy_buffer(app, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
-  // if (err) {
-  //   freeme(app, wc);
-  //   wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
-  //   ck_abort_msg(NULL);
-  // }
+  err = wlu_copy_buffer(app, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
+    ck_abort_msg(NULL);
+  }
 
   /* 0 is the binding # this is bytes between successive structs */
-  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertex_2D));
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[2];
   vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
@@ -436,7 +437,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
   const VkDeviceSize offsets = 0;
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[0].buff, &offsets);
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[1].buff, &offsets);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);

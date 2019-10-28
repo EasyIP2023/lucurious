@@ -36,4 +36,16 @@ const char *instance_extensions[] = {
   VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 };
 
+float pos_vertices[3][2] = {
+  {0.0f, -0.5f},
+  {0.5f, 0.5f},
+  {-0.5f, 0.5f}
+};
+
+float color_vertices[3][3] = {
+  {1.0f, 0.0f, 0.0f},
+  {0.0f, 1.0f, 0.0f},
+  {0.0f, 0.0f, 1.0f}
+};
+
 #endif

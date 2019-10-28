@@ -602,10 +602,12 @@ VkResult wlu_create_buffer(
     return res;
   }
 
-  p_data = memmove(p_data, data, size);
-  if (!p_data) {
-    wlu_log_me(WLU_DANGER, "[x] void *p_data memmove failed");
-    return res;
+  if (data) {
+    p_data = memmove(p_data, data, size);
+    if (!p_data) {
+      wlu_log_me(WLU_DANGER, "[x] void *p_data memmove failed");
+      return res;
+    }
   }
 
   VkMappedMemoryRange flush_range;

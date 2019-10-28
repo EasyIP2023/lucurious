@@ -129,7 +129,6 @@ START_TEST(test_enumerate_device) {
   app = NULL;
 } END_TEST;
 
-
 START_TEST(test_set_logical_device) {
   VkResult err;
   vkcomp *app = wlu_init_vk();

@@ -368,8 +368,8 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   VkVertexInputAttributeDescription vi_attribs[2];
-  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT);
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, 16, VK_FORMAT_R32G32B32A32_SFLOAT);
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(
     0, VK_VERTEX_INPUT_RATE_VERTEX, sizeof(vertices[0])
