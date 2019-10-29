@@ -35,13 +35,11 @@ static void set_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
   app->vk_layer_props = NULL;
-  app->vk_layer_count = VK_NULL_HANDLE;
+  app->vlc = VK_NULL_HANDLE;
   app->ep_instance_props = NULL;
-  app->ep_instance_count = VK_NULL_HANDLE;
+  app->eic = VK_NULL_HANDLE;
   app->ep_device_props = NULL;
-  app->ep_device_count = VK_NULL_HANDLE;
-  // app->device_properties;
-  // app->device_features;
+  app->edc = VK_NULL_HANDLE;
   app->physical_device = VK_NULL_HANDLE;
   app->queue_create_infos = NULL;
   app->queue_families = NULL;
@@ -53,15 +51,15 @@ static void set_values(vkcomp *app) {
   app->present_queue = VK_NULL_HANDLE;
   app->sc_buffs = VK_NULL_HANDLE;
   app->swap_chain = VK_NULL_HANDLE;
-  app->sc_img_count = VK_NULL_HANDLE;
+  app->sic = VK_NULL_HANDLE;
   app->render_pass = VK_NULL_HANDLE;
   app->pipeline_cache = VK_NULL_HANDLE;
   app->pipeline_layout = VK_NULL_HANDLE;
   app->graphics_pipeline = VK_NULL_HANDLE;
   app->render_pass = VK_NULL_HANDLE;
   app->sc_frame_buffs = VK_NULL_HANDLE;
-  app->cmd_pool = VK_NULL_HANDLE;
-  app->cmd_buffs = VK_NULL_HANDLE;
+  app->cmd_pbs = VK_NULL_HANDLE;
+  app->cpc = VK_NULL_HANDLE;
   app->sems = VK_NULL_HANDLE;
   app->depth.view = VK_NULL_HANDLE;
   app->depth.image = VK_NULL_HANDLE;
@@ -88,13 +86,16 @@ void wlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
   if (app->sc_frame_buffs) {
-    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    for (uint32_t i = 0; i < app->sic; i++) {
       vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
       app->sc_frame_buffs[i] = VK_NULL_HANDLE;
     }
   }
-  if (app->cmd_buffs)
-    vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
+  if (app->cmd_pbs) {
+    for (uint32_t i = 0; i < app->cpc; i++)
+      if (app->cmd_pbs[i].cmd_buffs)
+        vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sic, app->cmd_pbs[i].cmd_buffs);
+  }
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
   if (app->pipeline_cache)
@@ -104,7 +105,7 @@ void wlu_freeup_sc(void *data) {
   if (app->render_pass)
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {
-    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    for (uint32_t i = 0; i < app->sic; i++) {
       vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
       app->sc_buffs[i].view = VK_NULL_HANDLE;
     }
@@ -141,26 +142,32 @@ void wlu_freeup_vk(void *data) {
   if (app->depth.mem)
     vkFreeMemory(app->device, app->depth.mem, NULL);
   if (app->sems) {
-    for (uint32_t i = 0; i < app->sc_img_count; i++) {
-      if (app->sems[i].image) {
+    for (uint32_t i = 0; i < app->sic; i++) {
+      if (app->sems[i].image && app->sems[i].render) {
         vkDestroySemaphore(app->device, app->sems[i].image, NULL);
-        app->sems[i].image = VK_NULL_HANDLE;
-      }
-      if (app->sems[i].render) {
         vkDestroySemaphore(app->device, app->sems[i].render, NULL);
+        app->sems[i].image = VK_NULL_HANDLE;
         app->sems[i].render = VK_NULL_HANDLE;
       }
     }
     free(app->sems);
   }
-  if (app->cmd_buffs) {
-    vkFreeCommandBuffers(app->device, app->cmd_pool, app->sc_img_count, app->cmd_buffs);
-    free(app->cmd_buffs);
+  if (app->cmd_pbs) {
+    for (uint32_t i = 0; i < app->cpc; i++) {
+      if (app->cmd_pbs[i].cmd_buffs) {
+        vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sic, app->cmd_pbs[i].cmd_buffs);
+        free(app->cmd_pbs[i].cmd_buffs);
+        app->cmd_pbs[i].cmd_buffs = VK_NULL_HANDLE;
+      }
+      if (app->cmd_pbs[i].cmd_pool) {
+        vkDestroyCommandPool(app->device, app->cmd_pbs[i].cmd_pool, NULL);
+        app->cmd_pbs[i].cmd_pool = VK_NULL_HANDLE;
+      }
+    }
+    free(app->cmd_pbs);
   }
-  if (app->cmd_pool)
-    vkDestroyCommandPool(app->device, app->cmd_pool, NULL);
   if (app->sc_frame_buffs) {
-    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    for (uint32_t i = 0; i < app->sic; i++) {
       if (app->sc_frame_buffs[i]) {
         vkDestroyFramebuffer(app->device, app->sc_frame_buffs[i], NULL);
         app->sc_frame_buffs[i] = VK_NULL_HANDLE;
@@ -199,7 +206,7 @@ void wlu_freeup_vk(void *data) {
   if (app->render_pass)
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc_buffs) {
-    for (uint32_t i = 0; i < app->sc_img_count; i++) {
+    for (uint32_t i = 0; i < app->sic; i++) {
       if (app->sc_buffs[i].view) {
         vkDestroyImageView(app->device, app->sc_buffs[i].view, NULL);
         app->sc_buffs[i].view = VK_NULL_HANDLE;

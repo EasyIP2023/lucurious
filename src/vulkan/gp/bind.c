@@ -29,22 +29,26 @@
 
 void wlu_bind_pipeline(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   VkPipelineBindPoint pipelineBindPoint,
   VkPipeline pipeline
 ) {
-  vkCmdBindPipeline(app->cmd_buffs[cur_buff], pipelineBindPoint, pipeline);
+  vkCmdBindPipeline(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+                    pipelineBindPoint, pipeline);
 }
 
 void wlu_bind_desc_set(
   vkcomp *app,
-  uint32_t cur_buf,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
-  vkCmdBindDescriptorSets(app->cmd_buffs[cur_buf], pipelineBindPoint,
+  vkCmdBindDescriptorSets(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+                          pipelineBindPoint,
                           app->pipeline_layout, firstSet,
                           app->desc_count, app->desc_set,
                           dynamicOffsetCount, pDynamicOffsets);
@@ -52,13 +56,14 @@ void wlu_bind_desc_set(
 
 void wlu_bind_vertex_buff_to_cmd_buffs(
   vkcomp *app,
-  uint32_t cur_buf,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
   uint32_t firstBinding,
   uint32_t bindingCount,
   const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 ) {
-  vkCmdBindVertexBuffers(app->cmd_buffs[cur_buf],
+  vkCmdBindVertexBuffers(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
                         firstBinding, bindingCount,
                         pBuffers, offsets);
 }

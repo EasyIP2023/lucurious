@@ -29,6 +29,7 @@
 /* https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer */
 VkResult wlu_copy_buffer(
   vkcomp *app,
+  uint32_t cur_pool,
   VkBuffer src_buffer,
   VkBuffer dst_buffer,
   VkDeviceSize size
@@ -38,7 +39,7 @@ VkResult wlu_copy_buffer(
   VkCommandBufferAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  alloc_info.commandPool = app->cmd_pool;
+  alloc_info.commandPool = app->cmd_pbs[cur_pool].cmd_pool;
   alloc_info.commandBufferCount = 1;
 
   VkCommandBuffer cmd_buff;
@@ -88,7 +89,7 @@ VkResult wlu_copy_buffer(
   }
 
 finish_cb_copy:
-  vkFreeCommandBuffers(app->device, app->cmd_pool, 1, &cmd_buff);
+  vkFreeCommandBuffers(app->device, app->cmd_pbs[cur_pool].cmd_pool, 1, &cmd_buff);
 
   return res;
 }

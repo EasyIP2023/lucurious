@@ -29,18 +29,20 @@
 
 void wlu_cmd_draw(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t vertexCount,
   uint32_t instanceCount,
   uint32_t firstVertex,
   uint32_t firstInstance
 ) {
-  vkCmdDraw(app->cmd_buffs[cur_buff], vertexCount,
+  vkCmdDraw(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], vertexCount,
             instanceCount, firstVertex, firstInstance);
 }
 
 void wlu_cmd_draw_indexed(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t indexCount,
   uint32_t instanceCount,
@@ -48,30 +50,32 @@ void wlu_cmd_draw_indexed(
   int32_t vertexOffset,
   uint32_t firstInstance
 ) {
-  vkCmdDrawIndexed(app->cmd_buffs[cur_buff], indexCount, instanceCount,
+  vkCmdDrawIndexed(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], indexCount, instanceCount,
                    firstIndex, vertexOffset, firstInstance);
 }
 
 void wlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport viewport,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstViewport,
   uint32_t viewportCount
 ) {
   app->viewport = viewport;
-  vkCmdSetViewport(app->cmd_buffs[cur_buff], firstViewport,
+  vkCmdSetViewport(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], firstViewport,
                   viewportCount, &app->viewport);
 }
 
 void wlu_cmd_set_scissor(
   vkcomp *app,
   VkRect2D scissor,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstScissor,
   uint32_t scissorCount
 ) {
   app->scissor = scissor;
-  vkCmdSetScissor(app->cmd_buffs[cur_buff], firstScissor,
+  vkCmdSetScissor(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], firstScissor,
                   scissorCount, &app->scissor);
 }

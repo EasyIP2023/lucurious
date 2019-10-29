@@ -95,7 +95,7 @@ VkResult wlu_set_global_layers(vkcomp *app) {
       goto finish_vk_props;
     }
     app->vk_layer_props[i] = vk_props[i];
-    app->vk_layer_count = i;
+    app->vlc = i;
   }
 
 finish_vk_props:

@@ -80,7 +80,7 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
 
     for (uint32_t i = 0; i < extension_count; i++) {
       app->ep_instance_props[i] = extensions[i];
-      app->ep_instance_count = i;
+      app->eic = i;
     }
   }
 
@@ -96,11 +96,11 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
 
     for (uint32_t i = 0; i < extension_count; i++) {
       app->ep_device_props[i] = extensions[i];
-      app->ep_device_count = i;
+      app->edc = i;
     }
 
     /* check for swap chain support */
-    for (uint32_t i = 0; i < app->ep_device_count; i++) {
+    for (uint32_t i = 0; i < app->edc; i++) {
       if (!strcmp(app->ep_device_props[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
         res = VK_TRUE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has swap chain support");

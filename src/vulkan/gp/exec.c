@@ -29,6 +29,7 @@
 
 void wlu_exec_begin_render_pass(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -56,14 +57,14 @@ void wlu_exec_begin_render_pass(
   render_pass_info.clearValueCount = clearValueCount;
   render_pass_info.pClearValues = pClearValues;
 
-  for (uint32_t i = 0; i < app->sc_img_count; i++) {
+  for (uint32_t i = 0; i < app->sic; i++) {
     render_pass_info.framebuffer = app->sc_frame_buffs[i];
     /* Instert render pass into command buffer */
-    vkCmdBeginRenderPass(app->cmd_buffs[i], &render_pass_info, contents);
+    vkCmdBeginRenderPass(app->cmd_pbs[cur_pool].cmd_buffs[i], &render_pass_info, contents);
   }
 }
 
-void wlu_exec_stop_render_pass(vkcomp *app) {
-  for (uint32_t i = 0; i < app->sc_img_count; i++)
-    vkCmdEndRenderPass(app->cmd_buffs[i]);
+void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool) {
+  for (uint32_t i = 0; i < app->sic; i++)
+    vkCmdEndRenderPass(app->cmd_pbs[cur_pool].cmd_buffs[i]);
 }

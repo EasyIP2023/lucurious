@@ -84,6 +84,7 @@ VkResult wlu_create_desc_set(
 
 void wlu_exec_begin_render_pass(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -93,10 +94,11 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 );
 
-void wlu_exec_stop_render_pass(vkcomp *app);
+void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool);
 
 void wlu_bind_pipeline(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   VkPipelineBindPoint pipelineBindPoint,
   VkPipeline pipeline
@@ -104,7 +106,8 @@ void wlu_bind_pipeline(
 
 void wlu_bind_desc_set(
   vkcomp *app,
-  uint32_t cur_buf,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,
@@ -113,7 +116,8 @@ void wlu_bind_desc_set(
 
 void wlu_bind_vertex_buff_to_cmd_buffs(
   vkcomp *app,
-  uint32_t cur_buf,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
   uint32_t firstBinding,
   uint32_t bindingCount,
   const VkBuffer *pBuffers,
@@ -122,6 +126,7 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
 
 void wlu_cmd_draw(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t vertexCount,
   uint32_t instanceCount,
@@ -131,6 +136,7 @@ void wlu_cmd_draw(
 
 void wlu_cmd_draw_indexed(
   vkcomp *app,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t indexCount,
   uint32_t instanceCount,
@@ -142,6 +148,7 @@ void wlu_cmd_draw_indexed(
 void wlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport viewport,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstViewport,
   uint32_t viewportCount
@@ -150,6 +157,7 @@ void wlu_cmd_set_viewport(
 void wlu_cmd_set_scissor(
   vkcomp *app,
   VkRect2D scissor,
+  uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstScissor,
   uint32_t scissorCount

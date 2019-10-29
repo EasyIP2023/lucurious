@@ -90,12 +90,12 @@ void print_gvalidation_layers() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->vk_layer_count; i++) {
+  for (uint32_t i = 0; i < app->vlc; i++) {
     fprintf(stdout, "\t%s", app->vk_layer_props[i].layerName);
     fprintf(stdout, "\t\t%s\n", app->vk_layer_props[i].description);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n\tValidation Layer Count: %d\n", app->vk_layer_count);
+  fprintf(stdout, "\n\tValidation Layer Count: %d\n", app->vlc);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
   wlu_freeup_vk(app);
@@ -118,14 +118,14 @@ void print_instance_extensions() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->ep_instance_count; i++) {
+  for (uint32_t i = 0; i < app->eic; i++) {
     lower_to_upper(app->ep_instance_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
             app->ep_instance_props[i].specVersion,
             app->ep_instance_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n  Instance Extension Count: %d\n", app->ep_instance_count);
+  fprintf(stdout, "\n  Instance Extension Count: %d\n", app->eic);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
   wlu_freeup_vk(app);
@@ -157,14 +157,14 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->ep_device_count; i++) {
+  for (uint32_t i = 0; i < app->edc; i++) {
     lower_to_upper(app->ep_device_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
             app->ep_device_props[i].specVersion,
             app->ep_device_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  printf("\n  Device Extension Count: %d\n", app->ep_device_count);
+  printf("\n  Device Extension Count: %d\n", app->edc);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
   wlu_freeup_vk(app);

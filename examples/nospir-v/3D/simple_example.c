@@ -173,14 +173,15 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_cmd_buffs(app, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  uint32_t cur_pool = 0;
+  err = wlu_create_cmd_buffs(app, cur_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
     return EXIT_FAILURE;
   }
 
-  err = wlu_exec_begin_cmd_buffs(app, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = wlu_exec_begin_cmd_buffs(app, cur_pool, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
@@ -215,6 +216,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
+  /* current buff at this point is technically also current image, but they should be different */
   uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
   err = wlu_retrieve_swapchain_img(app, &cur_buff);
@@ -313,7 +315,7 @@ int main(void) {
 
   wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
   wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
-                             shader_frag_src, "frag.spv", "main");
+                             fragShaderText, "frag.spv", "main");
   if (!shi_frag.bytes) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
@@ -322,7 +324,7 @@ int main(void) {
 
   wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
   wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
-                             shader_vert_src, "vert.spv", "main");
+                             vertShaderText, "vert.spv", "main");
   if (!shi_vert.bytes) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
@@ -473,10 +475,10 @@ int main(void) {
   clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  wlu_exec_begin_render_pass(app, 0, 0, extent3D.width, extent3D.height,
+  wlu_exec_begin_render_pass(app, cur_pool, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_bind_pipeline(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
-  wlu_bind_desc_set(app, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
+  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
+  wlu_bind_desc_set(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
@@ -484,15 +486,15 @@ int main(void) {
   }
 
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
-  wlu_cmd_set_viewport(app, viewport, cur_buff, 0, 1);
-  wlu_cmd_set_scissor(app, scissor, cur_buff, 0, 1);
+  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
+  wlu_cmd_set_viewport(app, viewport, cur_pool, cur_buff, 0, 1);
+  wlu_cmd_set_scissor(app, scissor, cur_pool, cur_buff, 0, 1);
 
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
-  wlu_cmd_draw(app, cur_buff, vertex_count, 1, 0, 0);
+  wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
-  wlu_exec_stop_render_pass(app);
-  err = wlu_exec_stop_cmd_buffs(app);
+  wlu_exec_stop_render_pass(app, cur_pool);
+  err = wlu_exec_stop_cmd_buffs(app, cur_pool);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
@@ -502,7 +504,7 @@ int main(void) {
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
   VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
-  VkCommandBuffer cmd_buffs[1] = {app->cmd_buffs[cur_buff]};
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_pbs[cur_pool].cmd_buffs[cur_buff]};
   err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
     freeme(app, wc);

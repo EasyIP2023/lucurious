@@ -36,7 +36,7 @@ const char *instance_extensions[] = {
   VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 };
 
-const char shader_frag_src[] =
+const char fragShaderText[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"
@@ -46,7 +46,7 @@ const char shader_frag_src[] =
   "   outColor = color;\n"
   "}\n";
 
-const char shader_vert_src[] =
+const char vertShaderText[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"

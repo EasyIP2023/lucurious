@@ -67,13 +67,13 @@ typedef struct vkcomp {
 
   /* keep track of all vulkan extensions */
   VkLayerProperties *vk_layer_props;
-  uint32_t vk_layer_count;
+  uint32_t vlc; /* validation layer count */
 
   VkExtensionProperties *ep_instance_props;
-  uint32_t ep_instance_count;
+  uint32_t eic; /* vulkan extension properties instance count */
 
   VkExtensionProperties *ep_device_props;
-  uint32_t ep_device_count;
+  uint32_t edc; /* vulkan extension properties device count */
 
   /* To get device properties like the name, type and supported Vulkan version */
   VkPhysicalDeviceProperties device_properties;
@@ -101,7 +101,7 @@ typedef struct vkcomp {
   } *sc_buffs;
 
   VkSwapchainKHR swap_chain;
-  uint32_t sc_img_count;
+  uint32_t sic; /* swap chain image count */
 
   VkRenderPass render_pass;
   VkPipelineCache pipeline_cache;
@@ -110,8 +110,18 @@ typedef struct vkcomp {
 
   VkFramebuffer *sc_frame_buffs;
 
-  VkCommandPool cmd_pool;
-  VkCommandBuffer *cmd_buffs;
+  /*
+   * command pool count,
+   * the amount of command buffer sections
+   * should be equal to the amount of command pools.
+   * This helps keep track of what command buffers
+   * belong to what command pool.
+   */
+  uint32_t cpc;
+  struct vkcmds {
+    VkCommandPool cmd_pool;
+    VkCommandBuffer *cmd_buffs;
+  } *cmd_pbs;
 
   semaphores *sems;
 
@@ -275,7 +285,7 @@ VkResult wlu_create_framebuffers(
 VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
 
 /* Allows for your app to submmit graphics commands to render and image */
-VkResult wlu_create_cmd_buffs(vkcomp *app, VkCommandBufferLevel level);
+VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLevel level);
 
 /*
  * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass
@@ -289,11 +299,12 @@ VkResult wlu_create_semaphores(vkcomp *app);
 
 VkResult wlu_exec_begin_cmd_buffs(
   vkcomp *app,
+  uint32_t cur_pool,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app);
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool);
 
 /*
  * How Vulkan establishes connection with window system.
@@ -358,6 +369,7 @@ VkResult wlu_queue_present_queue(
 
 VkResult wlu_copy_buffer(
   vkcomp *app,
+  uint32_t cur_pool,
   VkBuffer src_buffer,
   VkBuffer dst_buffer,
   VkDeviceSize size
