@@ -25,14 +25,10 @@
 #ifndef VKALL_H
 #define VKALL_H
 
+#include <cglm/types.h>
+
 #define VK_USE_PLATFORM_WAYLAND_KHR 1
 #include <vulkan/vulkan.h>
-
-typedef float vec2[2];
-typedef float vec3[3];
-typedef float vec4[4];
-typedef float mat3[3][3];
-typedef float mat4[4][4];
 
 typedef struct vertex_2D {
   vec2 pos;
@@ -95,20 +91,22 @@ typedef struct vkcomp {
   VkQueue graphics_queue;
   VkQueue present_queue;
 
-  struct swap_chain_buffers {
-    VkImage image;
-    VkImageView view;
-  } *sc_buffs;
-
-  VkSwapchainKHR swap_chain;
-  uint32_t sic; /* swap chain image count */
+  uint32_t scc; /* swap chain count */
+  struct sc {
+    VkFramebuffer *frame_buffs;
+    VkSwapchainKHR swap_chain;
+    uint32_t sic; /* swap chain image count */
+    struct swap_chain_buffers {
+      VkImage image;
+      VkImageView view;
+    } *sc_buffs;
+    semaphores *sems;
+  } *sc;
 
   VkRenderPass render_pass;
   VkPipelineCache pipeline_cache;
   VkPipelineLayout pipeline_layout;
   VkPipeline graphics_pipeline;
-
-  VkFramebuffer *sc_frame_buffs;
 
   /*
    * command pool count,
@@ -122,8 +120,6 @@ typedef struct vkcomp {
     VkCommandPool cmd_pool;
     VkCommandBuffer *cmd_buffs;
   } *cmd_pbs;
-
-  semaphores *sems;
 
   VkViewport viewport;
   VkRect2D scissor;
@@ -233,9 +229,14 @@ VkResult wlu_create_swap_chain(
 
 /*
  * Create image views which is the way you communicate to vulkan
- * on how you intend to use the images in the swap chain
+ * on how you intend to use the images in a swap chain
  */
-VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type);
+VkResult wlu_create_img_views(
+  vkcomp *app,
+  uint32_t cur_sc,
+  VkFormat format,
+  VkImageViewType type
+);
 
 /* Need to depth buffer to render 3D images (only need one) */
 VkResult wlu_create_depth_buff(
@@ -271,6 +272,7 @@ VkResult wlu_create_buffer(
 
 VkResult wlu_create_framebuffers(
   vkcomp *app,
+  uint32_t cur_sc,
   uint32_t attachmentCount,
   VkImageView *attachments,
   uint32_t width,
@@ -284,8 +286,16 @@ VkResult wlu_create_framebuffers(
  */
 VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
 
-/* Allows for your app to submmit graphics commands to render and image */
-VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLevel level);
+/*
+ * Allows for your app to put commands into a buffer to later
+ * be submitted to one of the hardware queues
+ */
+VkResult wlu_create_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_sc,
+  VkCommandBufferLevel level
+);
 
 /*
  * Can find in Vulkan SDK samples/API-Samples/10-init_render_pass
@@ -295,16 +305,17 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLev
  * operation until the image is actually available. This function
  * creates semaphores
  */
-VkResult wlu_create_semaphores(vkcomp *app);
+VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_sc);
 
 VkResult wlu_exec_begin_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
+  uint32_t cur_sc,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool);
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc);
 
 /*
  * How Vulkan establishes connection with window system.
@@ -343,7 +354,7 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
 
 /* Acquire the swapchain image in order to set its layout */
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff);
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cur_sc);
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,

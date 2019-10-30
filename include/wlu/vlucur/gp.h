@@ -85,6 +85,7 @@ VkResult wlu_create_desc_set(
 void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
+  uint32_t cur_sc,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -94,7 +95,11 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 );
 
-void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool);
+void wlu_exec_stop_render_pass(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_sc
+);
 
 void wlu_bind_pipeline(
   vkcomp *app,

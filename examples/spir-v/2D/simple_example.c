@@ -172,15 +172,16 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  uint32_t cur_pool = 0;
-  err = wlu_create_cmd_buffs(app, cur_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  /* current buff at this point is technically also current image, but they should be different */
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
+  err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
+  err = wlu_create_img_views(app, cur_sc, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create image views");
@@ -188,17 +189,15 @@ int main(void) {
   }
 
   /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_semaphores(app);
+  err = wlu_create_semaphores(app, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     return EXIT_FAILURE;
   }
 
-  /* current buff at this point is technically also current image, but they should be different */
-  uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff);
+  err = wlu_retrieve_swapchain_img(app, &cur_buff, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
@@ -245,7 +244,7 @@ int main(void) {
   wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
 
   VkImageView vkimg_attach[1];
-  err = wlu_create_framebuffers(app, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
+  err = wlu_create_framebuffers(app, cur_sc, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
@@ -413,7 +412,7 @@ int main(void) {
   VkClearValue clear_value = wlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
 
   /* Set command buffers into recording state */
-  err = wlu_exec_begin_cmd_buffs(app, cur_pool, 0, NULL);
+  err = wlu_exec_begin_cmd_buffs(app, cur_pool, cur_sc, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
@@ -421,7 +420,7 @@ int main(void) {
   }
 
   /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, 0, 0, extent2D.width, extent2D.height,
+  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_cmd_set_viewport(app, viewport, cur_pool, cur_buff, 0, 1);
 
@@ -436,8 +435,8 @@ int main(void) {
   wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
   wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
-  wlu_exec_stop_render_pass(app, cur_pool);
-  err = wlu_exec_stop_cmd_buffs(app, cur_pool);
+  wlu_exec_stop_render_pass(app, cur_pool, cur_sc);
+  err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_stop_cmd_buffs failed");
@@ -445,8 +444,8 @@ int main(void) {
   }
 
   VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
-  VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
+  VkSemaphore wait_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_pbs[cur_pool].cmd_buffs[cur_buff]};
   err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, wait_stages, 1, signal_semaphores);
   if (err) {
@@ -455,7 +454,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_queue_present_queue(app, 1, signal_semaphores, 1, &app->swap_chain, &cur_buff, NULL);
+  err = wlu_queue_present_queue(app, 1, signal_semaphores, 1, &app->sc[cur_sc].swap_chain, &cur_buff, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_queue_present_queue failed");

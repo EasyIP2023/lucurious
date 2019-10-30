@@ -30,6 +30,7 @@
 void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
+  uint32_t cur_sc,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -39,7 +40,7 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 ) {
 
-  if (!app->sc_frame_buffs) {
+  if (!app->sc[cur_sc].frame_buffs) {
     wlu_log_me(WLU_DANGER, "[x] Frame Buffers weren't created");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
@@ -57,14 +58,14 @@ void wlu_exec_begin_render_pass(
   render_pass_info.clearValueCount = clearValueCount;
   render_pass_info.pClearValues = pClearValues;
 
-  for (uint32_t i = 0; i < app->sic; i++) {
-    render_pass_info.framebuffer = app->sc_frame_buffs[i];
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
+    render_pass_info.framebuffer = app->sc[cur_sc].frame_buffs[i];
     /* Instert render pass into command buffer */
     vkCmdBeginRenderPass(app->cmd_pbs[cur_pool].cmd_buffs[i], &render_pass_info, contents);
   }
 }
 
-void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool) {
-  for (uint32_t i = 0; i < app->sic; i++)
+void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++)
     vkCmdEndRenderPass(app->cmd_pbs[cur_pool].cmd_buffs[i]);
 }

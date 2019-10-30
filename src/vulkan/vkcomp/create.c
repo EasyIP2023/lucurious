@@ -246,16 +246,22 @@ VkResult wlu_create_swap_chain(
     return res;
   }
 
+  app->sc = (struct sc *) realloc(app->sc, (app->scc+1) * sizeof(struct sc));
+  if (!app->sc) {
+    wlu_log_me(WLU_DANGER, "realloc app->sc failed!");
+    return res;
+  }
+
   /*
    * Don't want to stick to minimum becuase one would have to wait on the
    * drive to complete internal operations before one can acquire another
    * images to render to. So it's recommended to add one to minImageCount
    */
-  app->sic = capabilities.minImageCount + 1;
+  app->sc[app->scc].sic = capabilities.minImageCount + 1;
 
   /* Be sure sic doesn't exceed the maximum. */
-  if (capabilities.maxImageCount > 0 && app->sic > capabilities.maxImageCount)
-    app->sic = capabilities.maxImageCount;
+  if (capabilities.maxImageCount > 0 && app->sc[app->scc].sic > capabilities.maxImageCount)
+    app->sc[app->scc].sic = capabilities.maxImageCount;
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -281,7 +287,7 @@ VkResult wlu_create_swap_chain(
   create_info.pNext = NULL;
   create_info.flags = 0;
   create_info.surface = app->surface;
-  create_info.minImageCount = app->sic;
+  create_info.minImageCount = app->sc[app->scc].sic;
   create_info.imageFormat = surface_fmt.format;
   create_info.imageColorSpace = surface_fmt.colorSpace;
   create_info.imageExtent.width = width;
@@ -313,60 +319,68 @@ VkResult wlu_create_swap_chain(
     create_info.pQueueFamilyIndices = NULL;
   }
 
-  res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->swap_chain);
+  res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->sc[app->scc].swap_chain);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateSwapchainKHR failed, ERROR CODE: %d", res);
     return res;
   }
 
+  app->scc++;
+
   return res;
 }
 
-VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type) {
+VkResult wlu_create_img_views(
+  vkcomp *app,
+  uint32_t cur_sc,
+  VkFormat format,
+  VkImageViewType type
+) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *sc_imgs = NULL;
 
-  if (!app->swap_chain) {
+  if (!app->sc[cur_sc].swap_chain) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     goto finish_create_img_views;
   }
 
-  app->sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
-        app->sic * sizeof(struct swap_chain_buffers));
-  if (!app->sc_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc app->sc_buffs failed");
+  app->sc[cur_sc].sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
+        app->sc[cur_sc].sic * sizeof(struct swap_chain_buffers));
+  if (!app->sc[cur_sc].sc_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc app->sc[%d].sc_buffs failed", cur_sc);
     goto finish_create_img_views;
   }
 
   /*
-   * It's okay to reuse app->sic, It'll give same result as minImageCount + 1.
+   * It's okay to reuse app->sc[cur_sc].sic,
+   * It'll give same result as minImageCount + 1.
    * Removal of function will result in validation layer errors
    */
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->sic, NULL);
+  res = vkGetSwapchainImagesKHR(app->device, app->sc[cur_sc].swap_chain, &app->sc[cur_sc].sic, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
   }
 
-  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->sic * sizeof(VkImage));
+  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->sc[cur_sc].sic * sizeof(VkImage));
   if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] calloc VkImage *sc_imgs failed");
     goto finish_create_img_views;
   }
 
-  res = vkGetSwapchainImagesKHR(app->device, app->swap_chain, &app->sic, sc_imgs);
+  res = vkGetSwapchainImagesKHR(app->device, app->sc[cur_sc].swap_chain, &app->sc[cur_sc].sic, sc_imgs);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
   }
 
-  for (uint32_t i = 0; i < app->sic; i++) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    create_info.image = app->sc_buffs[i].image = sc_imgs[i];
+    create_info.image = app->sc[cur_sc].sc_buffs[i].image = sc_imgs[i];
     create_info.viewType = type;
     create_info.format = format;
     create_info.components.r = VK_COMPONENT_SWIZZLE_R;
@@ -381,7 +395,7 @@ VkResult wlu_create_img_views(vkcomp *app, VkFormat format, VkImageViewType type
     create_info.subresourceRange.baseArrayLayer = 0;
     create_info.subresourceRange.layerCount = 1;
 
-    res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_buffs[i].view);
+    res = vkCreateImageView(app->device, &create_info, NULL, &app->sc[cur_sc].sc_buffs[i].view);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateImageView failed, ERROR CODE: %d", res);
       goto finish_create_img_views;
@@ -643,6 +657,7 @@ VkResult wlu_create_buffer(
  */
 VkResult wlu_create_framebuffers(
   vkcomp *app,
+  uint32_t cur_sc,
   uint32_t attachmentCount,
   VkImageView *attachments,
   uint32_t width,
@@ -658,22 +673,22 @@ VkResult wlu_create_framebuffers(
     return res;
   }
 
-  if (!app->sc_buffs) {
+  if (!app->sc[cur_sc].sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain buffers not setup");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_img_views(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return res;
   }
 
-  app->sc_frame_buffs = (VkFramebuffer *) calloc(sizeof(VkFramebuffer),
-        app->sic * sizeof(VkFramebuffer));
-  if (!app->sc_frame_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkFramebuffer *sc_frame_buffs failed");
+  app->sc[cur_sc].frame_buffs = (VkFramebuffer *) calloc(sizeof(VkFramebuffer),
+        app->sc[cur_sc].sic * sizeof(VkFramebuffer));
+  if (!app->sc[cur_sc].frame_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc app->sc[%d].frame_buffs failed", cur_sc);
     return res;
   }
 
-  for (uint32_t i = 0; i < app->sic; i++) {
-    attachments[0] = app->sc_buffs[i].view;
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
+    attachments[0] = app->sc[cur_sc].sc_buffs[i].view;
 
     VkFramebufferCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -684,7 +699,7 @@ VkResult wlu_create_framebuffers(
     create_info.height = height;
     create_info.layers = layers;
 
-    res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_frame_buffs[i]);
+    res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc[cur_sc].frame_buffs[i]);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateFramebuffer failed, ERROR CODE: %d", res);
       return res;
@@ -722,10 +737,15 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
   return res;
 }
 
-VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLevel level) {
+VkResult wlu_create_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_sc,
+  VkCommandBufferLevel level
+) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (app->sic == 0) {
+  if (app->sc[cur_sc].sic == 0) {
     wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
@@ -742,10 +762,15 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLev
   /*
    * make it so if swap chain is destroy you don't
    * call calloc multiple time on memory already allocated
+   * Valgrind will throw an error, this is intentional
+   * ==103433== Conditional jump or move depends on uninitialised value(s)
+   * ==103433==    at 0x4851A37: wlu_create_cmd_buffs (create.c:767)
+   * ==103433==    by 0x10AEAC: main (in .../lucurious/examples/spir-v/2D/se)
+   * ==103433==
    */
   if (!app->cmd_pbs[cur_pool].cmd_buffs) { /* decided on this instead of realloc */
     app->cmd_pbs[cur_pool].cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
-          app->sic * sizeof(VkCommandBuffer));
+          app->sc[cur_sc].sic * sizeof(VkCommandBuffer));
     if (!app->cmd_pbs[cur_pool].cmd_buffs) {
       wlu_log_me(WLU_DANGER, "[x] calloc VkCommandBuffer *cmd_buffs failed");
       return res;
@@ -757,7 +782,7 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLev
   alloc_info.pNext = NULL;
   alloc_info.commandPool = app->cmd_pbs[cur_pool].cmd_pool;
   alloc_info.level = level;
-  alloc_info.commandBufferCount = (uint32_t) app->sic;
+  alloc_info.commandBufferCount = (uint32_t) app->sc[cur_sc].sic;
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_pbs[cur_pool].cmd_buffs);
   if (res) {
@@ -768,12 +793,12 @@ VkResult wlu_create_cmd_buffs(vkcomp *app, uint32_t cur_pool, VkCommandBufferLev
   return res;
 }
 
-VkResult wlu_create_semaphores(vkcomp *app) {
+VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_sc) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->sems = (semaphores *) calloc(sizeof(semaphores),
-      app->sic * sizeof(semaphores));
-  if (!app->sems) {
+  app->sc[cur_sc].sems = (semaphores *) calloc(sizeof(semaphores),
+      app->sc[cur_sc].sic * sizeof(semaphores));
+  if (!app->sc[cur_sc].sems) {
     wlu_log_me(WLU_DANGER, "[x] calloc semaphores *sems failed");
     return res;
   }
@@ -783,14 +808,14 @@ VkResult wlu_create_semaphores(vkcomp *app) {
   create_info.pNext = NULL;
   create_info.flags = 0;
 
-  for (uint32_t i = 0; i < app->sic; i++) {
-    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sems[i].image);
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
+    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sc[cur_sc].sems[i].image);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateSemaphore failed to create image semaphore, ERROR CODE: %d", res);
       return res;
     }
 
-    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sems[i].render);
+    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sc[cur_sc].sems[i].render);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateSemaphore failed to create render semaphore, ERROR CODE: %d", res);
       return res;

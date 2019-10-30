@@ -192,10 +192,10 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff) {
+VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cur_sc) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sems) {
+  if (!app->sc[cur_sc].sems) {
     wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
     wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
@@ -203,8 +203,8 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff) {
   }
 
   /* UINT64_MAX disables timeout */
-  res = vkAcquireNextImageKHR(app->device, app->swap_chain, UINT64_MAX,
-                              app->sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
+  res = vkAcquireNextImageKHR(app->device, app->sc[cur_sc].swap_chain, UINT64_MAX,
+                              app->sc[cur_sc].sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
     wlu_freeup_sc(app);
     return res;

@@ -173,22 +173,23 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_pool = 0;
-  err = wlu_create_cmd_buffs(app, cur_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  /* current buff at this point is technically also current image, but they should be different */
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
+  err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
     ck_abort_msg(NULL);
   }
 
-  err = wlu_exec_begin_cmd_buffs(app, cur_pool, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = wlu_exec_begin_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_img_views(app, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
+  err = wlu_create_img_views(app, cur_sc, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create image views");
@@ -209,17 +210,15 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_semaphores(app);
+  err = wlu_create_semaphores(app, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
     ck_abort_msg(NULL);
   }
 
-  /* current buff at this point is technically also current image, but they should be different */
-  uint32_t cur_buff = 0;
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff);
+  err = wlu_retrieve_swapchain_img(app, &cur_buff, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
@@ -336,7 +335,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkImageView vkimg_attach[2];
   vkimg_attach[1] = app->depth.view;
-  err = wlu_create_framebuffers(app, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
+  err = wlu_create_framebuffers(app, cur_sc, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
@@ -475,7 +474,7 @@ START_TEST(test_vulkan_client_create_3D) {
   clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  wlu_exec_begin_render_pass(app, cur_pool, 0, 0, extent3D.width, extent3D.height,
+  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
   wlu_bind_desc_set(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
@@ -493,8 +492,8 @@ START_TEST(test_vulkan_client_create_3D) {
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
   wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
-  wlu_exec_stop_render_pass(app, cur_pool);
-  err = wlu_exec_stop_cmd_buffs(app, cur_pool);
+  wlu_exec_stop_render_pass(app, cur_pool, cur_sc);
+  err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_sc);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
@@ -502,8 +501,8 @@ START_TEST(test_vulkan_client_create_3D) {
   }
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  VkSemaphore wait_semaphores[1] = {app->sems[cur_buff].image};
-  VkSemaphore signal_semaphores[1] = {app->sems[cur_buff].render};
+  VkSemaphore wait_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_pbs[cur_pool].cmd_buffs[cur_buff]};
   err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
   if (err) {
@@ -512,7 +511,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->swap_chain, &cur_buff, NULL);
+  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->sc[cur_sc].swap_chain, &cur_buff, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");

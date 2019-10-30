@@ -29,6 +29,7 @@
 VkResult wlu_exec_begin_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
+  uint32_t cur_sc,
   VkCommandBufferUsageFlags flags,
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 ) {
@@ -48,7 +49,7 @@ VkResult wlu_exec_begin_cmd_buffs(
   begin_info.flags = flags;
   begin_info.pInheritanceInfo = pInheritanceInfo;
 
-  for (uint32_t i = 0; i < app->sic; i++) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
     res = vkBeginCommandBuffer(app->cmd_pbs[cur_pool].cmd_buffs[i], &begin_info);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] Failed to start recording command buffer [%d], ERROR CODE: %d", i, res);
@@ -59,10 +60,10 @@ VkResult wlu_exec_begin_cmd_buffs(
   return res;
 }
 
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool) {
+VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  for (uint32_t i = 0; i < app->sic; i++) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
     res = vkEndCommandBuffer(app->cmd_pbs[cur_pool].cmd_buffs[i]);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] Failed to stop recording command buffer [%d], ERROR CODE: %d", i, res);
