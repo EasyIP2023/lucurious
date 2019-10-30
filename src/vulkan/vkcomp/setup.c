@@ -84,10 +84,8 @@ void wlu_freeup_sc(void *data) {
 
   if (app->cmd_pbs) {
     for (uint32_t i = 0; i < app->cpc; i++)
-      if (app->cmd_pbs[i].cmd_buffs) {
+      if (app->cmd_pbs[i].cmd_buffs)
         vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sc[i].sic, app->cmd_pbs[i].cmd_buffs);
-        free(app->cmd_pbs[i].cmd_buffs); app->cmd_pbs[i].cmd_buffs = VK_NULL_HANDLE;
-      }
   }
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
