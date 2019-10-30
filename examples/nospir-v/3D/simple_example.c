@@ -231,8 +231,8 @@ int main(void) {
   if (extent3D.width > extent3D.height) fovy *= hw;
   wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(app, eye, center, up);
-  wlu_set_matrix(&app->ubd.model, model_matrix, WLU_MAT4);
-  wlu_set_matrix(&app->ubd.clip, clip_matrix, WLU_MAT4);
+  wlu_set_matrix(&app->ubd.model, model_matrix, sizeof(model_matrix));
+  wlu_set_matrix(&app->ubd.clip, clip_matrix, sizeof(clip_matrix));
   wlu_set_mvp_matrix(app);
   wlu_print_matrices(app);
 
@@ -486,7 +486,7 @@ int main(void) {
   }
 
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
+  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
   wlu_cmd_set_viewport(app, viewport, cur_pool, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, scissor, cur_pool, cur_buff, 0, 1);
 

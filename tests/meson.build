@@ -23,25 +23,6 @@
 #
 
 check = dependency('check')
-valgrind = find_program('valgrind', required : false)
-
-if valgrind.found()
-  valgrind_env = environment()
-  valgrind_env.set('LTEST_JOBS', '4')
-  #valgrind_suppressions_file = 'valgrind.suppressions'
-  add_test_setup('valgrind',
-      exe_wrapper : [valgrind,
-          '--leak-check=full',
-          '--show-leak-kinds=all',
-          '--track-origins=yes',
-          '--gen-suppressions=all',
-          '--error-exitcode=3'],
-          #'--suppressions=' + valgrind_suppressions_file],
-      env :  valgrind_env,
-      timeout_multiplier : 100)
-else
-  warning('valgrind not found, disabling valgrind test suite')
-endif
 
 extra_args = ['-g', '-ggdb3']
 
@@ -75,9 +56,17 @@ lucur_shade_test = executable('lucur-shade-test',
   install : false
 )
 
-# Testing main 3d wayland client later compositor build with executable
-lucur_main_3d_test = executable('lucur-main-3d-test',
-  'test-3D-main.c',
+lucur_cube_test = executable('lucur-cube-test',
+  'test-cube.c',
+  include_directories : lucur_inc,
+  dependencies : [check,shaderc],
+  link_with : lib_lucur,
+  link_args : extra_args,
+  install : false
+)
+
+lucur_triangle_test = executable('lucur-triangle-test',
+  'test-triangle.c',
   include_directories : lucur_inc,
   dependencies : [check,shaderc],
   link_with : lib_lucur,
@@ -86,8 +75,8 @@ lucur_main_3d_test = executable('lucur-main-3d-test',
 )
 
 # Testing main wayland client later compositor build with executable
-lucur_main_test = executable('lucur-main-test',
-  'test-main.c',
+lucur_square_test = executable('lucur-square-test',
+  'test-square.c',
   include_directories : lucur_inc,
   dependencies : [check,shaderc],
   link_with : lib_lucur,
@@ -98,5 +87,6 @@ lucur_main_test = executable('lucur-main-test',
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
 test('lucur-shade-test', lucur_shade_test, suite: ['all'])
-test('lucur-main-3d-test', lucur_main_3d_test, suite: ['all'])
-test('lucur-main-test', lucur_main_test, suite: ['all'])
+test('lucur-cube-test', lucur_cube_test, suite: ['images'])
+test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
+test('lucur-square-test', lucur_square_test, suite: ['images'])

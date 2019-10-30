@@ -44,6 +44,7 @@ const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation"
 };
 
+/* used in test-triangle */
 float pos_vertices[3][2] = {
   {0.0f, -0.5f},
   {0.5f, 0.5f},
@@ -55,7 +56,9 @@ float color_vertices[3][3] = {
   {0.0f, 1.0f, 0.0f},
   {0.0f, 0.0f, 1.0f}
 };
+/* used in test-triangle */
 
+/* used in test-cube */
 vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};
 vec3 up = {0, -1, 0};
@@ -119,5 +122,10 @@ vertex_3D vertices[36] = {
   { {1.0f, -1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 1.0f, 1.0f} },
   { {-1.0f, -1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 1.0f, 1.0f} }
 };
+/* used in test-cube */
+
+/* used in test-square */
+uint16_t indices[6] = {0, 1, 2, 2, 3, 0};
+/* used in test-square */
 
 #endif

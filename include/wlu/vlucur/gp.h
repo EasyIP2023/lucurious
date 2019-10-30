@@ -114,7 +114,7 @@ void wlu_bind_desc_set(
   const uint32_t *pDynamicOffsets
 );
 
-void wlu_bind_vertex_buff_to_cmd_buffs(
+void wlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -122,6 +122,15 @@ void wlu_bind_vertex_buff_to_cmd_buffs(
   uint32_t bindingCount,
   const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
+);
+
+void wlu_bind_index_buff_to_cmd_buff(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkIndexType indexType
 );
 
 void wlu_cmd_draw(

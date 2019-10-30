@@ -46,19 +46,16 @@ void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up) {
   glm_lookat(eye, center, up, app->ubd.view);
 }
 
-void wlu_set_matrix(void *matrix, void *model, wlu_matrix_type type) {
-  switch (type) {
-    case WLU_MAT3: memcpy((mat3 *) matrix, (mat3 *) model, sizeof(mat3)); break;
-    case WLU_MAT4: memcpy((mat4 *) matrix, (mat4 *) model, sizeof(mat4)); break;
-  }
+/* made void * to check if memcpy worked */
+void *wlu_set_matrix(void *matrix, void *model, uint32_t size) {
+  matrix = memcpy(matrix, model, size);
+  return (matrix) ? matrix : NULL;
 }
 
-void wlu_set_vector(void *vector, float *vec, wlu_vec_type type) {
-  switch (type) {
-    case WLU_VEC2: memcpy((vec2 *) vector, (vec2 *) vec, sizeof(vec2)); break;
-    case WLU_VEC3: memcpy((vec3 *) vector, (vec3 *) vec, sizeof(vec3)); break;
-    case WLU_VEC4: memcpy((vec4 *) vector, (vec4 *) vec, sizeof(vec4)); break;
-  }
+/* made void * to check if memcpy worked */
+void *wlu_set_vector(void *vector, float *vec, uint32_t size) {
+  vector = memcpy(vector, vec, size);
+  return (vector) ? vector : NULL;
 }
 
 void wlu_set_mvp_matrix(vkcomp *app) {

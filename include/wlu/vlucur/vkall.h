@@ -128,14 +128,14 @@ typedef struct vkcomp {
   VkViewport viewport;
   VkRect2D scissor;
 
-  struct {
+  struct depth {
     VkFormat format;
     VkImage image;
     VkDeviceMemory mem;
     VkImageView view;
   } depth;
 
-  struct {
+  struct ubd {
     mat4 proj;
     mat4 view;
     mat4 model;

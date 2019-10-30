@@ -49,8 +49,6 @@ void freeme(vkcomp *app, wclient *wc) {
 START_TEST(test_vulkan_client_create) {
   VkResult err;
 
-  wait_seconds(2);
-
   wclient *wc = wlu_init_wc();
   if (!wc) {
     wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
@@ -271,14 +269,17 @@ START_TEST(test_vulkan_client_create) {
 
   /* Start of vertex buffer */
   vertex_2D vertices[3];
-  for (uint32_t i = 0; i < 3; i++) {
-    wlu_set_vector(&vertices[i].pos, pos_vertices[i], WLU_VEC2);
-    wlu_set_vector(&vertices[i].color, color_vertices[i], WLU_VEC3);
+  /* Let the compiler get the size of your array for you. Don't hard code */
+  VkDeviceSize vsize = sizeof(vertices);
+  const uint32_t vertex_count = vsize / sizeof(vertex_2D);
+
+  for (uint32_t i = 0; i < vertex_count; i++) {
+    wlu_set_vector(&vertices[i].pos, pos_vertices[i], sizeof(pos_vertices[i]));
+    wlu_set_vector(&vertices[i].color, color_vertices[i], sizeof(color_vertices[i]));
     wlu_print_vector(&vertices[i].pos, WLU_VEC2);
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
-  VkDeviceSize vsize = sizeof(vertices);
   err = wlu_create_buffer(
     app, vsize, vertices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
@@ -441,15 +442,13 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
   const VkDeviceSize offsets = 0;
-  wlu_bind_vertex_buff_to_cmd_buffs(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, &offsets);
+  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, &offsets);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
 
-  /* Let the compiler get the size of your array for you. Don't hard code */
-  const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
   wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   wlu_exec_stop_render_pass(app, cur_pool);
@@ -486,7 +485,7 @@ Suite *main_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
-  s = suite_create("TestMain");
+  s = suite_create("TestTriangle");
 
   /* Core test case */
   tc_core = tcase_create("Core");
@@ -503,6 +502,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
+  wait_seconds(2);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);
