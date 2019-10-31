@@ -22,10 +22,10 @@ I'm not using [wlroots](https://github.com/swaywm/wlroots) because I wanted to l
 * [libshaderc](https://github.com/google/shaderc)
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang, libshaderc)
 
-### [Documentation](https://github.com/lucurious-labs/lucurious-docs)
-### [Installation/Usage/Examples](https://github.com/lucurious-labs/lucurious/tree/development/examples)
-### [Development](https://github.com/lucurious-labs/lucurious/tree/development/src)
-### [Testing](https://github.com/lucurious-labs/lucurious/tree/development/tests)
+### [Documentation](https://github.com/EasyIP2023/lucurious-docs)
+### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious/tree/development/examples)
+### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
+### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
 
 ## References
 * [Wayland freedesktop](https://wayland.freedesktop.org/)
