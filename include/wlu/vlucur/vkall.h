@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Lucurious Labs
+ * Copyright (c) 2019 EasyIP2023
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,9 +93,9 @@ typedef struct vkcomp {
 
   uint32_t scc; /* swap chain count */
   struct sc {
+    uint32_t sic; /* swap chain image count */
     VkFramebuffer *frame_buffs;
     VkSwapchainKHR swap_chain;
-    uint32_t sic; /* swap chain image count */
     struct swap_chain_buffers {
       VkImage image;
       VkImageView view;
