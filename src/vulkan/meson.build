@@ -39,7 +39,7 @@ vkcomp_files = [
 	'vkcomp/display.c', 'vkcomp/exec.c',
 	'vkcomp/setup.c', 'vkcomp/utils.c',
 	'vkcomp/vlayer.c', 'vkcomp/copy.c',
-	'vkcomp/set.c'
+	'vkcomp/set.c', 'vkcomp/values.c'
 ]
 
 lib_vulkan = static_library(

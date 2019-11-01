@@ -301,7 +301,5 @@ VkResult wlu_create_desc_set(
 
   vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
 
-  wlu_log_me(WLU_SUCCESS, "Successfully created Descriptor Set");
-
   return res;
 }

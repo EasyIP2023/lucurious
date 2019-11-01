@@ -106,7 +106,10 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  /* This will get the physical device, it's properties, and features */
+  VkPhysicalDeviceProperties device_props;
+  VkPhysicalDeviceFeatures device_feats;
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
@@ -120,7 +123,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_logical_device(app, 0, NULL, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 0, NULL, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -437,7 +440,7 @@ int main(void) {
   /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent2D.width, extent2D.height,
                              1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_cmd_set_viewport(app, viewport, cur_pool, cur_buff, 0, 1);
+  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
 
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
 

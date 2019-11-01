@@ -25,49 +25,7 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
-
-static void set_values(vkcomp *app) {
-  app->dbg_create_report_callback = VK_NULL_HANDLE;
-  app->dbg_destroy_report_callback = VK_NULL_HANDLE;
-  app->debug_messenger = VK_NULL_HANDLE;
-  app->debug_report_callbacks = VK_NULL_HANDLE;
-  app->dbg_size = VK_NULL_HANDLE;
-  app->instance = VK_NULL_HANDLE;
-  app->surface = VK_NULL_HANDLE;
-  app->vk_layer_props = NULL;
-  app->vlc = VK_NULL_HANDLE;
-  app->ep_instance_props = NULL;
-  app->eic = VK_NULL_HANDLE;
-  app->ep_device_props = NULL;
-  app->edc = VK_NULL_HANDLE;
-  app->physical_device = VK_NULL_HANDLE;
-  app->queue_create_infos = NULL;
-  app->queue_families = NULL;
-  app->queue_family_count = VK_NULL_HANDLE;
-  app->indices.graphics_family = UINT32_MAX;
-  app->indices.present_family = UINT32_MAX;
-  app->device = VK_FALSE;
-  app->graphics_queue = VK_NULL_HANDLE;
-  app->present_queue = VK_NULL_HANDLE;
-  app->scc = VK_NULL_HANDLE;
-  app->sc = VK_NULL_HANDLE;
-  app->render_pass = VK_NULL_HANDLE;
-  app->pipeline_cache = VK_NULL_HANDLE;
-  app->pipeline_layout = VK_NULL_HANDLE;
-  app->graphics_pipeline = VK_NULL_HANDLE;
-  app->render_pass = VK_NULL_HANDLE;
-  app->cmd_pbs = VK_NULL_HANDLE;
-  app->cpc = VK_NULL_HANDLE;
-  app->depth.view = VK_NULL_HANDLE;
-  app->depth.image = VK_NULL_HANDLE;
-  app->depth.mem = VK_NULL_HANDLE;
-  app->bdc = VK_NULL_HANDLE;
-  app->buffs_data = VK_NULL_HANDLE;
-  app->desc_count = VK_NULL_HANDLE;
-  app->desc_layouts = VK_NULL_HANDLE;
-  app->desc_pool = VK_NULL_HANDLE;
-  app->desc_set = VK_NULL_HANDLE;
-}
+#include <vlucur/values.h>
 
 vkcomp *wlu_init_vk() {
   vkcomp *app = (vkcomp *) calloc(sizeof(vkcomp), sizeof(vkcomp));
@@ -75,7 +33,7 @@ vkcomp *wlu_init_vk() {
     wlu_log_me(WLU_DANGER, "calloc vkcomp *app failed");
     return NULL;
   }
-  set_values(app);
+  set_vkcomp_init_values(app);
   return app;
 }
 
@@ -131,12 +89,6 @@ void wlu_freeup_vk(void *data) {
     free(app->queue_families);
   if (app->queue_create_infos)
     free(app->queue_create_infos);
-  if (app->depth.view)
-    vkDestroyImageView(app->device, app->depth.view, NULL);
-  if (app->depth.image)
-    vkDestroyImage(app->device, app->depth.image, NULL);
-  if (app->depth.mem)
-    vkFreeMemory(app->device, app->depth.mem, NULL);
   if (app->cmd_pbs) {
     for (uint32_t i = 0; i < app->cpc; i++) {
       if (app->cmd_pbs[i].cmd_buffs) {
@@ -183,6 +135,12 @@ void wlu_freeup_vk(void *data) {
     vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc) { /* Annihilate All Swap Chain Objects */
     for (uint32_t i = 0; i < app->scc; i++) {
+      if (app->sc[i].depth.view)
+        vkDestroyImageView(app->device, app->sc[i].depth.view, NULL);
+      if (app->sc[i].depth.image)
+        vkDestroyImage(app->device, app->sc[i].depth.image, NULL);
+      if (app->sc[i].depth.mem)
+        vkFreeMemory(app->device, app->sc[i].depth.mem, NULL);
       if (app->sc[i].sc_buffs && app->sc[i].frame_buffs && app->sc[i].sems) {
         for (uint32_t j = 0; j < app->sc[i].sic; j++) {
           if (app->sc[i].sems[j].image && app->sc[i].sems[j].render) {
@@ -212,7 +170,7 @@ void wlu_freeup_vk(void *data) {
   if (app->instance)
     vkDestroyInstance(app->instance, NULL);
 
-  set_values(app);
+  set_vkcomp_init_values(app);
   if (app) free(app);
   app = NULL;
 }

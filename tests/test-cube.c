@@ -108,7 +108,10 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+  /* This will get the physical device, it's properties, and features */
+  VkPhysicalDeviceProperties device_props;
+  VkPhysicalDeviceFeatures device_feats;
+  err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
@@ -122,7 +125,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app, 3, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 3, enabled_validation_layers, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -196,7 +199,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_depth_buff(app, VK_FORMAT_D16_UNORM,
+  err = wlu_create_depth_buff(app, cur_sc, VK_FORMAT_D16_UNORM,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_IMAGE_TYPE_2D, extent3D,
@@ -290,7 +293,7 @@ START_TEST(test_vulkan_client_create_3D) {
   );
 
   /* Create render pass stencil/depth attachment for depth buffer */
-  attachments[1] = wlu_set_attachment_desc(app->depth.format,
+  attachments[1] = wlu_set_attachment_desc(app->sc[cur_sc].depth.format,
     VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
@@ -334,7 +337,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_log_me(WLU_INFO, "End of shader creation");
 
   VkImageView vkimg_attach[2];
-  vkimg_attach[1] = app->depth.view;
+  vkimg_attach[1] = app->sc[cur_sc].depth.view;
   err = wlu_create_framebuffers(app, cur_sc, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
   if (err) {
     freeme(app, wc);
@@ -486,8 +489,8 @@ START_TEST(test_vulkan_client_create_3D) {
 
   const VkDeviceSize offsets[1] = {0};
   wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
-  wlu_cmd_set_viewport(app, viewport, cur_pool, cur_buff, 0, 1);
-  wlu_cmd_set_scissor(app, scissor, cur_pool, cur_buff, 0, 1);
+  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
+  wlu_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
 
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
   wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);

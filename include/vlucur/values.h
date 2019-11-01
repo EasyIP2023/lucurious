@@ -22,17 +22,10 @@
  * THE SOFTWARE.
  */
 
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef VALUES_H
+#define VALUES_H
 
-VkBool32 is_device_suitable(
-  VkPhysicalDevice device,
-  VkPhysicalDeviceType vkpdtype,
-  VkPhysicalDeviceProperties *device_props,
-  VkPhysicalDeviceFeatures *device_feats
-);
-
-VkResult get_extension_properties(vkcomp *app,
-    VkLayerProperties *prop, VkPhysicalDevice device);
+void set_vkcomp_init_values(vkcomp *app);
+void set_sc_init_values(vkcomp *app);
 
 #endif

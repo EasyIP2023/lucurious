@@ -40,17 +40,6 @@ typedef struct vertex_3D {
   vec4 color;
 } vertex_3D;
 
-/*
- * Use a image semaphore to signal that an image
- * has been acquired and is ready for rendering.
- * Use a render semaphore to singal that rendering
- * has finished and presentation can happen.
- */
-typedef struct semaphores {
-  VkSemaphore image;
-  VkSemaphore render;
-} semaphores;
-
 typedef struct vkcomp {
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
@@ -71,11 +60,6 @@ typedef struct vkcomp {
   VkExtensionProperties *ep_device_props;
   uint32_t edc; /* vulkan extension properties device count */
 
-  /* To get device properties like the name, type and supported Vulkan version */
-  VkPhysicalDeviceProperties device_properties;
-  /* For optional features like texture compression,
-    64 bit floats and multi viewport rendering */
-  VkPhysicalDeviceFeatures device_features;
   VkPhysicalDevice physical_device;
 
   VkDeviceQueueCreateInfo *queue_create_infos;
@@ -92,15 +76,26 @@ typedef struct vkcomp {
   VkQueue present_queue;
 
   uint32_t scc; /* swap chain count */
-  struct sc {
+  struct swap_chain {
     uint32_t sic; /* swap chain image count */
-    VkFramebuffer *frame_buffs;
     VkSwapchainKHR swap_chain;
     struct swap_chain_buffers {
       VkImage image;
       VkImageView view;
     } *sc_buffs;
-    semaphores *sems;
+
+    struct semaphores {
+      VkSemaphore image;
+      VkSemaphore render;
+    } *sems;
+
+    VkFramebuffer *frame_buffs;
+    struct depth_buffer {
+      VkFormat format;
+      VkImage image;
+      VkDeviceMemory mem;
+      VkImageView view;
+    } depth;
   } *sc;
 
   VkRenderPass render_pass;
@@ -121,27 +116,16 @@ typedef struct vkcomp {
     VkCommandBuffer *cmd_buffs;
   } *cmd_pbs;
 
-  VkViewport viewport;
-  VkRect2D scissor;
-
-  struct depth {
-    VkFormat format;
-    VkImage image;
-    VkDeviceMemory mem;
-    VkImageView view;
-  } depth;
-
-  struct ubd {
+  struct uniform_block_data {
     mat4 proj;
     mat4 view;
     mat4 model;
     mat4 clip;
     mat4 mvp;
-  } ubd; /* Uniform Block Data */
+  } ubd;
 
   /* Buffer Data Count */
   uint32_t bdc;
-
   struct buffs_data {
     VkBuffer buff;
     VkDeviceMemory mem;
@@ -201,7 +185,12 @@ VkResult wlu_create_instance(
  * This function will select the physical device of
  * your choosing based off of VkPhysicalDeviceType
  */
-VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype);
+VkResult wlu_create_physical_device(
+  vkcomp *app,
+  VkPhysicalDeviceType vkpdtype,
+  VkPhysicalDeviceProperties *device_properties,
+  VkPhysicalDeviceFeatures *device_features
+);
 
 /*
  * After selecting a physical device to use.
@@ -211,10 +200,11 @@ VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype);
  */
 VkResult wlu_create_logical_device(
   vkcomp *app,
+  VkPhysicalDeviceFeatures *device_feats,
   uint32_t enabledLayerCount,
-  const char* const* ppEnabledLayerNames,
+  const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
-  const char* const* ppEnabledExtensionNames
+  const char *const *ppEnabledExtensionNames
 );
 
 /* Create the actual swap chain used to present images to a surface */
@@ -241,6 +231,7 @@ VkResult wlu_create_img_views(
 /* Need to depth buffer to render 3D images (only need one) */
 VkResult wlu_create_depth_buff(
   vkcomp *app,
+  uint32_t cur_sc,
   VkFormat depth_format,
   VkFormatFeatureFlags linearTilingFeatures,
   VkFormatFeatureFlags optimalTilingFeatures,

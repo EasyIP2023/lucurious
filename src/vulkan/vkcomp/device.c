@@ -28,17 +28,21 @@
 #include <vlucur/device.h>
 
 /* This function is mainly the point where we query a given physical device properties/features */
-VkBool32 is_device_suitable(vkcomp *app, VkPhysicalDevice device, VkPhysicalDeviceType vkpdtype) {
-  /* Query device properties */
-  vkGetPhysicalDeviceProperties(device, &app->device_properties);
-  /* Query device features */
-  vkGetPhysicalDeviceFeatures(device, &app->device_features);
+VkBool32 is_device_suitable(
+  VkPhysicalDevice device,
+  VkPhysicalDeviceType vkpdtype,
+  VkPhysicalDeviceProperties *device_props,
+  VkPhysicalDeviceFeatures *device_feats
+) {
 
-  return (app->device_properties.deviceType == vkpdtype       &&
-          app->device_features.depthClamp                     &&
-          app->device_features.depthBiasClamp                 &&
-          app->device_features.logicOp                        &&
-          app->device_features.robustBufferAccess);
+  vkGetPhysicalDeviceProperties(device, device_props); /* Query device properties */
+  vkGetPhysicalDeviceFeatures(device, device_feats); /* Query device features */
+
+  return (device_props->deviceType == vkpdtype    &&
+          device_feats->depthClamp                &&
+          device_feats->depthBiasClamp            &&
+          device_feats->logicOp                   &&
+          device_feats->robustBufferAccess);
 }
 
 VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {

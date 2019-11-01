@@ -27,6 +27,7 @@
 #include <wlu/utils/log.h>
 #include <vlucur/utils.h>
 #include <vlucur/device.h>
+#include <vlucur/values.h>
 
 VkResult wlu_create_instance(
   vkcomp *app,
@@ -79,7 +80,12 @@ VkResult wlu_create_instance(
 }
 
 /* Get user physical device */
-VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype) {
+VkResult wlu_create_physical_device(
+  vkcomp *app,
+  VkPhysicalDeviceType vkpdtype,
+  VkPhysicalDeviceProperties *device_props,
+  VkPhysicalDeviceFeatures *device_feats
+) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -122,11 +128,11 @@ VkResult wlu_create_physical_device(vkcomp *app, VkPhysicalDeviceType vkpdtype) 
   * to do the graphics related task that we need
   */
   for (uint32_t i = 0; i < device_count; i++) {
-    if (is_device_suitable(app, devices[i], vkpdtype) &&
+    if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats) &&
         /* Check if current device has swap chain support */
         get_extension_properties(app, NULL, devices[i])) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
-      wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", app->device_properties.deviceName);
+      wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
     }
   }
@@ -147,6 +153,7 @@ finish_devices:
 
 VkResult wlu_create_logical_device(
   vkcomp *app,
+  VkPhysicalDeviceFeatures *device_feats,
   uint32_t enabledLayerCount,
   const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
@@ -197,7 +204,7 @@ VkResult wlu_create_logical_device(
   create_info.ppEnabledLayerNames = ppEnabledLayerNames;
   create_info.enabledExtensionCount = enabledExtensionCount;
   create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
-  create_info.pEnabledFeatures = &app->device_features;
+  create_info.pEnabledFeatures = device_feats;
 
 
   /* Create logic device */
@@ -246,7 +253,7 @@ VkResult wlu_create_swap_chain(
     return res;
   }
 
-  app->sc = (struct sc *) realloc(app->sc, (app->scc+1) * sizeof(struct sc));
+  app->sc = (struct swap_chain *) realloc(app->sc, (app->scc+1) * sizeof(struct swap_chain));
   if (!app->sc) {
     wlu_log_me(WLU_DANGER, "realloc app->sc failed!");
     return res;
@@ -262,6 +269,9 @@ VkResult wlu_create_swap_chain(
   /* Be sure sic doesn't exceed the maximum. */
   if (capabilities.maxImageCount > 0 && app->sc[app->scc].sic > capabilities.maxImageCount)
     app->sc[app->scc].sic = capabilities.maxImageCount;
+
+  /* initialize swap chain values */
+  set_sc_init_values(app);
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -412,6 +422,7 @@ finish_create_img_views:
 
 VkResult wlu_create_depth_buff(
   vkcomp *app,
+  uint32_t cur_sc,
   VkFormat depth_format,
   VkFormatFeatureFlags linearTilingFeatures,
   VkFormatFeatureFlags optimalTilingFeatures,
@@ -426,14 +437,14 @@ VkResult wlu_create_depth_buff(
   VkResult res = VK_RESULT_MAX_ENUM;
   VkBool32 pass;
 
-  app->depth.format = depth_format;
+  app->sc[cur_sc].depth.format = depth_format;
 
   VkImageCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
   create_info.imageType = imageType;
-  create_info.format = app->depth.format;
+  create_info.format = app->sc[cur_sc].depth.format;
   create_info.extent.width = extent.width;
   create_info.extent.height = extent.height;
   create_info.extent.depth = extent.depth;
@@ -442,7 +453,7 @@ VkResult wlu_create_depth_buff(
   create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 
   VkFormatProperties props;
-  vkGetPhysicalDeviceFormatProperties(app->physical_device, app->depth.format, &props);
+  vkGetPhysicalDeviceFormatProperties(app->physical_device, app->sc[cur_sc].depth.format, &props);
   if (props.linearTilingFeatures & linearTilingFeatures) {
     create_info.tiling = VK_IMAGE_TILING_LINEAR;
   } else if (props.optimalTilingFeatures & optimalTilingFeatures) {
@@ -471,7 +482,7 @@ VkResult wlu_create_depth_buff(
   create_view_info.pNext = NULL;
   create_view_info.flags = 0;
   create_view_info.image = VK_NULL_HANDLE;
-  create_view_info.format = app->depth.format;
+  create_view_info.format = app->sc[cur_sc].depth.format;
   create_view_info.components.r = VK_COMPONENT_SWIZZLE_R;
   create_view_info.components.g = VK_COMPONENT_SWIZZLE_G;
   create_view_info.components.b = VK_COMPONENT_SWIZZLE_B;
@@ -483,13 +494,13 @@ VkResult wlu_create_depth_buff(
   create_view_info.subresourceRange.layerCount = 1;
   create_view_info.viewType = viewType;
 
-  if (app->depth.format == VK_FORMAT_D16_UNORM_S8_UINT ||
-      app->depth.format == VK_FORMAT_D24_UNORM_S8_UINT ||
-      app->depth.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+  if (app->sc[cur_sc].depth.format == VK_FORMAT_D16_UNORM_S8_UINT ||
+      app->sc[cur_sc].depth.format == VK_FORMAT_D24_UNORM_S8_UINT ||
+      app->sc[cur_sc].depth.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
       create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
   /* Create image object */
-  res = vkCreateImage(app->device, &create_info, NULL, &app->depth.image);
+  res = vkCreateImage(app->device, &create_info, NULL, &app->sc[cur_sc].depth.image);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateImage failed, ERROR CODE: %d", res);
     return res;
@@ -503,7 +514,7 @@ VkResult wlu_create_depth_buff(
    * memory for an image.
    */
   VkMemoryRequirements mem_reqs;
-  vkGetImageMemoryRequirements(app->device, app->depth.image, &mem_reqs);
+  vkGetImageMemoryRequirements(app->device, app->sc[cur_sc].depth.image, &mem_reqs);
 
   mem_alloc.allocationSize = mem_reqs.size;
   /* Use the memory properties to determine the type of memory required */
@@ -514,22 +525,22 @@ VkResult wlu_create_depth_buff(
   }
 
   /* Allocate memory */
-  res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->depth.mem);
+  res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->sc[cur_sc].depth.mem);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
   /* Associate memory with image object by binding */
-  res = vkBindImageMemory(app->device, app->depth.image, app->depth.mem, 0);
+  res = vkBindImageMemory(app->device, app->sc[cur_sc].depth.image, app->sc[cur_sc].depth.mem, 0);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkBindImageMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
   /* Create image view object */
-  create_view_info.image = app->depth.image;
-  res = vkCreateImageView(app->device, &create_view_info, NULL, &app->depth.view);
+  create_view_info.image = app->sc[cur_sc].depth.image;
+  res = vkCreateImageView(app->device, &create_view_info, NULL, &app->sc[cur_sc].depth.view);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateImageView failed, ERROR CODE: %d", res);
     return res;
@@ -793,11 +804,18 @@ VkResult wlu_create_cmd_buffs(
   return res;
 }
 
+/*
+ * (This comment is for me)
+ * Use a image semaphore to signal that an image
+ * has been acquired and is ready for rendering.
+ * Use a render semaphore to singal that rendering
+ * has finished and presentation can happen.
+ */
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_sc) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->sc[cur_sc].sems = (semaphores *) calloc(sizeof(semaphores),
-      app->sc[cur_sc].sic * sizeof(semaphores));
+  app->sc[cur_sc].sems = (struct semaphores *) calloc(sizeof(struct semaphores),
+      app->sc[cur_sc].sic * sizeof(struct semaphores));
   if (!app->sc[cur_sc].sems) {
     wlu_log_me(WLU_DANGER, "[x] calloc semaphores *sems failed");
     return res;

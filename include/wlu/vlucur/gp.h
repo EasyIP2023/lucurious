@@ -161,7 +161,7 @@ void wlu_cmd_draw_indexed(
 
 void wlu_cmd_set_viewport(
   vkcomp *app,
-  VkViewport viewport,
+  VkViewport *viewport,
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstViewport,
@@ -170,7 +170,7 @@ void wlu_cmd_set_viewport(
 
 void wlu_cmd_set_scissor(
   vkcomp *app,
-  VkRect2D scissor,
+  VkRect2D *scissor,
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t firstScissor,
