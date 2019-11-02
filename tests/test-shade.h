@@ -63,7 +63,7 @@ const char vertShaderText[] =
   "void main() {\n"
   "   outColor = inColor;\n"
   "   gl_Position = myBufferVals.mvp * pos;\n"
-  "}\n";
+  "}";
 
 const char fragShaderText[] =
   "#version 400\n"
@@ -73,6 +73,23 @@ const char fragShaderText[] =
   "layout (location = 0) out vec4 outColor;\n"
   "void main() {\n"
   "   outColor = color;\n"
-  "}\n";
+  "}";
+
+const char spin_square_vert_text[] =
+  "#version 450\n"
+  "#extension GL_ARB_separate_shader_objects : enable\n"
+  "#extension GL_ARB_shading_language_420pack : enable\n"
+  "layout(binding = 0) uniform UniformBufferObject {\n"
+  "   mat4 model;\n"
+  "   mat4 view;\n"
+  "   mat4 proj;\n"
+  "} ubo;\n"
+  "layout(location = 0) in vec2 inPosition;\n"
+  "layout(location = 1) in vec3 inColor;\n"
+  "layout(location = 0) out vec3 fragColor;\n"
+  "void main() {\n"
+  "   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 0.0, 1.0);\n"
+  "   fragColor = inColor;\n"
+  "}";
 
 #endif

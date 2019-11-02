@@ -259,6 +259,9 @@ VkResult wlu_create_swap_chain(
     return res;
   }
 
+  /* initialize swap chain values */
+  set_sc_init_values(app);
+
   /*
    * Don't want to stick to minimum becuase one would have to wait on the
    * drive to complete internal operations before one can acquire another
@@ -269,9 +272,6 @@ VkResult wlu_create_swap_chain(
   /* Be sure sic doesn't exceed the maximum. */
   if (capabilities.maxImageCount > 0 && app->sc[app->scc].sic > capabilities.maxImageCount)
     app->sc[app->scc].sic = capabilities.maxImageCount;
-
-  /* initialize swap chain values */
-  set_sc_init_values(app);
 
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
@@ -362,6 +362,8 @@ VkResult wlu_create_img_views(
     wlu_log_me(WLU_DANGER, "[x] calloc app->sc[%d].sc_buffs failed", cur_sc);
     goto finish_create_img_views;
   }
+
+  set_sc_buffs_init_values(app, cur_sc);
 
   /*
    * It's okay to reuse app->sc[cur_sc].sic,
@@ -579,6 +581,8 @@ VkResult wlu_create_buffer(
     return res;
   }
 
+  set_buffs_init_values(app);
+
   app->buffs_data[app->bdc].name = buff_name;
   res = vkCreateBuffer(app->device, &create_info, NULL, &app->buffs_data[app->bdc].buff);
   if (res) {
@@ -736,6 +740,8 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
     return res;
   }
 
+  set_cmd_pbs_init_values(app);
+
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   create_info.pNext = NULL;
@@ -773,11 +779,6 @@ VkResult wlu_create_cmd_buffs(
   /*
    * make it so if swap chain is destroy you don't
    * call calloc multiple time on memory already allocated
-   * Valgrind will throw an error, this is intentional
-   * ==103433== Conditional jump or move depends on uninitialised value(s)
-   * ==103433==    at 0x4851A37: wlu_create_cmd_buffs (create.c:767)
-   * ==103433==    by 0x10AEAC: main (in .../lucurious/examples/spir-v/2D/se)
-   * ==103433==
    */
   if (!app->cmd_pbs[cur_pool].cmd_buffs) { /* decided on this instead of realloc */
     app->cmd_pbs[cur_pool].cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
@@ -820,6 +821,8 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_sc) {
     wlu_log_me(WLU_DANGER, "[x] calloc semaphores *sems failed");
     return res;
   }
+
+  set_sc_sems_init_values(app, cur_sc);
 
   VkSemaphoreCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;

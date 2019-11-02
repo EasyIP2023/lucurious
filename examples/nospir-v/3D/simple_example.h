@@ -44,7 +44,7 @@ const char fragShaderText[] =
   "layout (location = 0) out vec4 outColor;\n"
   "void main() {\n"
   "   outColor = color;\n"
-  "}\n";
+  "}";
 
 const char vertShaderText[] =
   "#version 400\n"
@@ -59,7 +59,7 @@ const char vertShaderText[] =
   "void main() {\n"
   "   outColor = inColor;\n"
   "   gl_Position = myBufferVals.mvp * pos;\n"
-  "}\n";
+  "}";
 
 vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};

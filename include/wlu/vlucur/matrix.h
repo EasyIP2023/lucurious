@@ -38,23 +38,15 @@ typedef enum wlu_matrix_type {
 
 float wlu_set_fovy(float fovy);
 
-void wlu_set_perspective(
-  vkcomp *app,
-  float fovy,
-  float aspect,
-  float nearVal,
-  float farVal
-);
+void wlu_set_perspective(mat4 proj, float fovy, float aspect, float nearVal, float farVal);
 
-void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up);
+void wlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up);
 
 void *wlu_set_matrix(void *matrix, void *model, uint32_t size);
 
 void *wlu_set_vector(void *vector, float *vec, uint32_t size);
 
-void wlu_set_mvp_matrix(vkcomp *app);
-
-void wlu_print_matrices(vkcomp *app);
+void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model);
 
 void wlu_print_vector(void *vector, wlu_vec_type type);
 

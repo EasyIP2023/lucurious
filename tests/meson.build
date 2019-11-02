@@ -74,7 +74,6 @@ lucur_triangle_test = executable('lucur-triangle-test',
   install : false
 )
 
-# Testing main wayland client later compositor build with executable
 lucur_square_test = executable('lucur-square-test',
   'test-square.c',
   include_directories : lucur_inc,

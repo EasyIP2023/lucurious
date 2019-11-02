@@ -116,14 +116,6 @@ typedef struct vkcomp {
     VkCommandBuffer *cmd_buffs;
   } *cmd_pbs;
 
-  struct uniform_block_data {
-    mat4 proj;
-    mat4 view;
-    mat4 model;
-    mat4 clip;
-    mat4 mvp;
-  } ubd;
-
   /* Buffer Data Count */
   uint32_t bdc;
   struct buffs_data {

@@ -33,17 +33,17 @@ float wlu_set_fovy(float fovy) {
 }
 
 void wlu_set_perspective(
-  vkcomp *app,
+  mat4 proj,
   float fovy,
   float aspect,
   float nearVal,
   float farVal
 ) {
-  glmc_perspective(fovy, aspect, nearVal, farVal, app->ubd.proj);
+  glmc_perspective(fovy, aspect, nearVal, farVal, proj);
 }
 
-void wlu_set_lookat(vkcomp *app, vec3 eye, vec3 center, vec3 up) {
-  glm_lookat(eye, center, up, app->ubd.view);
+void wlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up) {
+  glm_lookat(eye, center, up, view);
 }
 
 /* made void * to check if memcpy worked */
@@ -58,7 +58,6 @@ void *wlu_set_vector(void *vector, float *vec, uint32_t size) {
   return (vector) ? vector : NULL;
 }
 
-void wlu_set_mvp_matrix(vkcomp *app) {
-  glm_mat4_mulN((mat4 *[]){&app->ubd.clip, &app->ubd.proj,
-                &app->ubd.view, &app->ubd.model}, 4, app->ubd.mvp);
+void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model) {
+  glm_mat4_mulN((mat4 *[]){clip, proj, view, model}, 4, mvp);
 }

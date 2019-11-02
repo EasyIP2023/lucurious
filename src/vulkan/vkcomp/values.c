@@ -67,13 +67,41 @@ void set_vkcomp_init_values(vkcomp *app) {
 }
 
 void set_sc_init_values(vkcomp *app) {
-  for (uint32_t i = app->scc; i < (app->scc+1); i++) {
-    app->sc[i].swap_chain = VK_NULL_HANDLE;
-    app->sc[i].sc_buffs = VK_NULL_HANDLE;
-    app->sc[i].sems = VK_NULL_HANDLE;
-    app->sc[i].frame_buffs = VK_NULL_HANDLE;
-    app->sc[i].depth.view = VK_NULL_HANDLE;
-    app->sc[i].depth.image = VK_NULL_HANDLE;
-    app->sc[i].depth.mem = VK_NULL_HANDLE;
+  app->sc[app->scc].sic = VK_NULL_HANDLE;
+  app->sc[app->scc].swap_chain = VK_NULL_HANDLE;
+  app->sc[app->scc].sc_buffs = VK_NULL_HANDLE;
+  app->sc[app->scc].sems = VK_NULL_HANDLE;
+  app->sc[app->scc].frame_buffs = VK_NULL_HANDLE;
+  app->sc[app->scc].depth.format = VK_NULL_HANDLE;
+  app->sc[app->scc].depth.view = VK_NULL_HANDLE;
+  app->sc[app->scc].depth.image = VK_NULL_HANDLE;
+  app->sc[app->scc].depth.mem = VK_NULL_HANDLE;
+}
+
+void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_sc) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
+    app->sc[cur_sc].sc_buffs[i].image = VK_NULL_HANDLE;
+    app->sc[cur_sc].sc_buffs[i].view = VK_NULL_HANDLE;
   }
+}
+
+void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc) {
+  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
+    app->sc[cur_sc].sems[i].image = VK_NULL_HANDLE;
+    app->sc[cur_sc].sems[i].render = VK_NULL_HANDLE;
+  }
+}
+
+void set_cmd_pbs_init_values(vkcomp *app) {
+  app->cmd_pbs[app->cpc].cmd_pool = VK_NULL_HANDLE;
+  app->cmd_pbs[app->cpc].cmd_buffs = VK_NULL_HANDLE;
+}
+
+void set_buffs_init_values(vkcomp *app) {
+  app->buffs_data[app->bdc].buff = VK_NULL_HANDLE;
+  app->buffs_data[app->bdc].mem = VK_NULL_HANDLE;
+  app->buffs_data[app->bdc].buff_info.buffer = VK_NULL_HANDLE;
+  app->buffs_data[app->bdc].buff_info.offset = VK_NULL_HANDLE;
+  app->buffs_data[app->bdc].buff_info.range = VK_NULL_HANDLE;
+  app->buffs_data[app->bdc].name = VK_NULL_HANDLE;
 }

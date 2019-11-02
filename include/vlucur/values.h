@@ -27,5 +27,9 @@
 
 void set_vkcomp_init_values(vkcomp *app);
 void set_sc_init_values(vkcomp *app);
+void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_sc);
+void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc);
+void set_cmd_pbs_init_values(vkcomp *app);
+void set_buffs_init_values(vkcomp *app);
 
 #endif

@@ -42,6 +42,30 @@
 #define HEIGHT 600
 #define DEPTH 1
 
+struct uniform_block_data {
+  mat4 proj;
+  mat4 view;
+  mat4 model;
+  mat4 clip;
+  mat4 mvp;
+} ubd;
+
+void wlu_print_matrices() {
+  wlu_log_me(WLU_INFO, "Perspective Matrix");
+  wlu_log_me(WLU_INFO, "Projection from camera to screen");
+  wlu_print_matrix(ubd.proj, WLU_MAT4);
+  wlu_log_me(WLU_INFO, "View Matrix");
+  wlu_log_me(WLU_INFO, "View from world space to camera space");
+  wlu_print_matrix(ubd.view, WLU_MAT4);
+  wlu_log_me(WLU_INFO, "Model Matrix");
+  wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
+  wlu_print_matrix(ubd.model, WLU_MAT4);
+  wlu_log_me(WLU_INFO, "Clip Matrix");
+  wlu_print_matrix(ubd.clip, WLU_MAT4);
+  wlu_log_me(WLU_INFO, "MVP Matrix");
+  wlu_print_matrix(ubd.mvp, WLU_MAT4);
+}
+
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
@@ -231,16 +255,16 @@ int main(void) {
   float fovy = wlu_set_fovy(45.0f);
   float hw = (float) extent3D.width / (float) extent3D.height;
   if (extent3D.width > extent3D.height) fovy *= hw;
-  wlu_set_perspective(app, fovy, hw, 0.1f, 100.0f);
-  wlu_set_lookat(app, eye, center, up);
-  wlu_set_matrix(&app->ubd.model, model_matrix, sizeof(model_matrix));
-  wlu_set_matrix(&app->ubd.clip, clip_matrix, sizeof(clip_matrix));
-  wlu_set_mvp_matrix(app);
-  wlu_print_matrices(app);
+  wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 100.0f);
+  wlu_set_lookat(ubd.view, eye, center, up);
+  wlu_set_matrix(ubd.model, model_matrix, sizeof(model_matrix));
+  wlu_set_matrix(ubd.clip, clip_matrix, sizeof(clip_matrix));
+  wlu_set_mvp_matrix(ubd.mvp, &ubd.clip, &ubd.proj, &ubd.view, &ubd.model);
+  wlu_print_matrices();
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(app->ubd.mvp), &app->ubd.mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    app, sizeof(ubd.mvp), ubd.mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
