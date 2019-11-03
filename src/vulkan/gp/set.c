@@ -435,18 +435,17 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
 }
 
 VkDescriptorSetLayoutBinding wlu_set_desc_set(
-  vkcomp *app,
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
   VkShaderStageFlags stageFlags,
-  const VkSampler* pImmutableSamplers
+  const VkSampler *pImmutableSamplers
 ) {
 
   VkDescriptorSetLayoutBinding create_info = {};
   create_info.binding = binding;
   create_info.descriptorType = descriptorType;
-  create_info.descriptorCount = app->desc_count = descriptorCount;
+  create_info.descriptorCount = descriptorCount;
   create_info.stageFlags = stageFlags;
   create_info.pImmutableSamplers = pImmutableSamplers;
 
@@ -456,7 +455,7 @@ VkDescriptorSetLayoutBinding wlu_set_desc_set(
 VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
-  const VkDescriptorSetLayoutBinding* pBindings
+  const VkDescriptorSetLayoutBinding *pBindings
 ) {
 
   VkDescriptorSetLayoutCreateInfo create_info = {};

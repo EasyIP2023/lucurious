@@ -74,38 +74,38 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
 
   /* set available instance extensions */
   if (app && !device) {
-    app->ep_instance_props = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties),
+    app->ie_props = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties),
             extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_instance_props) {
+    if (!app->ie_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *ep_instance_props failed");
+      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *ie_props failed");
       goto finish_extensions;
     }
 
     for (uint32_t i = 0; i < extension_count; i++) {
-      app->ep_instance_props[i] = extensions[i];
+      app->ie_props[i] = extensions[i];
       app->eic = i;
     }
   }
 
   /* set available device extensions */
   if (device) {
-    app->ep_device_props = (VkExtensionProperties *) \
-      realloc(app->ep_device_props, extension_count * sizeof(VkExtensionProperties));
-    if (!app->ep_device_props) {
+    app->de_props = (VkExtensionProperties *) \
+      realloc(app->de_props, extension_count * sizeof(VkExtensionProperties));
+    if (!app->de_props) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *ep_device_props failed");
+      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *de_props failed");
       goto finish_extensions;
     }
 
     for (uint32_t i = 0; i < extension_count; i++) {
-      app->ep_device_props[i] = extensions[i];
+      app->de_props[i] = extensions[i];
       app->edc = i;
     }
 
     /* check for swap chain support */
     for (uint32_t i = 0; i < app->edc; i++) {
-      if (!strcmp(app->ep_device_props[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+      if (!strcmp(app->de_props[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
         res = VK_TRUE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has swap chain support");
         break;
@@ -127,8 +127,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
     goto finish_queue_family;
   }
 
@@ -192,9 +191,8 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   VkResult err;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
     capabilities.minImageCount = UINT32_MAX;
     return capabilities;
   }

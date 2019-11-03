@@ -31,8 +31,7 @@ VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surfac
 
   if (!app->instance) {
     wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
     return res;
   }
 
@@ -54,9 +53,8 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   uint32_t format_count = 0;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
     goto finish_format;
   }
 
@@ -114,9 +112,8 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   uint32_t pres_mode_count = 0;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
     goto finish_best_mode;
   }
 
@@ -196,9 +193,8 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cu
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc[cur_sc].sems) {
-    wlu_log_me(WLU_DANGER, "[x] Image semaphore must be initialize before use");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Image semaphores must be initialize before use");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores()");
     return res;
   }
 

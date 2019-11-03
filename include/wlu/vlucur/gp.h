@@ -59,11 +59,27 @@ VkResult wlu_create_graphics_pipeline(
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
 
-VkResult wlu_create_pipeline_layout(vkcomp *app, uint32_t pushConstantRangeCount, const VkPushConstantRange *pPushConstantRanges);
+VkResult wlu_create_pipeline_layout(
+  vkcomp *app,
+  uint32_t setLayoutCount,
+  VkDescriptorSetLayout *pSetLayouts,
+  uint32_t pushConstantRangeCount,
+  const VkPushConstantRange *pPushConstantRanges
+);
+
+VkResult wlu_create_desc_data(vkcomp *app, uint32_t desc_count);
 
 VkResult wlu_create_desc_set_layout(
   vkcomp *app,
+  uint32_t cur_dd,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
+);
+
+VkResult wlu_create_desc_pool(
+  vkcomp *app,
+  uint32_t cur_dd,
+  VkDescriptorPoolCreateFlags flags,
+  uint32_t psize
 );
 
 /*
@@ -73,13 +89,8 @@ VkResult wlu_create_desc_set_layout(
  */
 VkResult wlu_create_desc_set(
   vkcomp *app,
-  uint32_t psize,
-  uint32_t maxSets,
-  VkDescriptorPoolCreateFlags flags,
-  uint32_t dstBinding,
-  uint32_t dstArrayElement,
-  VkDescriptorType descriptorType,
-  VkDescriptorBufferInfo *pBufferInfo
+  uint32_t cur_dd,
+  uint32_t psize
 );
 
 void wlu_exec_begin_render_pass(
@@ -113,6 +124,7 @@ void wlu_bind_desc_set(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
+  uint32_t cur_dd,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,
@@ -329,7 +341,6 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
 );
 
 VkDescriptorSetLayoutBinding wlu_set_desc_set(
-  vkcomp *app,
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
@@ -349,6 +360,16 @@ VkClearValue wlu_set_clear_value(
   uint32_t uint32[4],
   float depth,
   uint32_t stencil
+);
+
+void wlu_update_descriptor_sets(
+  vkcomp *app,
+  uint32_t cur_dd,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  VkDescriptorType descriptorType,
+  VkDescriptorBufferInfo *pBufferInfo,
+  uint32_t psize
 );
 
 #endif

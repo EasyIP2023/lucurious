@@ -34,11 +34,11 @@ void set_vkcomp_init_values(vkcomp *app) {
   app->dbg_size = VK_NULL_HANDLE;
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
-  app->vk_layer_props = NULL;
+  app->vl_props = NULL;
   app->vlc = VK_NULL_HANDLE;
-  app->ep_instance_props = NULL;
+  app->ie_props = NULL;
   app->eic = VK_NULL_HANDLE;
-  app->ep_device_props = NULL;
+  app->de_props = NULL;
   app->edc = VK_NULL_HANDLE;
   app->physical_device = VK_NULL_HANDLE;
   app->queue_create_infos = NULL;
@@ -57,13 +57,10 @@ void set_vkcomp_init_values(vkcomp *app) {
   app->graphics_pipeline = VK_NULL_HANDLE;
   app->cpc = VK_NULL_HANDLE;
   app->cmd_pbs = VK_NULL_HANDLE;
-  // app->ubd = VK_NULL_HANDLE;
   app->bdc = VK_NULL_HANDLE;
   app->buffs_data = VK_NULL_HANDLE;
-  app->desc_count = VK_NULL_HANDLE;
-  app->desc_layouts = VK_NULL_HANDLE;
-  app->desc_pool = VK_NULL_HANDLE;
-  app->desc_set = VK_NULL_HANDLE;
+  app->ddc = VK_NULL_HANDLE;
+  app->desc_data = VK_NULL_HANDLE;
 }
 
 void set_sc_init_values(vkcomp *app) {
@@ -104,4 +101,11 @@ void set_buffs_init_values(vkcomp *app) {
   app->buffs_data[app->bdc].buff_info.offset = VK_NULL_HANDLE;
   app->buffs_data[app->bdc].buff_info.range = VK_NULL_HANDLE;
   app->buffs_data[app->bdc].name = VK_NULL_HANDLE;
+}
+
+void set_desc_data_init_values(vkcomp *app) {
+  app->desc_data[app->ddc].dc = VK_NULL_HANDLE;
+  app->desc_data[app->ddc].desc_layouts = VK_NULL_HANDLE;
+  app->desc_data[app->ddc].desc_pool = VK_NULL_HANDLE;
+  app->desc_data[app->ddc].desc_set = VK_NULL_HANDLE;
 }

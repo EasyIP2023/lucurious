@@ -175,7 +175,6 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  /* current buff at this point is technically also current image, but they should be different */
   uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
@@ -207,7 +206,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_pipeline_layout(app, 0, NULL);
+  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");

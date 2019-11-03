@@ -49,10 +49,10 @@ START_TEST(test_set_global_layers) {
     ck_abort_msg(NULL);
   }
 
-  if (app->vk_layer_props) {
-    ck_assert_ptr_nonnull(app->vk_layer_props);
+  if (app->vl_props) {
+    ck_assert_ptr_nonnull(app->vl_props);
   } else  {
-    ck_assert_ptr_null(app->vk_layer_props);
+    ck_assert_ptr_null(app->vl_props);
   }
 
   wlu_freeup_vk(app);
@@ -85,7 +85,7 @@ START_TEST(test_create_instance) {
   }
 
   ck_assert_ptr_nonnull(app->instance);
-  ck_assert_ptr_nonnull(app->ep_instance_props);
+  ck_assert_ptr_nonnull(app->ie_props);
 
   wlu_freeup_vk(app);
   app = NULL;

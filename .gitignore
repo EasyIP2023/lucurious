@@ -27,3 +27,5 @@ txt2man
 userdel.8
 
 peda*
+
+tests/test-spin-square.c

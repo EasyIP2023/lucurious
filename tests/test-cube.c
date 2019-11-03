@@ -200,8 +200,7 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  /* current buff at this point is technically also current image, but they should be different */
-  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_dd = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
@@ -274,34 +273,50 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(app,
+  err = wlu_create_desc_data(app, NUM_DESCRIPTOR_SETS);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_data() failed!");
+    ck_abort_msg(NULL);
+  }
+
+  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(
     0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS,
     VK_SHADER_STAGE_VERTEX_BIT, NULL
   );
 
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(0, 1, &desc_set);
 
-  err = wlu_create_desc_set_layout(app, &desc_set_info);
+  /* Using same layout for all obects for now */
+  err = wlu_create_desc_set_layout(app, cur_dd, &desc_set_info);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
     ck_abort_msg(NULL);
   }
 
-  /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_pipeline_layout(app, 0, NULL);
+  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_pool failed");
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_desc_set(app, 1, 1, 0, 0, 0,
-    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &app->buffs_data[0].buff_info
-  );
+  err = wlu_create_desc_set(app, cur_dd, NUM_DESCRIPTOR_SETS);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set failed");
+    ck_abort_msg(NULL);
+  }
+
+  wlu_update_descriptor_sets(app, cur_dd, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                             &app->buffs_data[0].buff_info, NUM_DESCRIPTOR_SETS);
+
+  /* This is where creation of the graphics pipeline begins */
+  err = wlu_create_pipeline_layout(app, NUM_DESCRIPTOR_SETS, &app->desc_data[cur_dd].desc_layouts[0], 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
     ck_abort_msg(NULL);
   }
 
@@ -504,7 +519,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent3D.width, extent3D.height,
                              2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
-  wlu_bind_desc_set(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
+  wlu_bind_desc_set(app, cur_pool, cur_buff, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
@@ -571,6 +586,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
+  wait_seconds(4);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

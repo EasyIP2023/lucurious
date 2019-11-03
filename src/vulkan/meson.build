@@ -27,19 +27,17 @@ cglm = cc.find_library('cglm')
 math = cc.find_library('m')
 
 gp_files = [
-	'gp/bind.c', 'gp/cmd.c',
-	'gp/create.c', 'gp/exec.c',
-	'gp/set.c'
+	'gp/bind.c', 'gp/cmd.c', 'gp/create.c', 'gp/exec.c',
+	'gp/set.c', 'gp/update.c'
 ]
 
 cglm_files = ['matrix/print.c', 'matrix/set.c']
 
 vkcomp_files = [
-	'vkcomp/create.c', 'vkcomp/device.c',
-	'vkcomp/display.c', 'vkcomp/exec.c',
-	'vkcomp/setup.c', 'vkcomp/utils.c',
-	'vkcomp/vlayer.c', 'vkcomp/copy.c',
-	'vkcomp/set.c', 'vkcomp/values.c'
+	'vkcomp/create.c', 'vkcomp/device.c', 'vkcomp/display.c',
+	'vkcomp/exec.c', 'vkcomp/setup.c', 'vkcomp/utils.c',
+	'vkcomp/vlayer.c', 'vkcomp/copy.c', 'vkcomp/set.c',
+	'vkcomp/values.c'
 ]
 
 lib_vulkan = static_library(

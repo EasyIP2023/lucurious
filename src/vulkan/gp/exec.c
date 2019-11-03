@@ -42,8 +42,7 @@ void wlu_exec_begin_render_pass(
 
   if (!app->sc[cur_sc].frame_buffs) {
     wlu_log_me(WLU_DANGER, "[x] Frame Buffers weren't created");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers()");
     return;
   }
 

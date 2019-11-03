@@ -22,15 +22,35 @@
  * THE SOFTWARE.
  */
 
-#ifndef VALUES_H
-#define VALUES_H
+#include <lucom.h>
+#include <wlu/vlucur/vkall.h>
+#include <wlu/vlucur/gp.h>
+#include <wlu/utils/log.h>
 
-void set_vkcomp_init_values(vkcomp *app);
-void set_sc_init_values(vkcomp *app);
-void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_sc);
-void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc);
-void set_cmd_pbs_init_values(vkcomp *app);
-void set_buffs_init_values(vkcomp *app);
-void set_desc_data_init_values(vkcomp *app);
+void wlu_update_descriptor_sets(
+  vkcomp *app,
+  uint32_t cur_dd,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  VkDescriptorType descriptorType,
+  VkDescriptorBufferInfo *pBufferInfo,
+  uint32_t psize
+) {
 
-#endif
+  /* Copy Uniform Buffer Info */
+  VkWriteDescriptorSet writes[psize];
+  for (uint32_t i = 0; i < psize; i++) {
+    writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writes[i].pNext = NULL;
+    writes[i].dstSet = app->desc_data[cur_dd].desc_set[i];
+    writes[i].dstBinding = dstBinding;
+    writes[i].dstArrayElement = dstArrayElement;
+    writes[i].descriptorCount = app->desc_data[cur_dd].dc;
+    writes[i].descriptorType = descriptorType;
+    writes[i].pImageInfo = NULL;
+    writes[i].pBufferInfo = pBufferInfo;
+    writes[i].pImageInfo = NULL;
+  }
+
+  vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
+}

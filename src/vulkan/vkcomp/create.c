@@ -92,8 +92,7 @@ VkResult wlu_create_physical_device(
 
   if (!app->instance) {
     wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
     goto finish_devices;
   }
 
@@ -164,16 +163,14 @@ VkResult wlu_create_logical_device(
   float queue_priorities[1] = {1.0};
 
   if (!app->physical_device) {
-    wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
     return res;
   }
 
   if (!app->queue_families) {
     wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
     return res;
   }
 
@@ -240,16 +237,14 @@ VkResult wlu_create_swap_chain(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] app->surface must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
     return res;
   }
 
   if (!app->device) {
-    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] VkDevice must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
     return res;
   }
 
@@ -351,8 +346,7 @@ VkResult wlu_create_img_views(
 
   if (!app->sc[cur_sc].swap_chain) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
     goto finish_create_img_views;
   }
 
@@ -683,15 +677,13 @@ VkResult wlu_create_framebuffers(
 
   if (!app->render_pass) {
     wlu_log_me(WLU_DANGER, "[x] render pass not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
     return res;
   }
 
   if (!app->sc[cur_sc].sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain buffers not setup");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_img_views(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_img_views()");
     return res;
   }
 
@@ -729,8 +721,7 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
 
   if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) {
     wlu_log_me(WLU_DANGER, "[x] graphics or present family index not set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family()");
     return res;
   }
 
@@ -764,15 +755,13 @@ VkResult wlu_create_cmd_buffs(
 
   if (app->sc[cur_sc].sic == 0) {
     wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
     return res;
   }
 
   if (!app->cmd_pbs[cur_pool].cmd_pool) {
-    wlu_log_me(WLU_DANGER, "[x] Must have a valid command pool");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_pool(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_pool()");
     return res;
   }
 

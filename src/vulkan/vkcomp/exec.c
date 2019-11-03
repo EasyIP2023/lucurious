@@ -38,8 +38,7 @@ VkResult wlu_exec_begin_cmd_buffs(
 
   if (!app->cmd_pbs[cur_pool].cmd_buffs) {
     wlu_log_me(WLU_DANGER, "[x] app->cmd_pbs[%d].cmd_buffs must be initialize", cur_pool);
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_buffs(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_buffs()");
     return res;
   }
 

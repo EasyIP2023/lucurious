@@ -51,13 +51,13 @@ typedef struct vkcomp {
   VkSurfaceKHR surface;
 
   /* keep track of all vulkan extensions */
-  VkLayerProperties *vk_layer_props;
+  VkLayerProperties *vl_props; /* validation layer properties */
   uint32_t vlc; /* validation layer count */
 
-  VkExtensionProperties *ep_instance_props;
+  VkExtensionProperties *ie_props; /* instance extension properties */
   uint32_t eic; /* vulkan extension properties instance count */
 
-  VkExtensionProperties *ep_device_props;
+  VkExtensionProperties *de_props; /* device extension properties */
   uint32_t edc; /* vulkan extension properties device count */
 
   VkPhysicalDevice physical_device;
@@ -103,13 +103,6 @@ typedef struct vkcomp {
   VkPipelineLayout pipeline_layout;
   VkPipeline graphics_pipeline;
 
-  /*
-   * command pool count,
-   * the amount of command buffer sections
-   * should be equal to the amount of command pools.
-   * This helps keep track of what command buffers
-   * belong to what command pool.
-   */
   uint32_t cpc;
   struct vkcmds {
     VkCommandPool cmd_pool;
@@ -125,10 +118,14 @@ typedef struct vkcomp {
     char *name;
   } *buffs_data;
 
-  uint32_t desc_count;
-  VkDescriptorSetLayout *desc_layouts;
-  VkDescriptorPool desc_pool;
-  VkDescriptorSet *desc_set;
+  /* Descriptor Data Count */
+  uint32_t ddc;
+  struct descriptors {
+    VkDescriptorPool desc_pool;
+    uint32_t dc; /* descriptor count */
+    VkDescriptorSetLayout *desc_layouts;
+    VkDescriptorSet *desc_set;
+  } *desc_data;
 } vkcomp;
 
 vkcomp *wlu_init_vk();

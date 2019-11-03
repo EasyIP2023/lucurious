@@ -79,11 +79,11 @@ VkResult wlu_set_global_layers(vkcomp *app) {
     res = vkEnumerateInstanceLayerProperties(&layer_count, vk_props);
   } while (res == VK_INCOMPLETE);
 
-  app->vk_layer_props = (VkLayerProperties *) calloc(sizeof(VkLayerProperties),
+  app->vl_props = (VkLayerProperties *) calloc(sizeof(VkLayerProperties),
       layer_count * sizeof(VkLayerProperties));
-  if (!app->vk_layer_props) {
+  if (!app->vl_props) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc for VkLayerProperties *vk_layer_props failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc for VkLayerProperties *vl_props failed");
     goto finish_vk_props;
   }
 
@@ -94,7 +94,7 @@ VkResult wlu_set_global_layers(vkcomp *app) {
       wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
       goto finish_vk_props;
     }
-    app->vk_layer_props[i] = vk_props[i];
+    app->vl_props[i] = vk_props[i];
     app->vlc = i;
   }
 
@@ -110,17 +110,15 @@ VkResult wlu_set_debug_message(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkDebugReportCallbackEXT debug_report_callback;
 
-  if (!app->vk_layer_props) {
+  if (!app->vl_props) {
     wlu_log_me(WLU_DANGER, "[x] Vulkan Validation Layers must be created");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_global_layers(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_global_layers()");
     return res;
   }
 
   if (!app->instance) {
     wlu_log_me(WLU_DANGER, "[x] A Vulkan Instance must be created");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
     return res;
   }
 

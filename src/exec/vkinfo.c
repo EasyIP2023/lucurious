@@ -91,8 +91,8 @@ void print_gvalidation_layers() {
   fprintf(stdout, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
   for (uint32_t i = 0; i < app->vlc; i++) {
-    fprintf(stdout, "\t%s", app->vk_layer_props[i].layerName);
-    fprintf(stdout, "\t\t%s\n", app->vk_layer_props[i].description);
+    fprintf(stdout, "\t%s", app->vl_props[i].layerName);
+    fprintf(stdout, "\t\t%s\n", app->vl_props[i].description);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
   fprintf(stdout, "\n\tValidation Layer Count: %d\n", app->vlc);
@@ -119,10 +119,10 @@ void print_instance_extensions() {
   fprintf(stdout, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
   for (uint32_t i = 0; i < app->eic; i++) {
-    lower_to_upper(app->ep_instance_props[i].extensionName);
+    lower_to_upper(app->ie_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
-            app->ep_instance_props[i].specVersion,
-            app->ep_instance_props[i].extensionName);
+            app->ie_props[i].specVersion,
+            app->ie_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
   fprintf(stdout, "\n  Instance Extension Count: %d\n", app->eic);
@@ -161,10 +161,10 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   fprintf(stdout, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
   for (uint32_t i = 0; i < app->edc; i++) {
-    lower_to_upper(app->ep_device_props[i].extensionName);
+    lower_to_upper(app->de_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
-            app->ep_device_props[i].specVersion,
-            app->ep_device_props[i].extensionName);
+            app->de_props[i].specVersion,
+            app->de_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
   printf("\n  Device Extension Count: %d\n", app->edc);

@@ -42,15 +42,16 @@ void wlu_bind_desc_set(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
+  uint32_t cur_dd,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
   vkCmdBindDescriptorSets(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
-                          pipelineBindPoint,
-                          app->pipeline_layout, firstSet,
-                          app->desc_count, app->desc_set,
+                          pipelineBindPoint, app->pipeline_layout, firstSet,
+                          app->desc_data[cur_dd].dc,
+                          app->desc_data[cur_dd].desc_set,
                           dynamicOffsetCount, pDynamicOffsets);
 }
 

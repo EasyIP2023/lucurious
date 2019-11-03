@@ -63,11 +63,11 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Signal handler for this process */
-  // err = wlu_watch_me(SIGSEGV, getpid());
-  // if (err) {
-  //   freeme(app, wc);
-  //   ck_abort_msg(NULL);
-  // }
+  err = wlu_watch_me(SIGSEGV, getpid());
+  if (err) {
+    freeme(app, wc);
+    ck_abort_msg(NULL);
+  }
 
   wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
@@ -175,7 +175,6 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  /* current buff at this point is technically also current image, but they should be different */
   uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
@@ -207,7 +206,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_pipeline_layout(app, 0, NULL);
+  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
@@ -504,7 +503,6 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  wait_seconds(2);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

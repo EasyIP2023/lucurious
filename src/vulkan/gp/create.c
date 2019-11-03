@@ -25,6 +25,7 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/vlucur/gp.h>
+#include <vlucur/values.h>
 #include <wlu/utils/log.h>
 
 void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
@@ -40,8 +41,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
 
   if (!app->device) {
     wlu_log_me(WLU_DANGER, "[x] A logical device must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
     return shader_module;
   }
 
@@ -88,9 +88,8 @@ VkResult wlu_create_render_pass(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->device) {
-    wlu_log_me(WLU_DANGER, "[x] app->device must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] A Vulkan Logical Device must be initialize");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
     return res;
   }
 
@@ -131,14 +130,12 @@ VkResult wlu_create_graphics_pipeline(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->render_pass) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
     return res;
   }
 
   if (!app->pipeline_layout) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout()");
     return res;
   }
 
@@ -184,6 +181,8 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
 
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
+  uint32_t setLayoutCount,
+  VkDescriptorSetLayout *pSetLayouts,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 ) {
@@ -194,8 +193,8 @@ VkResult wlu_create_pipeline_layout(
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.setLayoutCount = app->desc_count;
-  create_info.pSetLayouts = app->desc_layouts;
+  create_info.setLayoutCount = setLayoutCount;
+  create_info.pSetLayouts = pSetLayouts;
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
@@ -204,61 +203,87 @@ VkResult wlu_create_pipeline_layout(
   return res;
 }
 
+VkResult wlu_create_desc_data(vkcomp *app, uint32_t desc_count) {
+
+  app->desc_data = (struct descriptors *) realloc(app->desc_data,
+      (app->ddc+1) * sizeof(struct descriptors));
+  if (!app->desc_data) {
+    wlu_log_me(WLU_DANGER, "realloc app->desc_data failed!");
+    return VK_RESULT_MAX_ENUM;
+  }
+
+  set_desc_data_init_values(app);
+  app->desc_data[app->ddc].dc = desc_count;
+  app->ddc++;
+
+  return VK_SUCCESS;
+}
+
 VkResult wlu_create_desc_set_layout(
   vkcomp *app,
-  VkDescriptorSetLayoutCreateInfo *desc_set_info
+  uint32_t cur_dd,
+  VkDescriptorSetLayoutCreateInfo *desc_set_info /* Using same layout for all obects for now */
 ) {
-
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->desc_layouts = (VkDescriptorSetLayout *) calloc(sizeof(VkDescriptorSetLayout),
-        app->desc_count * sizeof(VkDescriptorSetLayout));
-  if (!app->desc_layouts) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkDescriptorSetLayout *desc_layout failed");
+  app->desc_data[cur_dd].desc_layouts = calloc(sizeof(VkDescriptorSetLayout),
+        app->desc_data[cur_dd].dc * sizeof(VkDescriptorSetLayout));
+  if (!app->desc_data[cur_dd].desc_layouts) {
+    wlu_log_me(WLU_DANGER, "calloc app->desc_data[cur_dd].desc_layouts failed", cur_dd);
     return res;
   }
 
-  res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, app->desc_layouts);
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++) {
+    res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL,
+                                      &app->desc_data[cur_dd].desc_layouts[i]);
+    if (res) {
+      wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed, ERROR CODE: %d", res);
+      goto finish_desc_layout;
+    }
+  }
 
+finish_desc_layout:
   return res;
 }
 
-VkResult wlu_create_desc_set(
+VkResult wlu_create_desc_pool(
   vkcomp *app,
-  uint32_t psize,
-  uint32_t maxSets,
+  uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
-  uint32_t dstBinding,
-  uint32_t dstArrayElement,
-  VkDescriptorType descriptorType,
-  VkDescriptorBufferInfo *pBufferInfo
+  uint32_t psize
 ) {
-
   VkResult res = VK_RESULT_MAX_ENUM;
-
-  if (!app->desc_layouts) {
-    wlu_log_me(WLU_DANGER, "[x] Descriptor Set Layout not defined");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layout(3)");
-    wlu_log_me(WLU_DANGER, "[x] See man pages for further details");
-  }
 
   VkDescriptorPoolSize pool_sizes[psize];
   for (uint32_t i = 0; i < psize; i++) {
     pool_sizes[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    pool_sizes[i].descriptorCount = app->desc_count;
+    pool_sizes[i].descriptorCount = app->desc_data[cur_dd].dc;
   }
 
   VkDescriptorPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = flags;
-  create_info.maxSets = maxSets;
+  create_info.maxSets = app->desc_data[cur_dd].dc;
   create_info.poolSizeCount = psize;
   create_info.pPoolSizes = pool_sizes;
 
-  res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_pool);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorPool failed, ERROR CODE: %d", res);
+  res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_data[cur_dd].desc_pool);
+
+  return res;
+}
+
+VkResult wlu_create_desc_set(
+  vkcomp *app,
+  uint32_t cur_dd,
+  uint32_t psize
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->desc_data[cur_dd].desc_pool) {
+    wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must have a descriptor pool");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_pool()");
     return res;
   }
 
@@ -266,40 +291,23 @@ VkResult wlu_create_desc_set(
   for (uint32_t i = 0; i < psize; i++) {
     alloc_info[i].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info[i].pNext = NULL;
-    alloc_info[i].descriptorPool = app->desc_pool;
-    alloc_info[i].descriptorSetCount = app->desc_count;
-    alloc_info[i].pSetLayouts = app->desc_layouts;
+    alloc_info[i].descriptorPool = app->desc_data[cur_dd].desc_pool;
+    alloc_info[i].descriptorSetCount = psize;
+    alloc_info[i].pSetLayouts = app->desc_data[cur_dd].desc_layouts; // For now
   }
 
-  app->desc_set = (VkDescriptorSet *) calloc(sizeof(VkDescriptorSet),
-        app->desc_count * sizeof(VkDescriptorSet));
-  if (!app->desc_set) {
+  app->desc_data[cur_dd].desc_set = (VkDescriptorSet *) calloc(sizeof(VkDescriptorSet),
+            app->desc_data[cur_dd].dc * sizeof(VkDescriptorSet));
+  if (!app->desc_data[cur_dd].desc_set) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkDescriptorSet *desc_set failed");
-    return res = VK_RESULT_MAX_ENUM;
+    return VK_RESULT_MAX_ENUM;
   }
 
-  res = vkAllocateDescriptorSets(app->device, alloc_info, app->desc_set);
+  res = vkAllocateDescriptorSets(app->device, alloc_info, app->desc_data[cur_dd].desc_set);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateDescriptorSets failed, ERROR CODE: %d", res);
     return res;
   }
-
-  /* Copy Uniform Buffer Info */
-  VkWriteDescriptorSet writes[psize];
-  for (uint32_t i = 0; i < psize; i++) {
-    writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writes[i].pNext = NULL;
-    writes[i].dstSet = app->desc_set[i];
-    writes[i].dstBinding = dstBinding;
-    writes[i].dstArrayElement = dstArrayElement;
-    writes[i].descriptorCount = app->desc_count;
-    writes[i].descriptorType = descriptorType;
-    writes[i].pImageInfo = NULL;
-    writes[i].pBufferInfo = pBufferInfo;
-    writes[i].pImageInfo = NULL;
-  }
-
-  vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
 
   return res;
 }

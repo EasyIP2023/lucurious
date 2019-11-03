@@ -56,15 +56,6 @@ lucur_shade_test = executable('lucur-shade-test',
   install : false
 )
 
-lucur_cube_test = executable('lucur-cube-test',
-  'test-cube.c',
-  include_directories : lucur_inc,
-  dependencies : [check,shaderc],
-  link_with : lib_lucur,
-  link_args : extra_args,
-  install : false
-)
-
 lucur_triangle_test = executable('lucur-triangle-test',
   'test-triangle.c',
   include_directories : lucur_inc,
@@ -83,9 +74,28 @@ lucur_square_test = executable('lucur-square-test',
   install : false
 )
 
+lucur_cube_test = executable('lucur-cube-test',
+  'test-cube.c',
+  include_directories : lucur_inc,
+  dependencies : [check,shaderc],
+  link_with : lib_lucur,
+  link_args : extra_args,
+  install : false
+)
+
+# lucur_spin_square_test = executable('lucur-spin-square-test',
+#   'test-spin-square.c',
+#   include_directories : lucur_inc,
+#   dependencies : [check,shaderc],
+#   link_with : lib_lucur,
+#   link_args : extra_args,
+#   install : false
+# )
+
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
 test('lucur-shade-test', lucur_shade_test, suite: ['all'])
-test('lucur-cube-test', lucur_cube_test, suite: ['images'])
 test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
 test('lucur-square-test', lucur_square_test, suite: ['images'])
+test('lucur-cube-test', lucur_cube_test, suite: ['images'])
+# test('lucur-spin-square-test', lucur_spin_square_test, suite: ['images'])

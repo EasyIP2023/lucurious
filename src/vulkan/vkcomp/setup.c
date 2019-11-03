@@ -66,7 +66,6 @@ void wlu_freeup_sc(void *data) {
     if (app->sc[i].swap_chain)
       vkDestroySwapchainKHR(app->device, app->sc[i].swap_chain, NULL);
   }
-
 }
 
 void wlu_freeup_vk(void *data) {
@@ -79,12 +78,12 @@ void wlu_freeup_vk(void *data) {
     }
     free(app->debug_report_callbacks);
   }
-  if (app->vk_layer_props)
-    free(app->vk_layer_props);
-  if (app->ep_instance_props)
-    free(app->ep_instance_props);
-  if (app->ep_device_props)
-    free(app->ep_device_props);
+  if (app->vl_props)
+    free(app->vl_props);
+  if (app->ie_props)
+    free(app->ie_props);
+  if (app->de_props)
+    free(app->de_props);
   if (app->queue_families)
     free(app->queue_families);
   if (app->queue_create_infos)
@@ -109,15 +108,28 @@ void wlu_freeup_vk(void *data) {
     vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
   if (app->graphics_pipeline)
     vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
-  if (app->desc_layouts) {
-    for (uint32_t i = 0; i < app->desc_count; i++)
-      vkDestroyDescriptorSetLayout(app->device, app->desc_layouts[i], NULL);
-    free(app->desc_layouts);
+  if (app->render_pass)
+    vkDestroyRenderPass(app->device, app->render_pass, NULL);
+  if (app->desc_data) {
+    for (uint32_t i = 0; i < app->ddc; i++) {
+      if (app->desc_data[i].desc_layouts) {
+        for (uint32_t j = 0; j < app->desc_data[i].dc; j++) {
+          vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
+          app->desc_data[i].desc_layouts[j] = VK_NULL_HANDLE;
+        }
+        free(app->desc_data[i].desc_layouts); app->desc_data[i].desc_layouts = VK_NULL_HANDLE;
+      }
+      if (app->desc_data[i].desc_set) {
+        free(app->desc_data[i].desc_set);
+        app->desc_data[i].desc_set = VK_NULL_HANDLE;
+      }
+      if (app->desc_data[i].desc_pool) {
+        vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
+        app->desc_data[i].desc_pool = VK_NULL_HANDLE;
+      }
+    }
+    free(app->desc_data);
   }
-  if (app->desc_set)
-    free(app->desc_set);
-  if (app->desc_pool)
-    vkDestroyDescriptorPool(app->device, app->desc_pool, NULL);
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
       if (app->buffs_data[i].buff) {
@@ -131,8 +143,6 @@ void wlu_freeup_vk(void *data) {
     }
     free(app->buffs_data);
   }
-  if (app->render_pass)
-    vkDestroyRenderPass(app->device, app->render_pass, NULL);
   if (app->sc) { /* Annihilate All Swap Chain Objects */
     for (uint32_t i = 0; i < app->scc; i++) {
       if (app->sc[i].depth.view)
@@ -144,11 +154,15 @@ void wlu_freeup_vk(void *data) {
       if (app->sc[i].sc_buffs && app->sc[i].frame_buffs && app->sc[i].sems) {
         for (uint32_t j = 0; j < app->sc[i].sic; j++) {
           if (app->sc[i].sems[j].image && app->sc[i].sems[j].render) {
-            vkDestroySemaphore(app->device, app->sc[i].sems[j].image, NULL); app->sc[i].sems[j].image = VK_NULL_HANDLE;
-            vkDestroySemaphore(app->device, app->sc[i].sems[j].render, NULL); app->sc[i].sems[j].render = VK_NULL_HANDLE;
+            vkDestroySemaphore(app->device, app->sc[i].sems[j].image, NULL);
+            vkDestroySemaphore(app->device, app->sc[i].sems[j].render, NULL);
+            app->sc[i].sems[j].image = VK_NULL_HANDLE;
+            app->sc[i].sems[j].render = VK_NULL_HANDLE;
           }
-          vkDestroyFramebuffer(app->device, app->sc[i].frame_buffs[j], NULL); app->sc[i].frame_buffs[j] = VK_NULL_HANDLE;
-          vkDestroyImageView(app->device, app->sc[i].sc_buffs[j].view, NULL); app->sc[i].sc_buffs[j].view = VK_NULL_HANDLE;
+          vkDestroyFramebuffer(app->device, app->sc[i].frame_buffs[j], NULL);
+          vkDestroyImageView(app->device, app->sc[i].sc_buffs[j].view, NULL);
+          app->sc[i].frame_buffs[j] = VK_NULL_HANDLE;
+          app->sc[i].sc_buffs[j].view = VK_NULL_HANDLE;
         }
         free(app->sc[i].sc_buffs); app->sc[i].sc_buffs = VK_NULL_HANDLE;
         free(app->sc[i].frame_buffs); app->sc[i].frame_buffs = VK_NULL_HANDLE;
