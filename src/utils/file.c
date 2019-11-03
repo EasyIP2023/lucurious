@@ -66,7 +66,10 @@ wlu_file_info wlu_read_file(const char *filename) {
   }
 
   /* Read in the entire file */
-  fread(fileinfo.bytes, fileinfo.byte_size, 1, stream);
+  if (fread(fileinfo.bytes, fileinfo.byte_size, 1, stream) == 0) {
+    wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
+    return fileinfo;
+  }
   fclose(stream);
 
   return fileinfo;
