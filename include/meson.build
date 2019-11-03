@@ -31,4 +31,4 @@ headers = ['wlu/vlucur/vkall.h',
            'wlu/utils/errors.h',
            'wlu/shader/shade.h']
 
-install_headers(headers, subdir: 'wlu')
+install_headers(headers, install_dir: '/usr/include/wlu', subdir: 'wlu')

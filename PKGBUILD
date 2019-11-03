@@ -1,13 +1,13 @@
-# Maintainer: Vincent Davis <vincedav2495@gmail.com>
+# Maintainer: Vincent Davis <vdavis2495@gmail.com>
 pkgname='lucurious'
-pkgver=r110.e6fe16e
+pkgver=0.0.1r111.9da66d0
 pkgrel=1
 license=('MIT')
 pkgdesc='[Desktop Engine, Library] for building and styling 2D/3D Vulkan Wayland Compositors'
 url='https://github.com/EasyIP2023/lucurious'
 arch=('x86_64')
-provides=("lucurious=${pkgver%%.r*}")
-conflicts=('lucurious')
+provides=("${pkgname}=${pkgver%%.r*}")
+conflicts=("${pkgname}")
 makedepends=('meson' 'ninja' 'git' 'wayland-protocols')
 source=("${pkgname}::git+${url}")
 sha512sums=('SKIP')
@@ -18,7 +18,7 @@ pkgver () {
 	(
 		set -o pipefail
 		git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
-		printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+		printf "${pkgver}.r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 	)
 }
 
