@@ -1,18 +1,17 @@
 # Maintainer: Vincent Davis <vdavis2495@gmail.com>
-pkgname='lucurious'
-pkgver=0.0.1r111.9da66d0
+# Contributor: Vincent Davis <vdavis2495@gmail.com>
+pkgname='lucurious-git'
+pkgver=0.0.1
 pkgrel=1
 license=('MIT')
 pkgdesc='[Desktop Engine, Library] for building and styling 2D/3D Vulkan Wayland Compositors'
 url='https://github.com/EasyIP2023/lucurious'
 arch=('x86_64')
-provides=("${pkgname}=${pkgver%%.r*}")
-conflicts=("${pkgname}")
-makedepends=('meson' 'ninja' 'git' 'wayland-protocols')
+depends=('shaderc' 'cglm' 'wayland' 'vulkan-icd-loader' 'vulkan-tools' 'vulkan-validation-layers')
+makedepends=('meson' 'ninja' 'git' 'wayland-protocols' 'vulkan-headers' 'check')
 source=("${pkgname}::git+${url}")
 sha512sums=('SKIP')
 
-# https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=wlroots-git
 pkgver () {
 	cd "${pkgname}"
 	(
@@ -27,6 +26,11 @@ build () {
 	rm -rf build
 	meson build
 	ninja -C build
+}
+
+check() {
+	cd "${pkgname}"
+	ninja test -C build
 }
 
 package () {

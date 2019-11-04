@@ -70,7 +70,7 @@ START_TEST(test_create_instance) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -102,7 +102,7 @@ START_TEST(test_enumerate_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -143,7 +143,7 @@ START_TEST(test_set_logical_device) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -175,7 +175,7 @@ START_TEST(test_set_logical_device) {
   }
 
   app->indices.present_family = app->indices.graphics_family;
-  err = wlu_create_logical_device(app, &device_feats, 3, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, enabled_validation_layers, 1, device_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -197,7 +197,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 3, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
@@ -229,7 +229,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   }
 
   app->indices.present_family = app->indices.graphics_family;
-  err = wlu_create_logical_device(app, &device_feats, 3, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, enabled_validation_layers, 1, device_extensions);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
