@@ -102,6 +102,7 @@ finish_extensions:
 VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkBool32 ret = VK_TRUE;
   VkBool32 *present_support = NULL;
+  VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
@@ -111,8 +112,8 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
-  VkQueueFamilyProperties *queue_families = (VkQueueFamilyProperties *) calloc(
-        sizeof(VkQueueFamilyProperties), qfc * sizeof(VkQueueFamilyProperties));
+  queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
+        qfc * sizeof(VkQueueFamilyProperties));
   if (!queue_families) {
     wlu_log_me(WLU_DANGER, "[x] calloc of VkQueueFamilyProperties *queue_families failed");
     goto finish_queue_family;

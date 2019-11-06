@@ -152,6 +152,7 @@ VkResult wlu_create_logical_device(
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
+  VkDeviceQueueCreateInfo *pQueueCreateInfos = NULL;
   float queue_priorities[1] = {1.0};
 
   if (!app->physical_device) {
@@ -169,8 +170,8 @@ VkResult wlu_create_logical_device(
   /* Will need to change this later but for now, This two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
-  VkDeviceQueueCreateInfo *pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(
-          sizeof(VkDeviceQueueCreateInfo),  dq_count * sizeof(VkDeviceQueueCreateInfo));
+  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
+        dq_count * sizeof(VkDeviceQueueCreateInfo));
   if (!pQueueCreateInfos) {
     wlu_log_me(WLU_DANGER, "[x] calloc VkDeviceQueueCreateInfo *queue_create_infos failed");
     goto finish_logical;
