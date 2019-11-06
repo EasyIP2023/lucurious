@@ -116,7 +116,7 @@ void wlu_freeup_vk(void *data) {
       for (uint32_t j = 0; j < gps_size; j++) {
         if (app->gp_data[i].graphics_pipelines[j])
           vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
-        app->gp_data[i].graphics_pipelines = VK_NULL_HANDLE;
+        FREE(app->gp_data[i].graphics_pipelines);
       }
     }
     free(app->gp_data);
