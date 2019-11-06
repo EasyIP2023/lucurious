@@ -70,4 +70,10 @@
       __typeof__ (b) _b = (b); \
     _a < _b ? _a : _b; })
 
+#define FREE(ptr) \
+  if (ptr) { \
+    free(ptr); \
+    ptr = NULL; \
+  }
+
 #endif

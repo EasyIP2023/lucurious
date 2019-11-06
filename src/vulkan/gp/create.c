@@ -78,6 +78,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
 
 VkResult wlu_create_render_pass(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t attachmentCount,
   const VkAttachmentDescription *pAttachments,
   uint32_t subpassCount,
@@ -93,6 +94,11 @@ VkResult wlu_create_render_pass(
     return res;
   }
 
+  if (!app->gp_data) {
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_gp_data()");
+    return res;
+  }
+
   VkRenderPassCreateInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   render_pass_info.pNext = NULL;
@@ -104,12 +110,25 @@ VkResult wlu_create_render_pass(
   render_pass_info.dependencyCount = dependencyCount;
   render_pass_info.pDependencies = pDependencies;
 
-  res = vkCreateRenderPass(app->device, &render_pass_info, NULL, &app->render_pass);
+  res = vkCreateRenderPass(app->device, &render_pass_info, NULL, &app->gp_data[cur_gpd].render_pass);
 
   return res;
 }
 
-VkResult wlu_create_graphics_pipeline(
+VkResult wlu_create_gp_data(vkcomp *app) {
+  app->gp_data = realloc(app->gp_data, (app->gpc+1) * sizeof(struct graphics_pipeline_data));
+  if (!app->gp_data) {
+    wlu_log_me(WLU_DANGER, "realloc app->gp_data failed!!");
+    return VK_RESULT_MAX_ENUM;
+  }
+
+  set_gp_data_init_values(app);
+  app->gpc++;
+
+  return VK_SUCCESS;
+}
+
+VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
   uint32_t stageCount,
   const VkPipelineShaderStageCreateInfo *pStages,
@@ -124,17 +143,19 @@ VkResult wlu_create_graphics_pipeline(
   const VkPipelineDynamicStateCreateInfo *pDynamicState,
   uint32_t subpass,
   VkPipeline basePipelineHandle,
-  uint32_t basePipelineIndex
+  uint32_t basePipelineIndex,
+  uint32_t cur_gpd,
+  uint32_t gps_count /* graphics pipelines count */
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->render_pass) {
+  if (!app->gp_data[cur_gpd].render_pass) {
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
     return res;
   }
 
-  if (!app->pipeline_layout) {
+  if (!app->gp_data[cur_gpd].pipeline_layout) {
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout()");
     return res;
   }
@@ -153,19 +174,25 @@ VkResult wlu_create_graphics_pipeline(
   pipeline_info.pDepthStencilState = pDepthStencilState;
   pipeline_info.pColorBlendState = pColorBlendState;
   pipeline_info.pDynamicState = pDynamicState;
-  pipeline_info.layout = app->pipeline_layout;
-  pipeline_info.renderPass = app->render_pass;
+  pipeline_info.layout = app->gp_data[cur_gpd].pipeline_layout;
+  pipeline_info.renderPass = app->gp_data[cur_gpd].render_pass;
   pipeline_info.subpass = subpass;
   pipeline_info.basePipelineHandle = basePipelineHandle;
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
-  res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, &app->graphics_pipeline);
+  app->gp_data[cur_gpd].graphics_pipelines = (VkPipeline *) calloc(sizeof(VkPipeline), gps_count * sizeof(VkPipeline));
+  if (!app->gp_data[cur_gpd].graphics_pipelines) {
+    wlu_log_me(WLU_DANGER, "calloc app->gp_data[%d].graphics_pipelines falied", cur_gpd);
+    return res;
+  }
+
+  res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, app->gp_data[cur_gpd].graphics_pipelines);
 
   return res;
 }
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData) {
-  VkResult res;
+  VkResult res = VK_RESULT_MAX_ENUM;
 
   VkPipelineCacheCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
@@ -181,13 +208,19 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
 
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t setLayoutCount,
   VkDescriptorSetLayout *pSetLayouts,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 ) {
 
-  VkResult res;
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->gp_data) {
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_gp_data()");
+    return res;
+  }
 
   VkPipelineLayoutCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -198,7 +231,7 @@ VkResult wlu_create_pipeline_layout(
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
-  res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->pipeline_layout);
+  res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->gp_data[cur_gpd].pipeline_layout);
 
   return res;
 }

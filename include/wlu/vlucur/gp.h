@@ -31,6 +31,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
 
 VkResult wlu_create_render_pass(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t attachmentCount,
   const VkAttachmentDescription *pAttachments,
   uint32_t subpassCount,
@@ -39,7 +40,9 @@ VkResult wlu_create_render_pass(
   const VkSubpassDependency *pDependencies
 );
 
-VkResult wlu_create_graphics_pipeline(
+VkResult wlu_create_gp_data(vkcomp *app);
+
+VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
   uint32_t stageCount,
   const VkPipelineShaderStageCreateInfo *pStages,
@@ -54,13 +57,16 @@ VkResult wlu_create_graphics_pipeline(
   const VkPipelineDynamicStateCreateInfo *pDynamicState,
   uint32_t subpass,
   VkPipeline basePipelineHandle,
-  uint32_t basePipelineIndex
+  uint32_t basePipelineIndex,
+  uint32_t cur_gpd,
+  uint32_t gps_count /* graphic pipelines count */
 );
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
 
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t setLayoutCount,
   VkDescriptorSetLayout *pSetLayouts,
   uint32_t pushConstantRangeCount,
@@ -97,6 +103,7 @@ void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_sc,
+  uint32_t cur_gpd,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -120,11 +127,12 @@ void wlu_bind_pipeline(
   VkPipeline pipeline
 );
 
-void wlu_bind_desc_set(
+void wlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t cur_dd,
+  uint32_t cur_gpd,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,

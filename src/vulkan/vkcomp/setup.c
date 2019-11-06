@@ -45,14 +45,21 @@ void wlu_freeup_sc(void *data) {
       if (app->cmd_pbs[i].cmd_buffs)
         vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sc[i].sic, app->cmd_pbs[i].cmd_buffs);
   }
-  if (app->graphics_pipeline)
-    vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
-  if (app->pipeline_cache)
+  if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
-  if (app->pipeline_layout)
-    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
-  if (app->render_pass)
-    vkDestroyRenderPass(app->device, app->render_pass, NULL);
+  if (app->gp_data) { /* leave like this for now */
+    for (uint32_t i = 0; i < app->gpc; i++) {
+      if (app->gp_data[i].pipeline_layout)
+        vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
+      if (app->gp_data[i].render_pass)
+        vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
+      uint32_t gps_size = sizeof(app->gp_data[i].graphics_pipelines) / sizeof(VkPipeline*);
+      for (uint32_t j = 0; j < gps_size; j++) {
+        if (app->gp_data[i].graphics_pipelines[j])
+          vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
+      }
+    }
+  }
   for (uint32_t i = 0; i < app->scc; i++) {
     if (app->sc[i].sc_buffs && app->sc[i].frame_buffs) {
       for (uint32_t j = 0; j < app->sc[i].sic; j++) {
@@ -61,7 +68,7 @@ void wlu_freeup_sc(void *data) {
         app->sc[i].frame_buffs[j] = VK_NULL_HANDLE;
         app->sc[i].sc_buffs[j].view = VK_NULL_HANDLE;
       }
-      free(app->sc[i].sc_buffs); app->sc[i].sc_buffs = VK_NULL_HANDLE;
+      FREE(app->sc[i].sc_buffs);
     }
     if (app->sc[i].swap_chain)
       vkDestroySwapchainKHR(app->device, app->sc[i].swap_chain, NULL);
@@ -80,20 +87,11 @@ void wlu_freeup_vk(void *data) {
   }
   if (app->vl_props)
     free(app->vl_props);
-  if (app->ie_props)
-    free(app->ie_props);
-  if (app->de_props)
-    free(app->de_props);
-  if (app->queue_families)
-    free(app->queue_families);
-  if (app->queue_create_infos)
-    free(app->queue_create_infos);
   if (app->cmd_pbs) {
     for (uint32_t i = 0; i < app->cpc; i++) {
       if (app->cmd_pbs[i].cmd_buffs) {
         vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sc[i].sic, app->cmd_pbs[i].cmd_buffs);
-        free(app->cmd_pbs[i].cmd_buffs);
-        app->cmd_pbs[i].cmd_buffs = VK_NULL_HANDLE;
+        FREE(app->cmd_pbs[i].cmd_buffs);
       }
       if (app->cmd_pbs[i].cmd_pool) {
         vkDestroyCommandPool(app->device, app->cmd_pbs[i].cmd_pool, NULL);
@@ -102,27 +100,36 @@ void wlu_freeup_vk(void *data) {
     }
     free(app->cmd_pbs);
   }
-  if (app->pipeline_cache)
+  if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
-  if (app->pipeline_layout)
-    vkDestroyPipelineLayout(app->device, app->pipeline_layout, NULL);
-  if (app->graphics_pipeline)
-    vkDestroyPipeline(app->device, app->graphics_pipeline, NULL);
-  if (app->render_pass)
-    vkDestroyRenderPass(app->device, app->render_pass, NULL);
+  if (app->gp_data) { /* leave like this for now */
+    for (uint32_t i = 0; i < app->gpc; i++) {
+      if (app->gp_data[i].pipeline_layout) {
+        vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
+        app->gp_data[i].pipeline_layout = VK_NULL_HANDLE;
+      }
+      if (app->gp_data[i].render_pass) {
+        vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
+        app->gp_data[i].render_pass = VK_NULL_HANDLE;
+      }
+      uint32_t gps_size = sizeof(app->gp_data[i].graphics_pipelines) / sizeof(VkPipeline*);
+      for (uint32_t j = 0; j < gps_size; j++) {
+        if (app->gp_data[i].graphics_pipelines[j])
+          vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
+        app->gp_data[i].graphics_pipelines = VK_NULL_HANDLE;
+      }
+    }
+    free(app->gp_data);
+  }
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
       if (app->desc_data[i].desc_layouts) {
-        for (uint32_t j = 0; j < app->desc_data[i].dc; j++) {
+        for (uint32_t j = 0; j < app->desc_data[i].dc; j++)
           vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
-          app->desc_data[i].desc_layouts[j] = VK_NULL_HANDLE;
-        }
-        free(app->desc_data[i].desc_layouts); app->desc_data[i].desc_layouts = VK_NULL_HANDLE;
+        FREE(app->desc_data[i].desc_layouts);
       }
-      if (app->desc_data[i].desc_set) {
-        free(app->desc_data[i].desc_set);
-        app->desc_data[i].desc_set = VK_NULL_HANDLE;
-      }
+      if (app->desc_data[i].desc_set)
+        FREE(app->desc_data[i].desc_set);
       if (app->desc_data[i].desc_pool) {
         vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
         app->desc_data[i].desc_pool = VK_NULL_HANDLE;
@@ -156,17 +163,11 @@ void wlu_freeup_vk(void *data) {
           if (app->sc[i].sems[j].image && app->sc[i].sems[j].render) {
             vkDestroySemaphore(app->device, app->sc[i].sems[j].image, NULL);
             vkDestroySemaphore(app->device, app->sc[i].sems[j].render, NULL);
-            app->sc[i].sems[j].image = VK_NULL_HANDLE;
-            app->sc[i].sems[j].render = VK_NULL_HANDLE;
           }
           vkDestroyFramebuffer(app->device, app->sc[i].frame_buffs[j], NULL);
           vkDestroyImageView(app->device, app->sc[i].sc_buffs[j].view, NULL);
-          app->sc[i].frame_buffs[j] = VK_NULL_HANDLE;
-          app->sc[i].sc_buffs[j].view = VK_NULL_HANDLE;
         }
-        free(app->sc[i].sc_buffs); app->sc[i].sc_buffs = VK_NULL_HANDLE;
-        free(app->sc[i].frame_buffs); app->sc[i].frame_buffs = VK_NULL_HANDLE;
-        free(app->sc[i].sems); app->sc[i].sems = VK_NULL_HANDLE;
+        FREE(app->sc[i].sc_buffs); FREE(app->sc[i].frame_buffs); FREE(app->sc[i].sems);
       }
       if (app->sc[i].swap_chain) {
         vkDestroySwapchainKHR(app->device, app->sc[i].swap_chain, NULL);
@@ -185,6 +186,5 @@ void wlu_freeup_vk(void *data) {
     vkDestroyInstance(app->instance, NULL);
 
   set_vkcomp_init_values(app);
-  if (app) free(app);
-  app = NULL;
+  FREE(app);
 }

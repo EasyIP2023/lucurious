@@ -32,7 +32,11 @@ VkBool32 is_device_suitable(
   VkPhysicalDeviceFeatures *device_feats
 );
 
-VkResult get_extension_properties(vkcomp *app,
-    VkLayerProperties *prop, VkPhysicalDevice device);
+VkResult get_extension_properties(
+  vkcomp *app,
+  VkLayerProperties *prop,
+  VkPhysicalDevice device,
+  VkExtensionProperties **eprops
+);
 
 #endif

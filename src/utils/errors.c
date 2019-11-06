@@ -133,7 +133,7 @@ void wait_seconds(int seconds) {
 }
 
 void wlu_freeup_watchme() {
-  if (wsi.apsh) { free(wsi.apsh); wsi.apsh = NULL; }
-  if (wsi.apps) { free(wsi.apps); wsi.apps = NULL; }
-  if (wsi.wcs) { free(wsi.wcs); wsi.wcs = NULL; }
+  FREE(wsi.apsh);
+  FREE(wsi.apps);
+  FREE(wsi.wcs);
 }

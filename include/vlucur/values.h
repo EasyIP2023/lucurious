@@ -32,5 +32,6 @@ void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc);
 void set_cmd_pbs_init_values(vkcomp *app);
 void set_buffs_init_values(vkcomp *app);
 void set_desc_data_init_values(vkcomp *app);
+void set_gp_data_init_values(vkcomp *app);
 
 #endif

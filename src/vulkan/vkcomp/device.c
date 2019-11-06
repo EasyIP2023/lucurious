@@ -45,15 +45,20 @@ VkBool32 is_device_suitable(
           device_feats->robustBufferAccess);
 }
 
-VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysicalDevice device) {
+VkResult get_extension_properties(
+  vkcomp *app,
+  VkLayerProperties *prop,
+  VkPhysicalDevice device,
+  VkExtensionProperties **eprops
+) {
   VkResult res = VK_INCOMPLETE;
   VkExtensionProperties *extensions = NULL;
   uint32_t extension_count = 0;
 
   do {
-    res = (app && !device)  ?  vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-          (prop)            ?  vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, NULL) :
-                               vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+    res = (app && !device) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+          (prop)           ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, NULL) :
+                             vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
     if (res) return res;
 
     /* Rare but may happen for instances. If so continue on with the app */
@@ -67,93 +72,66 @@ VkResult get_extension_properties(vkcomp *app, VkLayerProperties *prop, VkPhysic
       goto finish_extensions;
     }
 
-    res = (app && !device)  ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-          (prop)            ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
-                              vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
+    res = (app && !device) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+          (prop)           ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
+                             vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
   } while (res == VK_INCOMPLETE);
 
   /* set available instance extensions */
-  if (app && !device) {
-    app->ie_props = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties),
-            extension_count * sizeof(VkExtensionProperties));
-    if (!app->ie_props) {
+  if (app) {
+    *eprops = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
+    if (!(*eprops)) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *ie_props failed");
+      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *eprops failed");
       goto finish_extensions;
     }
 
-    for (uint32_t i = 0; i < extension_count; i++) {
-      app->ie_props[i] = extensions[i];
-      app->eic = i;
-    }
-  }
-
-  /* set available device extensions */
-  if (device) {
-    app->de_props = (VkExtensionProperties *) \
-      realloc(app->de_props, extension_count * sizeof(VkExtensionProperties));
-    if (!app->de_props) {
+    *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
+    if (!(*eprops)) {
       res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *de_props failed");
+      wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
       goto finish_extensions;
-    }
-
-    for (uint32_t i = 0; i < extension_count; i++) {
-      app->de_props[i] = extensions[i];
-      app->edc = i;
-    }
-
-    /* check for swap chain support */
-    for (uint32_t i = 0; i < app->edc; i++) {
-      if (!strcmp(app->de_props[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
-        res = VK_TRUE;
-        wlu_log_me(WLU_SUCCESS, "Physical Device has swap chain support");
-        break;
-      }
     }
   }
 
 finish_extensions:
-  if (extensions) {
-    free(extensions);
-    extensions = NULL;
-  }
+  FREE(extensions);
   return res;
 }
 
 VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkBool32 ret = VK_TRUE;
   VkBool32 *present_support = NULL;
-
+  uint32_t qfc = 0; /* queue family count */
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
     goto finish_queue_family;
   }
 
-  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, NULL);
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
-  app->queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
-      app->queue_family_count * sizeof(VkQueueFamilyProperties));
-  if (!app->queue_families) {
+  VkQueueFamilyProperties *queue_families = (VkQueueFamilyProperties *) calloc(
+        sizeof(VkQueueFamilyProperties), qfc * sizeof(VkQueueFamilyProperties));
+  if (!queue_families) {
     wlu_log_me(WLU_DANGER, "[x] calloc of VkQueueFamilyProperties *queue_families failed");
     goto finish_queue_family;
   }
 
-  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &app->queue_family_count, app->queue_families);
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
-  present_support = calloc(sizeof(VkBool32), app->queue_family_count * sizeof(VkBool32));
+  present_support = calloc(sizeof(VkBool32), qfc * sizeof(VkBool32));
   if (!present_support) {
     wlu_log_me(WLU_DANGER, "[x] calloc of VkBool32 *present_support failed");
     goto finish_queue_family;
   }
 
   if (app->surface)
-    for (uint32_t i = 0; i < app->queue_family_count; i++)
+    for (uint32_t i = 0; i < qfc; i++)
       vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support[i]);
 
-  for (uint32_t i = 0; i < app->queue_family_count; i++) {
-    if (app->queue_families[i].queueFlags & vkqfbits) {
+  for (uint32_t i = 0; i < qfc; i++) {
+    if (queue_families[i].queueFlags & vkqfbits) {
       if (app->indices.graphics_family == UINT32_MAX) {
         app->indices.graphics_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
@@ -169,7 +147,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   }
 
   if (app->surface && app->indices.present_family == UINT32_MAX) {
-    for (uint32_t i = 0; i < app->queue_family_count; i++) {
+    for (uint32_t i = 0; i < qfc; i++) {
       if (present_support[i]) {
         app->indices.present_family = i; ret = VK_FALSE;
         break;
@@ -178,10 +156,8 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   }
 
 finish_queue_family:
-  if (present_support) {
-    free(present_support);
-    present_support = NULL;
-  }
+  FREE(queue_families);
+  FREE(present_support);
   return ret;
 }
 

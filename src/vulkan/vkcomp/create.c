@@ -70,12 +70,6 @@ VkResult wlu_create_instance(
     return res;
   }
 
-  res = get_extension_properties(app, NULL, NULL);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
-    return res;
-  }
-
   return res;
 }
 
@@ -126,10 +120,9 @@ VkResult wlu_create_physical_device(
   * get a physical device that is suitable
   * to do the graphics related task that we need
   */
+  VkExtensionProperties *eprops = VK_NULL_HANDLE;
   for (uint32_t i = 0; i < device_count; i++) {
-    if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats) &&
-        /* Check if current device has swap chain support */
-        get_extension_properties(app, NULL, devices[i])) {
+    if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
       wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
@@ -143,16 +136,15 @@ VkResult wlu_create_physical_device(
   }
 
 finish_devices:
-  if (devices) {
-    free(devices);
-    devices = NULL;
-  }
+  FREE(eprops);
+  FREE(devices);
   return res;
 }
 
 VkResult wlu_create_logical_device(
   vkcomp *app,
   VkPhysicalDeviceFeatures *device_feats,
+  uint32_t queue_count,
   uint32_t enabledLayerCount,
   const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
@@ -165,44 +157,45 @@ VkResult wlu_create_logical_device(
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
-    return res;
+    goto finish_logical;
   }
 
-  if (!app->queue_families) {
+  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) {
     wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
-    return res;
+    goto finish_logical;
   }
 
-  app->queue_create_infos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
-      app->queue_family_count * sizeof(VkDeviceQueueCreateInfo));
-  if (!app->queue_create_infos) {
-    wlu_log_me(WLU_DANGER, "[x] calloc app->queue_create_infos failed");
-    return res;
+  /* Will need to change this later but for now, This two hardware queues should currently always be the same */
+  uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
+  uint32_t dq_count = 1;
+  VkDeviceQueueCreateInfo *pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(
+          sizeof(VkDeviceQueueCreateInfo),  dq_count * sizeof(VkDeviceQueueCreateInfo));
+  if (!pQueueCreateInfos) {
+    wlu_log_me(WLU_DANGER, "[x] calloc VkDeviceQueueCreateInfo *queue_create_infos failed");
+    goto finish_logical;
   }
 
-  uint32_t queue_fam_indices[] = {app->indices.graphics_family, app->indices.present_family};
-  for (uint32_t i = 0; i < app->queue_family_count; i++) {
-    app->queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    app->queue_create_infos[i].pNext = NULL;
-    app->queue_create_infos[i].flags = 0;
-    app->queue_create_infos[i].queueFamilyIndex = queue_fam_indices[i];
-    app->queue_create_infos[i].queueCount = app->queue_family_count;
-    app->queue_create_infos[i].pQueuePriorities = queue_priorities;
+  for (uint32_t i = 0; i < dq_count; i++) {
+    pQueueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    pQueueCreateInfos[i].pNext = NULL;
+    pQueueCreateInfos[i].flags = 0;
+    pQueueCreateInfos[i].queueFamilyIndex = queue_fam_indices[i];
+    pQueueCreateInfos[i].queueCount = queue_count;
+    pQueueCreateInfos[i].pQueuePriorities = queue_priorities;
   }
 
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.queueCreateInfoCount = app->queue_family_count;
-  create_info.pQueueCreateInfos = app->queue_create_infos;
+  create_info.queueCreateInfoCount = dq_count;
+  create_info.pQueueCreateInfos = pQueueCreateInfos;
   create_info.enabledLayerCount = enabledLayerCount;
   create_info.ppEnabledLayerNames = ppEnabledLayerNames;
   create_info.enabledExtensionCount = enabledExtensionCount;
   create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
   create_info.pEnabledFeatures = device_feats;
-
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
@@ -222,6 +215,8 @@ VkResult wlu_create_logical_device(
   else
     vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
 
+finish_logical:
+  FREE(pQueueCreateInfos);
   return res;
 }
 
@@ -409,10 +404,7 @@ VkResult wlu_create_img_views(
   }
 
 finish_create_img_views:
-  if (sc_imgs) {
-    free(sc_imgs);
-    sc_imgs = NULL;
-  }
+  FREE(sc_imgs);
   return res;
 }
 
@@ -667,6 +659,7 @@ VkResult wlu_create_buffer(
 VkResult wlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_sc,
+  uint32_t cur_gpd,
   uint32_t attachmentCount,
   VkImageView *attachments,
   uint32_t width,
@@ -675,7 +668,7 @@ VkResult wlu_create_framebuffers(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->render_pass) {
+  if (!app->gp_data[cur_gpd].render_pass) {
     wlu_log_me(WLU_DANGER, "[x] render pass not setup");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
     return res;
@@ -699,7 +692,7 @@ VkResult wlu_create_framebuffers(
 
     VkFramebufferCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    create_info.renderPass = app->render_pass;
+    create_info.renderPass = app->gp_data[cur_gpd].render_pass;
     create_info.attachmentCount = attachmentCount;
     create_info.pAttachments = attachments;
     create_info.width = width;

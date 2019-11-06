@@ -52,19 +52,8 @@ typedef struct vkcomp {
 
   /* keep track of all vulkan extensions */
   VkLayerProperties *vl_props; /* validation layer properties */
-  uint32_t vlc; /* validation layer count */
-
-  VkExtensionProperties *ie_props; /* instance extension properties */
-  uint32_t eic; /* vulkan extension properties instance count */
-
-  VkExtensionProperties *de_props; /* device extension properties */
-  uint32_t edc; /* vulkan extension properties device count */
 
   VkPhysicalDevice physical_device;
-
-  VkDeviceQueueCreateInfo *queue_create_infos;
-  VkQueueFamilyProperties *queue_families;
-  uint32_t queue_family_count;
 
   struct queue_family_indices {
     uint32_t graphics_family;
@@ -98,19 +87,21 @@ typedef struct vkcomp {
     } depth;
   } *sc;
 
-  VkRenderPass render_pass;
+  uint32_t gpc; /* graphics pipeline count */
   VkPipelineCache pipeline_cache;
-  VkPipelineLayout pipeline_layout;
-  VkPipeline graphics_pipeline;
+  struct graphics_pipeline_data {
+    VkRenderPass render_pass;
+    VkPipelineLayout pipeline_layout;
+    VkPipeline *graphics_pipelines;
+  } *gp_data;
 
-  uint32_t cpc;
+  uint32_t cpc; /* command pool count */
   struct vkcmds {
     VkCommandPool cmd_pool;
     VkCommandBuffer *cmd_buffs;
   } *cmd_pbs;
 
-  /* Buffer Data Count */
-  uint32_t bdc;
+  uint32_t bdc; /* Buffer Data Count */
   struct buffs_data {
     VkBuffer buff;
     VkDeviceMemory mem;
@@ -118,8 +109,7 @@ typedef struct vkcomp {
     char *name;
   } *buffs_data;
 
-  /* Descriptor Data Count */
-  uint32_t ddc;
+  uint32_t ddc; /* Descriptor Data Count */
   struct descriptors {
     VkDescriptorPool desc_pool;
     uint32_t dc; /* descriptor count */
@@ -190,6 +180,7 @@ VkResult wlu_create_physical_device(
 VkResult wlu_create_logical_device(
   vkcomp *app,
   VkPhysicalDeviceFeatures *device_feats,
+  uint32_t queue_count,
   uint32_t enabledLayerCount,
   const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
@@ -253,6 +244,7 @@ VkResult wlu_create_buffer(
 VkResult wlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_sc,
+  uint32_t cur_gpd,
   uint32_t attachmentCount,
   VkImageView *attachments,
   uint32_t width,

@@ -58,6 +58,7 @@ char **str_split(char *a_str, const char a_delim) {
   count++;
 
   result = calloc(sizeof(char*), count * sizeof(char*));
+  if (!result) return NULL;
 
   if (result) {
     size_t idx  = 0;
@@ -65,16 +66,14 @@ char **str_split(char *a_str, const char a_delim) {
 
     while (token) {
       if (idx > count) {
-        free(result);
-        result = NULL;
+        FREE(result);
         return result;
       }
       *(result + idx++) = strdup(token);
       token = strtok(0, delim);
     }
     if (idx != (count - 1)) {
-      free(result);
-      result = NULL;
+      FREE(result);
       return result;
     }
     *(result + idx) = 0;

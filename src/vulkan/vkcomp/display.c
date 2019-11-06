@@ -98,10 +98,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   }
 
 finish_format:
-  if (formats) {
-    free(formats);
-    formats = NULL;
-  }
+  FREE(formats);
   return ret_fmt;
 }
 
@@ -155,10 +152,7 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   }
 
 finish_best_mode:
-  if (present_modes) {
-    free(present_modes);
-    present_modes = NULL;
-  }
+  FREE(present_modes)
   return best_mode;
 }
 

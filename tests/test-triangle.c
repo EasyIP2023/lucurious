@@ -123,7 +123,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app, &device_feats, 1, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -175,7 +175,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0;
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_gpd = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
@@ -206,7 +206,14 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
+  err = wlu_create_gp_data(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_gp_data failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_pipeline_layout(app, cur_gpd, 0, NULL, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
@@ -232,7 +239,7 @@ START_TEST(test_vulkan_client_create) {
     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
-  err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 1, &subdep);
+  err = wlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
@@ -261,7 +268,7 @@ START_TEST(test_vulkan_client_create) {
   }
 
   VkImageView vkimg_attach[1];
-  err = wlu_create_framebuffers(app, cur_sc, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
+  err = wlu_create_framebuffers(app, cur_sc, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
@@ -404,10 +411,10 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_graphics_pipeline(app, 2, shader_stages,
+  err = wlu_create_graphics_pipelines(app, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
   );
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
@@ -437,11 +444,11 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent2D.width, extent2D.height,
-                             1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, cur_gpd, 0, 0, extent2D.width,
+                             extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
 
-  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
+  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   const VkDeviceSize offsets = 0;
   wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, &offsets);
 

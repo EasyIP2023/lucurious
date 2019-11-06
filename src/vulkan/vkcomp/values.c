@@ -35,15 +35,7 @@ void set_vkcomp_init_values(vkcomp *app) {
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
   app->vl_props = NULL;
-  app->vlc = VK_NULL_HANDLE;
-  app->ie_props = NULL;
-  app->eic = VK_NULL_HANDLE;
-  app->de_props = NULL;
-  app->edc = VK_NULL_HANDLE;
   app->physical_device = VK_NULL_HANDLE;
-  app->queue_create_infos = NULL;
-  app->queue_families = NULL;
-  app->queue_family_count = VK_NULL_HANDLE;
   app->indices.graphics_family = UINT32_MAX;
   app->indices.present_family = UINT32_MAX;
   app->device = VK_FALSE;
@@ -51,10 +43,8 @@ void set_vkcomp_init_values(vkcomp *app) {
   app->present_queue = VK_NULL_HANDLE;
   app->scc = VK_NULL_HANDLE;
   app->sc = VK_NULL_HANDLE;
-  app->render_pass = VK_NULL_HANDLE;
-  app->pipeline_cache = VK_NULL_HANDLE;
-  app->pipeline_layout = VK_NULL_HANDLE;
-  app->graphics_pipeline = VK_NULL_HANDLE;
+  app->gpc = VK_NULL_HANDLE;
+  app->gp_data = VK_NULL_HANDLE;
   app->cpc = VK_NULL_HANDLE;
   app->cmd_pbs = VK_NULL_HANDLE;
   app->bdc = VK_NULL_HANDLE;
@@ -108,4 +98,10 @@ void set_desc_data_init_values(vkcomp *app) {
   app->desc_data[app->ddc].desc_layouts = VK_NULL_HANDLE;
   app->desc_data[app->ddc].desc_pool = VK_NULL_HANDLE;
   app->desc_data[app->ddc].desc_set = VK_NULL_HANDLE;
+}
+
+void set_gp_data_init_values(vkcomp *app) {
+  app->gp_data[app->gpc].render_pass = VK_NULL_HANDLE;
+  app->gp_data[app->gpc].pipeline_layout = VK_NULL_HANDLE;
+  app->gp_data[app->gpc].graphics_pipelines = VK_NULL_HANDLE;
 }

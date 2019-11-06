@@ -38,20 +38,20 @@ void wlu_bind_pipeline(
                     pipelineBindPoint, pipeline);
 }
 
-void wlu_bind_desc_set(
+void wlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t cur_dd,
+  uint32_t cur_gpd,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
-  vkCmdBindDescriptorSets(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
-                          pipelineBindPoint, app->pipeline_layout, firstSet,
-                          app->desc_data[cur_dd].dc,
-                          app->desc_data[cur_dd].desc_set,
+  vkCmdBindDescriptorSets(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint,
+                          app->gp_data[cur_gpd].pipeline_layout, firstSet,
+                          app->desc_data[cur_dd].dc, app->desc_data[cur_dd].desc_set,
                           dynamicOffsetCount, pDynamicOffsets);
 }
 

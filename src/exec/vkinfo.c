@@ -26,6 +26,7 @@
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
 #include <exec/vkinfo.h>
+#include <vlucur/device.h>
 
 const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -90,12 +91,13 @@ void print_gvalidation_layers() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->vlc; i++) {
+  uint32_t lcount = sizeof(app->vl_props) / sizeof(VkLayerProperties*);
+  for (uint32_t i = 0; i < lcount; i++) {
     fprintf(stdout, "\t%s", app->vl_props[i].layerName);
     fprintf(stdout, "\t\t%s\n", app->vl_props[i].description);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n\tValidation Layer Count: %d\n", app->vlc);
+  fprintf(stdout, "\n\tValidation Layer Count: %d\n", lcount);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
   wlu_freeup_vk(app);
@@ -118,16 +120,28 @@ void print_instance_extensions() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->eic; i++) {
-    lower_to_upper(app->ie_props[i].extensionName);
+
+  /* set available instance extensions */
+  VkExtensionProperties *ie_props = VK_NULL_HANDLE;
+  err = get_extension_properties(app, NULL, NULL, &ie_props);
+  if (err) {
+    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
+    wlu_freeup_vk(app);
+    return;
+  }
+
+  uint32_t eip_count = sizeof(ie_props) / sizeof(VkExtensionProperties*);
+  for (uint32_t i = 0; i < eip_count; i++) {
+    lower_to_upper(ie_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
-            app->ie_props[i].specVersion,
-            app->ie_props[i].extensionName);
+            ie_props[i].specVersion,
+            ie_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n  Instance Extension Count: %d\n", app->eic);
+  fprintf(stdout, "\n  Instance Extension Count: %d\n", eip_count);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
+  FREE(ie_props);
   wlu_freeup_vk(app);
 }
 
@@ -160,15 +174,26 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  for (uint32_t i = 0; i < app->edc; i++) {
-    lower_to_upper(app->de_props[i].extensionName);
+
+  VkExtensionProperties *de_props = VK_NULL_HANDLE;
+  err = get_extension_properties(app, NULL, NULL, &de_props);
+  if (err) {
+    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
+    wlu_freeup_vk(app);
+    return;
+  }
+
+  uint32_t de_count = sizeof(de_props) / sizeof(VkExtensionProperties*);
+  for (uint32_t i = 0; i < de_count; i++) {
+    lower_to_upper(de_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n",
-            app->de_props[i].specVersion,
-            app->de_props[i].extensionName);
+            de_props[i].specVersion,
+            de_props[i].extensionName);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
-  printf("\n  Device Extension Count: %d\n", app->edc);
+  printf("\n  Device Extension Count: %d\n", de_count);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
+  FREE(de_props);
   wlu_freeup_vk(app);
 }

@@ -7,7 +7,7 @@ license=('MIT')
 pkgdesc='[Desktop Engine, Library] for building and styling 2D/3D Vulkan Wayland Compositors'
 url='https://github.com/EasyIP2023/lucurious'
 arch=('x86_64')
-depends=('shaderc' 'cglm' 'wayland' 'vulkan-icd-loader' 'vulkan-tools' 'vulkan-validation-layers')
+depends=('shaderc' 'vulkan-driver' 'vulkan-icd-loader' 'cglm' 'wayland')
 makedepends=('meson' 'ninja' 'git' 'wayland-protocols' 'vulkan-headers' 'check')
 source=("${pkgname}::git+${url}")
 sha512sums=('SKIP')
@@ -26,11 +26,6 @@ build () {
 	rm -rf build
 	meson build
 	ninja -C build
-}
-
-check() {
-	cd "${pkgname}"
-	ninja test -C build
 }
 
 package () {

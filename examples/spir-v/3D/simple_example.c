@@ -149,7 +149,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_logical_device(app, &device_feats, 0, NULL, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, 0, NULL, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -200,7 +200,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_dd = 0;
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
@@ -287,6 +287,7 @@ int main(void) {
 
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(0, 1, &desc_set);
 
+  /* Using same layout for all obects for now */
   err = wlu_create_desc_set_layout(app, cur_dd, &desc_set_info);
   if (err) {
     freeme(app, wc);
@@ -312,7 +313,14 @@ int main(void) {
                              &app->buffs_data[0].buff_info, NUM_DESCRIPTOR_SETS);
 
   /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_pipeline_layout(app, app->desc_data[cur_dd].dc, app->desc_data[cur_dd].desc_layouts, 0, NULL);
+  err = wlu_create_gp_data(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_gp_data failed");
+    return EXIT_FAILURE;
+  }
+
+  err = wlu_create_pipeline_layout(app, cur_gpd, NUM_DESCRIPTOR_SETS, &app->desc_data[cur_dd].desc_layouts[0], 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
@@ -341,7 +349,7 @@ int main(void) {
   VkAttachmentReference depth_ref = wlu_set_attachment_ref(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
   VkSubpassDescription subpass = wlu_set_subpass_desc(0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
 
-  err = wlu_create_render_pass(app, 2, attachments, 1, &subpass, 0, NULL);
+  err = wlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_render_pass failed");
@@ -357,7 +365,7 @@ int main(void) {
 
   VkImageView vkimg_attach[2];
   vkimg_attach[1] = app->sc[cur_sc].depth.view;
-  err = wlu_create_framebuffers(app, cur_sc, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
+  err = wlu_create_framebuffers(app, cur_sc, cur_gpd, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
@@ -471,10 +479,10 @@ int main(void) {
     VK_SAMPLE_COUNT_1_BIT, VK_FALSE, 0.0f, NULL, VK_FALSE, VK_FALSE
   );
 
-  err = wlu_create_graphics_pipeline(app, 2, shader_stages,
+  err = wlu_create_graphics_pipelines(app, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, &ds_info, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
   );
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
@@ -496,10 +504,10 @@ int main(void) {
   clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, 0, 0, extent3D.width, extent3D.height,
-                             2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
-  wlu_bind_desc_set(app, cur_pool, cur_buff, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, cur_gpd, 0, 0, extent3D.width,
+                             extent3D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
+  wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);

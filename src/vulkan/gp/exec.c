@@ -31,6 +31,7 @@ void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_sc,
+  uint32_t cur_gpd,
   uint32_t x,
   uint32_t y,
   uint32_t width,
@@ -49,7 +50,7 @@ void wlu_exec_begin_render_pass(
   VkRenderPassBeginInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   render_pass_info.pNext = NULL;
-  render_pass_info.renderPass = app->render_pass;
+  render_pass_info.renderPass = app->gp_data[cur_gpd].render_pass;
   render_pass_info.renderArea.offset.x = x;
   render_pass_info.renderArea.offset.y = y;
   render_pass_info.renderArea.extent.width = width;

@@ -89,20 +89,16 @@ VkResult wlu_set_global_layers(vkcomp *app) {
 
   /* Gather the extension list for each instance layer. */
   for (uint32_t i = 0; i < layer_count; i++) {
-    res = get_extension_properties(NULL, &vk_props[i], NULL);
+    res = get_extension_properties(NULL, &vk_props[i], NULL, NULL);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", res);
       goto finish_vk_props;
     }
     app->vl_props[i] = vk_props[i];
-    app->vlc = i;
   }
 
 finish_vk_props:
-  if (vk_props) {
-    free(vk_props);
-    vk_props = NULL;
-  }
+  FREE(vk_props);
   return res;
 }
 
