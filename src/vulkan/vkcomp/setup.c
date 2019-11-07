@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 EasyIP2023
+ * Copyright (c) 2019 Vincent Davis Jr.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,13 +82,10 @@ void wlu_freeup_vk(void *data) {
     app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
   if (app->cmd_pbs) {
     for (uint32_t i = 0; i < app->cpc; i++) {
-      if (app->cmd_pbs[i].cmd_buffs) {
-        vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sc[i].sic, app->cmd_pbs[i].cmd_buffs);
-        FREE(app->cmd_pbs[i].cmd_buffs);
-      }
       if (app->cmd_pbs[i].cmd_pool) {
         vkDestroyCommandPool(app->device, app->cmd_pbs[i].cmd_pool, NULL);
         app->cmd_pbs[i].cmd_pool = VK_NULL_HANDLE;
+        FREE(app->cmd_pbs[i].cmd_buffs);
       }
     }
     free(app->cmd_pbs);

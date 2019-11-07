@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 EasyIP2023
+ * Copyright (c) 2019 Vincent Davis Jr.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -243,7 +243,12 @@ VkResult wlu_create_framebuffers(
  * Allows for your app to create a command pool to store your
  * command buffers before being committed to main memory
  */
-VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags);
+VkResult wlu_create_cmd_pool(
+  vkcomp *app,
+  uint32_t cur_sc,
+  uint32_t queueFamilyIndex,
+  VkCommandPoolCreateFlagBits flags
+);
 
 /*
  * Allows for your app to put commands into a buffer to later

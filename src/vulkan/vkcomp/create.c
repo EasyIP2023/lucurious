@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 EasyIP2023
+ * Copyright (c) 2019 Vincent Davis Jr.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -710,12 +710,17 @@ VkResult wlu_create_framebuffers(
   return res;
 }
 
-VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
+VkResult wlu_create_cmd_pool(
+  vkcomp *app,
+  uint32_t cur_sc,
+  uint32_t queueFamilyIndex,
+  VkCommandPoolCreateFlagBits flags
+) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) {
-    wlu_log_me(WLU_DANGER, "[x] graphics or present family index not set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family()");
+  if (app->sc[cur_sc].sic == 0) {
+    wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
     return res;
   }
 
@@ -727,13 +732,26 @@ VkResult wlu_create_cmd_pool(vkcomp *app, VkCommandPoolCreateFlagBits flags) {
 
   set_cmd_pbs_init_values(app);
 
+  /* create an array of cmd_buffs to call later in wlu_create_cmd_buffs */
+  app->cmd_pbs[app->cpc].cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
+        app->sc[cur_sc].sic * sizeof(VkCommandBuffer));
+  if (!app->cmd_pbs[app->cpc].cmd_buffs) {
+    wlu_log_me(WLU_DANGER, "[x] calloc app->cmd_pbs[%d].cmd_buffs failed", app->cpc);
+    return res;
+  }
+
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = flags;
-  create_info.queueFamilyIndex = app->indices.graphics_family;
+  create_info.queueFamilyIndex = queueFamilyIndex;
 
   res = vkCreateCommandPool(app->device, &create_info, NULL, &app->cmd_pbs[app->cpc].cmd_pool);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "vkCreateCommandPool failed, ERROR CODE: %d", res);
+    return res;
+  }
+
   app->cpc++;
 
   return res;
@@ -757,19 +775,6 @@ VkResult wlu_create_cmd_buffs(
     wlu_log_me(WLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_pool()");
     return res;
-  }
-
-  /*
-   * make it so if swap chain is destroy you don't
-   * call calloc multiple time on memory already allocated
-   */
-  if (!app->cmd_pbs[cur_pool].cmd_buffs) { /* decided on this instead of realloc */
-    app->cmd_pbs[cur_pool].cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
-          app->sc[cur_sc].sic * sizeof(VkCommandBuffer));
-    if (!app->cmd_pbs[cur_pool].cmd_buffs) {
-      wlu_log_me(WLU_DANGER, "[x] calloc VkCommandBuffer *cmd_buffs failed");
-      return res;
-    }
   }
 
   VkCommandBufferAllocateInfo alloc_info = {};

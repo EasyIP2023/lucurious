@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 EasyIP2023
+ * Copyright (c) 2019 Vincent Davis Jr.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -161,14 +161,16 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  err = wlu_create_cmd_pool(app, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_gpd = 0;
+  err = wlu_create_cmd_pool(app, cur_sc, app->indices.graphics_family,
+                            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
+                            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
     return EXIT_FAILURE;
   }
 
-  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_gpd = 0;
   err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   if (err) {
     freeme(app, wc);
