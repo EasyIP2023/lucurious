@@ -97,13 +97,6 @@ START_TEST(test_vulkan_client_create_3D) {
 
   wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
-  err = wlu_set_global_layers(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
-
   err = wlu_create_instance(app, "Draw Cube", "Desktop Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
     freeme(app, wc);

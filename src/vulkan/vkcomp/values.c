@@ -27,14 +27,10 @@
 #include <vlucur/values.h>
 
 void set_vkcomp_init_values(vkcomp *app) {
-  app->dbg_create_report_callback = VK_NULL_HANDLE;
   app->dbg_destroy_report_callback = VK_NULL_HANDLE;
-  app->debug_messenger = VK_NULL_HANDLE;
-  app->debug_report_callbacks = VK_NULL_HANDLE;
-  app->dbg_size = VK_NULL_HANDLE;
+  app->debug_report_callback = VK_NULL_HANDLE;
   app->instance = VK_NULL_HANDLE;
   app->surface = VK_NULL_HANDLE;
-  app->vl_props = NULL;
   app->physical_device = VK_NULL_HANDLE;
   app->indices.graphics_family = UINT32_MAX;
   app->indices.present_family = UINT32_MAX;

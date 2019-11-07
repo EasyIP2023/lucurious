@@ -78,7 +78,8 @@ void print_gvalidation_layers() {
   vkcomp *app = NULL;
   app = wlu_init_vk();
 
-  err = wlu_set_global_layers(app);
+  VkLayerProperties *vk_props = VK_NULL_HANDLE;
+  err = wlu_set_global_layers(&vk_props);
   if (err) {
     wlu_freeup_vk(app);
     fprintf(stdout, "%s", colors[WLU_DANGER]);
@@ -91,15 +92,16 @@ void print_gvalidation_layers() {
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
   fprintf(stdout, "%s", colors[WLU_INFO]);
-  uint32_t lcount = sizeof(app->vl_props) / sizeof(VkLayerProperties*);
+  uint32_t lcount = sizeof(vk_props) / sizeof(VkLayerProperties*);
   for (uint32_t i = 0; i < lcount; i++) {
-    fprintf(stdout, "\t%s", app->vl_props[i].layerName);
-    fprintf(stdout, "\t\t%s\n", app->vl_props[i].description);
+    fprintf(stdout, "\t%s", vk_props[i].layerName);
+    fprintf(stdout, "\t\t%s\n", vk_props[i].description);
   }
   fprintf(stdout, "%s", colors[WLU_WARNING]);
   fprintf(stdout, "\n\tValidation Layer Count: %d\n", lcount);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
+  FREE(vk_props);
   wlu_freeup_vk(app);
 }
 
@@ -123,7 +125,7 @@ void print_instance_extensions() {
 
   /* set available instance extensions */
   VkExtensionProperties *ie_props = VK_NULL_HANDLE;
-  err = get_extension_properties(app, NULL, NULL, &ie_props);
+  err = get_extension_properties(app, NULL, &ie_props);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
     wlu_freeup_vk(app);
@@ -176,7 +178,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   fprintf(stdout, "%s", colors[WLU_INFO]);
 
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
-  err = get_extension_properties(app, NULL, NULL, &de_props);
+  err = get_extension_properties(app, NULL, &de_props);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
     wlu_freeup_vk(app);

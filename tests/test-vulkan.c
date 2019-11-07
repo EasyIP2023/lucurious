@@ -22,8 +22,10 @@
  * THE SOFTWARE.
  */
 
+#include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
+#include <vlucur/device.h>
 #include <stdlib.h>
 #include <check.h>
 
@@ -41,34 +43,28 @@ START_TEST(test_init_vulkan) {
 START_TEST(test_set_global_layers) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
+  VkLayerProperties *vk_props = VK_NULL_HANDLE;
 
-  err = wlu_set_global_layers(app);
+  err = wlu_set_global_layers(&vk_props);
   if (err) {
     wlu_freeup_vk(app);
     wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
     ck_abort_msg(NULL);
   }
 
-  if (app->vl_props) {
-    ck_assert_ptr_nonnull(app->vl_props);
-  } else  {
-    ck_assert_ptr_null(app->vl_props);
+  if (vk_props) {
+    ck_assert_ptr_nonnull(vk_props);
+  } else {
+    ck_assert_ptr_null(vk_props);
   }
 
+  FREE(vk_props);
   wlu_freeup_vk(app);
-  app = NULL;
 } END_TEST;
 
 START_TEST(test_create_instance) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
-
-  err = wlu_set_global_layers(app);
-  if (err) {
-    wlu_freeup_vk(app);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
@@ -87,19 +83,11 @@ START_TEST(test_create_instance) {
   ck_assert_ptr_nonnull(app->instance);
 
   wlu_freeup_vk(app);
-  app = NULL;
 } END_TEST;
 
 START_TEST(test_enumerate_device) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
-
-  err = wlu_set_global_layers(app);
-  if (err) {
-    wlu_freeup_vk(app);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
@@ -128,19 +116,11 @@ START_TEST(test_enumerate_device) {
   ck_assert_ptr_nonnull(app->physical_device);
 
   wlu_freeup_vk(app);
-  app = NULL;
 } END_TEST;
 
 START_TEST(test_set_logical_device) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
-
-  err = wlu_set_global_layers(app);
-  if (err) {
-    wlu_freeup_vk(app);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
@@ -182,19 +162,11 @@ START_TEST(test_set_logical_device) {
   }
 
   wlu_freeup_vk(app);
-  app = NULL;
 } END_TEST;
 
 START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
-
-  err = wlu_set_global_layers(app);
-  if (err) {
-    wlu_freeup_vk(app);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
@@ -244,7 +216,6 @@ START_TEST(test_swap_chain_fail_no_surface) {
   if (err) wlu_log_me(WLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   wlu_freeup_vk(app);
-  app = NULL;
 } END_TEST;
 
 Suite *vulkan_suite(void) {

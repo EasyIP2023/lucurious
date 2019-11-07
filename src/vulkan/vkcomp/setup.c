@@ -78,15 +78,8 @@ void wlu_freeup_sc(void *data) {
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
-  if (app->debug_report_callbacks) {
-    for (uint32_t i = 0; i < app->dbg_size; i++) {
-      app->dbg_destroy_report_callback(app->instance, app->debug_report_callbacks[i], NULL);
-      app->debug_report_callbacks[i] = NULL;
-    }
-    free(app->debug_report_callbacks);
-  }
-  if (app->vl_props)
-    free(app->vl_props);
+  if (app->debug_report_callback)
+    app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
   if (app->cmd_pbs) {
     for (uint32_t i = 0; i < app->cpc; i++) {
       if (app->cmd_pbs[i].cmd_buffs) {

@@ -71,13 +71,6 @@ int main(void) {
 
   wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
-  err = wlu_set_global_layers(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    return EXIT_FAILURE;
-  }
-
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 0, NULL, 4, instance_extensions);
   if (err) {
     freeme(app, wc);

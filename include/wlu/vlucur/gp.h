@@ -81,6 +81,7 @@ VkResult wlu_create_desc_set_layout(
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 );
 
+/* Inorder to allocate descriptor sets you must create a descriptor pool */
 VkResult wlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_dd,
@@ -90,8 +91,7 @@ VkResult wlu_create_desc_pool(
 
 /*
  * Function creates a descriptor set that you can use to
- * inform the GPU how the data contained in a buffer (Uniform)
- * is mapped to the shader program's variables
+ * manipulate the data contained in a buffer (Uniform)
  */
 VkResult wlu_create_desc_set(
   vkcomp *app,

@@ -34,9 +34,11 @@ VkBool32 is_device_suitable(
 
 VkResult get_extension_properties(
   vkcomp *app,
-  VkLayerProperties *prop,
   VkPhysicalDevice device,
   VkExtensionProperties **eprops
 );
+
+/* I just decided to put this here because of conveniency */
+VkResult wlu_set_global_layers(VkLayerProperties **vk_props);
 
 #endif

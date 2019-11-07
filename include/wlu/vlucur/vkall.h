@@ -41,20 +41,13 @@ typedef struct vertex_3D {
 } vertex_3D;
 
 typedef struct vkcomp {
-  PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback;
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
-  PFN_vkDebugReportMessageEXT debug_messenger;
-  VkDebugReportCallbackEXT *debug_report_callbacks;
-  uint32_t dbg_size;
+  VkDebugReportCallbackEXT debug_report_callback;
 
   VkInstance instance;
   VkSurfaceKHR surface;
 
-  /* keep track of all vulkan extensions */
-  VkLayerProperties *vl_props; /* validation layer properties */
-
   VkPhysicalDevice physical_device;
-
   struct queue_family_indices {
     uint32_t graphics_family;
     uint32_t present_family;
@@ -124,12 +117,6 @@ vkcomp *wlu_init_vk();
 void wlu_freeup_sc(void *data);
 
 void wlu_freeup_vk(void *data);
-
-/* Set vulkan validation layers properties.
- * To get these validation layers you must install
- * vulkan sdk
- */
-VkResult wlu_set_global_layers(vkcomp *app);
 
 VkResult wlu_set_debug_message(vkcomp *app);
 

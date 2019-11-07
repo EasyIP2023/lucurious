@@ -47,7 +47,6 @@ VkBool32 is_device_suitable(
 
 VkResult get_extension_properties(
   vkcomp *app,
-  VkLayerProperties *prop,
   VkPhysicalDevice device,
   VkExtensionProperties **eprops
 ) {
@@ -56,9 +55,8 @@ VkResult get_extension_properties(
   uint32_t extension_count = 0;
 
   do {
-    res = (app && !device) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-          (prop)           ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, NULL) :
-                             vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
     if (res) return res;
 
     /* Rare but may happen for instances. If so continue on with the app */
@@ -72,26 +70,23 @@ VkResult get_extension_properties(
       goto finish_extensions;
     }
 
-    res = (app && !device) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-          (prop)           ? vkEnumerateInstanceExtensionProperties(prop->layerName, &extension_count, extensions) :
-                             vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
+    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
   } while (res == VK_INCOMPLETE);
 
   /* set available instance extensions */
-  if (app) {
-    *eprops = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
-    if (!(*eprops)) {
-      res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *eprops failed");
-      goto finish_extensions;
-    }
+  *eprops = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
+  if (!(*eprops)) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *eprops failed");
+    goto finish_extensions;
+  }
 
-    *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
-    if (!(*eprops)) {
-      res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
-      goto finish_extensions;
-    }
+  *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
+  if (!(*eprops)) {
+    res = VK_RESULT_MAX_ENUM;
+    wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
+    goto finish_extensions;
   }
 
 finish_extensions:
