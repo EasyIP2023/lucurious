@@ -1,29 +1,30 @@
 # Lucurious
+![Example 1](https://66.media.tumblr.com/76896cad1a8b07abc2ddd331dcc7403b/tumblr_oun56jf9mK1u2y46bo4_1280.jpg)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
+
+**Note: This is one mans attempt at something that could be cool. This is by no means official industry level software. This is just something I'm doing on the side for fun. IT WILL NOT BE DOCUMENTED!!! The only documentation you will find is from comments in the code.**
 
 Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s a library for building and styling Wayland Compositors using C, CSS, and Javascript. Will be using N-Api and the Wayland protocol to turn the nonexistent UI into reality.
-
-**Reasons**
-
-Because I want to learn more and have nothing better to do. Plus i'm crazy and ambitious... But aren't we all.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) and the Wayland protocol to assist in building optimal, memory efficient, easy to use graphically amazing two/three dimensional desktop environments.
 
 ## Dependencies
-* wayland
-* wayland-protocol
-* wayland-docs
-* pixman
+* wayland-client
+* wayland-server
+* wayland-protocols
+* wayland-scanner
+* vulkan (Install your graphics card driver)
+* vulkan-icd-loader
+* vulkan-headers
+* vulkan-sdk
 * libinput
+* [CGLM (for linear algebra)](https://github.com/recp/cglm)
+* [libshaderc](https://github.com/google/shaderc)
+* [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang, libshaderc)
 
-## Development
-
-**How to use wayland-scanner**
-```bash
-wayland-scanner private-code < xdg-shell.xml > xdg-shell-protocol.c
-wayland-scanner server-header < xdg-shell.xml > xdg-shell-server-protocol.h
-wayland-scanner client-header < xdg-shell.xml > xdg-shell-client-protocol.h
-```
+### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious/tree/development/examples)
+### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
+### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
 
 ## References
 * [Wayland freedesktop](https://wayland.freedesktop.org/)
@@ -33,10 +34,8 @@ wayland-scanner client-header < xdg-shell.xml > xdg-shell-client-protocol.h
 * [Swaywm](https://github.com/swaywm)
 * [Emersion Hello Wayland](https://github.com/emersion/hello-wayland)
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
-* [ImageMagick Core](https://imagemagick.org/script/magick-core.php)
-
-
-![Expanse](https://preview.redd.it/oru8123acdv01.png?width=960&crop=smart&auto=webp&s=f9f896391d3ac23c0186f951f975fdac12c019fe)
-![Expanse 2](https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fkevinmurnane%2Ffiles%2F2017%2F03%2Ftablet-sized_S1E9_Syfy.jpg)
-![Stark Pic](https://cdn57.androidauthority.net/wp-content/uploads/2018/07/iron-man-2-840x484.jpg)
-![Picture 1](https://scifiinterfaces.com/wp-content/uploads/2012/11/prometheus-110.png)
+* [Vulkan](https://vulkan.lunarg.com)
+* [Vulkan Tutorial](https://vulkan-tutorial.com/)
+* [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-2)
+* [Vulkan Validation Layers](https://gpuopen.com/using-the-vulkan-validation-layers/)
+* [MVP](https://jsantell.com/model-view-projection)
