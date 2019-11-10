@@ -40,38 +40,38 @@ vkcomp *wlu_init_vk() {
 void wlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
-  if (app->cmd_pbs) {
-    for (uint32_t i = 0; i < app->cpc; i++)
-      if (app->cmd_pbs[i].cmd_buffs)
-        vkFreeCommandBuffers(app->device, app->cmd_pbs[i].cmd_pool, app->sc[i].sic, app->cmd_pbs[i].cmd_buffs);
+  if (app->cmd_data) {
+    for (uint32_t i = 0; i < app->cdc; i++)
+      if (app->cmd_data[i].cmd_buffs)
+        vkFreeCommandBuffers(app->device, app->cmd_data[i].cmd_pool, app->sc_data[i].sic, app->cmd_data[i].cmd_buffs);
   }
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
   if (app->gp_data) { /* leave like this for now */
-    for (uint32_t i = 0; i < app->gpc; i++) {
+    for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout)
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
       if (app->gp_data[i].render_pass)
         vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
-      uint32_t gps_size = sizeof(app->gp_data[i].graphics_pipelines) / sizeof(VkPipeline*);
-      for (uint32_t j = 0; j < gps_size; j++) {
-        if (app->gp_data[i].graphics_pipelines[j])
-          vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
-      }
+      for (uint32_t j = 0; j < app->gp_data[i].gpc; j++)
+        vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
     }
   }
-  for (uint32_t i = 0; i < app->scc; i++) {
-    if (app->sc[i].sc_buffs && app->sc[i].frame_buffs) {
-      for (uint32_t j = 0; j < app->sc[i].sic; j++) {
-        vkDestroyFramebuffer(app->device, app->sc[i].frame_buffs[j], NULL);
-        vkDestroyImageView(app->device, app->sc[i].sc_buffs[j].view, NULL);
-        app->sc[i].frame_buffs[j] = VK_NULL_HANDLE;
-        app->sc[i].sc_buffs[j].view = VK_NULL_HANDLE;
+
+  if (app->sc_data) {
+    for (uint32_t i = 0; i < app->sdc; i++) {
+      if (app->sc_data[i].sc_buffs && app->sc_data[i].frame_buffs) {
+        for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
+          vkDestroyFramebuffer(app->device, app->sc_data[i].frame_buffs[j], NULL);
+          vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
+          app->sc_data[i].frame_buffs[j] = VK_NULL_HANDLE;
+          app->sc_data[i].sc_buffs[j].view = VK_NULL_HANDLE;
+        }
+        FREE(app->sc_data[i].sc_buffs);
       }
-      FREE(app->sc[i].sc_buffs);
+      if (app->sc_data[i].swap_chain)
+        vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
     }
-    if (app->sc[i].swap_chain)
-      vkDestroySwapchainKHR(app->device, app->sc[i].swap_chain, NULL);
   }
 }
 
@@ -80,20 +80,20 @@ void wlu_freeup_vk(void *data) {
 
   if (app->debug_report_callback)
     app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
-  if (app->cmd_pbs) {
-    for (uint32_t i = 0; i < app->cpc; i++) {
-      if (app->cmd_pbs[i].cmd_pool) {
-        vkDestroyCommandPool(app->device, app->cmd_pbs[i].cmd_pool, NULL);
-        app->cmd_pbs[i].cmd_pool = VK_NULL_HANDLE;
-        FREE(app->cmd_pbs[i].cmd_buffs);
+  if (app->cmd_data) {
+    for (uint32_t i = 0; i < app->cdc; i++) {
+      if (app->cmd_data[i].cmd_pool) {
+        vkDestroyCommandPool(app->device, app->cmd_data[i].cmd_pool, NULL);
+        app->cmd_data[i].cmd_pool = VK_NULL_HANDLE;
+        FREE(app->cmd_data[i].cmd_buffs);
       }
     }
-    free(app->cmd_pbs);
+    free(app->cmd_data);
   }
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
   if (app->gp_data) { /* leave like this for now */
-    for (uint32_t i = 0; i < app->gpc; i++) {
+    for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout) {
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
         app->gp_data[i].pipeline_layout = VK_NULL_HANDLE;
@@ -102,12 +102,9 @@ void wlu_freeup_vk(void *data) {
         vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
         app->gp_data[i].render_pass = VK_NULL_HANDLE;
       }
-      uint32_t gps_size = sizeof(app->gp_data[i].graphics_pipelines) / sizeof(VkPipeline*);
-      for (uint32_t j = 0; j < gps_size; j++) {
-        if (app->gp_data[i].graphics_pipelines[j])
-          vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
-        FREE(app->gp_data[i].graphics_pipelines);
-      }
+      for (uint32_t j = 0; j < app->gp_data[i].gpc; j++)
+        vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
+      FREE(app->gp_data[i].graphics_pipelines);
     }
     free(app->gp_data);
   }
@@ -140,31 +137,31 @@ void wlu_freeup_vk(void *data) {
     }
     free(app->buffs_data);
   }
-  if (app->sc) { /* Annihilate All Swap Chain Objects */
-    for (uint32_t i = 0; i < app->scc; i++) {
-      if (app->sc[i].depth.view)
-        vkDestroyImageView(app->device, app->sc[i].depth.view, NULL);
-      if (app->sc[i].depth.image)
-        vkDestroyImage(app->device, app->sc[i].depth.image, NULL);
-      if (app->sc[i].depth.mem)
-        vkFreeMemory(app->device, app->sc[i].depth.mem, NULL);
-      if (app->sc[i].sc_buffs && app->sc[i].frame_buffs && app->sc[i].sems) {
-        for (uint32_t j = 0; j < app->sc[i].sic; j++) {
-          if (app->sc[i].sems[j].image && app->sc[i].sems[j].render) {
-            vkDestroySemaphore(app->device, app->sc[i].sems[j].image, NULL);
-            vkDestroySemaphore(app->device, app->sc[i].sems[j].render, NULL);
+  if (app->sc_data) { /* Annihilate All Swap Chain Objects */
+    for (uint32_t i = 0; i < app->sdc; i++) {
+      if (app->sc_data[i].depth.view)
+        vkDestroyImageView(app->device, app->sc_data[i].depth.view, NULL);
+      if (app->sc_data[i].depth.image)
+        vkDestroyImage(app->device, app->sc_data[i].depth.image, NULL);
+      if (app->sc_data[i].depth.mem)
+        vkFreeMemory(app->device, app->sc_data[i].depth.mem, NULL);
+      if (app->sc_data[i].sc_buffs && app->sc_data[i].frame_buffs && app->sc_data[i].sems) {
+        for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
+          if (app->sc_data[i].sems[j].image && app->sc_data[i].sems[j].render) {
+            vkDestroySemaphore(app->device, app->sc_data[i].sems[j].image, NULL);
+            vkDestroySemaphore(app->device, app->sc_data[i].sems[j].render, NULL);
           }
-          vkDestroyFramebuffer(app->device, app->sc[i].frame_buffs[j], NULL);
-          vkDestroyImageView(app->device, app->sc[i].sc_buffs[j].view, NULL);
+          vkDestroyFramebuffer(app->device, app->sc_data[i].frame_buffs[j], NULL);
+          vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
         }
-        FREE(app->sc[i].sc_buffs); FREE(app->sc[i].frame_buffs); FREE(app->sc[i].sems);
+        FREE(app->sc_data[i].sc_buffs); FREE(app->sc_data[i].frame_buffs); FREE(app->sc_data[i].sems);
       }
-      if (app->sc[i].swap_chain) {
-        vkDestroySwapchainKHR(app->device, app->sc[i].swap_chain, NULL);
-        app->sc[i].swap_chain = VK_NULL_HANDLE;
+      if (app->sc_data[i].swap_chain) {
+        vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
+        app->sc_data[i].swap_chain = VK_NULL_HANDLE;
       }
     }
-    free(app->sc);
+    free(app->sc_data);
   }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
@@ -177,4 +174,54 @@ void wlu_freeup_vk(void *data) {
 
   set_vkcomp_init_values(app);
   FREE(app);
+}
+
+/* Simple Effective One Time Buffer Allocater */
+VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
+  switch (type) {
+    case WLU_SC_DATA:
+      app->sc_data = (struct swap_chain *) calloc(sizeof(struct swap_chain), arr_size * sizeof(struct swap_chain));
+      if (!app->sc_data) {
+        wlu_log_me(WLU_DANGER, "calloc app->sc_data failed!");
+        return VK_RESULT_MAX_ENUM;
+      }
+      app->sdc = arr_size;
+      set_sc_data_init_values(app); break;
+    case WLU_GP_DATA:
+      app->gp_data = (struct graphics_pipeline_data *) calloc(sizeof(struct graphics_pipeline_data),
+            arr_size * sizeof(struct graphics_pipeline_data));
+      if (!app->gp_data) {
+        wlu_log_me(WLU_DANGER, "calloc app->gp_data failed!!");
+        return VK_RESULT_MAX_ENUM;
+      }
+      app->gdc = arr_size;
+      set_gp_data_init_values(app); break;
+    case WLU_CMD_DATA:
+      app->cmd_data = (struct vkcmds *) calloc(sizeof(struct vkcmds), arr_size * sizeof(struct vkcmds));
+      if (!app->cmd_data) {
+        wlu_log_me(WLU_DANGER, "[x] calloc struct vkcmds *cmd_pbs failed!");
+        return VK_RESULT_MAX_ENUM;
+      }
+      app->cdc = arr_size;
+      set_cmd_data_init_values(app); break;
+    case WLU_BUFFS_DATA:
+      app->buffs_data = (struct buffs_data *) calloc(sizeof(struct buffs_data), arr_size * sizeof(struct buffs_data));
+      if (!app->buffs_data) {
+        wlu_log_me(WLU_DANGER, "[x] calloc struct buffs_data *buffs_data failed!");
+        return VK_RESULT_MAX_ENUM;
+      }
+      app->bdc = arr_size;
+      set_buffs_data_init_values(app); break;
+    case WLU_DESC_DATA:
+      app->desc_data = (struct desc_data *) calloc(sizeof(struct desc_data), arr_size * sizeof(struct desc_data));
+      if (!app->desc_data) {
+        wlu_log_me(WLU_DANGER, "calloc struct desc_data *desc_data failed!");
+        return VK_RESULT_MAX_ENUM;
+      }
+      app->ddc = arr_size;
+      set_desc_data_init_values(app); break;
+    default: break;
+  }
+
+  return VK_SUCCESS;
 }

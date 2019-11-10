@@ -40,8 +40,6 @@ VkResult wlu_create_render_pass(
   const VkSubpassDependency *pDependencies
 );
 
-VkResult wlu_create_gp_data(vkcomp *app);
-
 VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
   uint32_t stageCount,
@@ -73,9 +71,7 @@ VkResult wlu_create_pipeline_layout(
   const VkPushConstantRange *pPushConstantRanges
 );
 
-VkResult wlu_create_desc_data(vkcomp *app, uint32_t desc_count);
-
-VkResult wlu_create_desc_set_layout(
+VkResult wlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
@@ -102,7 +98,7 @@ VkResult wlu_create_desc_set(
 void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
-  uint32_t cur_sc,
+  uint32_t cur_scd,
   uint32_t cur_gpd,
   uint32_t x,
   uint32_t y,
@@ -116,7 +112,7 @@ void wlu_exec_begin_render_pass(
 void wlu_exec_stop_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
-  uint32_t cur_sc
+  uint32_t cur_scd
 );
 
 void wlu_bind_pipeline(

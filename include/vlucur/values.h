@@ -26,12 +26,11 @@
 #define VALUES_H
 
 void set_vkcomp_init_values(vkcomp *app);
-void set_sc_init_values(vkcomp *app);
-void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_sc);
-void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc);
-void set_cmd_pbs_init_values(vkcomp *app);
-void set_buffs_init_values(vkcomp *app);
-void set_desc_data_init_values(vkcomp *app);
+void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_scd);
+void set_sc_sems_init_values(vkcomp *app, uint32_t cur_scd);
+void set_sc_data_init_values(vkcomp *app);
+void set_buffs_data_init_values(vkcomp *app);
+void set_cmd_data_init_values(vkcomp *app);
 void set_gp_data_init_values(vkcomp *app);
-
+void set_desc_data_init_values(vkcomp *app);
 #endif

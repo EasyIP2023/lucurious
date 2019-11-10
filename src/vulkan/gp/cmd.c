@@ -36,7 +36,7 @@ void wlu_cmd_draw(
   uint32_t firstVertex,
   uint32_t firstInstance
 ) {
-  vkCmdDraw(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], vertexCount,
+  vkCmdDraw(app->cmd_data[cur_pool].cmd_buffs[cur_buff], vertexCount,
             instanceCount, firstVertex, firstInstance);
 }
 
@@ -50,7 +50,7 @@ void wlu_cmd_draw_indexed(
   int32_t vertexOffset,
   uint32_t firstInstance
 ) {
-  vkCmdDrawIndexed(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdDrawIndexed(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                    indexCount, instanceCount, firstIndex,
                    vertexOffset, firstInstance);
 }
@@ -63,7 +63,7 @@ void wlu_cmd_set_viewport(
   uint32_t firstViewport,
   uint32_t viewportCount
 ) {
-  vkCmdSetViewport(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdSetViewport(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                    firstViewport, viewportCount, viewport);
 }
 
@@ -75,6 +75,6 @@ void wlu_cmd_set_scissor(
   uint32_t firstScissor,
   uint32_t scissorCount
 ) {
-  vkCmdSetScissor(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdSetScissor(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                   firstScissor, scissorCount, scissor);
 }

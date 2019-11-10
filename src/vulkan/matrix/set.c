@@ -46,16 +46,31 @@ void wlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up) {
   glm_lookat(eye, center, up, view);
 }
 
-/* made void * to check if memcpy worked */
-void *wlu_set_matrix(void *matrix, void *model, uint32_t size) {
-  matrix = memcpy(matrix, model, size);
-  return (matrix) ? matrix : NULL;
+void wlu_set_matrix(void *dest, void *src, wlu_matrix_type type) {
+  switch (type) {
+    case WLU_MAT3:
+      glm_mat3_copy(src, dest);
+      break;
+    case WLU_MAT4:
+      glm_mat4_copy(src, dest);
+      break;
+    default: break;
+  }
 }
 
-/* made void * to check if memcpy worked */
-void *wlu_set_vector(void *vector, float *vec, uint32_t size) {
-  vector = memcpy(vector, vec, size);
-  return (vector) ? vector : NULL;
+void wlu_set_vector(void *dest, void *src, wlu_vec_type type) {
+  switch(type) {
+    case WLU_VEC2:
+      memcpy(dest, src, sizeof(vec2)); // cglm doesn't have a vec to copy func
+      break;
+    case WLU_VEC3:
+      glm_vec3_copy(src, dest);
+      break;
+    case WLU_VEC4:
+      glm_vec4_copy(src, dest);
+      break;
+    default: break;
+  }
 }
 
 void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model) {

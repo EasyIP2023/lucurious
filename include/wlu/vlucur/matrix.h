@@ -25,26 +25,15 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-typedef enum wlu_vec_type {
-  WLU_VEC2 = 0,
-  WLU_VEC3 = 1,
-  WLU_VEC4 = 2
-} wlu_vec_type;
-
-typedef enum wlu_matrix_type {
-  WLU_MAT3 = 0,
-  WLU_MAT4 = 1
-} wlu_matrix_type;
-
 float wlu_set_fovy(float fovy);
 
 void wlu_set_perspective(mat4 proj, float fovy, float aspect, float nearVal, float farVal);
 
 void wlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up);
 
-void *wlu_set_matrix(void *matrix, void *model, uint32_t size);
+void wlu_set_matrix(void *dest, void *src, wlu_matrix_type type);
 
-void *wlu_set_vector(void *vector, float *vec, uint32_t size);
+void wlu_set_vector(void *dest, void *src, wlu_vec_type type);
 
 void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model);
 

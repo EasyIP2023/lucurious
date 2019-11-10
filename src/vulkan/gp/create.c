@@ -113,19 +113,6 @@ VkResult wlu_create_render_pass(
   return res;
 }
 
-VkResult wlu_create_gp_data(vkcomp *app) {
-  app->gp_data = realloc(app->gp_data, (app->gpc+1) * sizeof(struct graphics_pipeline_data));
-  if (!app->gp_data) {
-    wlu_log_me(WLU_DANGER, "realloc app->gp_data failed!!");
-    return VK_RESULT_MAX_ENUM;
-  }
-
-  set_gp_data_init_values(app);
-  app->gpc++;
-
-  return VK_SUCCESS;
-}
-
 VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
   uint32_t stageCount,
@@ -178,6 +165,7 @@ VkResult wlu_create_graphics_pipelines(
   pipeline_info.basePipelineHandle = basePipelineHandle;
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
+  app->gp_data[cur_gpd].gpc = gps_count;
   app->gp_data[cur_gpd].graphics_pipelines = (VkPipeline *) calloc(sizeof(VkPipeline), gps_count * sizeof(VkPipeline));
   if (!app->gp_data[cur_gpd].graphics_pipelines) {
     wlu_log_me(WLU_DANGER, "calloc app->gp_data[%d].graphics_pipelines falied", cur_gpd);
@@ -234,23 +222,7 @@ VkResult wlu_create_pipeline_layout(
   return res;
 }
 
-VkResult wlu_create_desc_data(vkcomp *app, uint32_t desc_count) {
-
-  app->desc_data = (struct descriptors *) realloc(app->desc_data,
-      (app->ddc+1) * sizeof(struct descriptors));
-  if (!app->desc_data) {
-    wlu_log_me(WLU_DANGER, "realloc app->desc_data failed!");
-    return VK_RESULT_MAX_ENUM;
-  }
-
-  set_desc_data_init_values(app);
-  app->desc_data[app->ddc].dc = desc_count;
-  app->ddc++;
-
-  return VK_SUCCESS;
-}
-
-VkResult wlu_create_desc_set_layout(
+VkResult wlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorSetLayoutCreateInfo *desc_set_info /* Using same layout for all obects for now */
@@ -269,11 +241,10 @@ VkResult wlu_create_desc_set_layout(
                                       &app->desc_data[cur_dd].desc_layouts[i]);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed, ERROR CODE: %d", res);
-      goto finish_desc_layout;
+      return res;
     }
   }
 
-finish_desc_layout:
   return res;
 }
 
