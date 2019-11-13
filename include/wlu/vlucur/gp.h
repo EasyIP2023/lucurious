@@ -82,7 +82,8 @@ VkResult wlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
-  uint32_t psize
+  uint32_t psize,
+  VkDescriptorPoolSize *pool_sizes
 );
 
 /*
@@ -358,6 +359,17 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   const VkDescriptorSetLayoutBinding *pBindings
 );
 
+VkDescriptorPoolSize wlu_set_desc_pool_size(
+  VkDescriptorType type,
+  uint32_t descriptorCount
+);
+
+VkDescriptorBufferInfo wlu_set_desc_buff_info(
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize range
+);
+
 VkClearValue wlu_set_clear_value(
   float float32[4],
   int32_t int32[4],
@@ -366,14 +378,23 @@ VkClearValue wlu_set_clear_value(
   uint32_t stencil
 );
 
-void wlu_update_descriptor_sets(
-  vkcomp *app,
-  uint32_t cur_dd,
+VkWriteDescriptorSet wlu_write_desc_set(
+  VkDescriptorSet dstSet,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
+  uint32_t descriptorCount,
   VkDescriptorType descriptorType,
-  VkDescriptorBufferInfo *pBufferInfo,
-  uint32_t psize
+  const VkDescriptorImageInfo *pImageInfo,
+  const VkDescriptorBufferInfo *pBufferInfo,
+  const VkBufferView *pTexelBufferView
+);
+
+void wlu_update_desc_sets(
+  vkcomp *app,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
 );
 
 #endif

@@ -81,9 +81,6 @@ void set_buffs_data_init_values(vkcomp *app) {
   for (uint32_t i = 0; i < app->bdc; i++) {
     app->buffs_data[i].buff = VK_NULL_HANDLE;
     app->buffs_data[i].mem = VK_NULL_HANDLE;
-    app->buffs_data[i].buff_info.buffer = VK_NULL_HANDLE;
-    app->buffs_data[i].buff_info.offset = VK_NULL_HANDLE;
-    app->buffs_data[i].buff_info.range = VK_NULL_HANDLE;
     app->buffs_data[i].name = VK_NULL_HANDLE;
   }
 }

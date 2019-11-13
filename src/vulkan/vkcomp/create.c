@@ -626,8 +626,8 @@ VkResult wlu_create_buffer(
   flush_range.pNext = NULL;
   flush_range.memory = app->buffs_data[cur_bd].mem;
   /* the region that was modified will be flushed */
-  app->buffs_data[cur_bd].buff_info.offset = flush_range.offset = 0;
-  app->buffs_data[cur_bd].buff_info.range = flush_range.size = size;
+  flush_range.offset = 0;
+  flush_range.size = size;
   /* from offset 0 to size of buffer */
 
   /* refresh the cache */
@@ -638,8 +638,6 @@ VkResult wlu_create_buffer(
   }
 
   vkUnmapMemory(app->device, app->buffs_data[cur_bd].mem);
-
-  app->buffs_data[cur_bd].buff_info.buffer = app->buffs_data[cur_bd].buff;
 
   return res;
 }

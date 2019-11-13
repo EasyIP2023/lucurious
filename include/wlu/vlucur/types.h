@@ -35,6 +35,12 @@ typedef struct _vertex_3D {
   vec4 color;
 } vertex_3D;
 
+typedef enum _wlu_rotate_type {
+  WLU_X = 0,
+  WLU_Y = 1,
+  WLU_Z = 2
+} wlu_rotate_type;
+
 typedef enum _wlu_vec_type {
   WLU_VEC2 = 0,
   WLU_VEC3 = 1,
@@ -113,7 +119,6 @@ typedef struct vkcomp {
   struct buffs_data {
     VkBuffer buff;
     VkDeviceMemory mem;
-    VkDescriptorBufferInfo buff_info;
     char *name;
   } *buffs_data;
 

@@ -252,15 +252,10 @@ VkResult wlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
-  uint32_t psize
+  uint32_t psize,
+  VkDescriptorPoolSize *pool_sizes
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
-
-  VkDescriptorPoolSize pool_sizes[psize];
-  for (uint32_t i = 0; i < psize; i++) {
-    pool_sizes[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    pool_sizes[i].descriptorCount = app->desc_data[cur_dd].dc;
-  }
 
   VkDescriptorPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -271,6 +266,10 @@ VkResult wlu_create_desc_pool(
   create_info.pPoolSizes = pool_sizes;
 
   res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_data[cur_dd].desc_pool);
+  if (res) {
+    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorPool failed, ERROR CODE: %d", res);
+    return res;
+  }
 
   return res;
 }

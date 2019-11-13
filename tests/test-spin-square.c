@@ -33,12 +33,15 @@
 
 #include <signal.h>
 #include <check.h>
+#include <time.h>
 
 #include "test-extras.h"
 #include "test-shade.h"
 
 #define WIDTH 800
 #define HEIGHT 600
+
+#define drand48() ((float)(rand() / (RAND_MAX + 1.0)))
 
 struct uniform_block_data {
   mat4 model;
@@ -50,6 +53,27 @@ void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
   wlu_freeup_watchme();
+}
+
+VkResult init_buffs(vkcomp *app) {
+  VkResult err;
+
+  err = wlu_otba(app, 8, WLU_BUFFS_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_SC_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_GP_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_CMD_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_DESC_DATA);
+  if (err) return err;
+
+  return err;
 }
 
 START_TEST(test_vulkan_client_create) {
@@ -65,6 +89,13 @@ START_TEST(test_vulkan_client_create) {
   if (!app) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
+    ck_abort_msg(NULL);
+  }
+
+  err = init_buffs(app);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] init_buffs failed!!");
     ck_abort_msg(NULL);
   }
 
@@ -122,7 +153,7 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_logical_device(app, &device_feats, 3, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
@@ -160,17 +191,15 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmd = 0, cur_dd = 0;
+  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0;
-  err = wlu_create_cmd_pool(app, cur_scd, app->indices.graphics_family,
-                            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
-                            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+  err = wlu_create_cmd_pool(app, cur_scd, cur_cmd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
@@ -207,24 +236,17 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_pipeline_layout(app, 0, NULL, 0, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
-    ck_abort_msg(NULL);
-  }
-
   /* Starting point for render pass creation */
-  VkAttachmentDescription color_attachment = wlu_set_attachment_desc(surface_fmt.format,
+  VkAttachmentDescription attachment = wlu_set_attachment_desc(surface_fmt.format,
     VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
   );
 
-  VkAttachmentReference color_attachment_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+  VkAttachmentReference color_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
   VkSubpassDescription subpass = wlu_set_subpass_desc(
-    0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL
+    0, NULL, 1, &color_ref, NULL, NULL, 0, NULL
   );
 
   VkSubpassDependency subdep = wlu_set_subpass_dep(
@@ -233,10 +255,10 @@ START_TEST(test_vulkan_client_create) {
     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
-  err = wlu_create_render_pass(app, 1, &color_attachment, 1, &subpass, 1, &subdep);
+  err = wlu_create_render_pass(app, cur_gpd, 1, &attachment, 1, &subpass, 1, &subdep);
   if (err) {
     freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create render pass");
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_render_pass failed");
     ck_abort_msg(NULL);
   }
   wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
@@ -262,7 +284,7 @@ START_TEST(test_vulkan_client_create) {
   }
 
   VkImageView vkimg_attach[1];
-  err = wlu_create_framebuffers(app, cur_scd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
+  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
@@ -278,21 +300,9 @@ START_TEST(test_vulkan_client_create) {
   };
   VkDeviceSize vsize = sizeof(vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
-
   for (uint32_t i = 0; i < vertex_count; i++) {
     wlu_print_vector(&vertices[i].pos, WLU_VEC2);
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
-  }
-
-  err = wlu_create_buffer(
-    app, vsize, vertices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  );
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
-    ck_abort_msg(NULL);
   }
 
   /*
@@ -304,8 +314,7 @@ START_TEST(test_vulkan_client_create) {
    * (and vice-versa) without the need to flush memory caches.
    */
   err = wlu_create_buffer(
-    app, vsize, NULL, 0,
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    app, cur_bd, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
@@ -314,18 +323,12 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
     ck_abort_msg(NULL);
   }
-
-  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
-    ck_abort_msg(NULL);
-  }
+  cur_bd++;
 
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = isize / sizeof(uint16_t);
   err = wlu_create_buffer(
-    app, isize, indices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    app, cur_bd, isize, indices, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging_two",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
@@ -334,9 +337,10 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
     ck_abort_msg(NULL);
   }
+  cur_bd++;
 
   err = wlu_create_buffer(
-    app, isize, NULL, 0,
+    app, cur_bd, isize, NULL, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "index",
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -346,27 +350,44 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
     ck_abort_msg(NULL);
   }
+  cur_bd++;
 
-  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[2].buff, app->buffs_data[3].buff, isize);
+  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[1].buff, app->buffs_data[2].buff, isize);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_copy_buffer failed");
     ck_abort_msg(NULL);
   }
 
-  VkDeviceSize usize = sizeof(struct uniform_block_data);
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+  float fovy = wlu_set_fovy(45.0f);
+  float hw = (float) extent2D.width / (float) extent2D.height;
+  if (extent2D.width > extent2D.height) fovy *= hw;
+  wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
+  wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
+  ubd.proj[1][1] *= -1;
+
+  VkDeviceSize usize[app->sc_data[cur_scd].sic];
+  for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
+    srand((unsigned int)time(NULL));
+    wlu_set_matrix(ubd.model, model_matrix_default, WLU_MAT4);
+    wlu_set_rotate(ubd.model, ubd.model, drand48() * wlu_set_fovy(90.0f), WLU_Z);
+    usize[i-cur_bd] = sizeof(ubd);
     err = wlu_create_buffer(
-      app, usize, NULL, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-      0, NULL, "uniform", VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+      app, i, usize[i-cur_bd], &ubd, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
     if (err) {
       freeme(app, wc);
       wlu_log_me(WLU_DANGER, "[x] wlu_create_uniform_buff failed");
       ck_abort_msg(NULL);
     }
+    wlu_log_me(WLU_SUCCESS, "Just Allocated!!!");
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
+
+  cur_bd += app->sc_data[cur_scd].sic;
 
   /* 0 is the binding # this is bytes between successive structs */
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
@@ -375,18 +396,10 @@ START_TEST(test_vulkan_client_create) {
   vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_2D, pos));
   vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_2D, color));
 
-  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(
-    1, &vi_binding, 2, vi_attribs
-  );
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(1, &vi_binding, 2, vi_attribs);
 
   /* End of vertex buffer */
-  err = wlu_create_desc_data(app, app->sc_data[cur_scd].sic);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_data() failed!");
-    ck_abort_msg(NULL);
-  }
-
+  app->desc_data[cur_dd].dc = app->sc_data[cur_scd].sic;
   VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(
     0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic,
     VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -399,6 +412,51 @@ START_TEST(test_vulkan_client_create) {
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
+    ck_abort_msg(NULL);
+  }
+
+  /* Using same layout for all obects for now */
+  err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set_layouts failed, ERROR CODE: %d", err);
+    ck_abort_msg(NULL);
+  }
+
+  VkDescriptorPoolSize pool_sizes[app->desc_data[cur_dd].dc];
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++)
+    pool_sizes[i] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->desc_data[cur_dd].dc);
+
+  err = wlu_create_desc_pool(app, cur_dd, 0, app->desc_data[cur_dd].dc, pool_sizes);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_pool failed");
+    ck_abort_msg(NULL);
+  }
+
+  err = wlu_create_desc_set(app, cur_dd, app->desc_data[cur_dd].dc);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set failed");
+    ck_abort_msg(NULL);
+  }
+
+  /* set uniform buffer VKBufferInfos */
+  VkDescriptorBufferInfo buff_infos[app->desc_data[cur_dd].dc];
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++)
+    buff_infos[i] = wlu_set_desc_buff_info(app->buffs_data[i+3].buff, 0, usize[i]);
+
+  VkWriteDescriptorSet writes[app->desc_data[cur_dd].dc];
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++)
+    writes[i] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 0, 0, app->desc_data[cur_dd].dc,
+                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, buff_infos, NULL);
+
+  wlu_update_desc_sets(app, app->desc_data[cur_dd].dc, writes, 0, NULL);
+
+  err = wlu_create_pipeline_layout(app, cur_gpd, app->desc_data[cur_dd].dc, app->desc_data[cur_dd].desc_layouts, 0, NULL);
+  if (err) {
+    freeme(app, wc);
+    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
     ck_abort_msg(NULL);
   }
 
@@ -449,7 +507,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkPipelineRasterizationStateCreateInfo rasterizer = wlu_set_rasterization_state_info(
     VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT,
-    VK_FRONT_FACE_CLOCKWISE, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
+    VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
   );
 
   VkPipelineMultisampleStateCreateInfo multisampling = wlu_set_multisample_state_info(
@@ -474,10 +532,10 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_graphics_pipeline(app, 2, shader_stages,
+  err = wlu_create_graphics_pipelines(app, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
   );
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
@@ -506,22 +564,21 @@ START_TEST(test_vulkan_client_create) {
     ck_abort_msg(NULL);
   }
 
-  /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, 0, 0, extent2D.width, extent2D.height,
-                             1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
-
-  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->graphics_pipeline);
-
-  uint32_t bd_size = sizeof(app->buffs_data) / sizeof(struct buffs_data *);
-  for (uint32_t i = 0; i < bd_size; i++) {
+  for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
 
+  /* Drawing will start when you begin a render pass */
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
+                             extent2D.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
+  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
+  wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
+
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
-  wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buffs_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[0].buff, offsets);
+  wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buffs_data[2].buff, offsets[0], VK_INDEX_TYPE_UINT16);
 
   wlu_cmd_draw_indexed(app, cur_pool, cur_buff, index_count, 1, 0, offsets[0], 0);
 

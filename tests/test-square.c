@@ -49,6 +49,9 @@ void freeme(vkcomp *app, wclient *wc) {
 VkResult init_buffs(vkcomp *app) {
   VkResult err;
 
+  err = wlu_otba(app, 4, WLU_BUFFS_DATA);
+  if (err) return err;
+
   err = wlu_otba(app, 1, WLU_SC_DATA);
   if (err) return err;
 
@@ -56,9 +59,6 @@ VkResult init_buffs(vkcomp *app) {
   if (err) return err;
 
   err = wlu_otba(app, 1, WLU_CMD_DATA);
-  if (err) return err;
-
-  err = wlu_otba(app, 4, WLU_BUFFS_DATA);
   if (err) return err;
 
   return err;
@@ -499,8 +499,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
 
-  uint32_t bd_size = sizeof(app->buffs_data) / sizeof(struct buffs_data *);
-  for (uint32_t i = 0; i < bd_size; i++) {
+  for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }

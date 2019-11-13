@@ -111,8 +111,10 @@ void wlu_freeup_vk(void *data) {
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
       if (app->desc_data[i].desc_layouts) {
-        for (uint32_t j = 0; j < app->desc_data[i].dc; j++)
-          vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
+        for (uint32_t j = 0; j < app->desc_data[i].dc; j++) {
+          if (app->desc_data[i].desc_layouts[j])
+            vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
+        }
         FREE(app->desc_data[i].desc_layouts);
       }
       if (app->desc_data[i].desc_set)

@@ -34,8 +34,8 @@
 #include <stdbool.h>
 
 /*
- * The amount of time, one waits for a command buffer
- * to complete unit measured in nanoseconds
+ * The amount of time, one waits for a command buffer to complete 
+ * unit measured in nanoseconds
  */
 #define FENCE_TIMEOUT 100000000
 
@@ -70,10 +70,6 @@
       __typeof__ (b) _b = (b); \
     _a < _b ? _a : _b; })
 
-#define FREE(ptr) \
-  if (ptr) { \
-    free(ptr); \
-    ptr = NULL; \
-  }
+#define FREE(ptr) if (ptr) { free(ptr); ptr = NULL; }
 
 #endif

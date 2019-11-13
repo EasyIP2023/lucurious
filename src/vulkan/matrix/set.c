@@ -76,3 +76,12 @@ void wlu_set_vector(void *dest, void *src, wlu_vec_type type) {
 void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model) {
   glm_mat4_mulN((mat4 *[]){clip, proj, view, model}, 4, mvp);
 }
+
+void wlu_set_rotate(mat4 dest, mat4 src, float rad, wlu_rotate_type type) {
+  switch (type) {
+    case WLU_X: glm_rotate_x(src, rad, dest); break;
+    case WLU_Y: glm_rotate_y(src, rad, dest); break;
+    case WLU_Z: glm_rotate_z(src, rad, dest); break;
+    default: break;
+  }
+}

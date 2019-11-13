@@ -76,6 +76,9 @@ void freeme(vkcomp *app, wclient *wc) {
 VkResult init_buffs(vkcomp *app) {
   VkResult err;
 
+  err = wlu_otba(app, 2, WLU_BUFFS_DATA);
+  if (err) return err;
+
   err = wlu_otba(app, 1, WLU_SC_DATA);
   if (err) return err;
 
@@ -83,9 +86,6 @@ VkResult init_buffs(vkcomp *app) {
   if (err) return err;
 
   err = wlu_otba(app, 1, WLU_CMD_DATA);
-  if (err) return err;
-
-  err = wlu_otba(app, 2, WLU_BUFFS_DATA);
   if (err) return err;
 
   err = wlu_otba(app, 1, WLU_DESC_DATA);
@@ -313,7 +313,11 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS);
+  VkDescriptorPoolSize pool_sizes[NUM_DESCRIPTOR_SETS];
+  for (uint32_t i = 0; i < NUM_DESCRIPTOR_SETS; i++)
+    pool_sizes[i] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+
+  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS, pool_sizes);
   if (err) {
     freeme(app, wc);
     wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_pool failed");
@@ -327,8 +331,12 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
-  wlu_update_descriptor_sets(app, cur_dd, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                             &app->buffs_data[0].buff_info, NUM_DESCRIPTOR_SETS);
+  VkDescriptorBufferInfo buff_info = wlu_set_desc_buff_info(app->buffs_data[0].buff, 0, sizeof(ubd.mvp));
+  VkWriteDescriptorSet write = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
+                               app->desc_data[cur_dd].dc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
+                               &buff_info, NULL);
+
+  wlu_update_desc_sets(app, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   err = wlu_create_pipeline_layout(app, cur_gpd, NUM_DESCRIPTOR_SETS, &app->desc_data[cur_dd].desc_layouts[0], 0, NULL);
   if (err) {
@@ -421,6 +429,8 @@ START_TEST(test_vulkan_client_create_3D) {
     ck_abort_msg(NULL);
   }
 
+  cur_bd++;
+
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[2];
@@ -511,7 +521,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_graphics_pipelines(app, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, &ds_info, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 2
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
   );
   if (err) {
     wlu_freeup_shader(app, &frag_shader_module);
@@ -538,8 +548,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
-  uint32_t bd_size = sizeof(app->buffs_data) / sizeof(struct buffs_data *);
-  for (uint32_t i = 0; i < bd_size; i++) {
+  for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }

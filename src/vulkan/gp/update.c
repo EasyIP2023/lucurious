@@ -27,30 +27,39 @@
 #include <wlu/vlucur/gp.h>
 #include <wlu/utils/log.h>
 
-void wlu_update_descriptor_sets(
-  vkcomp *app,
-  uint32_t cur_dd,
+VkWriteDescriptorSet wlu_write_desc_set(
+  VkDescriptorSet dstSet,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
+  uint32_t descriptorCount,
   VkDescriptorType descriptorType,
-  VkDescriptorBufferInfo *pBufferInfo,
-  uint32_t psize
+  const VkDescriptorImageInfo *pImageInfo,
+  const VkDescriptorBufferInfo *pBufferInfo,
+  const VkBufferView *pTexelBufferView
 ) {
-
   /* Copy Uniform Buffer Info */
-  VkWriteDescriptorSet writes[psize];
-  for (uint32_t i = 0; i < psize; i++) {
-    writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writes[i].pNext = NULL;
-    writes[i].dstSet = app->desc_data[cur_dd].desc_set[i];
-    writes[i].dstBinding = dstBinding;
-    writes[i].dstArrayElement = dstArrayElement;
-    writes[i].descriptorCount = app->desc_data[cur_dd].dc;
-    writes[i].descriptorType = descriptorType;
-    writes[i].pImageInfo = NULL;
-    writes[i].pBufferInfo = pBufferInfo;
-    writes[i].pImageInfo = NULL;
-  }
+  VkWriteDescriptorSet write = {};
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.pNext = NULL;
+  write.dstSet = dstSet;
+  write.dstBinding = dstBinding;
+  write.dstArrayElement = dstArrayElement;
+  write.descriptorCount = descriptorCount;
+  write.descriptorType = descriptorType;
+  write.pImageInfo = pImageInfo;
+  write.pBufferInfo = pBufferInfo;
+  write.pTexelBufferView = pTexelBufferView;
 
-  vkUpdateDescriptorSets(app->device, psize, writes, 0, NULL);
+  return write;
+}
+
+void wlu_update_desc_sets(
+  vkcomp *app,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
+) {
+  vkUpdateDescriptorSets(app->device, descriptorWriteCount, pDescriptorWrites,
+                         descriptorCopyCount, pDescriptorCopies);
 }

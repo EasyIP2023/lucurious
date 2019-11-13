@@ -468,6 +468,32 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   return create_info;
 }
 
+VkDescriptorPoolSize wlu_set_desc_pool_size(
+  VkDescriptorType type,
+  uint32_t descriptorCount
+) {
+
+  VkDescriptorPoolSize pool_size = {};
+  pool_size.type = type;
+  pool_size.descriptorCount = descriptorCount;
+
+  return pool_size;
+}
+
+VkDescriptorBufferInfo wlu_set_desc_buff_info(
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize range
+) {
+
+  VkDescriptorBufferInfo create_info = {};
+  create_info.buffer = buffer;
+  create_info.offset = offset;
+  create_info.range = range;
+
+  return create_info;
+}
+
 VkClearValue wlu_set_clear_value(
   float float32[4],
   int32_t int32[4],

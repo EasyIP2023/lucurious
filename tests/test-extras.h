@@ -61,6 +61,11 @@ vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};
 vec3 up = {0, -1, 0};
 
+/* used in test-spin-square.c */
+vec3 spin_eye = {2.0f, 2.0f, 2.0f};
+vec3 spin_center = {0.0f, 0.0f, 0.0f};
+vec3 spin_up = {0.0f, 0.0f, 1.0f};
+
 mat4 clip_matrix = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
   { 0.0f,-1.0f, 0.0f, 0.0f },
@@ -73,6 +78,13 @@ mat4 model_matrix = {
   { 0.0f, 1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 1.0f, 0.0f },
   { 0.0f, 0.0f, 0.0f, 1.0f }
+};
+
+mat4 model_matrix_default = {
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f },
+  { 1.0f, 1.0f, 1.0f, 1.0f }
 };
 
 // { position }, { color }

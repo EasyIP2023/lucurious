@@ -37,6 +37,8 @@ void wlu_set_vector(void *dest, void *src, wlu_vec_type type);
 
 void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model);
 
+void wlu_set_rotate(mat4 dest, mat4 src, float rad, wlu_rotate_type type);
+
 void wlu_print_vector(void *vector, wlu_vec_type type);
 
 void wlu_print_matrix(void *matrix, wlu_matrix_type type);
