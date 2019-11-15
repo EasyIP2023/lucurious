@@ -22,10 +22,13 @@
  * THE SOFTWARE.
  */
 
-#include <wlu/utils/log.h>
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include <wlu/utils/log.h>
 
 static const char *term_colors[] = {
 	[WLU_NONE]   	= "",

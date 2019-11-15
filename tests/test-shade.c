@@ -22,12 +22,13 @@
  * THE SOFTWARE.
  */
 
-#include <wlu/shader/shade.h>
-#include <wlu/utils/log.h>
-
 #include <check.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
+
+#include <wlu/shader/shade.h>
+#include <wlu/utils/log.h>
 
 #include "test-shade.h"
 

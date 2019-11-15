@@ -25,9 +25,6 @@
 #ifndef WLU_LOG_H
 #define WLU_LOG_H
 
-#include <stdio.h>
-#include <stdarg.h>
-
 typedef enum wlu_log_type {
   WLU_NONE = 0,
   WLU_SUCCESS = 1,
