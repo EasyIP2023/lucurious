@@ -71,13 +71,9 @@ int main(int argc, char **argv) {
       case 'i': print_instance_extensions(); break;
       case 'd':
         if (optarg) {
-          if (!strcmp(long_options[option_index].name, "pde")) {
-            if (optarg) {
-              print_device_extensions(ret_dtype(optarg));
-            } else {
-              fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
-            }
-          }
+          print_device_extensions(ret_dtype(optarg));
+        } else {
+          fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
         }
         break;
       case '?': break;
