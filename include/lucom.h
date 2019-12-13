@@ -28,13 +28,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdbool.h>
 
 /*
- * The amount of time, one waits for a command buffer to complete 
+ * The amount of time, one waits for a command buffer to complete
  * unit measured in nanoseconds
  */
 #define FENCE_TIMEOUT 100000000
@@ -59,17 +58,6 @@
 #define ALL_UNUSED_IMPL(nargs) ALL_UNUSED_IMPL_(nargs)
 #define ALL_UNUSED(...) ALL_UNUSED_IMPL(VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
 
-/* https://stackoverflow.com/questions/3437404/min-and-max-in-c */
-#define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-
-#define min(a,b) \
-  ({ __typeof__ (a) _a = (a); \
-      __typeof__ (b) _b = (b); \
-    _a < _b ? _a : _b; })
-
-#define FREE(ptr) if (ptr) { free(ptr); ptr = NULL; }
+#define FREE(ptr) { free(ptr); ptr = NULL; }
 
 #endif

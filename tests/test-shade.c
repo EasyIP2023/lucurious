@@ -23,9 +23,7 @@
  */
 
 #include <check.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <lucom.h>
 
 #include <wlu/shader/shade.h>
 #include <wlu/utils/log.h>

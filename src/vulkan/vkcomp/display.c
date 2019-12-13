@@ -162,24 +162,24 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   } else {
     VkExtent2D actual_extent = {width, height};
 
-    actual_extent.width = max(capabilities.minImageExtent.width,
-                          min(capabilities.maxImageExtent.width,
-                          actual_extent.width));
-    actual_extent.height = max(capabilities.minImageExtent.height,
-                           min(capabilities.maxImageExtent.height,
-                           actual_extent.height));
+    actual_extent.width = fmax(capabilities.minImageExtent.width,
+                          fmin(capabilities.maxImageExtent.width,
+                               actual_extent.width));
+    actual_extent.height = fmax(capabilities.minImageExtent.height,
+                           fmin(capabilities.maxImageExtent.height,
+                                actual_extent.height));
     return actual_extent;
   }
 }
 
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth) {
   VkExtent3D actual_extent = {width, height, depth};
-  actual_extent.width = max(capabilities.minImageExtent.width,
-                        min(capabilities.maxImageExtent.width,
-                        actual_extent.width));
-  actual_extent.height = max(capabilities.minImageExtent.height,
-                         min(capabilities.maxImageExtent.height,
-                         actual_extent.height));
+  actual_extent.width = fmax(capabilities.minImageExtent.width,
+                        fmin(capabilities.maxImageExtent.width,
+                             actual_extent.width));
+  actual_extent.height = fmax(capabilities.minImageExtent.height,
+                         fmin(capabilities.maxImageExtent.height,
+                              actual_extent.height));
   return actual_extent;
 }
 
