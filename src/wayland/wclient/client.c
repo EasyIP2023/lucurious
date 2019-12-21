@@ -24,10 +24,12 @@ static void set_values(wclient *wc) {
 
 wclient *wlu_init_wc() {
   wclient *wc = calloc(sizeof(wclient), sizeof(wclient));
+
   if (!wc) {
-    wlu_log_me(WLU_DANGER, "calloc wclient *wc failed"); 
-    return NULL;
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
+    return wc;
   }
+
   set_values(wc);
   return wc;
 }

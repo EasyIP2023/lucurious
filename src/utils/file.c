@@ -34,14 +34,14 @@ wlu_file_info wlu_read_file(const char *filename) {
   /* Open the file in binary mode */
   stream = fopen(filename, "rb");
   if (!stream) {
-    wlu_log_me(WLU_DANGER, "[x] %s: %s", filename, strerror(errno));
+    wlu_log_me(WLU_DANGER, "[x] fopen: %s", filename, strerror(errno));
     return fileinfo;
   }
 
   /* Go to the end of the file */
   fileinfo.byte_size = fseek(stream, 0, SEEK_END);
   if (fileinfo.byte_size == -1) {
-    wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
+    wlu_log_me(WLU_DANGER, "[x] fseek: %s", strerror(errno));
     return fileinfo;
   }
 
@@ -52,22 +52,22 @@ wlu_file_info wlu_read_file(const char *filename) {
    */
   fileinfo.byte_size = ftell(stream);
   if (fileinfo.byte_size == -1) {
-    wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
+    wlu_log_me(WLU_DANGER, "[x] ftell: %s", strerror(errno));
     return fileinfo;
   }
 
   /* Jump back to the beginning of the file */
   rewind(stream);
 
-  fileinfo.bytes = (char *) calloc(sizeof(char), (fileinfo.byte_size+1) * sizeof(char));
+  fileinfo.bytes = (char *) calloc((fileinfo.byte_size+1) * sizeof(char), sizeof(char));
   if (!fileinfo.bytes) {
-    wlu_log_me(WLU_DANGER, "[x] failed to calloc buff");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return fileinfo;
   }
 
   /* Read in the entire file */
   if (fread(fileinfo.bytes, fileinfo.byte_size, 1, stream) == 0) {
-    wlu_log_me(WLU_DANGER, "[x] %s", strerror(errno));
+    wlu_log_me(WLU_DANGER, "[x] fread: %s", strerror(errno));
     return fileinfo;
   }
   fclose(stream);

@@ -22,15 +22,7 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_FILE_H
-#define WLU_FILE_H
+#include <lucom.h>
 
-typedef struct wlu_file_info {
-  char *bytes;
-  long byte_size;
-} wlu_file_info;
-
-/* A way to load SPIR-V byte code */
-wlu_file_info wlu_read_file(const char *filename);
-
-#endif
+#include <wlu/utils/mm.h>
+#include <wlu/utils/log.h>

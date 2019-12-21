@@ -102,11 +102,10 @@ VkResult wlu_create_physical_device(
     goto finish_devices;
   }
 
-  devices = (VkPhysicalDevice *) calloc(sizeof(VkPhysicalDevice),
-      device_count * sizeof(VkPhysicalDevice));
+  devices = (VkPhysicalDevice *) calloc(device_count * sizeof(VkPhysicalDevice), sizeof(VkPhysicalDevice));
   if (!devices) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc VkPhysicalDevice *devices failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_devices;
   }
 
@@ -170,10 +169,9 @@ VkResult wlu_create_logical_device(
   /* Will need to change this later but for now, This two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
-  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(sizeof(VkDeviceQueueCreateInfo),
-        dq_count * sizeof(VkDeviceQueueCreateInfo));
+  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(dq_count * sizeof(VkDeviceQueueCreateInfo), sizeof(VkDeviceQueueCreateInfo));
   if (!pQueueCreateInfos) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkDeviceQueueCreateInfo *queue_create_infos failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_logical;
   }
 
@@ -342,10 +340,10 @@ VkResult wlu_create_img_views(
     goto finish_create_img_views;
   }
 
-  app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) calloc(sizeof(struct swap_chain_buffers),
-        app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers));
+  app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) calloc(
+    app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers), sizeof(struct swap_chain_buffers));
   if (!app->sc_data[cur_scd].sc_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc app->sc_data[%d].sc_buffs failed", cur_scd);
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_create_img_views;
   }
 
@@ -362,10 +360,10 @@ VkResult wlu_create_img_views(
     goto finish_create_img_views;
   }
 
-  sc_imgs = (VkImage *) calloc(sizeof(VkImage), app->sc_data[cur_scd].sic * sizeof(VkImage));
+  sc_imgs = (VkImage *) calloc(app->sc_data[cur_scd].sic * sizeof(VkImage), sizeof(VkImage));
   if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc VkImage *sc_imgs failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_create_img_views;
   }
 
@@ -673,10 +671,10 @@ VkResult wlu_create_framebuffers(
     return res;
   }
 
-  app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) calloc(sizeof(VkFramebuffer),
-        app->sc_data[cur_scd].sic * sizeof(VkFramebuffer));
+  app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) calloc(
+    app->sc_data[cur_scd].sic * sizeof(VkFramebuffer), sizeof(VkFramebuffer));
   if (!app->sc_data[cur_scd].frame_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc app->sc_data[%d].frame_buffs failed", cur_scd);
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
   }
 
@@ -724,10 +722,10 @@ VkResult wlu_create_cmd_pool(
   }
 
   /* create an array of cmd_buffs to call later in wlu_create_cmd_buffs */
-  app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) calloc(sizeof(VkCommandBuffer),
-        app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer));
+  app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) calloc(
+    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer), sizeof(VkCommandBuffer));
   if (!app->cmd_data[cur_cmdd].cmd_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc app->cmd_data[%d].cmd_buffs failed", cur_cmdd);
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
   }
 
@@ -782,20 +780,20 @@ VkResult wlu_create_cmd_buffs(
   return res;
 }
 
-/*
- * (This comment is for me)
- * Use a image semaphore to signal that an image
- * has been acquired and is ready for rendering.
- * Use a render semaphore to singal that rendering
- * has finished and presentation can happen.
- */
+/**
+* (This comment is for me)
+* Use a image semaphore to signal that an image
+* has been acquired and is ready for rendering.
+* Use a render semaphore to singal that rendering
+* has finished and presentation can happen.
+*/
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->sc_data[cur_scd].sems = (struct semaphores *) calloc(sizeof(struct semaphores),
-      app->sc_data[cur_scd].sic * sizeof(struct semaphores));
+  app->sc_data[cur_scd].sems = (struct semaphores *) calloc(
+    app->sc_data[cur_scd].sic * sizeof(struct semaphores), sizeof(struct semaphores));
   if (!app->sc_data[cur_scd].sems) {
-    wlu_log_me(WLU_DANGER, "[x] calloc semaphores *sems failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
   }
 

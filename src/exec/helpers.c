@@ -57,7 +57,7 @@ char **str_split(char *a_str, const char a_delim) {
      knows where the list of returned strings ends. */
   count++;
 
-  result = calloc(sizeof(char*), count * sizeof(char*));
+  result = calloc(count * sizeof(char*), sizeof(char));
   if (!result) return NULL;
 
   if (result) {

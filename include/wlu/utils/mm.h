@@ -22,15 +22,16 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_FILE_H
-#define WLU_FILE_H
+#ifndef WLU_MM_H
+#define WLU_MM_H
 
-typedef struct wlu_file_info {
-  char *bytes;
-  long byte_size;
-} wlu_file_info;
+typedef struct _wlu_mem_block {
+  struct _wlu_mem_block *next; /* points to next memory block */
+  bool is_free;                /* check if memory block is free or not */
+  size_t size;                 /* allocated memory size */
+  void *mem_addr;              /* starting adress of the block */
+} wlu_mem_block;
 
-/* A way to load SPIR-V byte code */
-wlu_file_info wlu_read_file(const char *filename);
+#define BLOCK_SIZE sizeof(wlu_mem_block)
 
 #endif

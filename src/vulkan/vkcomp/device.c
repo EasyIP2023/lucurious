@@ -75,10 +75,10 @@ VkResult get_extension_properties(
   } while (res == VK_INCOMPLETE);
 
   /* set available instance extensions */
-  *eprops = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
+  *eprops = (VkExtensionProperties *) calloc(extension_count * sizeof(VkExtensionProperties), sizeof(VkExtensionProperties));
   if (!(*eprops)) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *eprops failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_extensions;
   }
 
@@ -107,18 +107,18 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
-  queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
-        qfc * sizeof(VkQueueFamilyProperties));
+  queue_families = (VkQueueFamilyProperties *) calloc(
+    qfc * sizeof(VkQueueFamilyProperties), sizeof(VkQueueFamilyProperties));
   if (!queue_families) {
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkQueueFamilyProperties *queue_families failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_queue_family;
   }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
-  present_support = calloc(sizeof(VkBool32), qfc * sizeof(VkBool32));
+  present_support = calloc(qfc * sizeof(VkBool32), sizeof(VkBool32));
   if (!present_support) {
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkBool32 *present_support failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_queue_family;
   }
 

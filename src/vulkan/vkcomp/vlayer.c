@@ -70,11 +70,10 @@ VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
   }
 
   /* allocate space */
-  *vk_props = (VkLayerProperties *) calloc(sizeof(VkLayerProperties),
-      layer_count * sizeof(VkLayerProperties));
+  *vk_props = (VkLayerProperties *) calloc(layer_count * sizeof(VkLayerProperties), sizeof(VkLayerProperties));
   if (!(*vk_props)) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc VkLayerProperties *vk_props failed");
+    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_vk_props;
   }
 

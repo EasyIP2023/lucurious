@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #ifndef TYPES_H
 #define TYPES_H
@@ -36,28 +36,28 @@ typedef struct _vertex_3D {
 } vertex_3D;
 
 typedef enum _wlu_rotate_type {
-  WLU_X = 0,
-  WLU_Y = 1,
-  WLU_Z = 2
+  WLU_X = 0x00000000,
+  WLU_Y = 0x00000001,
+  WLU_Z = 0x00000002
 } wlu_rotate_type;
 
 typedef enum _wlu_vec_type {
-  WLU_VEC2 = 0,
-  WLU_VEC3 = 1,
-  WLU_VEC4 = 2
+  WLU_VEC2 = 0x00000000,
+  WLU_VEC3 = 0x00000001,
+  WLU_VEC4 = 0x00000002
 } wlu_vec_type;
 
 typedef enum _wlu_matrix_type {
-  WLU_MAT3 = 0,
-  WLU_MAT4 = 1
+  WLU_MAT3 = 0x00000000,
+  WLU_MAT4 = 0x00000001
 } wlu_matrix_type;
 
 typedef enum _wlu_data_type {
-  WLU_SC_DATA = 0,
-  WLU_GP_DATA = 1,
-  WLU_CMD_DATA = 2,
-  WLU_BUFFS_DATA = 3,
-  WLU_DESC_DATA = 4
+  WLU_SC_DATA = 0x00000000,
+  WLU_GP_DATA = 0x00000001,
+  WLU_CMD_DATA = 0x00000002,
+  WLU_BUFFS_DATA = 0x00000003,
+  WLU_DESC_DATA = 0x00000004
 } wlu_data_type;
 
 typedef struct vkcomp {
