@@ -69,7 +69,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
     goto finish_format;
   }
 
-  formats = (VkSurfaceFormatKHR *) calloc(format_count * sizeof(VkSurfaceFormatKHR), sizeof(VkSurfaceFormatKHR));
+  formats = (VkSurfaceFormatKHR *) calloc(format_count, sizeof(VkSurfaceFormatKHR));
   if (!formats) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_format;
@@ -124,7 +124,7 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
     goto finish_best_mode;
   }
 
-  present_modes = (VkPresentModeKHR *) calloc(pres_mode_count * sizeof(VkPresentModeKHR), sizeof(VkPresentModeKHR));
+  present_modes = (VkPresentModeKHR *) calloc(pres_mode_count, sizeof(VkPresentModeKHR));
   if (!present_modes) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_best_mode;

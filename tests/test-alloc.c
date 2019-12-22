@@ -22,18 +22,22 @@
 * THE SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <wlu/wclient/client.h>
+#include <lucom.h>
+#include <wlu/utils/log.h>
+#include <wlu/utils/mm.h>
 #include <check.h>
 
-START_TEST(init_wayland_client) {
-  wclient *wc = NULL;
-  wc = wlu_init_wc();
+START_TEST(basic_alloc) {
+  wlu_mem_block *mem_block = NULL;
+  wlu_alloc(10, &mem_block);
+  wlu_alloc(35, &mem_block);
+  wlu_alloc(62, &mem_block);
 
-  ck_assert_ptr_nonnull(wc);
-
-  wlu_freeup_wc(wc);
-  wc = NULL;
+  wlu_print_mb(mem_block);
+  wlu_free(&(mem_block->next));
+  wlu_log_me(WLU_WARNING, "After freeing second node");
+  wlu_print_mb(mem_block);
+  mem_block = NULL;
 } END_TEST;
 
 
@@ -41,12 +45,12 @@ Suite *wclient_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
-  s = suite_create("WClient");
+  s = suite_create("Alloc");
 
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, init_wayland_client);
+  tcase_add_test(tc_core, basic_alloc);
   suite_add_tcase(s, tc_core);
 
   return s;

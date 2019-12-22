@@ -22,6 +22,8 @@
 # THE SOFTWARE.
 #
 
+jemalloc = dependency('jemalloc')
+
 subdir('utils')
 subdir('shader')
 subdir('vulkan')

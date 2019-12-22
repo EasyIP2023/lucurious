@@ -50,7 +50,7 @@ lucur_wclient_test = executable('lucur-wclient-test',
 lucur_shade_test = executable('lucur-shade-test',
   'test-shade.c',
   include_directories : lucur_inc,
-  dependencies: [check,shaderc],
+  dependencies: [check],
   link_with : lib_lucur,
   link_args : extra_args,
   install : false
@@ -59,7 +59,7 @@ lucur_shade_test = executable('lucur-shade-test',
 lucur_triangle_test = executable('lucur-triangle-test',
   'test-triangle.c',
   include_directories : lucur_inc,
-  dependencies : [check,shaderc],
+  dependencies : [check],
   link_with : lib_lucur,
   link_args : extra_args,
   install : false
@@ -68,7 +68,7 @@ lucur_triangle_test = executable('lucur-triangle-test',
 lucur_square_test = executable('lucur-square-test',
   'test-square.c',
   include_directories : lucur_inc,
-  dependencies : [check,shaderc],
+  dependencies : [check],
   link_with : lib_lucur,
   link_args : extra_args,
   install : false
@@ -77,7 +77,7 @@ lucur_square_test = executable('lucur-square-test',
 lucur_cube_test = executable('lucur-cube-test',
   'test-cube.c',
   include_directories : lucur_inc,
-  dependencies : [check,shaderc],
+  dependencies : [check],
   link_with : lib_lucur,
   link_args : extra_args,
   install : false
@@ -86,12 +86,22 @@ lucur_cube_test = executable('lucur-cube-test',
 lucur_spin_square_test = executable('lucur-spin-square-test',
   'test-spin-square.c',
   include_directories : lucur_inc,
-  dependencies : [check,shaderc],
+  dependencies : [check],
   link_with : lib_lucur,
   link_args : extra_args,
   install : false
 )
 
+lucur_alloc_test = executable('lucur-alloc-test',
+  'test-alloc.c',
+  include_directories : lucur_inc,
+  dependencies : [check],
+  link_with : lib_lucur,
+  link_args : extra_args,
+  install : false
+)
+
+test('lucur-alloc-test', lucur_alloc_test, suite: ['alloc'])
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
 test('lucur-shade-test', lucur_shade_test, suite: ['all'])

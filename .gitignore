@@ -17,6 +17,7 @@
 examples/**/*se
 
 build/
+ibuild/
 
 valgrind-out.txt
 

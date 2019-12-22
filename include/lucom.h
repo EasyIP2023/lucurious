@@ -26,12 +26,12 @@
 #define LUCOM_H
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <jemalloc/jemalloc.h>
 
 /**
 * The amount of time, one waits for a command buffer to complete

@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -102,7 +102,7 @@ VkResult wlu_create_physical_device(
     goto finish_devices;
   }
 
-  devices = (VkPhysicalDevice *) calloc(device_count * sizeof(VkPhysicalDevice), sizeof(VkPhysicalDevice));
+  devices = (VkPhysicalDevice *) calloc(device_count, sizeof(VkPhysicalDevice));
   if (!devices) {
     res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
@@ -115,7 +115,7 @@ VkResult wlu_create_physical_device(
     goto finish_devices;
   }
 
-  /*
+  /**
   * get a physical device that is suitable
   * to do the graphics related task that we need
   */
@@ -169,7 +169,7 @@ VkResult wlu_create_logical_device(
   /* Will need to change this later but for now, This two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
-  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(dq_count * sizeof(VkDeviceQueueCreateInfo), sizeof(VkDeviceQueueCreateInfo));
+  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(dq_count, sizeof(VkDeviceQueueCreateInfo));
   if (!pQueueCreateInfos) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_logical;
@@ -203,11 +203,11 @@ VkResult wlu_create_logical_device(
     goto finish_logical;
   }
 
-  /*
-   * Queues are automatically created with
-   * the logical device, but you need a queue
-   * handle to interface with them
-   */
+  /**
+  * Queues are automatically created with
+  * the logical device, but you need a queue
+  * handle to interface with them
+  */
   vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
   if (app->indices.graphics_family == app->indices.present_family)
     app->present_queue = app->graphics_queue;
@@ -249,11 +249,11 @@ VkResult wlu_create_swap_chain(
     return res;
   }
 
-  /*
-   * Don't want to stick to minimum becuase one would have to wait on the
-   * drive to complete internal operations before one can acquire another
-   * images to render to. So it's recommended to add one to minImageCount
-   */
+  /**
+  * Don't want to stick to minimum becuase one would have to wait on the
+  * drive to complete internal operations before one can acquire another
+  * images to render to. So it's recommended to add one to minImageCount
+  */
   app->sc_data[cur_scd].sic = capabilities.minImageCount + 1;
 
   /* Be sure sic doesn't exceed the maximum. */
@@ -341,7 +341,7 @@ VkResult wlu_create_img_views(
   }
 
   app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) calloc(
-    app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers), sizeof(struct swap_chain_buffers));
+    app->sc_data[cur_scd].sic, sizeof(struct swap_chain_buffers));
   if (!app->sc_data[cur_scd].sc_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_create_img_views;
@@ -349,18 +349,18 @@ VkResult wlu_create_img_views(
 
   set_sc_buffs_init_values(app, cur_scd);
 
-  /*
-   * It's okay to reuse app->sc_data[cur_scd].sic,
-   * It'll give same result as minImageCount + 1.
-   * Removal of function will result in validation layer errors
-   */
+  /**
+  * It's okay to reuse app->sc_data[cur_scd].sic,
+  * It'll give same result as minImageCount + 1.
+  * Removal of function will result in validation layer errors
+  */
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
     goto finish_create_img_views;
   }
 
-  sc_imgs = (VkImage *) calloc(app->sc_data[cur_scd].sic * sizeof(VkImage), sizeof(VkImage));
+  sc_imgs = (VkImage *) calloc(app->sc_data[cur_scd].sic, sizeof(VkImage));
   if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
@@ -598,12 +598,12 @@ VkResult wlu_create_buffer(
     return res;
   }
 
-  /*
-   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-   * With any buffer, you need to populate it with the data that
-   * you want the shader to read. In order to get CPU access to
-   * the memory, you need to map it
-   */
+  /**
+  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+  * With any buffer, you need to populate it with the data that
+  * you want the shader to read. In order to get CPU access to
+  * the memory, you need to map it
+  */
   void *p_data = NULL;
   res = vkMapMemory(app->device, app->buffs_data[cur_bd].mem, 0, mem_reqs.size, 0, &p_data);
   if (res) {
@@ -640,13 +640,13 @@ VkResult wlu_create_buffer(
   return res;
 }
 
-/*
- * This function creates the framebuffers.
- * Attachments specified when creating the render pass
- * are bounded by wrapping them into a VkFramebuffer object.
- * A framebuffer object references all VkImageView objects this
- * is represented by "attachments"
- */
+/**
+* This function creates the framebuffers.
+* Attachments specified when creating the render pass
+* are bounded by wrapping them into a VkFramebuffer object.
+* A framebuffer object references all VkImageView objects this
+* is represented by "attachments"
+*/
 VkResult wlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_scd,
@@ -672,7 +672,7 @@ VkResult wlu_create_framebuffers(
   }
 
   app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) calloc(
-    app->sc_data[cur_scd].sic * sizeof(VkFramebuffer), sizeof(VkFramebuffer));
+    app->sc_data[cur_scd].sic, sizeof(VkFramebuffer));
   if (!app->sc_data[cur_scd].frame_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
@@ -723,7 +723,7 @@ VkResult wlu_create_cmd_pool(
 
   /* create an array of cmd_buffs to call later in wlu_create_cmd_buffs */
   app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) calloc(
-    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer), sizeof(VkCommandBuffer));
+    app->sc_data[cur_scd].sic, sizeof(VkCommandBuffer));
   if (!app->cmd_data[cur_cmdd].cmd_buffs) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
@@ -791,7 +791,7 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   app->sc_data[cur_scd].sems = (struct semaphores *) calloc(
-    app->sc_data[cur_scd].sic * sizeof(struct semaphores), sizeof(struct semaphores));
+    app->sc_data[cur_scd].sic, sizeof(struct semaphores));
   if (!app->sc_data[cur_scd].sems) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;

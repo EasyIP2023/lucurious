@@ -166,7 +166,7 @@ VkResult wlu_create_graphics_pipelines(
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
   app->gp_data[cur_gpd].gpc = gps_count;
-  app->gp_data[cur_gpd].graphics_pipelines = (VkPipeline *) calloc(gps_count * sizeof(VkPipeline), sizeof(VkPipeline));
+  app->gp_data[cur_gpd].graphics_pipelines = (VkPipeline *) calloc(gps_count, sizeof(VkPipeline));
   if (!app->gp_data[cur_gpd].graphics_pipelines) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
@@ -229,8 +229,7 @@ VkResult wlu_create_desc_set_layouts(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->desc_data[cur_dd].desc_layouts = calloc(app->desc_data[cur_dd].dc * \
-      sizeof(VkDescriptorSetLayout), sizeof(VkDescriptorSetLayout));
+  app->desc_data[cur_dd].desc_layouts = (VkDescriptorSetLayout *) calloc(app->desc_data[cur_dd].dc, sizeof(VkDescriptorSetLayout));
   if (!app->desc_data[cur_dd].desc_layouts) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return res;
@@ -297,8 +296,7 @@ VkResult wlu_create_desc_set(
     alloc_info[i].pSetLayouts = app->desc_data[cur_dd].desc_layouts; // For now
   }
 
-  app->desc_data[cur_dd].desc_set = (VkDescriptorSet *) calloc(app->desc_data[cur_dd].dc * \
-        sizeof(VkDescriptorSet), sizeof(VkDescriptorSet));
+  app->desc_data[cur_dd].desc_set = (VkDescriptorSet *) calloc(app->desc_data[cur_dd].dc, sizeof(VkDescriptorSet));
   if (!app->desc_data[cur_dd].desc_set) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     return VK_RESULT_MAX_ENUM;

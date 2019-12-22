@@ -28,7 +28,7 @@
 #include <vlucur/values.h>
 
 vkcomp *wlu_init_vk() {
-  vkcomp *app = (vkcomp *) calloc(sizeof(vkcomp), sizeof(vkcomp));
+  vkcomp *app = (vkcomp *) calloc(1, sizeof(vkcomp));
 
   if (!app) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
@@ -184,8 +184,7 @@ void wlu_freeup_vk(void *data) {
 VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
-      app->sc_data = (struct swap_chain *) calloc(arr_size * \
-        sizeof(struct swap_chain), sizeof(struct swap_chain));
+      app->sc_data = (struct swap_chain *) calloc(arr_size, sizeof(struct swap_chain));
       if (!app->sc_data) {
         wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
         return VK_RESULT_MAX_ENUM;
@@ -193,8 +192,7 @@ VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
       app->sdc = arr_size;
       set_sc_data_init_values(app); break;
     case WLU_GP_DATA:
-      app->gp_data = (struct graphics_pipeline_data *) calloc(arr_size * \
-        sizeof(struct graphics_pipeline_data), sizeof(struct graphics_pipeline_data));
+      app->gp_data = (struct graphics_pipeline_data *) calloc(arr_size, sizeof(struct graphics_pipeline_data));
       if (!app->gp_data) {
         wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
         return VK_RESULT_MAX_ENUM;
@@ -202,7 +200,7 @@ VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
       app->gdc = arr_size;
       set_gp_data_init_values(app); break;
     case WLU_CMD_DATA:
-      app->cmd_data = (struct vkcmds *) calloc(arr_size * sizeof(struct vkcmds), sizeof(struct vkcmds));
+      app->cmd_data = (struct vkcmds *) calloc(arr_size, sizeof(struct vkcmds));
       if (!app->cmd_data) {
         wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
         return VK_RESULT_MAX_ENUM;
@@ -210,7 +208,7 @@ VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
       app->cdc = arr_size;
       set_cmd_data_init_values(app); break;
     case WLU_BUFFS_DATA:
-      app->buffs_data = (struct buffs_data *) calloc(arr_size * sizeof(struct buffs_data), sizeof(struct buffs_data));
+      app->buffs_data = (struct buffs_data *) calloc(arr_size, sizeof(struct buffs_data));
       if (!app->buffs_data) {
         wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
         return VK_RESULT_MAX_ENUM;
@@ -218,7 +216,7 @@ VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
       app->bdc = arr_size;
       set_buffs_data_init_values(app); break;
     case WLU_DESC_DATA:
-      app->desc_data = (struct desc_data *) calloc(arr_size * sizeof(struct desc_data), sizeof(struct desc_data));
+      app->desc_data = (struct desc_data *) calloc(arr_size, sizeof(struct desc_data));
       if (!app->desc_data) {
         wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
         return VK_RESULT_MAX_ENUM;

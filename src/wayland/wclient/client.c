@@ -23,7 +23,7 @@ static void set_values(wclient *wc) {
 }
 
 wclient *wlu_init_wc() {
-  wclient *wc = calloc(sizeof(wclient), sizeof(wclient));
+  wclient *wc = calloc(1, sizeof(wclient));
 
   if (!wc) {
     wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
