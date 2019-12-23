@@ -28,16 +28,27 @@
 #include <check.h>
 
 START_TEST(basic_alloc) {
-  wlu_mem_block *mem_block = NULL;
-  wlu_alloc(10, &mem_block);
-  wlu_alloc(35, &mem_block);
-  wlu_alloc(62, &mem_block);
+  int *bytes = (int *) wlu_alloc(4);
+  char *b = (char *) wlu_alloc(8);
+  float *f = (float *) wlu_alloc(4);
+  float *q = (float *) wlu_alloc(4);
 
-  wlu_print_mb(mem_block);
-  wlu_free(&(mem_block->next));
-  wlu_log_me(WLU_WARNING, "After freeing second node");
-  wlu_print_mb(mem_block);
-  mem_block = NULL;
+  ALL_UNUSED(bytes, f, q);
+
+  // *bytes = 30;
+  // b = "abcdegf";
+  // *f = *q = 45.78f;
+  // wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
+  // wlu_log_me(WLU_INFO, "b: %s", b);
+  // wlu_log_me(WLU_INFO, "f: %0.2f", *f);
+  // wlu_log_me(WLU_INFO, "q: %0.2f", *q);
+
+  wlu_print_mb();
+  wlu_free(b);
+  wlu_log_me(WLU_WARNING, "After freeing char *b alloc");
+  wlu_print_mb();
+
+  bytes=NULL; b=NULL; f=NULL; q=NULL;
 } END_TEST;
 
 

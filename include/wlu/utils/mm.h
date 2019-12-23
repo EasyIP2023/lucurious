@@ -25,22 +25,8 @@
 #ifndef WLU_MM_H
 #define WLU_MM_H
 
-/**
-* Struct that stores block metadata
-* next    | points to next memory block
-* is_free | checks if memory block is free or not
-* size    | allocated memory size
-* saddr   | starting adress of the block
-*/
-typedef struct _wlu_mem_block {
-  struct _wlu_mem_block *next;
-  bool is_free;
-  size_t size;
-  void *saddr;
-} wlu_mem_block;
-
-void wlu_alloc(size_t size, wlu_mem_block **head);
-void wlu_free(wlu_mem_block **head);
-void wlu_print_mb(wlu_mem_block *current);
+void *wlu_alloc(size_t bytes);
+void wlu_free(void *addr);
+void wlu_print_mb();
 
 #endif

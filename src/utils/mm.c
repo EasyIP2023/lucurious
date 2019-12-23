@@ -26,16 +26,42 @@
 #include <wlu/utils/log.h>
 #include <wlu/utils/mm.h>
 
+/**
+* Struct that stores block metadata
+* next    | points to next memory block
+* is_free | checks if memory block is free or not
+* size    | allocated memory size
+* saddr   | starting adress for the block
+* eaddr   | ending adress for the block
+*/
+typedef struct _wlu_mem_block {
+  struct _wlu_mem_block *next;
+  bool is_free;
+  size_t size;
+  void *saddr;
+  void *eaddr;
+} wlu_mem_block;
+
 #define BLOCK_SIZE sizeof(wlu_mem_block)
 #define SBRK_ERR (void*)-1
 
-static wlu_mem_block *alloc_mem_block(size_t size) {
+static wlu_mem_block *mema_list = NULL;
+
+/**
+* The moment one tries to access addresses in newly
+* allocated virtual area. The kernel automatically
+* creates new physical pages
+*/
+static wlu_mem_block *alloc_mem_block(size_t bytes) {
   /* set first break point or starting address for block of memory */
   wlu_mem_block *block = (wlu_mem_block *) sbrk(0);
+  if (block == SBRK_ERR) {
+    wlu_log_me(WLU_DANGER, "[x] sbrk: %s", strerror(errno));
+    return NULL;
+  }
 
   /* set second break point or ending address for block of memory */
-  void *alloc_mem = (void *) sbrk(BLOCK_SIZE * size);
-
+  void *alloc_mem = (void *) sbrk(BLOCK_SIZE * bytes);
   if (alloc_mem == SBRK_ERR) {
     wlu_log_me(WLU_DANGER, "[x] sbrk: %s", strerror(errno));
     return NULL;
@@ -43,39 +69,50 @@ static wlu_mem_block *alloc_mem_block(size_t size) {
 
   block->next = NULL;
   block->is_free = false;
-  block->size = size;
+  block->size = bytes;
 
-  /* Want to start address at an address that does not include metadata */
+  /* Want to start block address at an address that does not include metadata */
   block->saddr = block + BLOCK_SIZE;
+  /* Could get 'eaddr' by doing operation: saddr + size */
+  block->eaddr = alloc_mem;
 
   return block;
 }
 
-void wlu_alloc(size_t size, wlu_mem_block **head) {
-  wlu_mem_block *current = *head;
+void *wlu_alloc(size_t bytes) {
+  wlu_mem_block *saddr = mema_list;
+  void *ret_addr = NULL;
 
-  if (!current) {
-    *head = alloc_mem_block(size);
-    if (!(*head)) return;
+  wlu_mem_block *nblock = alloc_mem_block(bytes);
+  if (!nblock) return NULL;
+
+  if (!saddr) {
+    saddr = ret_addr = nblock;
   } else {
     /* Retrieve last memory block */
-    while (current->next) current = current->next;
-    wlu_mem_block *nblock = alloc_mem_block(size);
-    if (!nblock) return;
-    current->next = nblock;
+    while (mema_list->next) mema_list = mema_list->next;
+    mema_list->next = ret_addr = nblock;
   }
+
+  /* reset memory address list to starting heap address */
+  mema_list = saddr;
+  return ret_addr;
 }
 
 /* Freeing memory means to override the contents */
-void wlu_free(wlu_mem_block **head) {
-  if (!(*head)) return;
-  (*head)->is_free = true;
+void wlu_free(void *addr) {
+  wlu_mem_block *current = mema_list;
+  while (current) {
+    if (addr == current) { current->is_free = true; return; }
+    current = current->next;
+  }
 }
 
-void wlu_print_mb(wlu_mem_block *current) {
+void wlu_print_mb() {
+  wlu_mem_block *current = mema_list;
   while(current) {
-    wlu_log_me(WLU_INFO, "isfree = %d, size = %d, saddr = %p, current node = %p, next node = %p",
-               current->is_free, current->size, current->saddr, current, current->next);
+    wlu_log_me(WLU_INFO, "current block = %p, next block = %p, isfree = %d, block size = %d, saddr = %p",
+               current, current->next, current->is_free, current->size, current->saddr);
     current = current->next;
   }
 }
