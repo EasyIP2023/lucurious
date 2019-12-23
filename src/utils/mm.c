@@ -87,11 +87,14 @@ void *wlu_alloc(size_t bytes) {
   if (!nblock) return NULL;
 
   if (!saddr) {
-    saddr = ret_addr = nblock;
+    /* This will create first link/block in linked list */
+    saddr = nblock;
+    ret_addr = nblock->saddr;
   } else {
     /* Retrieve last memory block */
     while (mema_list->next) mema_list = mema_list->next;
-    mema_list->next = ret_addr = nblock;
+    mema_list->next = nblock;
+    ret_addr = nblock->saddr;
   }
 
   /* reset memory address list to starting heap address */

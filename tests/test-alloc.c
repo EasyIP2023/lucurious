@@ -33,15 +33,13 @@ START_TEST(basic_alloc) {
   float *f = (float *) wlu_alloc(4);
   float *q = (float *) wlu_alloc(4);
 
-  ALL_UNUSED(bytes, f, q);
-
-  // *bytes = 30;
-  // b = "abcdegf";
-  // *f = *q = 45.78f;
-  // wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
-  // wlu_log_me(WLU_INFO, "b: %s", b);
-  // wlu_log_me(WLU_INFO, "f: %0.2f", *f);
-  // wlu_log_me(WLU_INFO, "q: %0.2f", *q);
+  *bytes = 30;
+  b = "abcdegf";
+  *f = *q = 45.78f;
+  wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
+  wlu_log_me(WLU_INFO, "b: %s", b);
+  wlu_log_me(WLU_INFO, "f: %0.2f", *f);
+  wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
   wlu_print_mb();
   wlu_free(b);
