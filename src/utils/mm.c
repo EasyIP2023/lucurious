@@ -25,45 +25,47 @@
 #include <lucom.h>
 #include <wlu/utils/log.h>
 #include <wlu/utils/mm.h>
+#include <sys/mman.h>
 
 /**
 * Struct that stores block metadata
+* Using linked list to keep track of memory allocated
 * next    | points to next memory block
 * is_free | checks if memory block is free or not
 * size    | allocated memory size
-* saddr   | starting adress for the block
-* eaddr   | ending adress for the block
+* saddr   | starting address for the block
 */
-typedef struct _wlu_mem_block {
-  struct _wlu_mem_block *next;
+typedef struct mblock {
+  struct mblock *next;
   bool is_free;
   size_t size;
   void *saddr;
-  void *eaddr;
-} wlu_mem_block;
+} wlu_mem_block_t;
 
-#define BLOCK_SIZE sizeof(wlu_mem_block)
-#define SBRK_ERR (void*)-1
+/* Keep track of last block starting address */
+static void *last_addr = NULL;
+static wlu_mem_block_t *mema_list = NULL;
 
-static wlu_mem_block *mema_list = NULL;
+#define BLOCK_SIZE sizeof(wlu_mem_block_t)
+#define ALLOC_ERR (void*)-1
 
-/**
-* The moment one tries to access addresses in newly
-* allocated virtual area. The kernel automatically
-* creates new physical pages
-*/
-static wlu_mem_block *alloc_mem_block(size_t bytes) {
-  /* set first break point or starting address for block of memory */
-  wlu_mem_block *block = (wlu_mem_block *) sbrk(0);
-  if (block == SBRK_ERR) {
-    wlu_log_me(WLU_DANGER, "[x] sbrk: %s", strerror(errno));
-    return NULL;
-  }
+static wlu_mem_block_t *get_free_block(size_t bytes) {
+	wlu_mem_block_t *current = mema_list;
+	while (current) {
+		if (current->is_free && current->size >= bytes)
+			return current;
+		current = current->next;
+	}
+	return NULL;
+}
 
-  /* set second break point or ending address for block of memory */
-  void *alloc_mem = (void *) sbrk(BLOCK_SIZE * bytes);
-  if (alloc_mem == SBRK_ERR) {
-    wlu_log_me(WLU_DANGER, "[x] sbrk: %s", strerror(errno));
+static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
+  /* change break point to get starting address for block of memory */
+  wlu_mem_block_t *block = NULL;
+  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (block == ALLOC_ERR) {
+    wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
     return NULL;
   }
 
@@ -73,46 +75,60 @@ static wlu_mem_block *alloc_mem_block(size_t bytes) {
 
   /* Want to start block address at an address that does not include metadata */
   block->saddr = block + BLOCK_SIZE;
-  /* Could get 'eaddr' by doing operation: saddr + size */
-  block->eaddr = alloc_mem;
 
+  last_addr = block;
   return block;
 }
 
 void *wlu_alloc(size_t bytes) {
-  wlu_mem_block *saddr = mema_list;
-  void *ret_addr = NULL;
+  wlu_mem_block_t *saddr = mema_list;
+  wlu_mem_block_t *nblock = NULL;
+  void *temp = last_addr;
 
-  wlu_mem_block *nblock = alloc_mem_block(bytes);
+  /* if free block found return block */
+  nblock = get_free_block(bytes);
+  if (nblock) return nblock;
+
+  nblock = alloc_mem_block(bytes);
   if (!nblock) return NULL;
 
   if (!saddr) {
     /* This will create first link/block in linked list */
     saddr = nblock;
-    ret_addr = nblock->saddr;
   } else {
-    /* Retrieve last memory block */
-    while (mema_list->next) mema_list = mema_list->next;
+    /* Retrieve last used memory block */
+    mema_list = temp;
     mema_list->next = nblock;
-    ret_addr = nblock->saddr;
   }
 
   /* reset memory address list to starting heap address */
   mema_list = saddr;
-  return ret_addr;
+  return nblock->saddr;
 }
 
-/* Freeing memory means to override the contents */
-void wlu_free(void *addr) {
-  wlu_mem_block *current = mema_list;
+/* Freeing memory in this case means to override the contents */
+void wlu_free_block(void *addr) {
+  wlu_mem_block_t *current = mema_list;
   while (current) {
     if (addr == current) { current->is_free = true; return; }
     current = current->next;
   }
 }
 
+void wlu_release_block(void *addr) {
+  wlu_mem_block_t *current = mema_list;
+  while (current) {
+    if (addr == current) {
+      if (munmap(current->saddr, BLOCK_SIZE+current->size) == -1)
+        wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
+      return;
+    }
+    current = current->next;
+  }
+}
+
 void wlu_print_mb() {
-  wlu_mem_block *current = mema_list;
+  wlu_mem_block_t *current = mema_list;
   while(current) {
     wlu_log_me(WLU_INFO, "current block = %p, next block = %p, isfree = %d, block size = %d, saddr = %p",
                current, current->next, current->is_free, current->size, current->saddr);

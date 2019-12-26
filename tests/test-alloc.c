@@ -22,10 +22,23 @@
 * THE SOFTWARE.
 */
 
+#define INAPI_CALLS
+
 #include <lucom.h>
 #include <wlu/utils/log.h>
 #include <wlu/utils/mm.h>
 #include <check.h>
+
+void release(const char *fmt, ...) {
+  va_list list;
+  void *block = NULL;
+  va_start(list, fmt);
+  while(!block) {
+    block = va_arg(list, void*);
+    wlu_release_block(block);
+  }
+  va_end(list);
+}
 
 START_TEST(basic_alloc) {
   int *bytes = (int *) wlu_alloc(4);
@@ -42,15 +55,15 @@ START_TEST(basic_alloc) {
   wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
   wlu_print_mb();
-  wlu_free(b);
+  wlu_free_block(b);
   wlu_log_me(WLU_WARNING, "After freeing char *b alloc");
   wlu_print_mb();
 
+  release("%p%p%p%p", bytes, b, f, q);
   bytes=NULL; b=NULL; f=NULL; q=NULL;
 } END_TEST;
 
-
-Suite *wclient_suite(void) {
+Suite *alloc_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
@@ -68,11 +81,8 @@ Suite *wclient_suite(void) {
 int main(void) {
   int number_failed;
 
-  Suite *s;
-  SRunner *sr;
-
-  s = wclient_suite();
-  sr = srunner_create(s);
+  Suite *s = alloc_suite();
+  SRunner *sr = srunner_create(s);
 
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);

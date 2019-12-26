@@ -25,16 +25,14 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
+#include <wlu/utils/mm.h>
 #include <vlucur/values.h>
 
+#define FREE_LUALLOC(addr) wlu_release_block(addr); addr = NULL;
+
 vkcomp *wlu_init_vk() {
-  vkcomp *app = (vkcomp *) calloc(1, sizeof(vkcomp));
-
-  if (!app) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return app;
-  }
-
+  vkcomp *app = (vkcomp *) wlu_alloc(sizeof(vkcomp));
+  if (!app) return app;
   set_vkcomp_init_values(app);
   return app;
 }
@@ -90,7 +88,7 @@ void wlu_freeup_vk(void *data) {
         FREE(app->cmd_data[i].cmd_buffs);
       }
     }
-    FREE(app->cmd_data);
+    FREE_LUALLOC(app->cmd_data);
   }
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
@@ -108,7 +106,7 @@ void wlu_freeup_vk(void *data) {
         vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
       FREE(app->gp_data[i].graphics_pipelines);
     }
-    FREE(app->gp_data);
+    FREE_LUALLOC(app->gp_data);
   }
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
@@ -126,7 +124,7 @@ void wlu_freeup_vk(void *data) {
         app->desc_data[i].desc_pool = VK_NULL_HANDLE;
       }
     }
-    FREE(app->desc_data);
+    FREE_LUALLOC(app->desc_data);
   }
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
@@ -139,7 +137,7 @@ void wlu_freeup_vk(void *data) {
         app->buffs_data[i].mem = VK_NULL_HANDLE;
       }
     }
-    FREE(app->buffs_data);
+    FREE_LUALLOC(app->buffs_data);
   }
   if (app->sc_data) { /* Annihilate All Swap Chain Objects */
     for (uint32_t i = 0; i < app->sdc; i++) {
@@ -165,7 +163,7 @@ void wlu_freeup_vk(void *data) {
         app->sc_data[i].swap_chain = VK_NULL_HANDLE;
       }
     }
-    FREE(app->sc_data);
+    FREE_LUALLOC(app->sc_data);
   }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
@@ -177,50 +175,35 @@ void wlu_freeup_vk(void *data) {
     vkDestroyInstance(app->instance, NULL);
 
   set_vkcomp_init_values(app);
-  FREE(app);
+  FREE_LUALLOC(app);
 }
 
 /* Simple Effective One Time Buffer Allocater */
 VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
-      app->sc_data = (struct swap_chain *) calloc(arr_size, sizeof(struct swap_chain));
-      if (!app->sc_data) {
-        wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-        return VK_RESULT_MAX_ENUM;
-      }
+      app->sc_data = (struct swap_chain *) wlu_alloc(arr_size * sizeof(struct swap_chain));
+      if (!app->sc_data) return VK_RESULT_MAX_ENUM;
       app->sdc = arr_size;
       set_sc_data_init_values(app); break;
     case WLU_GP_DATA:
-      app->gp_data = (struct graphics_pipeline_data *) calloc(arr_size, sizeof(struct graphics_pipeline_data));
-      if (!app->gp_data) {
-        wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-        return VK_RESULT_MAX_ENUM;
-      }
+      app->gp_data = (struct graphics_pipeline_data *) wlu_alloc(arr_size * sizeof(struct graphics_pipeline_data));
+      if (!app->gp_data) return VK_RESULT_MAX_ENUM;
       app->gdc = arr_size;
       set_gp_data_init_values(app); break;
     case WLU_CMD_DATA:
-      app->cmd_data = (struct vkcmds *) calloc(arr_size, sizeof(struct vkcmds));
-      if (!app->cmd_data) {
-        wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-        return VK_RESULT_MAX_ENUM;
-      }
+      app->cmd_data = (struct vkcmds *) wlu_alloc(arr_size * sizeof(struct vkcmds));
+      if (!app->cmd_data) return VK_RESULT_MAX_ENUM;
       app->cdc = arr_size;
       set_cmd_data_init_values(app); break;
     case WLU_BUFFS_DATA:
-      app->buffs_data = (struct buffs_data *) calloc(arr_size, sizeof(struct buffs_data));
-      if (!app->buffs_data) {
-        wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-        return VK_RESULT_MAX_ENUM;
-      }
+      app->buffs_data = (struct buffs_data *) wlu_alloc(arr_size * sizeof(struct buffs_data));
+      if (!app->buffs_data) return VK_RESULT_MAX_ENUM;
       app->bdc = arr_size;
       set_buffs_data_init_values(app); break;
     case WLU_DESC_DATA:
-      app->desc_data = (struct desc_data *) calloc(arr_size, sizeof(struct desc_data));
-      if (!app->desc_data) {
-        wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-        return VK_RESULT_MAX_ENUM;
-      }
+      app->desc_data = (struct desc_data *) wlu_alloc(arr_size * sizeof(struct desc_data));
+      if (!app->desc_data) return VK_RESULT_MAX_ENUM;
       app->ddc = arr_size;
       set_desc_data_init_values(app); break;
     default: break;

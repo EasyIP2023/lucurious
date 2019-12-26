@@ -31,13 +31,15 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <jemalloc/jemalloc.h>
+#include <stdlib.h>
 
 /**
 * The amount of time, one waits for a command buffer to complete
 * unit measured in nanoseconds
 */
 #define FENCE_TIMEOUT 100000000
+
+#define POW2_DEC(pow) 1 << pow
 
 /**
 * http://efesx.com/2010/07/17/variadic-macro-to-count-number-of-arguments/

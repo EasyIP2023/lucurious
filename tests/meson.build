@@ -24,6 +24,7 @@
 
 check = dependency('check')
 
+# Produce better debug information
 extra_args = ['-g', '-ggdb3']
 
 # Testing vulkan suite

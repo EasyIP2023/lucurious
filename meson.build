@@ -66,7 +66,6 @@ lib_lucur = shared_library(
 	version: '.'.join(so_version),
 	link_whole: lucur_parts,
 	include_directories: lucur_inc,
-	dependencies: [jemalloc],
 	install_dir: '/usr/lib',
 	install: true
 )

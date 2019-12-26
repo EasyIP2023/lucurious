@@ -28,7 +28,7 @@
 #include <wlu/utils/log.h>
 
 wlu_file_info wlu_read_file(const char *filename) {
-  struct wlu_file_info fileinfo = {NULL, 0};
+  wlu_file_info fileinfo = {NULL, 0};
   FILE *stream = NULL;
 
   /* Open the file in binary mode */
@@ -70,6 +70,7 @@ wlu_file_info wlu_read_file(const char *filename) {
     wlu_log_me(WLU_DANGER, "[x] fread: %s", strerror(errno));
     return fileinfo;
   }
+
   fclose(stream);
 
   return fileinfo;
