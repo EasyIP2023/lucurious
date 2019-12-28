@@ -23,12 +23,12 @@
 */
 
 #include <lucom.h>
+
+#define INAPI_CALLS
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
-#include <wlu/utils/mm.h>
 #include <vlucur/values.h>
-
-#define FREE_LUALLOC(addr) wlu_release_block(addr); addr = NULL;
+#include <wlu/utils/mm.h>
 
 vkcomp *wlu_init_vk() {
   vkcomp *app = (vkcomp *) wlu_alloc(sizeof(vkcomp));
@@ -88,7 +88,6 @@ void wlu_freeup_vk(void *data) {
         FREE(app->cmd_data[i].cmd_buffs);
       }
     }
-    FREE_LUALLOC(app->cmd_data);
   }
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
@@ -106,7 +105,6 @@ void wlu_freeup_vk(void *data) {
         vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
       FREE(app->gp_data[i].graphics_pipelines);
     }
-    FREE_LUALLOC(app->gp_data);
   }
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
@@ -124,7 +122,6 @@ void wlu_freeup_vk(void *data) {
         app->desc_data[i].desc_pool = VK_NULL_HANDLE;
       }
     }
-    FREE_LUALLOC(app->desc_data);
   }
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
@@ -137,7 +134,6 @@ void wlu_freeup_vk(void *data) {
         app->buffs_data[i].mem = VK_NULL_HANDLE;
       }
     }
-    FREE_LUALLOC(app->buffs_data);
   }
   if (app->sc_data) { /* Annihilate All Swap Chain Objects */
     for (uint32_t i = 0; i < app->sdc; i++) {
@@ -163,7 +159,6 @@ void wlu_freeup_vk(void *data) {
         app->sc_data[i].swap_chain = VK_NULL_HANDLE;
       }
     }
-    FREE_LUALLOC(app->sc_data);
   }
   if (app->device) {
     vkDeviceWaitIdle(app->device);
@@ -175,7 +170,7 @@ void wlu_freeup_vk(void *data) {
     vkDestroyInstance(app->instance, NULL);
 
   set_vkcomp_init_values(app);
-  FREE_LUALLOC(app);
+  wlu_release_blocks();
 }
 
 /* Simple Effective One Time Buffer Allocater */

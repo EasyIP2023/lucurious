@@ -29,17 +29,6 @@
 #include <wlu/utils/mm.h>
 #include <check.h>
 
-void release(const char *fmt, ...) {
-  va_list list;
-  void *block = NULL;
-  va_start(list, fmt);
-  while(!block) {
-    block = va_arg(list, void*);
-    wlu_release_block(block);
-  }
-  va_end(list);
-}
-
 START_TEST(basic_alloc) {
   int *bytes = (int *) wlu_alloc(4);
   char *b = (char *) wlu_alloc(8);
@@ -59,7 +48,7 @@ START_TEST(basic_alloc) {
   wlu_log_me(WLU_WARNING, "After freeing char *b alloc");
   wlu_print_mb();
 
-  release("%p%p%p%p", bytes, b, f, q);
+  wlu_release_blocks();
   bytes=NULL; b=NULL; f=NULL; q=NULL;
 } END_TEST;
 

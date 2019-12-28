@@ -27,10 +27,10 @@
 
 void *wlu_alloc(size_t bytes);
 void wlu_free_block(void *addr);
-void wlu_release_block(void *addr);
 
 #ifdef INAPI_CALLS
 void wlu_print_mb();
+void wlu_release_blocks();
 #endif
 
 #endif

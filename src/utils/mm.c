@@ -22,10 +22,11 @@
 * THE SOFTWARE.
 */
 
+#include <sys/mman.h>
+
 #include <lucom.h>
 #include <wlu/utils/log.h>
 #include <wlu/utils/mm.h>
-#include <sys/mman.h>
 
 /**
 * Struct that stores block metadata
@@ -42,25 +43,27 @@ typedef struct mblock {
   void *saddr;
 } wlu_mem_block_t;
 
-/* Keep track of last block starting address */
-static void *last_addr = NULL;
+/* Keep track of first/last block addresses */
+static void *last_addr = NULL, *start_addr = NULL;
 static wlu_mem_block_t *mema_list = NULL;
 
 #define BLOCK_SIZE sizeof(wlu_mem_block_t)
 #define ALLOC_ERR (void*)-1
 
+/* Helps in ensuring one does not waste time in context switching */
 static wlu_mem_block_t *get_free_block(size_t bytes) {
 	wlu_mem_block_t *current = mema_list;
 	while (current) {
-		if (current->is_free && current->size >= bytes)
-			return current;
+		if (current->is_free && current->size >= bytes) {
+      current->is_free = false;
+      return current;
+    }
 		current = current->next;
 	}
 	return NULL;
 }
 
 static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
-  /* change break point to get starting address for block of memory */
   wlu_mem_block_t *block = NULL;
   block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE,
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -81,7 +84,6 @@ static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
 }
 
 void *wlu_alloc(size_t bytes) {
-  wlu_mem_block_t *saddr = mema_list;
   wlu_mem_block_t *nblock = NULL;
   void *temp = last_addr;
 
@@ -92,17 +94,18 @@ void *wlu_alloc(size_t bytes) {
   nblock = alloc_mem_block(bytes);
   if (!nblock) return NULL;
 
-  if (!saddr) {
+  if (!start_addr) {
     /* This will create first link/block in linked list */
-    saddr = nblock;
+    start_addr = nblock;
   } else {
     /* Retrieve last used memory block */
     mema_list = temp;
+    /* remember this is the best way to append to end of linked-list */
     mema_list->next = nblock;
   }
 
   /* reset memory address list to starting heap address */
-  mema_list = saddr;
+  mema_list = start_addr;
   return nblock->saddr;
 }
 
@@ -115,16 +118,27 @@ void wlu_free_block(void *addr) {
   }
 }
 
-void wlu_release_block(void *addr) {
-  wlu_mem_block_t *current = mema_list;
-  while (current) {
-    if (addr == current) {
-      if (munmap(current->saddr, BLOCK_SIZE+current->size) == -1)
+/**
+* Releasing memory in this case means to
+* unmap all pages (remove page tables)
+*/
+void wlu_release_blocks() {
+  void *next_block = NULL;
+  while (mema_list) {
+    if (!mema_list->next) {
+      if (munmap(mema_list, BLOCK_SIZE+mema_list->size) == -1)
         wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
-      return;
+      break;
+    } else {
+      next_block = mema_list->next;
+      if (munmap(mema_list, BLOCK_SIZE+mema_list->size) == -1) {
+        wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
+        return;
+      }
+      mema_list = next_block;
     }
-    current = current->next;
   }
+  mema_list = start_addr = NULL;
 }
 
 void wlu_print_mb() {
@@ -134,4 +148,5 @@ void wlu_print_mb() {
                current, current->next, current->is_free, current->size, current->saddr);
     current = current->next;
   }
+  mema_list = start_addr;
 }
