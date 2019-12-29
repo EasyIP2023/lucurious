@@ -24,16 +24,13 @@
 
 check = dependency('check')
 
-# Produce better debug information
-extra_args = ['-g', '-ggdb3']
-
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',
   'test-vulkan.c',
   include_directories : lucur_inc,
   dependencies: [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -43,7 +40,7 @@ lucur_wclient_test = executable('lucur-wclient-test',
   include_directories : lucur_inc,
   dependencies: [check],
   link_with : lib_lucur,
-  link_args: extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -53,7 +50,7 @@ lucur_shade_test = executable('lucur-shade-test',
   include_directories : lucur_inc,
   dependencies: [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -62,7 +59,7 @@ lucur_triangle_test = executable('lucur-triangle-test',
   include_directories : lucur_inc,
   dependencies : [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -71,7 +68,7 @@ lucur_square_test = executable('lucur-square-test',
   include_directories : lucur_inc,
   dependencies : [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -80,7 +77,7 @@ lucur_cube_test = executable('lucur-cube-test',
   include_directories : lucur_inc,
   dependencies : [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -89,7 +86,7 @@ lucur_spin_square_test = executable('lucur-spin-square-test',
   include_directories : lucur_inc,
   dependencies : [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 
@@ -98,7 +95,7 @@ lucur_alloc_test = executable('lucur-alloc-test',
   include_directories : lucur_inc,
   dependencies : [check],
   link_with : lib_lucur,
-  link_args : extra_args,
+  c_args : '-DDEV_ENV',
   install : false
 )
 

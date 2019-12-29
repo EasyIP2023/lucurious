@@ -26,11 +26,12 @@
 #define WLU_MM_H
 
 void *wlu_alloc(size_t bytes);
+void *wlu_realloc(void *addr, size_t new_size);
 void wlu_free_block(void *addr);
-
-#ifdef INAPI_CALLS
-void wlu_print_mb();
 void wlu_release_blocks();
+
+#ifdef DEV_ENV
+void wlu_print_mb();
 #endif
 
 #endif

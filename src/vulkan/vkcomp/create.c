@@ -102,10 +102,9 @@ VkResult wlu_create_physical_device(
     goto finish_devices;
   }
 
-  devices = (VkPhysicalDevice *) calloc(device_count, sizeof(VkPhysicalDevice));
+  devices = (VkPhysicalDevice *) wlu_alloc(device_count * sizeof(VkPhysicalDevice));
   if (!devices) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_devices;
   }
 
@@ -169,11 +168,8 @@ VkResult wlu_create_logical_device(
   /* Will need to change this later but for now, This two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
-  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) calloc(dq_count, sizeof(VkDeviceQueueCreateInfo));
-  if (!pQueueCreateInfos) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    goto finish_logical;
-  }
+  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) wlu_alloc(dq_count * sizeof(VkDeviceQueueCreateInfo));
+  if (!pQueueCreateInfos) goto finish_logical;
 
   for (uint32_t i = 0; i < dq_count; i++) {
     pQueueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -340,12 +336,9 @@ VkResult wlu_create_img_views(
     goto finish_create_img_views;
   }
 
-  app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) calloc(
-    app->sc_data[cur_scd].sic, sizeof(struct swap_chain_buffers));
-  if (!app->sc_data[cur_scd].sc_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    goto finish_create_img_views;
-  }
+  app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) wlu_alloc(
+    app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers));
+  if (!app->sc_data[cur_scd].sc_buffs) goto finish_create_img_views;
 
   set_sc_buffs_init_values(app, cur_scd);
 
@@ -360,10 +353,9 @@ VkResult wlu_create_img_views(
     goto finish_create_img_views;
   }
 
-  sc_imgs = (VkImage *) calloc(app->sc_data[cur_scd].sic, sizeof(VkImage));
+  sc_imgs = (VkImage *) wlu_alloc(app->sc_data[cur_scd].sic * sizeof(VkImage));
   if (!sc_imgs) {
     res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
     goto finish_create_img_views;
   }
 
@@ -489,13 +481,13 @@ VkResult wlu_create_depth_buff(
     return res;
   }
 
-  /*
-   * Although you know the width, height, and the size of a buffer element,
-   * there is no way to determine exactly how much memory is needed to allocate.
-   * This is because alignment constraints that may be placed by the GPU hardware.
-   * This function allows you to find out everything you need to allocate the
-   * memory for an image.
-   */
+  /**
+  * Although you know the width, height, and the size of a buffer element,
+  * there is no way to determine exactly how much memory is needed to allocate.
+  * This is because alignment constraints that may be placed by the GPU hardware.
+  * This function allows you to find out everything you need to allocate the
+  * memory for an image.
+  */
   VkMemoryRequirements mem_reqs;
   vkGetImageMemoryRequirements(app->device, app->sc_data[cur_scd].depth.image, &mem_reqs);
 
@@ -671,12 +663,9 @@ VkResult wlu_create_framebuffers(
     return res;
   }
 
-  app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) calloc(
-    app->sc_data[cur_scd].sic, sizeof(VkFramebuffer));
-  if (!app->sc_data[cur_scd].frame_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return res;
-  }
+  app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) wlu_alloc(
+    app->sc_data[cur_scd].sic * sizeof(VkFramebuffer));
+  if (!app->sc_data[cur_scd].frame_buffs) return res;
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     attachments[0] = app->sc_data[cur_scd].sc_buffs[i].view;
@@ -722,12 +711,9 @@ VkResult wlu_create_cmd_pool(
   }
 
   /* create an array of cmd_buffs to call later in wlu_create_cmd_buffs */
-  app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) calloc(
-    app->sc_data[cur_scd].sic, sizeof(VkCommandBuffer));
-  if (!app->cmd_data[cur_cmdd].cmd_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return res;
-  }
+  app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) wlu_alloc(
+    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer));
+  if (!app->cmd_data[cur_cmdd].cmd_buffs) return res;
 
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -790,12 +776,9 @@ VkResult wlu_create_cmd_buffs(
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->sc_data[cur_scd].sems = (struct semaphores *) calloc(
-    app->sc_data[cur_scd].sic, sizeof(struct semaphores));
-  if (!app->sc_data[cur_scd].sems) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return res;
-  }
+  app->sc_data[cur_scd].sems = (struct semaphores *) wlu_alloc(
+    app->sc_data[cur_scd].sic * sizeof(struct semaphores));
+  if (!app->sc_data[cur_scd].sems) return res;
 
   set_sc_sems_init_values(app, cur_scd);
 

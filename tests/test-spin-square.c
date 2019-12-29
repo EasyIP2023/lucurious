@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -52,7 +52,7 @@ struct uniform_block_data {
 void freeme(vkcomp *app, wclient *wc) {
   wlu_freeup_vk(app);
   wlu_freeup_wc(wc);
-  wlu_freeup_watchme();
+  wlu_release_blocks();
 }
 
 VkResult init_buffs(vkcomp *app) {
@@ -98,15 +98,6 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] init_buffs failed!!");
     ck_abort_msg(NULL);
   }
-
-  /* Signal handler for this process */
-  err = wlu_watch_me(SIGSEGV, getpid());
-  if (err) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
-
-  wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   if (err) {
@@ -474,9 +465,6 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
     ck_abort_msg(NULL);
   }
-
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &frag_shader_module);
-  wlu_add_watchme_info(1, app, 0, NULL, 2, &vert_shader_module);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL

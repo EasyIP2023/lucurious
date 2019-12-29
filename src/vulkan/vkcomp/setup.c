@@ -23,12 +23,9 @@
 */
 
 #include <lucom.h>
-
-#define INAPI_CALLS
 #include <wlu/vlucur/vkall.h>
 #include <wlu/utils/log.h>
 #include <vlucur/values.h>
-#include <wlu/utils/mm.h>
 
 vkcomp *wlu_init_vk() {
   vkcomp *app = (vkcomp *) wlu_alloc(sizeof(vkcomp));
@@ -85,7 +82,6 @@ void wlu_freeup_vk(void *data) {
       if (app->cmd_data[i].cmd_pool) {
         vkDestroyCommandPool(app->device, app->cmd_data[i].cmd_pool, NULL);
         app->cmd_data[i].cmd_pool = VK_NULL_HANDLE;
-        FREE(app->cmd_data[i].cmd_buffs);
       }
     }
   }
@@ -103,7 +99,6 @@ void wlu_freeup_vk(void *data) {
       }
       for (uint32_t j = 0; j < app->gp_data[i].gpc; j++)
         vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
-      FREE(app->gp_data[i].graphics_pipelines);
     }
   }
   if (app->desc_data) {
@@ -113,10 +108,7 @@ void wlu_freeup_vk(void *data) {
           if (app->desc_data[i].desc_layouts[j])
             vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
         }
-        FREE(app->desc_data[i].desc_layouts);
       }
-      if (app->desc_data[i].desc_set)
-        FREE(app->desc_data[i].desc_set);
       if (app->desc_data[i].desc_pool) {
         vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
         app->desc_data[i].desc_pool = VK_NULL_HANDLE;
@@ -152,7 +144,6 @@ void wlu_freeup_vk(void *data) {
           vkDestroyFramebuffer(app->device, app->sc_data[i].frame_buffs[j], NULL);
           vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
         }
-        FREE(app->sc_data[i].sc_buffs); FREE(app->sc_data[i].frame_buffs); FREE(app->sc_data[i].sems);
       }
       if (app->sc_data[i].swap_chain) {
         vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
@@ -170,7 +161,7 @@ void wlu_freeup_vk(void *data) {
     vkDestroyInstance(app->instance, NULL);
 
   set_vkcomp_init_values(app);
-  wlu_release_blocks();
+  app = NULL;
 }
 
 /* Simple Effective One Time Buffer Allocater */

@@ -57,7 +57,7 @@ char **str_split(char *a_str, const char a_delim) {
      knows where the list of returned strings ends. */
   count++;
 
-  result = calloc(count, sizeof(char));
+  result = wlu_alloc(count);
   if (!result) return NULL;
 
   if (result) {
@@ -66,14 +66,14 @@ char **str_split(char *a_str, const char a_delim) {
 
     while (token) {
       if (idx > count) {
-        FREE(result);
+        wlu_free_block(result);
         return result;
       }
       *(result + idx++) = strdup(token);
       token = strtok(0, delim);
     }
     if (idx != (count - 1)) {
-      FREE(result);
+      wlu_free_block(result);
       return result;
     }
     *(result + idx) = 0;

@@ -22,18 +22,15 @@
 * THE SOFTWARE.
 */
 
-#define INAPI_CALLS
-
 #include <lucom.h>
 #include <wlu/utils/log.h>
-#include <wlu/utils/mm.h>
 #include <check.h>
 
 START_TEST(basic_alloc) {
-  int *bytes = (int *) wlu_alloc(4);
+  int *bytes = (int *) wlu_alloc(sizeof(int));
   char *b = (char *) wlu_alloc(8);
-  float *f = (float *) wlu_alloc(4);
-  float *q = (float *) wlu_alloc(4);
+  float *f = (float *) wlu_alloc(sizeof(float));
+  float *q = (float *) wlu_alloc(sizeof(float));
 
   *bytes = 30;
   b = "abcdegf";

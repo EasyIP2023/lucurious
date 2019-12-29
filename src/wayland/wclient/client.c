@@ -23,13 +23,8 @@ static void set_values(wclient *wc) {
 }
 
 wclient *wlu_init_wc() {
-  wclient *wc = calloc(1, sizeof(wclient));
-
-  if (!wc) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return wc;
-  }
-
+  wclient *wc = wlu_alloc(sizeof(wclient));
+  if (!wc) return wc;
   set_values(wc);
   return wc;
 }
@@ -101,8 +96,9 @@ static void global_registry_handler(void *data, struct wl_registry *registry, ui
   } else if (strcmp(interface, wl_shm_interface.name) == 0) {
     wc->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
   } else if (strcmp(interface, wl_seat_interface.name) == 0) {
-    wc->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
-    wl_seat_add_listener(wc->seat, &seat_listener, NULL);
+    ALL_UNUSED(seat_listener);
+    // wc->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
+    // wl_seat_add_listener(wc->seat, &seat_listener, NULL);
   }
 }
 
@@ -204,7 +200,6 @@ int wlu_connect_client(wclient *wc) {
   err = wl_display_roundtrip(wc->display);
   if (!err) return EXIT_FAILURE;
 
-  wl_surface_attach(wc->surface, wc->buffer, 0, 0);
   wl_surface_commit(wc->surface);
 
   return err = 0;
@@ -247,7 +242,5 @@ void wlu_freeup_wc(void *data) {
     free(wc->xdg_wm_base);
 
   set_values(wc);
-  if (wc)
-    free(wc);
   wc = NULL;
 }

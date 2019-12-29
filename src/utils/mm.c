@@ -23,10 +23,14 @@
 */
 
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <lucom.h>
 #include <wlu/utils/log.h>
-#include <wlu/utils/mm.h>
+
+static const int ERR64 = -1;
 
 /**
 * Struct that stores block metadata
@@ -65,11 +69,20 @@ static wlu_mem_block_t *get_free_block(size_t bytes) {
 
 static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
   wlu_mem_block_t *block = NULL;
+  int fd = 0;
+
+  /* Allows for zeros to be written into values of bytes allocated */
+  fd = open("/dev/zero", O_RDWR);
+  if (fd == ERR64) {
+    wlu_log_me(WLU_DANGER, "[x] open: %s", strerror(errno));
+    goto finish_alloc_mem_block;
+  }
+
   block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+               MAP_PRIVATE | MAP_ANONYMOUS, fd, 0);
   if (block == ALLOC_ERR) {
     wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
-    return NULL;
+    goto finish_alloc_mem_block;
   }
 
   block->next = NULL;
@@ -77,9 +90,12 @@ static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
   block->size = bytes;
 
   /* Want to start block address at an address that does not include metadata */
-  block->saddr = block + BLOCK_SIZE;
+  block->saddr = BLOCK_SIZE + block;
 
   last_addr = block;
+finish_alloc_mem_block:
+  if (close(fd) == ERR64)
+    wlu_log_me(WLU_DANGER, "[x] close: %s", strerror(errno));
   return block;
 }
 
@@ -109,6 +125,19 @@ void *wlu_alloc(size_t bytes) {
   return nblock->saddr;
 }
 
+void *wlu_realloc(void *addr, size_t new_size) {
+  wlu_mem_block_t *current = mema_list;
+
+  while (current) {
+    if (addr == current)
+      return mremap(addr, BLOCK_SIZE + current->size,
+                    BLOCK_SIZE + new_size, MREMAP_MAYMOVE);
+    current = current->next;
+  }
+
+  return wlu_alloc(new_size);
+}
+
 /* Freeing memory in this case means to override the contents */
 void wlu_free_block(void *addr) {
   wlu_mem_block_t *current = mema_list;
@@ -125,18 +154,12 @@ void wlu_free_block(void *addr) {
 void wlu_release_blocks() {
   void *next_block = NULL;
   while (mema_list) {
-    if (!mema_list->next) {
-      if (munmap(mema_list, BLOCK_SIZE+mema_list->size) == -1)
-        wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
-      break;
-    } else {
-      next_block = mema_list->next;
-      if (munmap(mema_list, BLOCK_SIZE+mema_list->size) == -1) {
-        wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
-        return;
-      }
-      mema_list = next_block;
+    next_block = (!mema_list->next) ? NULL : mema_list->next;
+    if (munmap(mema_list, BLOCK_SIZE + mema_list->size) == ERR64) {
+      wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
+      return;
     }
+    mema_list = next_block;
   }
   mema_list = start_addr = NULL;
 }

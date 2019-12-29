@@ -61,6 +61,8 @@
 #define ALL_UNUSED_IMPL(nargs) ALL_UNUSED_IMPL_(nargs)
 #define ALL_UNUSED(...) ALL_UNUSED_IMPL(VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
 
-#define FREE(ptr) { free(ptr); ptr = NULL; }
+#include <wlu/utils/mm.h>
+
+#define FREE(ptr) { wlu_free_block(ptr); ptr = NULL; }
 
 #endif
