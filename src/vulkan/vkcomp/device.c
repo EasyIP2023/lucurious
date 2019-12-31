@@ -54,42 +54,29 @@ VkResult get_extension_properties(
   VkExtensionProperties *extensions = NULL;
   uint32_t extension_count = 0;
 
-  do {
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
-    if (res) return res;
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+  if (res) return res;
 
-    /* Rare but may happen for instances. If so continue on with the app */
-    if (extension_count == 0) goto finish_extensions;
+  /* Rare but may happen for instances. If so continue on with the app */
+  if (extension_count == 0) return res;
 
-    extensions = (VkExtensionProperties *) realloc(extensions,
-      extension_count * sizeof(VkExtensionProperties));
-    if (!extensions) {
-      res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *extensions failed");
-      goto finish_extensions;
-    }
+  extensions = (VkExtensionProperties *) alloca(extension_count * sizeof(VkExtensionProperties));
 
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
-  } while (res == VK_INCOMPLETE);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
+  if (res) return res;
 
   /* set available instance extensions */
   *eprops = (VkExtensionProperties *) wlu_alloc(extension_count * sizeof(VkExtensionProperties));
-  if (!(*eprops)) {
-    res = VK_RESULT_MAX_ENUM;
-    goto finish_extensions;
-  }
+  if (!(*eprops)) return VK_RESULT_MAX_ENUM;
 
   *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
   if (!(*eprops)) {
-    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
-    goto finish_extensions;
+    return VK_RESULT_MAX_ENUM;
   }
 
-finish_extensions:
-  FREE(extensions);
   return res;
 }
 
@@ -98,21 +85,22 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkBool32 *present_support = NULL;
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
+
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
-    goto finish_queue_family;
+    return ret;
   }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
-  queue_families = (VkQueueFamilyProperties *) wlu_alloc(qfc * sizeof(VkQueueFamilyProperties));
-  if (!queue_families) goto finish_queue_family;
+  queue_families = (VkQueueFamilyProperties *) alloca(qfc * sizeof(VkQueueFamilyProperties));
+  if (!queue_families) return ret;
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
-  present_support = wlu_alloc(qfc * sizeof(VkBool32));
-  if (!present_support) goto finish_queue_family;
+  present_support = alloca(qfc * sizeof(VkBool32));
+  if (!present_support) return ret;
 
   if (app->surface)
     for (uint32_t i = 0; i < qfc; i++)
@@ -129,7 +117,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
       if (app->surface && present_support[i]) {
         app->indices.present_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
-        goto finish_queue_family;
+        break;
       }
     }
   }
@@ -143,9 +131,6 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
     }
   }
 
-finish_queue_family:
-  FREE(queue_families);
-  FREE(present_support);
   return ret;
 }
 

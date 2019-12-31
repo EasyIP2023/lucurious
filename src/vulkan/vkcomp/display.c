@@ -55,27 +55,26 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   if (!app->surface) {
     wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    goto finish_format;
+    return ret_fmt;
   }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    goto finish_format;
+    return ret_fmt;
   }
 
   if (format_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device surface formats, format_count equals 0");
-    goto finish_format;
+    return ret_fmt;
   }
 
-  formats = (VkSurfaceFormatKHR *) wlu_alloc(format_count * sizeof(VkSurfaceFormatKHR));
-  if (!formats) goto finish_format;
+  formats = (VkSurfaceFormatKHR *) alloca(format_count * sizeof(VkSurfaceFormatKHR));
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    goto finish_format;
+    return ret_fmt;
   }
 
   ret_fmt = formats[0];
@@ -83,18 +82,16 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   if (format_count == 1 && formats[0].format == format) {
     ret_fmt.format = format;
     ret_fmt.colorSpace = colorSpace;
-    goto finish_format;
+    return ret_fmt;
   }
 
   for (uint32_t i = 0; i < format_count; i++) {
     if (formats[i].format == format && formats[i].colorSpace == colorSpace) {
       ret_fmt = formats[i];
-      goto finish_format;
+      return ret_fmt;
     }
   }
 
-finish_format:
-  FREE(formats);
   return ret_fmt;
 }
 
@@ -107,27 +104,26 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   if (!app->surface) {
     wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    goto finish_best_mode;
+    return best_mode;
   }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    goto finish_best_mode;
+    return best_mode;
   }
 
   if (pres_mode_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device presentation modes, pres_mode_count equals 0");
-    goto finish_best_mode;
+    return best_mode;
   }
 
-  present_modes = (VkPresentModeKHR *) wlu_alloc(pres_mode_count * sizeof(VkPresentModeKHR));
-  if (!present_modes) goto finish_best_mode;
+  present_modes = (VkPresentModeKHR *) alloca(pres_mode_count * sizeof(VkPresentModeKHR));
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    goto finish_best_mode;
+    return best_mode;
   }
 
   /* Only mode that is guaranteed */
@@ -136,15 +132,13 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   for (uint32_t i = 0; i < pres_mode_count; i++) {
     if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) { /* For triple buffering */
       best_mode = present_modes[i];
-      goto finish_best_mode;
+      break;
     }
     else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
       best_mode = present_modes[i];
     }
   }
 
-finish_best_mode:
-  FREE(present_modes)
   return best_mode;
 }
 

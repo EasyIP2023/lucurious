@@ -58,13 +58,13 @@ static wlu_mem_block_t *mema_list = NULL;
 static wlu_mem_block_t *get_free_block(size_t bytes) {
 	wlu_mem_block_t *current = mema_list;
 	while (current) {
-		if (current->is_free && current->size >= bytes) {
+    if (current->is_free && current->size >= bytes) {
       current->is_free = false;
       return current;
     }
-		current = current->next;
+    current = current->next;
 	}
-	return NULL;
+  return NULL;
 }
 
 static wlu_mem_block_t *alloc_mem_block(size_t bytes) {
@@ -138,18 +138,26 @@ void *wlu_realloc(void *addr, size_t new_size) {
   return wlu_alloc(new_size);
 }
 
-/* Freeing memory in this case means to override the contents */
+/**
+* Freeing memory in this case means to override the contents
+* If memory address can't be accessed break
+* Node is most likely the end of linked list
+*/
 void wlu_free_block(void *addr) {
   wlu_mem_block_t *current = mema_list;
   while (current) {
-    if (addr == current) { current->is_free = true; return; }
+    if (!current->next) return;
+    if (addr == current->saddr) {
+      current->is_free = true;
+      return;
+    }
     current = current->next;
   }
 }
 
 /**
 * Releasing memory in this case means to
-* unmap all pages (remove page tables)
+* unmap all virtual pages (remove page tables)
 */
 void wlu_release_blocks() {
   void *next_block = NULL;

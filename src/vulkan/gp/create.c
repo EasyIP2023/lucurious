@@ -70,7 +70,6 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
     default: break;
   }
 
-  FREE(code);
   return shader_module;
 }
 

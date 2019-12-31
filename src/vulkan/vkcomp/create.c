@@ -87,38 +87,32 @@ VkResult wlu_create_physical_device(
   if (!app->instance) {
     wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
-    goto finish_devices;
+    return res;
   }
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkEnumeratePhysicalDevices failed, ERROR CODE: %d", res);
-    goto finish_devices;
+    return res;
   }
 
   if (device_count == 0) {
-    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] failed to find GPUs with Vulkan support!!! device_count equals 0");
-    goto finish_devices;
+    return VK_RESULT_MAX_ENUM;
   }
 
-  devices = (VkPhysicalDevice *) wlu_alloc(device_count * sizeof(VkPhysicalDevice));
-  if (!devices) {
-    res = VK_RESULT_MAX_ENUM;
-    goto finish_devices;
-  }
+  devices = (VkPhysicalDevice *) alloca(device_count * sizeof(VkPhysicalDevice));
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkEnumeratePhysicalDevices failed, ERROR CODE: %d", res);
-    goto finish_devices;
+    return res;
   }
 
   /**
   * get a physical device that is suitable
   * to do the graphics related task that we need
   */
-  VkExtensionProperties *eprops = VK_NULL_HANDLE;
   for (uint32_t i = 0; i < device_count; i++) {
     if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
       memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
@@ -128,14 +122,10 @@ VkResult wlu_create_physical_device(
   }
 
   if (app->physical_device == VK_NULL_HANDLE) {
-    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] failed to find a suitable GPU!!!");
-    goto finish_devices;
+    return VK_RESULT_MAX_ENUM;
   }
 
-finish_devices:
-  FREE(eprops);
-  FREE(devices);
   return res;
 }
 
@@ -156,20 +146,20 @@ VkResult wlu_create_logical_device(
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
-    goto finish_logical;
+    return res;
   }
 
   if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) {
     wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
-    goto finish_logical;
+    return res;
   }
 
   /* Will need to change this later but for now, This two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
-  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) wlu_alloc(dq_count * sizeof(VkDeviceQueueCreateInfo));
-  if (!pQueueCreateInfos) goto finish_logical;
+  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) alloca(dq_count * sizeof(VkDeviceQueueCreateInfo));
+  if (!pQueueCreateInfos) return res;
 
   for (uint32_t i = 0; i < dq_count; i++) {
     pQueueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -196,7 +186,7 @@ VkResult wlu_create_logical_device(
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkCreateDevice failed, ERROR CODE: %d", res);
-    goto finish_logical;
+    return res;
   }
 
   /**
@@ -210,8 +200,6 @@ VkResult wlu_create_logical_device(
   else
     vkGetDeviceQueue(app->device, app->indices.present_family, 0, &app->present_queue);
 
-finish_logical:
-  FREE(pQueueCreateInfos);
   return res;
 }
 
@@ -333,12 +321,12 @@ VkResult wlu_create_img_views(
   if (!app->sc_data[cur_scd].swap_chain) {
     wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
-    goto finish_create_img_views;
+    return res;
   }
 
   app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) wlu_alloc(
     app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers));
-  if (!app->sc_data[cur_scd].sc_buffs) goto finish_create_img_views;
+  if (!app->sc_data[cur_scd].sc_buffs) return res;
 
   set_sc_buffs_init_values(app, cur_scd);
 
@@ -350,19 +338,16 @@ VkResult wlu_create_img_views(
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, NULL);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
-    goto finish_create_img_views;
+    return res;
   }
 
-  sc_imgs = (VkImage *) wlu_alloc(app->sc_data[cur_scd].sic * sizeof(VkImage));
-  if (!sc_imgs) {
-    res = VK_RESULT_MAX_ENUM;
-    goto finish_create_img_views;
-  }
+  sc_imgs = (VkImage *) alloca(app->sc_data[cur_scd].sic * sizeof(VkImage));
+  if (!sc_imgs) return VK_RESULT_MAX_ENUM;
 
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, sc_imgs);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkGetSwapchainImagesKHR failed, ERROR CODE: %d", res);
-    goto finish_create_img_views;
+    return res;
   }
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
@@ -386,12 +371,10 @@ VkResult wlu_create_img_views(
     res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkCreateImageView failed, ERROR CODE: %d", res);
-      goto finish_create_img_views;
+      return res;
     }
   }
 
-finish_create_img_views:
-  FREE(sc_imgs);
   return res;
 }
 

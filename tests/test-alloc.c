@@ -28,21 +28,27 @@
 
 START_TEST(basic_alloc) {
   int *bytes = (int *) wlu_alloc(sizeof(int));
-  char *b = (char *) wlu_alloc(8);
+  char **b = (char **) wlu_alloc(2);
   float *f = (float *) wlu_alloc(sizeof(float));
   float *q = (float *) wlu_alloc(sizeof(float));
 
   *bytes = 30;
-  b = "abcdegf";
+  b[0] = "abcdegf";
+  b[1] = "hijklmn";
   *f = *q = 45.78f;
   wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
-  wlu_log_me(WLU_INFO, "b: %s", b);
+  wlu_log_me(WLU_INFO, "b[0]: %s", b[0]);
+  wlu_log_me(WLU_INFO, "b[1]: %s", b[1]);
   wlu_log_me(WLU_INFO, "f: %0.2f", *f);
   wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
   wlu_print_mb();
   wlu_free_block(b);
-  wlu_log_me(WLU_WARNING, "After freeing char *b alloc");
+  wlu_log_me(WLU_WARNING, "After freeing char **b alloc");
+  wlu_print_mb();
+
+  wlu_free_block(f);
+  wlu_log_me(WLU_WARNING, "After freeing float *f alloc");
   wlu_print_mb();
 
   wlu_release_blocks();

@@ -282,14 +282,16 @@ START_TEST(test_vulkan_client_create) {
   }
 
   /* Start of vertex buffer */
-  vertex_2D vertices[3];
+  vertex_2D vertices[3] = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+  };
   /* Let the compiler get the size of your array for you. Don't hard code */
   VkDeviceSize vsize = sizeof(vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_set_vector(&vertices[i].pos, pos_vertices[i], WLU_VEC2);
-    wlu_set_vector(&vertices[i].color, color_vertices[i], WLU_VEC3);
     wlu_print_vector(&vertices[i].pos, WLU_VEC2);
     wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
