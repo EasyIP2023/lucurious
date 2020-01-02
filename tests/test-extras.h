@@ -25,6 +25,19 @@
 #ifndef TEST_EXTRAS_H
 #define TEST_EXTRAS_H
 
+#define FREEME(app,wc) \
+  do { \
+    if (app) wlu_freeup_vk(app); \
+    if (wc) wlu_freeup_wc(wc); \
+    wlu_release_blocks(); \
+  } while(0);
+
+#define check_err(err,app,wc,shader) \
+  do { \
+    if (!shader && err) wlu_freeup_shader(app, shader); \
+    if (err) { FREEME(app, wc) ck_abort_msg(NULL); } \
+  } while(0);
+
 const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -46,11 +59,6 @@ const char *enabled_validation_layers[] = {
 vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};
 vec3 up = {0, -1, 0};
-
-/* used in test-spin-square.c */
-vec3 spin_eye = {2.0f, 2.0f, 2.0f};
-vec3 spin_center = {0.0f, 0.0f, 0.0f};
-vec3 spin_up = {0.0f, 0.0f, 1.0f};
 
 mat4 clip_matrix = {
   { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -123,5 +131,11 @@ vertex_3D vertices[36] = {
 /* used in test-square */
 uint16_t indices[6] = {0, 1, 2, 2, 3, 0};
 /* used in test-square */
+
+/* used in test-spin-square.c */
+vec3 spin_eye = {2.0f, 2.0f, 2.0f};
+vec3 spin_center = {0.0f, 0.0f, 0.0f};
+vec3 spin_up = {0.0f, 0.0f, 1.0f};
+/* used in test-spin-square.c */
 
 #endif

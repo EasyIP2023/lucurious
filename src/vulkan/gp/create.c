@@ -28,11 +28,8 @@
 #include <vlucur/values.h>
 #include <wlu/utils/log.h>
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module) {
-  if (*shader_module) {
-    vkDestroyShaderModule(app->device, *shader_module, NULL);
-    *shader_module = VK_NULL_HANDLE;
-  }
+void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module) {
+  if (shader_module) vkDestroyShaderModule(app->device, shader_module, NULL);
 }
 
 VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size) {
@@ -69,6 +66,8 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
       break;
     default: break;
   }
+
+  free(code);
 
   return shader_module;
 }

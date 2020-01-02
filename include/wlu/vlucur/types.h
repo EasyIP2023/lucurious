@@ -60,7 +60,7 @@ typedef enum _wlu_data_type {
   WLU_DESC_DATA = 0x00000004
 } wlu_data_type;
 
-typedef struct vkcomp {
+typedef struct _vkcomp {
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
   VkDebugReportCallbackEXT debug_report_callback;
 
@@ -78,7 +78,7 @@ typedef struct vkcomp {
   VkQueue present_queue;
 
   uint32_t sdc; /* swap chain data count */
-  struct swap_chain {
+  struct _sc_data {
     uint32_t sic; /* swap chain image count */
     VkSwapchainKHR swap_chain;
     struct swap_chain_buffers {
@@ -102,7 +102,7 @@ typedef struct vkcomp {
 
   uint32_t gdc;
   VkPipelineCache pipeline_cache;
-  struct graphics_pipeline_data {
+  struct _gp_data {
     VkRenderPass render_pass;
     VkPipelineLayout pipeline_layout;
     uint32_t gpc; /* graphics piplines count */
@@ -110,20 +110,21 @@ typedef struct vkcomp {
   } *gp_data;
 
   uint32_t cdc; /* command data count */
-  struct vkcmds {
+  struct _cmd_data {
     VkCommandPool cmd_pool;
     VkCommandBuffer *cmd_buffs;
   } *cmd_data;
 
   uint32_t bdc; /* buffer data count */
-  struct buffs_data {
+  struct _buffs_data {
     VkBuffer buff;
     VkDeviceMemory mem;
+    VkDeviceSize size;
     char *name;
   } *buffs_data;
 
   uint32_t ddc; /* descriptor data count */
-  struct desc_data {
+  struct _desc_data {
     VkDescriptorPool desc_pool;
     uint32_t dc; /* descriptor count */
     VkDescriptorSetLayout *desc_layouts;

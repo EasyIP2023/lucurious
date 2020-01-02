@@ -103,18 +103,20 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   if (!present_support) return ret;
 
   if (app->surface)
-    for (uint32_t i = 0; i < qfc; i++)
+    for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
       vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support[i]);
 
   for (uint32_t i = 0; i < qfc; i++) {
     if (queue_families[i].queueFlags & vkqfbits) {
       if (app->indices.graphics_family == UINT32_MAX) {
+        /* Retrieve Graphics Family Queue index */
         app->indices.graphics_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
       }
 
       /* Check to see if a device can create images on the surface we may have created */
       if (app->surface && present_support[i]) {
+        /* Retrieve Present Family Queue index */
         app->indices.present_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
         break;

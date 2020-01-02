@@ -145,8 +145,7 @@ void *wlu_realloc(void *addr, size_t new_size) {
 */
 void wlu_free_block(void *addr) {
   wlu_mem_block_t *current = mema_list;
-  while (current) {
-    if (!current->next) return;
+  while (current->next) {
     if (addr == current->saddr) {
       current->is_free = true;
       return;

@@ -139,16 +139,15 @@ VkResult wlu_create_depth_buff(
   VkImageViewType viewType
 );
 
-/*
- * Function creates buffers like a uniform buffer so that shaders can access
- * in a read-only fashion constant parameter data. Function also
- * creates buffers like a vertex buffer so that it's visible to the CPU
- */
+/**
+* Function creates buffers like a uniform buffer so that shaders can access
+* in a read-only fashion constant parameter data. Function also
+* creates buffers like a vertex buffer so that it's visible to the CPU
+*/
 VkResult wlu_create_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,
-  void *data,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   VkSharingMode sharingMode,
@@ -156,6 +155,12 @@ VkResult wlu_create_buffer(
   const uint32_t *pQueueFamilyIndices,
   char *buff_name,
   VkFlags requirements_mask
+);
+
+VkResult wlu_create_buff_mem_map(
+  vkcomp *app,
+  uint32_t cur_bd,
+  void *data
 );
 
 VkResult wlu_create_framebuffers(

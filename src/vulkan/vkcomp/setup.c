@@ -37,6 +37,15 @@ vkcomp *wlu_init_vk() {
 void wlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
+  /**
+  * To destory all uniform buffers
+  * if (app->buffs_data) {
+  *  for (uint32_t i = 0; i < app->bdc; i++) {
+  *    vkDestroyBuffer(app->device, uniform_buffs[i], NULL);
+  *    vkFreeMemory(app->device, uniform_buffs_mem[i], NULL);
+  *  }
+  * }
+  */
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++)
       if (app->cmd_data[i].cmd_buffs)
@@ -168,27 +177,27 @@ void wlu_freeup_vk(void *data) {
 VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
-      app->sc_data = (struct swap_chain *) wlu_alloc(arr_size * sizeof(struct swap_chain));
+      app->sc_data = (struct _sc_data *) wlu_alloc(arr_size * sizeof(struct _sc_data));
       if (!app->sc_data) return VK_RESULT_MAX_ENUM;
       app->sdc = arr_size;
       set_sc_data_init_values(app); break;
     case WLU_GP_DATA:
-      app->gp_data = (struct graphics_pipeline_data *) wlu_alloc(arr_size * sizeof(struct graphics_pipeline_data));
+      app->gp_data = (struct _gp_data *) wlu_alloc(arr_size * sizeof(struct _gp_data));
       if (!app->gp_data) return VK_RESULT_MAX_ENUM;
       app->gdc = arr_size;
       set_gp_data_init_values(app); break;
     case WLU_CMD_DATA:
-      app->cmd_data = (struct vkcmds *) wlu_alloc(arr_size * sizeof(struct vkcmds));
+      app->cmd_data = (struct _cmd_data *) wlu_alloc(arr_size * sizeof(struct _cmd_data));
       if (!app->cmd_data) return VK_RESULT_MAX_ENUM;
       app->cdc = arr_size;
       set_cmd_data_init_values(app); break;
     case WLU_BUFFS_DATA:
-      app->buffs_data = (struct buffs_data *) wlu_alloc(arr_size * sizeof(struct buffs_data));
+      app->buffs_data = (struct _buffs_data *) wlu_alloc(arr_size * sizeof(struct _buffs_data));
       if (!app->buffs_data) return VK_RESULT_MAX_ENUM;
       app->bdc = arr_size;
       set_buffs_data_init_values(app); break;
     case WLU_DESC_DATA:
-      app->desc_data = (struct desc_data *) wlu_alloc(arr_size * sizeof(struct desc_data));
+      app->desc_data = (struct _desc_data *) wlu_alloc(arr_size * sizeof(struct _desc_data));
       if (!app->desc_data) return VK_RESULT_MAX_ENUM;
       app->ddc = arr_size;
       set_desc_data_init_values(app); break;

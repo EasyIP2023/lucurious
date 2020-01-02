@@ -112,35 +112,37 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-// static struct wl_buffer *create_buffer(wclient *wc) {
-// 	int stride = 1024 * 4;
-// 	int size = stride * 681;
-//
-// 	int fd = create_shm_file(size);
-// 	if (fd < 0) {
-// 		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
-// 		return NULL;
-// 	}
-//
-// 	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-// 	if (wc->shm_data == MAP_FAILED) {
-// 		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
-// 		close(fd);
-// 		return NULL;
-// 	}
-//
-// 	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
-// 	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
-// 		stride, WL_SHM_FORMAT_ARGB8888);
-// 	wl_shm_pool_destroy(pool);
-//
-// 	// MagickImage is from waves.h
-// 	// memcpy(wc->shm_data, MagickImage, size);
-// 	return buffer;
-// }
+static struct wl_buffer *create_buffer(wclient *wc) {
+	int stride = 1024 * 4;
+	int size = stride * 681;
+
+	int fd = create_shm_file(size);
+	if (fd < 0) {
+		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
+		return NULL;
+	}
+
+	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (wc->shm_data == MAP_FAILED) {
+		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
+		close(fd);
+		return NULL;
+	}
+
+	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
+	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
+		stride, WL_SHM_FORMAT_ARGB8888);
+	wl_shm_pool_destroy(pool);
+
+	// MagickImage is from waves.h
+	// memcpy(wc->shm_data, MagickImage, size);
+	return buffer;
+}
 
 int wlu_connect_client(wclient *wc) {
   int err = 0;
+
+  ALL_UNUSED(create_buffer);
 
   wc->display = wl_display_connect(NULL);
   if (!wc->display) return EXIT_FAILURE;
@@ -233,11 +235,8 @@ void wlu_freeup_wc(void *data) {
     wl_registry_destroy(wc->registry);
   if (wc->display)
     wl_display_disconnect(wc->display);
-  if (wc->shm_data) {
-    int size = 1024 * 4 * 681;
-    munmap(wc->shm_data, size);
-  }
-
+  if (wc->shm_data)
+    munmap(wc->shm_data, 1024 * 4 * 681);
   if (wc->xdg_wm_base)
     free(wc->xdg_wm_base);
 

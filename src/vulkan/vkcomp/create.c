@@ -511,7 +511,6 @@ VkResult wlu_create_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,
-  void *data,
   VkBufferCreateFlagBits flags,
   VkBufferUsageFlags usage,
   VkSharingMode sharingMode,
@@ -551,7 +550,7 @@ VkResult wlu_create_buffer(
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   alloc_info.pNext = NULL;
-  alloc_info.allocationSize = mem_reqs.size;
+  alloc_info.allocationSize = app->buffs_data[cur_bd].size = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
   res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
@@ -573,6 +572,23 @@ VkResult wlu_create_buffer(
     return res;
   }
 
+  return res;
+}
+
+VkResult wlu_create_buff_mem_map(
+  vkcomp *app,
+  uint32_t cur_bd,
+  void *data
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->buffs_data[cur_bd].mem) {
+    wlu_log_me(WLU_DANGER, "VkDeviceMemory not created");
+    wlu_log_me(WLU_DANGER, "Must make a call to wlu_create_buffer()");
+    return res;
+  }
+
   /**
   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
   * With any buffer, you need to populate it with the data that
@@ -580,14 +596,14 @@ VkResult wlu_create_buffer(
   * the memory, you need to map it
   */
   void *p_data = NULL;
-  res = vkMapMemory(app->device, app->buffs_data[cur_bd].mem, 0, mem_reqs.size, 0, &p_data);
+  res = vkMapMemory(app->device, app->buffs_data[cur_bd].mem, 0, app->buffs_data[cur_bd].size, 0, &p_data);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkMapMemory failed, ERROR CODE: %d", res);
     return res;
   }
 
   if (data) {
-    p_data = memmove(p_data, data, size);
+    p_data = memmove(p_data, data, app->buffs_data[cur_bd].size);
     if (!p_data) {
       wlu_log_me(WLU_DANGER, "[x] void *p_data memmove failed");
       return res;
@@ -600,7 +616,7 @@ VkResult wlu_create_buffer(
   flush_range.memory = app->buffs_data[cur_bd].mem;
   /* the region that was modified will be flushed */
   flush_range.offset = 0;
-  flush_range.size = size;
+  flush_range.size = app->buffs_data[cur_bd].size;
   /* from offset 0 to size of buffer */
 
   /* refresh the cache */
