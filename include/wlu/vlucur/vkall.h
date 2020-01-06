@@ -254,7 +254,7 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
 
 /* Acquire the swapchain image in order to set its layout */
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cur_scd);
+VkResult wlu_acquire_next_sc_img(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img);
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,

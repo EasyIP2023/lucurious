@@ -324,7 +324,7 @@ VkResult wlu_create_img_views(
     return res;
   }
 
-  app->sc_data[cur_scd].sc_buffs = (struct swap_chain_buffers *) wlu_alloc(
+  app->sc_data[cur_scd].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK,
     app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers));
   if (!app->sc_data[cur_scd].sc_buffs) return res;
 
@@ -662,7 +662,7 @@ VkResult wlu_create_framebuffers(
     return res;
   }
 
-  app->sc_data[cur_scd].frame_buffs = (VkFramebuffer *) wlu_alloc(
+  app->sc_data[cur_scd].frame_buffs = wlu_alloc(WLU_SMALL_BLOCK,
     app->sc_data[cur_scd].sic * sizeof(VkFramebuffer));
   if (!app->sc_data[cur_scd].frame_buffs) return res;
 
@@ -709,11 +709,6 @@ VkResult wlu_create_cmd_pool(
     return res;
   }
 
-  /* create an array of cmd_buffs to call later in wlu_create_cmd_buffs */
-  app->cmd_data[cur_cmdd].cmd_buffs = (VkCommandBuffer *) wlu_alloc(
-    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer));
-  if (!app->cmd_data[cur_cmdd].cmd_buffs) return res;
-
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   create_info.pNext = NULL;
@@ -756,6 +751,10 @@ VkResult wlu_create_cmd_buffs(
   alloc_info.level = level;
   alloc_info.commandBufferCount = (uint32_t) app->sc_data[cur_scd].sic;
 
+  app->cmd_data[cur_pool].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK,
+    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer));
+  if (!app->cmd_data[cur_pool].cmd_buffs) return res;
+
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_data[cur_pool].cmd_buffs);
   if (res) {
     wlu_log_me(WLU_DANGER, "[x] vkAllocateCommandBuffers failed, ERROR CODE: %d", res);
@@ -775,7 +774,7 @@ VkResult wlu_create_cmd_buffs(
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->sc_data[cur_scd].sems = (struct semaphores *) wlu_alloc(
+  app->sc_data[cur_scd].sems = wlu_alloc(WLU_SMALL_BLOCK,
     app->sc_data[cur_scd].sic * sizeof(struct semaphores));
   if (!app->sc_data[cur_scd].sems) return res;
 

@@ -378,6 +378,7 @@ VkClearValue wlu_set_clear_value(
   uint32_t stencil
 );
 
+/* descriptorCount: Specify the amount of descriptors to update */
 VkWriteDescriptorSet wlu_write_desc_set(
   VkDescriptorSet dstSet,
   uint32_t dstBinding,

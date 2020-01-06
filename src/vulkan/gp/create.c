@@ -164,7 +164,7 @@ VkResult wlu_create_graphics_pipelines(
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
   app->gp_data[cur_gpd].gpc = gps_count;
-  app->gp_data[cur_gpd].graphics_pipelines = (VkPipeline *) wlu_alloc(gps_count * sizeof(VkPipeline));
+  app->gp_data[cur_gpd].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK, gps_count * sizeof(VkPipeline));
   if (!app->gp_data[cur_gpd].graphics_pipelines) return res;
 
   res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, app->gp_data[cur_gpd].graphics_pipelines);
@@ -224,7 +224,8 @@ VkResult wlu_create_desc_set_layouts(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->desc_data[cur_dd].desc_layouts = (VkDescriptorSetLayout *) wlu_alloc(app->desc_data[cur_dd].dc * sizeof(VkDescriptorSetLayout));
+  app->desc_data[cur_dd].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK,
+    app->desc_data[cur_dd].dc * sizeof(VkDescriptorSetLayout));
   if (!app->desc_data[cur_dd].desc_layouts) return res;
 
   for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++) {
@@ -279,16 +280,22 @@ VkResult wlu_create_desc_set(
     return res;
   }
 
+  if (!app->desc_data[cur_dd].desc_layouts) {
+    wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
+    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layouts()");
+    return res;
+  }
+
   VkDescriptorSetAllocateInfo alloc_info[psize];
   for (uint32_t i = 0; i < psize; i++) {
     alloc_info[i].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info[i].pNext = NULL;
     alloc_info[i].descriptorPool = app->desc_data[cur_dd].desc_pool;
-    alloc_info[i].descriptorSetCount = psize;
-    alloc_info[i].pSetLayouts = app->desc_data[cur_dd].desc_layouts; // For now
+    alloc_info[i].descriptorSetCount = app->desc_data[cur_dd].dc;
+    alloc_info[i].pSetLayouts = app->desc_data[cur_dd].desc_layouts;
   }
 
-  app->desc_data[cur_dd].desc_set = (VkDescriptorSet *) wlu_alloc(app->desc_data[cur_dd].dc * sizeof(VkDescriptorSet));
+  app->desc_data[cur_dd].desc_set = wlu_alloc(WLU_SMALL_BLOCK, app->desc_data[cur_dd].dc * sizeof(VkDescriptorSet));
   if (!app->desc_data[cur_dd].desc_set) return VK_RESULT_MAX_ENUM;
 
   res = vkAllocateDescriptorSets(app->device, alloc_info, app->desc_data[cur_dd].desc_set);

@@ -92,6 +92,6 @@ int main(int argc, char **argv) {
 
 exit_loop:
   if (c == -1 && track == 0) help_message();
-  wlu_release_blocks();
+  wlu_release_block();
   return EXIT_SUCCESS;
 }

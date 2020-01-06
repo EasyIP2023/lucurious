@@ -25,19 +25,16 @@
 #ifndef LUCOM_H
 #define LUCOM_H
 
+#define INAPI_CALLS 1
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
-
-/**
-* The amount of time, one waits for a command buffer to complete
-* unit measured in nanoseconds
-*/
-#define FENCE_TIMEOUT 100000000
 
 #define POW2_DEC(pow) 1 << pow
 
@@ -60,6 +57,11 @@
 #define ALL_UNUSED_IMPL_(nargs) UNUSED ## nargs
 #define ALL_UNUSED_IMPL(nargs) ALL_UNUSED_IMPL_(nargs)
 #define ALL_UNUSED(...) ALL_UNUSED_IMPL(VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
+
+typedef enum _wlu_block_type {
+  WLU_LARGE_BLOCK = 0x00000000,
+  WLU_SMALL_BLOCK = 0x00000001
+} wlu_block_type;
 
 #include <wlu/utils/mm.h>
 

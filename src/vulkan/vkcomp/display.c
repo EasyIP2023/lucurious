@@ -169,7 +169,7 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cur_scd) {
+VkResult wlu_acquire_next_sc_img(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data[cur_scd].sems) {
@@ -178,9 +178,8 @@ VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cu
     return res;
   }
 
-  /* UINT64_MAX disables timeout */
-  res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, UINT64_MAX,
-                              app->sc_data[cur_scd].sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
+  res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
+                              app->sc_data[cur_scd].sems[*cur_img].image, VK_NULL_HANDLE, cur_img);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
     wlu_freeup_sc(app);
     return res;
@@ -242,7 +241,7 @@ VkResult wlu_queue_graphics_queue(
     }
 
     /* Use fence to synchronize application with rendering operation */
-    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
+    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, GENERAL_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
       goto finish_gq_submit;

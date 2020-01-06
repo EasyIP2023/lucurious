@@ -43,6 +43,12 @@
 #define HEIGHT 600
 #define DEPTH 1
 
+static wlu_otma_mems ma = {
+  .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
+  .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
+  .cmdd_cnt = 10, .bd_cnt = 10, .dd_cnt = 10
+};
+
 static struct uniform_block_data {
   mat4 proj;
   mat4 view;
@@ -90,6 +96,8 @@ static VkResult init_buffs(vkcomp *app) {
 
 START_TEST(test_vulkan_client_create_3D) {
   VkResult err;
+
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   wclient *wc = wlu_init_wc();
   check_err(!wc, NULL, NULL, NULL)
@@ -172,7 +180,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff, cur_scd);
+  err = wlu_acquire_next_sc_img(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   float fovy = wlu_set_fovy(45.0f);
@@ -198,7 +206,7 @@ START_TEST(test_vulkan_client_create_3D) {
   cur_bd++;
 
   /* MVP transformation is in a single uniform buffer object, So descriptor sets is 1 */
-  app->desc_data[cur_dd].dc = NUM_DESCRIPTOR_SETS;
+  app->desc_data[cur_dd].dc = 1;
   VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(
     0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS, VK_SHADER_STAGE_VERTEX_BIT, NULL
   );

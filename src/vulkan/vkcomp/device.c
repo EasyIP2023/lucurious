@@ -68,7 +68,7 @@ VkResult get_extension_properties(
   if (res) return res;
 
   /* set available instance extensions */
-  *eprops = (VkExtensionProperties *) wlu_alloc(extension_count * sizeof(VkExtensionProperties));
+  *eprops = wlu_alloc(WLU_SMALL_BLOCK, extension_count * sizeof(VkExtensionProperties));
   if (!(*eprops)) return VK_RESULT_MAX_ENUM;
 
   *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));

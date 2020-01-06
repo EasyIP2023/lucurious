@@ -29,7 +29,7 @@
   do { \
     if (app) wlu_freeup_vk(app); \
     if (wc) wlu_freeup_wc(wc); \
-    wlu_release_blocks(); \
+    wlu_release_block(); \
   } while(0);
 
 #define check_err(err,app,wc,shader) \

@@ -23,7 +23,7 @@ static void set_values(wclient *wc) {
 }
 
 wclient *wlu_init_wc() {
-  wclient *wc = wlu_alloc(sizeof(wclient));
+  wclient *wc = wlu_alloc(WLU_SMALL_BLOCK, sizeof(wclient));
   if (!wc) return wc;
   set_values(wc);
   return wc;
@@ -54,36 +54,6 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   .close = xdg_toplevel_handle_close,
 };
 
-/* static void pointer_handle_button(void *data, struct wl_pointer *pointer,
-		uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
-  wclient *wc = (wclient *) data;
-  ALL_UNUSED(time, pointer);
-	if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
-		xdg_toplevel_move(wc->xdg_toplevel, wc->seat, serial);
-	}
-} */
-
-static const struct wl_pointer_listener pointer_listener = {
-	.enter = noop,
-	.leave = noop,
-	.motion = noop,
-	.button = noop,
-	.axis = noop,
-};
-
-static void seat_handle_capabilities(void *data, struct wl_seat *seat,
-		uint32_t capabilities) {
-  ALL_UNUSED(data);
-	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
-		struct wl_pointer *pointer = wl_seat_get_pointer(seat);
-		wl_pointer_add_listener(pointer, &pointer_listener, seat);
-	}
-}
-
-static const struct wl_seat_listener seat_listener = {
-	.capabilities = seat_handle_capabilities,
-};
-
 static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t name,
 	  const char *interface, uint32_t version) {
   wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
@@ -95,10 +65,6 @@ static void global_registry_handler(void *data, struct wl_registry *registry, ui
     wc->xdg_wm_base = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
   } else if (strcmp(interface, wl_shm_interface.name) == 0) {
     wc->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
-  } else if (strcmp(interface, wl_seat_interface.name) == 0) {
-    ALL_UNUSED(seat_listener);
-    // wc->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
-    // wl_seat_add_listener(wc->seat, &seat_listener, NULL);
   }
 }
 
@@ -113,30 +79,29 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 static struct wl_buffer *create_buffer(wclient *wc) {
-	int stride = 1024 * 4;
-	int size = stride * 681;
+  int stride = 1024 * 4;
+  int size = stride * 681;
 
-	int fd = create_shm_file(size);
-	if (fd < 0) {
-		wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
-		return NULL;
-	}
+  int fd = create_shm_file(size);
+  if (fd < 0) {
+    wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
+    return NULL;
+  }
 
-	wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	if (wc->shm_data == MAP_FAILED) {
-		wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
-		close(fd);
-		return NULL;
-	}
+  wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (wc->shm_data == MAP_FAILED) {
+    wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
+    close(fd);
+    return NULL;
+  }
 
-	struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
-	struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681,
-		stride, WL_SHM_FORMAT_ARGB8888);
-	wl_shm_pool_destroy(pool);
+  struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
+  struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681, stride, WL_SHM_FORMAT_ARGB8888);
+  wl_shm_pool_destroy(pool);
 
 	// MagickImage is from waves.h
 	// memcpy(wc->shm_data, MagickImage, size);
-	return buffer;
+  return buffer;
 }
 
 int wlu_connect_client(wclient *wc) {

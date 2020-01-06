@@ -27,10 +27,16 @@
 #include <check.h>
 
 START_TEST(basic_alloc) {
-  int *bytes = (int *) wlu_alloc(sizeof(int));
-  char **b = (char **) wlu_alloc(2);
-  float *f = (float *) wlu_alloc(sizeof(float));
-  float *q = (float *) wlu_alloc(sizeof(float));
+  wlu_otma_mems ma = {
+    .inta_cnt = 1, .cha_cnt = 2,
+    .fla_cnt = 1, .dba_cnt = 1,
+  };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
+  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(int));
+  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK, 2 * sizeof(b));
+  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(float));
+  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(float));
 
   *bytes = 30;
   b[0] = "abcdegf";
@@ -43,16 +49,16 @@ START_TEST(basic_alloc) {
   wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
   wlu_print_mb();
-  wlu_free_block(b);
+  FREE(b);
   wlu_log_me(WLU_WARNING, "After freeing char **b alloc");
   wlu_print_mb();
 
-  wlu_free_block(f);
+  FREE(f);
   wlu_log_me(WLU_WARNING, "After freeing float *f alloc");
   wlu_print_mb();
 
-  wlu_release_blocks();
-  bytes=NULL; b=NULL; f=NULL; q=NULL;
+  wlu_release_block();
+  bytes=NULL; q=NULL;
 } END_TEST;
 
 Suite *alloc_suite(void) {

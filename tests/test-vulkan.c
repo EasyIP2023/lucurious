@@ -32,14 +32,22 @@
 #include "test-extras.h"
 
 START_TEST(test_init_vulkan) {
+  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
   ck_assert_ptr_nonnull(app);
   FREEME(app, NULL)
 } END_TEST;
 
 START_TEST(test_set_global_layers) {
-  VkResult err;
   wlu_log_me(WLU_WARNING, "SECOND TEST");
+
+  VkResult err;
+
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
   VkLayerProperties *vk_props = VK_NULL_HANDLE;
 
@@ -61,6 +69,11 @@ START_TEST(test_set_global_layers) {
 
 START_TEST(test_create_instance) {
   VkResult err;
+  wlu_log_me(WLU_WARNING, "THIRD TEST");
+
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
@@ -84,6 +97,11 @@ START_TEST(test_create_instance) {
 
 START_TEST(test_enumerate_device) {
   VkResult err;
+  wlu_log_me(WLU_WARNING, "FOURTH TEST");
+
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
@@ -117,6 +135,11 @@ START_TEST(test_enumerate_device) {
 
 START_TEST(test_set_logical_device) {
   VkResult err;
+  wlu_log_me(WLU_WARNING, "FIFTH TEST");
+
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
@@ -163,6 +186,11 @@ START_TEST(test_set_logical_device) {
 
 START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
+
+  wlu_log_me(WLU_WARNING, "SIXTH TEST");
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);

@@ -26,62 +26,6 @@
 #include <wlu/vlucur/vkall.h>
 #include <exec/helpers.h>
 
-/* https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c */
-char **str_split(char *a_str, const char a_delim) {
-  char  **result   = NULL;
-  size_t count     = 0;
-  char *tmp        = a_str;
-  char *last_comma = NULL;
-  char delim[2];
-
-  delim[0] = a_delim;
-  delim[1] = 0;
-
-  /* Count how many elements will be extracted. */
-  while (*tmp){
-    if (a_delim == *tmp) {
-      count++;
-      last_comma = tmp;
-    }
-    tmp++;
-  }
-
-  /* Just encase user supplies wrong number of arguments */
-  if (count != 1)
-    return NULL;
-
-  /* Add space for trailing token. */
-  count += last_comma < (a_str + strlen(a_str) - 1);
-
-  /* Add space for terminating null string so caller
-     knows where the list of returned strings ends. */
-  count++;
-
-  result = wlu_alloc(count);
-  if (!result) return NULL;
-
-  if (result) {
-    size_t idx  = 0;
-    char *token = strtok(a_str, delim);
-
-    while (token) {
-      if (idx > count) {
-        wlu_free_block(result);
-        return result;
-      }
-      *(result + idx++) = strdup(token);
-      token = strtok(0, delim);
-    }
-    if (idx != (count - 1)) {
-      wlu_free_block(result);
-      return result;
-    }
-    *(result + idx) = 0;
-  }
-
-  return result;
-}
-
 VkQueueFlagBits ret_qfambit(char *str) {
   if (!strcmp(str, "VK_QUEUE_GRAPHICS_BIT")) return VK_QUEUE_GRAPHICS_BIT;
   if (!strcmp(str, "VK_QUEUE_COMPUTE_BIT")) return VK_QUEUE_COMPUTE_BIT;

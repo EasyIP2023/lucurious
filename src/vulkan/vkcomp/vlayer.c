@@ -70,7 +70,7 @@ VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
   }
 
   /* allocate space */
-  *vk_props = (VkLayerProperties *) wlu_alloc(layer_count * sizeof(VkLayerProperties));
+  *vk_props = wlu_alloc(WLU_SMALL_BLOCK, layer_count * sizeof(VkLayerProperties));
   if (!(*vk_props)) {
     res = VK_RESULT_MAX_ENUM;
     goto finish_vk_props;

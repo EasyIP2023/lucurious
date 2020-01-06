@@ -40,7 +40,13 @@
 #define WIDTH 800
 #define HEIGHT 600
 
-VkResult init_buffs(vkcomp *app) {
+static wlu_otma_mems ma = {
+  .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
+  .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
+  .cmdd_cnt = 10, .bd_cnt = 10
+};
+
+static VkResult init_buffs(vkcomp *app) {
   VkResult err;
 
   err = wlu_otba(app, 4, WLU_BUFFS_DATA);
@@ -60,6 +66,8 @@ VkResult init_buffs(vkcomp *app) {
 
 START_TEST(test_vulkan_client_create) {
   VkResult err;
+
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   wclient *wc = wlu_init_wc();
   check_err(!wc, NULL, NULL, NULL)
@@ -132,7 +140,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff, cur_scd);
+  err = wlu_acquire_next_sc_img(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_layout(app, cur_gpd, 0, NULL, 0, NULL);

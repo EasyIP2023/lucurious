@@ -25,6 +25,12 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+/**
+* The amount of time, one waits for a command buffer to complete
+* unit measured in nanoseconds
+*/
+#define GENERAL_TIMEOUT 100000000
+
 typedef struct _vertex_2D {
   vec2 pos;
   vec3 color;
