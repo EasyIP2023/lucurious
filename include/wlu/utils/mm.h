@@ -48,7 +48,6 @@ typedef struct _wlu_otma_mems {
 bool wlu_otma(wlu_otma_mems ma);
 void wlu_release_block();
 
-
 #ifdef DEV_ENV
 void wlu_print_mb();
 #endif

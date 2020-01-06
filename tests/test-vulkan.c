@@ -45,7 +45,7 @@ START_TEST(test_set_global_layers) {
 
   VkResult err;
 
-  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 200 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
@@ -71,7 +71,7 @@ START_TEST(test_create_instance) {
   VkResult err;
   wlu_log_me(WLU_WARNING, "THIRD TEST");
 
-  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
@@ -99,7 +99,7 @@ START_TEST(test_enumerate_device) {
   VkResult err;
   wlu_log_me(WLU_WARNING, "FOURTH TEST");
 
-  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
@@ -137,7 +137,7 @@ START_TEST(test_set_logical_device) {
   VkResult err;
   wlu_log_me(WLU_WARNING, "FIFTH TEST");
 
-  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
@@ -188,7 +188,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
 
   wlu_log_me(WLU_WARNING, "SIXTH TEST");
-  wlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 50 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();

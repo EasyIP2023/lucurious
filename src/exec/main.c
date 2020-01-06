@@ -33,6 +33,13 @@ int main(int argc, char **argv) {
   int c = 0;
   int8_t track = 0;
 
+  wlu_otma_mems ma = {
+    .vkcomp_cnt = 1,
+    .vkval_layer_cnt = 200,
+    .vkext_props_cnt = 200
+  };
+  if (!wlu_otma(ma)) return EXIT_FAILURE;
+
   while (1) {
     int option_index = 0;
 
