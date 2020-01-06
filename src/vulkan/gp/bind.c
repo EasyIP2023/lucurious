@@ -34,7 +34,7 @@ void wlu_bind_pipeline(
   VkPipelineBindPoint pipelineBindPoint,
   VkPipeline pipeline
 ) {
-  vkCmdBindPipeline(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdBindPipeline(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                     pipelineBindPoint, pipeline);
 }
 
@@ -49,7 +49,7 @@ void wlu_bind_desc_sets(
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
-  vkCmdBindDescriptorSets(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint,
+  vkCmdBindDescriptorSets(app->cmd_data[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint,
                           app->gp_data[cur_gpd].pipeline_layout, firstSet,
                           app->desc_data[cur_dd].dc, app->desc_data[cur_dd].desc_set,
                           dynamicOffsetCount, pDynamicOffsets);
@@ -64,7 +64,7 @@ void wlu_bind_vertex_buffs_to_cmd_buff(
   const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 ) {
-  vkCmdBindVertexBuffers(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                         firstBinding, bindingCount,
                         pBuffers, offsets);
 }
@@ -77,6 +77,6 @@ void wlu_bind_index_buff_to_cmd_buff(
   VkDeviceSize offset,
   VkIndexType indexType
 ) {
-  vkCmdBindIndexBuffer(app->cmd_pbs[cur_pool].cmd_buffs[cur_buff],
+  vkCmdBindIndexBuffer(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
                       buffer, offset, indexType);
 }

@@ -22,15 +22,40 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_FILE_H
-#define WLU_FILE_H
+#ifndef WLU_MM_H
+#define WLU_MM_H
 
-typedef struct wlu_file_info {
-  char *bytes;
-  long byte_size;
-} wlu_file_info;
+typedef struct _wlu_otma_mems {
+  uint32_t inta_cnt;  /* int array count */
+  uint32_t cha_cnt;   /* char array count */
+  uint32_t fla_cnt;    /* float array count */
+  uint32_t dba_cnt;   /* double array count */
+  uint32_t vkext_props_cnt;
+  uint32_t vkval_layer_cnt;
+  uint32_t vkcomp_cnt;
+  uint32_t wclient_cnt;
+  uint32_t desc_cnt;  /* descriptor count */
+  uint32_t gp_cnt;    /* Graphics pipelines count */
+  uint32_t si_cnt;    /* swap chain image count */
+  uint32_t scd_cnt;   /* swap chain data count */
+  uint32_t gpd_cnt;   /* graphics pipeline data count */
+  uint32_t cmdd_cnt;  /* command data count */
+  uint32_t bd_cnt;    /* buffer data count */
+  uint32_t dd_cnt;    /* descriptor data count */
+} wlu_otma_mems;
 
-/* A way to load SPIR-V byte code */
-wlu_file_info wlu_read_file(const char *filename);
+/* [one time memory allocater] For creating large memory blocks once */
+bool wlu_otma(wlu_otma_mems ma);
+void wlu_release_block();
+
+#ifdef DEV_ENV
+void wlu_print_mb();
+#endif
+
+#ifdef INAPI_CALLS
+void *wlu_alloc(wlu_block_type type, size_t bytes);
+void *wlu_realloc(void *addr, size_t new_size);
+void wlu_free_block(void *addr);
+#endif
 
 #endif

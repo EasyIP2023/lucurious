@@ -1,31 +1,31 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #ifndef WLU_GRAPHICS_PIPELINE_H
 #define WLU_GRAPHICS_PIPELINE_H
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule *shader_module);
+void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module);
 
 VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
 
@@ -39,8 +39,6 @@ VkResult wlu_create_render_pass(
   uint32_t dependencyCount,
   const VkSubpassDependency *pDependencies
 );
-
-VkResult wlu_create_gp_data(vkcomp *app);
 
 VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
@@ -73,9 +71,7 @@ VkResult wlu_create_pipeline_layout(
   const VkPushConstantRange *pPushConstantRanges
 );
 
-VkResult wlu_create_desc_data(vkcomp *app, uint32_t desc_count);
-
-VkResult wlu_create_desc_set_layout(
+VkResult wlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
@@ -86,7 +82,8 @@ VkResult wlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
-  uint32_t psize
+  uint32_t psize,
+  VkDescriptorPoolSize *pool_sizes
 );
 
 /*
@@ -102,7 +99,7 @@ VkResult wlu_create_desc_set(
 void wlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
-  uint32_t cur_sc,
+  uint32_t cur_scd,
   uint32_t cur_gpd,
   uint32_t x,
   uint32_t y,
@@ -116,7 +113,7 @@ void wlu_exec_begin_render_pass(
 void wlu_exec_stop_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
-  uint32_t cur_sc
+  uint32_t cur_scd
 );
 
 void wlu_bind_pipeline(
@@ -348,7 +345,7 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
   const VkDynamicState *pDynamicStates
 );
 
-VkDescriptorSetLayoutBinding wlu_set_desc_set(
+VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
@@ -356,10 +353,21 @@ VkDescriptorSetLayoutBinding wlu_set_desc_set(
   const VkSampler *pImmutableSamplers
 );
 
-VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
+VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_layout_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding *pBindings
+);
+
+VkDescriptorPoolSize wlu_set_desc_pool_size(
+  VkDescriptorType type,
+  uint32_t descriptorCount
+);
+
+VkDescriptorBufferInfo wlu_set_desc_buff_info(
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize range
 );
 
 VkClearValue wlu_set_clear_value(
@@ -370,14 +378,24 @@ VkClearValue wlu_set_clear_value(
   uint32_t stencil
 );
 
-void wlu_update_descriptor_sets(
-  vkcomp *app,
-  uint32_t cur_dd,
+/* descriptorCount: Specify the amount of descriptors to update */
+VkWriteDescriptorSet wlu_write_desc_set(
+  VkDescriptorSet dstSet,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
+  uint32_t descriptorCount,
   VkDescriptorType descriptorType,
-  VkDescriptorBufferInfo *pBufferInfo,
-  uint32_t psize
+  const VkDescriptorImageInfo *pImageInfo,
+  const VkDescriptorBufferInfo *pBufferInfo,
+  const VkBufferView *pTexelBufferView
+);
+
+void wlu_update_desc_sets(
+  vkcomp *app,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
 );
 
 #endif

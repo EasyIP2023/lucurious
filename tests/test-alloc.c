@@ -23,33 +23,54 @@
 */
 
 #include <lucom.h>
-#include <wlu/wclient/client.h>
+#include <wlu/utils/log.h>
 #include <check.h>
 
-START_TEST(init_wayland_client) {
-  wlu_otma_mems ma = { .wclient_cnt = 1 };
+START_TEST(basic_alloc) {
+  wlu_otma_mems ma = {
+    .inta_cnt = 1, .cha_cnt = 2,
+    .fla_cnt = 1, .dba_cnt = 1,
+  };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
-  wclient *wc = NULL;
-  wc = wlu_init_wc();
+  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(int));
+  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK, 2 * sizeof(b));
+  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(float));
+  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK, sizeof(float));
 
-  ck_assert_ptr_nonnull(wc);
+  *bytes = 30;
+  b[0] = "abcdegf";
+  b[1] = "hijklmn";
+  *f = *q = 45.78f;
+  wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
+  wlu_log_me(WLU_INFO, "b[0]: %s", b[0]);
+  wlu_log_me(WLU_INFO, "b[1]: %s", b[1]);
+  wlu_log_me(WLU_INFO, "f: %0.2f", *f);
+  wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
-  wlu_freeup_wc(wc);
-  wc = NULL;
+  wlu_print_mb();
+  FREE(b);
+  wlu_log_me(WLU_WARNING, "After freeing char **b alloc");
+  wlu_print_mb();
+
+  FREE(f);
+  wlu_log_me(WLU_WARNING, "After freeing float *f alloc");
+  wlu_print_mb();
+
+  wlu_release_block();
+  bytes=NULL; q=NULL;
 } END_TEST;
 
-
-Suite *wclient_suite(void) {
+Suite *alloc_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
-  s = suite_create("WClient");
+  s = suite_create("Alloc");
 
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, init_wayland_client);
+  tcase_add_test(tc_core, basic_alloc);
   suite_add_tcase(s, tc_core);
 
   return s;
@@ -58,11 +79,8 @@ Suite *wclient_suite(void) {
 int main(void) {
   int number_failed;
 
-  Suite *s;
-  SRunner *sr;
-
-  s = wclient_suite();
-  sr = srunner_create(s);
+  Suite *s = alloc_suite();
+  SRunner *sr = srunner_create(s);
 
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);

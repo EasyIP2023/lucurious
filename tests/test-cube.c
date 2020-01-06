@@ -1,26 +1,28 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
+#define INCLUDE_MATRIX_H 1
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -29,7 +31,6 @@
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
-#include <wlu/vlucur/matrix.h>
 
 #include <signal.h>
 #include <check.h>
@@ -42,7 +43,13 @@
 #define HEIGHT 600
 #define DEPTH 1
 
-struct uniform_block_data {
+static wlu_otma_mems ma = {
+  .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
+  .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
+  .cmdd_cnt = 10, .bd_cnt = 10, .dd_cnt = 10
+};
+
+static struct uniform_block_data {
   mat4 proj;
   mat4 view;
   mat4 model;
@@ -50,7 +57,7 @@ struct uniform_block_data {
   mat4 mvp;
 } ubd;
 
-void wlu_print_matrices() {
+static void wlu_print_matrices() {
   wlu_log_me(WLU_INFO, "Perspective Matrix");
   wlu_log_me(WLU_INFO, "Projection from camera to screen");
   wlu_print_matrix(ubd.proj, WLU_MAT4);
@@ -66,156 +73,100 @@ void wlu_print_matrices() {
   wlu_print_matrix(ubd.mvp, WLU_MAT4);
 }
 
-void freeme(vkcomp *app, wclient *wc) {
-  wlu_freeup_vk(app);
-  wlu_freeup_wc(wc);
-  wlu_freeup_watchme();
+static VkResult init_buffs(vkcomp *app) {
+  VkResult err;
+
+  err = wlu_otba(app, 2, WLU_BUFFS_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_SC_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_GP_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_CMD_DATA);
+  if (err) return err;
+
+  err = wlu_otba(app, 1, WLU_DESC_DATA);
+  if (err) return err;
+
+  return err;
 }
 
 START_TEST(test_vulkan_client_create_3D) {
   VkResult err;
 
+  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+
   wclient *wc = wlu_init_wc();
-  if (!wc) {
-    wlu_log_me(WLU_DANGER, "[x] wlu_init_wc failed!!");
-    ck_abort_msg(NULL);
-  }
+  check_err(!wc, NULL, NULL, NULL)
 
   vkcomp *app = wlu_init_vk();
-  if (!app) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_init_vk failed!!");
-    ck_abort_msg(NULL);
-  }
+  check_err(!app, NULL, wc, NULL)
 
-  /* Signal handler for this process */
-  err = wlu_watch_me(SIGSEGV, getpid());
-  if (err) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
-
-  wlu_add_watchme_info(1, app, 1, wc, 0, NULL);
+  err = init_buffs(app);
+  check_err(err, app, wc, NULL)
 
   err = wlu_create_instance(app, "Draw Cube", "Desktop Engine", 1, enabled_validation_layers, 4, instance_extensions);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   err = wlu_set_debug_message(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
-  if (wlu_connect_client(wc)) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to connect client");
-    ck_abort_msg(NULL);
-  }
+  check_err(wlu_connect_client(wc), app, wc, NULL)
 
   /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to connect to vulkan surfaceKHR");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
-  if (capabilities.minImageCount == UINT32_MAX) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
-  /*
-   * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
-   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
-   * SRGB if used for colorSpace if available, because it
-   * results in more accurate perceived colors
-   */
+  check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
+
+  /**
+  * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
+  * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
+  * SRGB if used for colorSpace if available, because it
+  * results in more accurate perceived colors
+  */
   VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
-  if (surface_fmt.format == VK_FORMAT_UNDEFINED) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
+  check_err(surface_fmt.format == VK_FORMAT_UNDEFINED, app, wc, NULL)
 
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
-  if (pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR) {
-    freeme(app, wc);
-    ck_abort_msg(NULL);
-  }
+  check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
   VkExtent3D extent3D = wlu_choose_3D_swap_extent(capabilities, WIDTH, HEIGHT, DEPTH);
-  if (extent3D.width == UINT32_MAX) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] choose_swap_extent failed, extent3D.width equals %d", extent3D.width);
-    ck_abort_msg(NULL);
-  }
+  check_err(extent3D.width == UINT32_MAX, app, wc, NULL)
 
-  err = wlu_create_swap_chain(app, capabilities, surface_fmt, pres_mode, extent3D.width, extent3D.height);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create swap chain");
-    ck_abort_msg(NULL);
-  }
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0, cur_bd = 0, cur_cmd = 0;
+  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent3D.width, extent3D.height);
+  check_err(err, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_sc = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0;
-  err = wlu_create_cmd_pool(app, cur_sc, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create command pool, ERROR CODE: %d", err);
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_cmd_pool(app, cur_scd, cur_cmd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create command buffers, ERROR CODE: %d", err);
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  check_err(err, app, wc, NULL)
 
-  err = wlu_exec_begin_cmd_buffs(app, cur_pool, cur_sc, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to start command buffer recording");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_exec_begin_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_img_views(app, cur_sc, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create image views");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_img_views(app, cur_scd, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_depth_buff(app, cur_sc, VK_FORMAT_D16_UNORM,
+  err = wlu_create_depth_buff(app, cur_scd, VK_FORMAT_D16_UNORM,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_IMAGE_TYPE_2D, extent3D,
@@ -223,102 +174,67 @@ START_TEST(test_vulkan_client_create_3D) {
     VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_VIEW_TYPE_2D
   );
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_depth_buff failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_semaphores(app, cur_sc);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_semaphores failed");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_semaphores(app, cur_scd);
+  check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_retrieve_swapchain_img(app, &cur_buff, cur_sc);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_retrieve_swapchain_img failed");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_acquire_next_sc_img(app, cur_scd, &cur_buff);
+  check_err(err, app, wc, NULL)
 
   float fovy = wlu_set_fovy(45.0f);
   float hw = (float) extent3D.width / (float) extent3D.height;
   if (extent3D.width > extent3D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(ubd.view, eye, center, up);
-  wlu_set_matrix(ubd.model, model_matrix, sizeof(model_matrix));
-  wlu_set_matrix(ubd.clip, clip_matrix, sizeof(clip_matrix));
+  wlu_set_matrix(ubd.model, model_matrix, WLU_MAT4);
+  wlu_set_matrix(ubd.clip, clip_matrix, WLU_MAT4);
   wlu_set_mvp_matrix(ubd.mvp, &ubd.clip, &ubd.proj, &ubd.view, &ubd.model);
   wlu_print_matrices();
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
   err = wlu_create_buffer(
-    app, sizeof(ubd.mvp), ubd.mvp, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    app, cur_bd, sizeof(ubd.mvp), 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "uniform",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_buffer failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_desc_data(app, NUM_DESCRIPTOR_SETS);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_data() failed!");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_buff_mem_map(app, cur_bd, ubd.mvp);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
 
-  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set(
-    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS,
-    VK_SHADER_STAGE_VERTEX_BIT, NULL
+  /* MVP transformation is in a single uniform buffer object, So descriptor sets is 1 */
+  app->desc_data[cur_dd].dc = 1;
+  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(
+    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS, VK_SHADER_STAGE_VERTEX_BIT, NULL
   );
 
-  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_info(0, 1, &desc_set);
+  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_layout_info(0, 1, &desc_set);
 
   /* Using same layout for all obects for now */
-  err = wlu_create_desc_set_layout(app, cur_dd, &desc_set_info);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_set_desc_set_info failed");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
+  check_err(err, app, wc, NULL)
 
-  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_pool failed");
-    ck_abort_msg(NULL);
-  }
+  VkDescriptorPoolSize pool_sizes[NUM_DESCRIPTOR_SETS];
+  pool_sizes[0] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+
+  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS, pool_sizes);
+  check_err(err, app, wc, NULL)
 
   err = wlu_create_desc_set(app, cur_dd, NUM_DESCRIPTOR_SETS);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_desc_set failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
-  wlu_update_descriptor_sets(app, cur_dd, 0, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                             &app->buffs_data[0].buff_info, NUM_DESCRIPTOR_SETS);
+  VkDescriptorBufferInfo buff_info = wlu_set_desc_buff_info(app->buffs_data[0].buff, 0, sizeof(ubd.mvp));
+  VkWriteDescriptorSet write = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
+                               app->desc_data[cur_dd].dc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
+                               &buff_info, NULL);
 
-  /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_gp_data(app);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_gp_data failed");
-    ck_abort_msg(NULL);
-  }
+  wlu_update_desc_sets(app, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   err = wlu_create_pipeline_layout(app, cur_gpd, NUM_DESCRIPTOR_SETS, &app->desc_data[cur_dd].desc_layouts[0], 0, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_layout failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   /* start of render pass creation */
   wlu_log_me(WLU_INFO, "Start of render pass creation");
@@ -332,7 +248,7 @@ START_TEST(test_vulkan_client_create_3D) {
   );
 
   /* Create render pass stencil/depth attachment for depth buffer */
-  attachments[1] = wlu_set_attachment_desc(app->sc[cur_sc].depth.format,
+  attachments[1] = wlu_set_attachment_desc(app->sc_data[cur_scd].depth.format,
     VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
@@ -343,11 +259,7 @@ START_TEST(test_vulkan_client_create_3D) {
   VkSubpassDescription subpass = wlu_set_subpass_desc(0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
 
   err = wlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_render_pass failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   wlu_log_me(WLU_SUCCESS, "Successfully created the render pass!!!");
   /* End of render pass creation */
@@ -357,52 +269,36 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
   wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
                              fragShaderText, "frag.spv", "main");
-  if (!shi_frag.bytes) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(!shi_frag.bytes, app, wc, NULL)
 
   wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
   wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
                              vertShaderText, "vert.spv", "main");
-  if (!shi_vert.bytes) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(!shi_vert.bytes, app, wc, NULL)
 
   wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
   wlu_log_me(WLU_INFO, "End of shader creation");
 
   VkImageView vkimg_attach[2];
-  vkimg_attach[1] = app->sc[cur_sc].depth.view;
-  err = wlu_create_framebuffers(app, cur_sc, cur_gpd, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_framebuffers failed");
-    ck_abort_msg(NULL);
-  }
+  vkimg_attach[1] = app->sc_data[cur_scd].depth.view;
+  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
+  check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_pipeline_cache failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
   /* Start of vertex buffer */
   VkDeviceSize vsize = sizeof(vertices);
   err = wlu_create_buffer(
-    app, vsize, vertices, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex",
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_create_buffer failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
 
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
@@ -417,22 +313,10 @@ START_TEST(test_vulkan_client_create_3D) {
   /* End of vertex buffer */
 
   VkShaderModule vert_shader_module = wlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
-  if (!vert_shader_module) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
-    ck_abort_msg(NULL);
-  }
+  check_err(!vert_shader_module, app, wc, NULL)
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
-  if (!frag_shader_module) {
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create shader module");
-    ck_abort_msg(NULL);
-  }
-
-  wlu_add_watchme_info(1, app, 0, NULL, 1, &vert_shader_module);
-  wlu_add_watchme_info(1, app, 0, NULL, 2, &frag_shader_module);
+  check_err(!frag_shader_module, app, wc, vert_shader_module)
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -496,17 +380,12 @@ START_TEST(test_vulkan_client_create_3D) {
     &rasterizer, &multisampling, &ds_info, &color_blending,
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
   );
-  if (err) {
-    wlu_freeup_shader(app, &frag_shader_module);
-    wlu_freeup_shader(app, &vert_shader_module);
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] failed to create graphics pipeline");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, NULL, NULL, vert_shader_module)
+  check_err(err, app, wc, frag_shader_module)
 
   wlu_log_me(WLU_SUCCESS, "Successfully created graphics pipeline");
-  wlu_freeup_shader(app, &frag_shader_module);
-  wlu_freeup_shader(app, &vert_shader_module);
+  wlu_freeup_shader(app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
+  wlu_freeup_shader(app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
 
   VkClearValue clear_values[2];
   float float32[4] = {0.2f, 0.2f, 0.2f, 0.2f};
@@ -516,7 +395,7 @@ START_TEST(test_vulkan_client_create_3D) {
   clear_values[1] = wlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_sc, cur_gpd, 0, 0, extent3D.width,
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent3D.width,
                              extent3D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
@@ -534,34 +413,22 @@ START_TEST(test_vulkan_client_create_3D) {
   const uint32_t vertex_count = sizeof(vertices) / sizeof(vertices[0]);
   wlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
-  wlu_exec_stop_render_pass(app, cur_pool, cur_sc);
-  err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_sc);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
-    ck_abort_msg(NULL);
-  }
+  wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
+  err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
+  check_err(err, app, wc, NULL)
 
   VkPipelineStageFlags pipe_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  VkSemaphore wait_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].image};
-  VkSemaphore signal_semaphores[1] = {app->sc[cur_sc].sems[cur_buff].render};
-  VkCommandBuffer cmd_buffs[1] = {app->cmd_pbs[cur_pool].cmd_buffs[cur_buff]};
+  VkSemaphore wait_semaphores[1] = {app->sc_data[cur_scd].sems[cur_buff].image};
+  VkSemaphore signal_semaphores[1] = {app->sc_data[cur_scd].sems[cur_buff].render};
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
   err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, wait_semaphores, &pipe_stage_flags, 1, signal_semaphores);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, wc, NULL)
 
-  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->sc[cur_sc].swap_chain, &cur_buff, NULL);
-  if (err) {
-    freeme(app, wc);
-    wlu_log_me(WLU_DANGER, "[x] wlu_exec_queue_cmd_buff failed");
-    ck_abort_msg(NULL);
-  }
+  err = wlu_queue_present_queue(app, 0, NULL, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
+  check_err(err, app, wc, NULL)
 
   wait_seconds(1);
-  freeme(app, wc);
+  FREEME(app, wc)
 } END_TEST;
 
 

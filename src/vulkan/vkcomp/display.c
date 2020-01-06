@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -55,31 +55,26 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   if (!app->surface) {
     wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    goto finish_format;
+    return ret_fmt;
   }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    goto finish_format;
+    return ret_fmt;
   }
 
   if (format_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device surface formats, format_count equals 0");
-    goto finish_format;
+    return ret_fmt;
   }
 
-  formats = (VkSurfaceFormatKHR *) calloc(sizeof(VkSurfaceFormatKHR),
-        format_count * sizeof(VkSurfaceFormatKHR));
-  if (!formats) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkSurfaceFormatKHR *formats failed");
-    goto finish_format;
-  }
+  formats = (VkSurfaceFormatKHR *) alloca(format_count * sizeof(VkSurfaceFormatKHR));
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    goto finish_format;
+    return ret_fmt;
   }
 
   ret_fmt = formats[0];
@@ -87,18 +82,16 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   if (format_count == 1 && formats[0].format == format) {
     ret_fmt.format = format;
     ret_fmt.colorSpace = colorSpace;
-    goto finish_format;
+    return ret_fmt;
   }
 
   for (uint32_t i = 0; i < format_count; i++) {
     if (formats[i].format == format && formats[i].colorSpace == colorSpace) {
       ret_fmt = formats[i];
-      goto finish_format;
+      return ret_fmt;
     }
   }
 
-finish_format:
-  FREE(formats);
   return ret_fmt;
 }
 
@@ -111,31 +104,26 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   if (!app->surface) {
     wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    goto finish_best_mode;
+    return best_mode;
   }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    goto finish_best_mode;
+    return best_mode;
   }
 
   if (pres_mode_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device presentation modes, pres_mode_count equals 0");
-    goto finish_best_mode;
+    return best_mode;
   }
 
-  present_modes = (VkPresentModeKHR *) calloc(sizeof(VkPresentModeKHR),
-      pres_mode_count * sizeof(VkPresentModeKHR));
-  if (!present_modes) {
-    wlu_log_me(WLU_DANGER, "[x] calloc VkPresentModeKHR *present_modes failed");
-    goto finish_best_mode;
-  }
+  present_modes = (VkPresentModeKHR *) alloca(pres_mode_count * sizeof(VkPresentModeKHR));
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
   if (err) {
     wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    goto finish_best_mode;
+    return best_mode;
   }
 
   /* Only mode that is guaranteed */
@@ -144,15 +132,13 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   for (uint32_t i = 0; i < pres_mode_count; i++) {
     if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) { /* For triple buffering */
       best_mode = present_modes[i];
-      goto finish_best_mode;
+      break;
     }
     else if (present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
       best_mode = present_modes[i];
     }
   }
 
-finish_best_mode:
-  FREE(present_modes)
   return best_mode;
 }
 
@@ -162,39 +148,38 @@ VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   } else {
     VkExtent2D actual_extent = {width, height};
 
-    actual_extent.width = max(capabilities.minImageExtent.width,
-                          min(capabilities.maxImageExtent.width,
-                          actual_extent.width));
-    actual_extent.height = max(capabilities.minImageExtent.height,
-                           min(capabilities.maxImageExtent.height,
-                           actual_extent.height));
+    actual_extent.width = fmax(capabilities.minImageExtent.width,
+                          fmin(capabilities.maxImageExtent.width,
+                               actual_extent.width));
+    actual_extent.height = fmax(capabilities.minImageExtent.height,
+                           fmin(capabilities.maxImageExtent.height,
+                                actual_extent.height));
     return actual_extent;
   }
 }
 
 VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth) {
   VkExtent3D actual_extent = {width, height, depth};
-  actual_extent.width = max(capabilities.minImageExtent.width,
-                        min(capabilities.maxImageExtent.width,
-                        actual_extent.width));
-  actual_extent.height = max(capabilities.minImageExtent.height,
-                         min(capabilities.maxImageExtent.height,
-                         actual_extent.height));
+  actual_extent.width = fmax(capabilities.minImageExtent.width,
+                        fmin(capabilities.maxImageExtent.width,
+                             actual_extent.width));
+  actual_extent.height = fmax(capabilities.minImageExtent.height,
+                         fmin(capabilities.maxImageExtent.height,
+                              actual_extent.height));
   return actual_extent;
 }
 
-VkResult wlu_retrieve_swapchain_img(vkcomp *app, uint32_t *cur_buff, uint32_t cur_sc) {
+VkResult wlu_acquire_next_sc_img(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sc[cur_sc].sems) {
+  if (!app->sc_data[cur_scd].sems) {
     wlu_log_me(WLU_DANGER, "[x] Image semaphores must be initialize before use");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores()");
     return res;
   }
 
-  /* UINT64_MAX disables timeout */
-  res = vkAcquireNextImageKHR(app->device, app->sc[cur_sc].swap_chain, UINT64_MAX,
-                              app->sc[cur_sc].sems[*cur_buff].image, VK_NULL_HANDLE, cur_buff);
+  res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
+                              app->sc_data[cur_scd].sems[*cur_img].image, VK_NULL_HANDLE, cur_img);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
     wlu_freeup_sc(app);
     return res;
@@ -256,7 +241,7 @@ VkResult wlu_queue_graphics_queue(
     }
 
     /* Use fence to synchronize application with rendering operation */
-    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, FENCE_TIMEOUT);
+    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, GENERAL_TIMEOUT);
     if (res) {
       wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
       goto finish_gq_submit;

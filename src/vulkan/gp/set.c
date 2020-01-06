@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -242,12 +242,12 @@ VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
   return scissor;
 }
 
-/*
- * Rasterizer takes the geometry shaped by the vertices from the vertex shader
- * and turns it into fragments to be colored by the fragment shader.
- * It also performs depth testing, face culling and the scissor test.
- * Can be configured to output fragments that fill entire polygons
- */
+/**
+* Rasterizer takes the geometry shaped by the vertices from the vertex shader
+* and turns it into fragments to be colored by the fragment shader.
+* It also performs depth testing, face culling and the scissor test.
+* Can be configured to output fragments that fill entire polygons
+*/
 VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
   VkBool32 depthClampEnable,
   VkBool32 rasterizerDiscardEnable,
@@ -265,15 +265,15 @@ VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  /*
-   * If set to VK_TRUE, then fragments that are beyond the near and far
-   * planes are clamped to them as opposed to discarding them.
-   */
+  /**
+  * If set to VK_TRUE, then fragments that are beyond the near and far
+  * planes are clamped to them as opposed to discarding them.
+  */
   create_info.depthClampEnable = depthClampEnable;
-  /*
-   * If set to VK_TRUE, then geometry never passes through the rasterizer stage.
-   * This basically disables any output to the framebuffer.
-   */
+  /**
+  * If set to VK_TRUE, then geometry never passes through the rasterizer stage.
+  * This basically disables any output to the framebuffer.
+  */
   create_info.rasterizerDiscardEnable = rasterizerDiscardEnable;
   create_info.polygonMode = polygonMode; /* determines how fragments are generated for geometry */
   create_info.cullMode = cullMode;
@@ -364,13 +364,13 @@ VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
 }
 
 
-/*
- * Once a fragment shader has returned a color,
- * colorblending combines the color that is already in the framebuffer
- * Done by:
- * Mixing the old and new values to produce a final color
- * Combining the old and new values using a bitwise operation
- */
+/**
+* Once a fragment shader has returned a color,
+* colorblending combines the color that is already in the framebuffer
+* Done by:
+* Mixing the old and new values to produce a final color
+* Combining the old and new values using a bitwise operation
+*/
 VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
   VkBool32 blendEnable,
   VkBlendFactor srcColorBlendFactor,
@@ -434,7 +434,7 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
   return create_info;
 }
 
-VkDescriptorSetLayoutBinding wlu_set_desc_set(
+VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
@@ -452,7 +452,7 @@ VkDescriptorSetLayoutBinding wlu_set_desc_set(
   return create_info;
 }
 
-VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
+VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_layout_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding *pBindings
@@ -464,6 +464,32 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_info(
   create_info.flags = flags;
   create_info.bindingCount = bindingCount;
   create_info.pBindings = pBindings;
+
+  return create_info;
+}
+
+VkDescriptorPoolSize wlu_set_desc_pool_size(
+  VkDescriptorType type,
+  uint32_t descriptorCount
+) {
+
+  VkDescriptorPoolSize pool_size = {};
+  pool_size.type = type;
+  pool_size.descriptorCount = descriptorCount;
+
+  return pool_size;
+}
+
+VkDescriptorBufferInfo wlu_set_desc_buff_info(
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize range
+) {
+
+  VkDescriptorBufferInfo create_info = {};
+  create_info.buffer = buffer;
+  create_info.offset = offset;
+  create_info.range = range;
 
   return create_info;
 }

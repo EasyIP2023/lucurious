@@ -1,26 +1,26 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Vincent Davis Jr.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
@@ -54,43 +54,29 @@ VkResult get_extension_properties(
   VkExtensionProperties *extensions = NULL;
   uint32_t extension_count = 0;
 
-  do {
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
-    if (res) return res;
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+  if (res) return res;
 
-    /* Rare but may happen for instances. If so continue on with the app */
-    if (extension_count == 0) goto finish_extensions;
+  /* Rare but may happen for instances. If so continue on with the app */
+  if (extension_count == 0) return res;
 
-    extensions = (VkExtensionProperties *) realloc(extensions,
-      extension_count * sizeof(VkExtensionProperties));
-    if (!extensions) {
-      res = VK_RESULT_MAX_ENUM;
-      wlu_log_me(WLU_DANGER, "[x] realloc of VkExtensionProperties *extensions failed");
-      goto finish_extensions;
-    }
+  extensions = (VkExtensionProperties *) alloca(extension_count * sizeof(VkExtensionProperties));
 
-    res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                  vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
-  } while (res == VK_INCOMPLETE);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
+  if (res) return res;
 
   /* set available instance extensions */
-  *eprops = (VkExtensionProperties *) calloc(sizeof(VkExtensionProperties), extension_count * sizeof(VkExtensionProperties));
-  if (!(*eprops)) {
-    res = VK_RESULT_MAX_ENUM;
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkExtensionProperties *eprops failed");
-    goto finish_extensions;
-  }
+  *eprops = wlu_alloc(WLU_SMALL_BLOCK, extension_count * sizeof(VkExtensionProperties));
+  if (!(*eprops)) return VK_RESULT_MAX_ENUM;
 
   *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
   if (!(*eprops)) {
-    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
-    goto finish_extensions;
+    return VK_RESULT_MAX_ENUM;
   }
 
-finish_extensions:
-  FREE(extensions);
   return res;
 }
 
@@ -99,45 +85,41 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkBool32 *present_support = NULL;
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
+
   if (!app->physical_device) {
     wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
     wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
-    goto finish_queue_family;
+    return ret;
   }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
-  queue_families = (VkQueueFamilyProperties *) calloc(sizeof(VkQueueFamilyProperties),
-        qfc * sizeof(VkQueueFamilyProperties));
-  if (!queue_families) {
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkQueueFamilyProperties *queue_families failed");
-    goto finish_queue_family;
-  }
+  queue_families = (VkQueueFamilyProperties *) alloca(qfc * sizeof(VkQueueFamilyProperties));
+  if (!queue_families) return ret;
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
-  present_support = calloc(sizeof(VkBool32), qfc * sizeof(VkBool32));
-  if (!present_support) {
-    wlu_log_me(WLU_DANGER, "[x] calloc of VkBool32 *present_support failed");
-    goto finish_queue_family;
-  }
+  present_support = alloca(qfc * sizeof(VkBool32));
+  if (!present_support) return ret;
 
   if (app->surface)
-    for (uint32_t i = 0; i < qfc; i++)
+    for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
       vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support[i]);
 
   for (uint32_t i = 0; i < qfc; i++) {
     if (queue_families[i].queueFlags & vkqfbits) {
       if (app->indices.graphics_family == UINT32_MAX) {
+        /* Retrieve Graphics Family Queue index */
         app->indices.graphics_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
       }
 
       /* Check to see if a device can create images on the surface we may have created */
       if (app->surface && present_support[i]) {
+        /* Retrieve Present Family Queue index */
         app->indices.present_family = i; ret = VK_FALSE;
         wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
-        goto finish_queue_family;
+        break;
       }
     }
   }
@@ -151,9 +133,6 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
     }
   }
 
-finish_queue_family:
-  FREE(queue_families);
-  FREE(present_support);
   return ret;
 }
 

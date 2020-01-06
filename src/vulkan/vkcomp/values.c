@@ -37,67 +37,75 @@ void set_vkcomp_init_values(vkcomp *app) {
   app->device = VK_FALSE;
   app->graphics_queue = VK_NULL_HANDLE;
   app->present_queue = VK_NULL_HANDLE;
-  app->scc = VK_NULL_HANDLE;
-  app->sc = VK_NULL_HANDLE;
-  app->gpc = VK_NULL_HANDLE;
+  app->sdc = VK_NULL_HANDLE;
+  app->sc_data = VK_NULL_HANDLE;
+  app->gdc = VK_NULL_HANDLE;
   app->gp_data = VK_NULL_HANDLE;
-  app->cpc = VK_NULL_HANDLE;
-  app->cmd_pbs = VK_NULL_HANDLE;
+  app->cdc = VK_NULL_HANDLE;
+  app->cmd_data = VK_NULL_HANDLE;
   app->bdc = VK_NULL_HANDLE;
   app->buffs_data = VK_NULL_HANDLE;
   app->ddc = VK_NULL_HANDLE;
   app->desc_data = VK_NULL_HANDLE;
 }
 
-void set_sc_init_values(vkcomp *app) {
-  app->sc[app->scc].sic = VK_NULL_HANDLE;
-  app->sc[app->scc].swap_chain = VK_NULL_HANDLE;
-  app->sc[app->scc].sc_buffs = VK_NULL_HANDLE;
-  app->sc[app->scc].sems = VK_NULL_HANDLE;
-  app->sc[app->scc].frame_buffs = VK_NULL_HANDLE;
-  app->sc[app->scc].depth.format = VK_NULL_HANDLE;
-  app->sc[app->scc].depth.view = VK_NULL_HANDLE;
-  app->sc[app->scc].depth.image = VK_NULL_HANDLE;
-  app->sc[app->scc].depth.mem = VK_NULL_HANDLE;
-}
-
-void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_sc) {
-  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
-    app->sc[cur_sc].sc_buffs[i].image = VK_NULL_HANDLE;
-    app->sc[cur_sc].sc_buffs[i].view = VK_NULL_HANDLE;
+void set_sc_buffs_init_values(vkcomp *app, uint32_t cur_scd) {
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    app->sc_data[cur_scd].sc_buffs[i].image = VK_NULL_HANDLE;
+    app->sc_data[cur_scd].sc_buffs[i].view = VK_NULL_HANDLE;
   }
 }
 
-void set_sc_sems_init_values(vkcomp *app, uint32_t cur_sc) {
-  for (uint32_t i = 0; i < app->sc[cur_sc].sic; i++) {
-    app->sc[cur_sc].sems[i].image = VK_NULL_HANDLE;
-    app->sc[cur_sc].sems[i].render = VK_NULL_HANDLE;
+void set_sc_sems_init_values(vkcomp *app, uint32_t cur_scd) {
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    app->sc_data[cur_scd].sems[i].image = VK_NULL_HANDLE;
+    app->sc_data[cur_scd].sems[i].render = VK_NULL_HANDLE;
   }
 }
 
-void set_cmd_pbs_init_values(vkcomp *app) {
-  app->cmd_pbs[app->cpc].cmd_pool = VK_NULL_HANDLE;
-  app->cmd_pbs[app->cpc].cmd_buffs = VK_NULL_HANDLE;
+void set_sc_data_init_values(vkcomp *app) {
+  for (uint32_t i = 0; i < app->sdc; i++) {
+    app->sc_data[i].sic = VK_NULL_HANDLE;
+    app->sc_data[i].swap_chain = VK_NULL_HANDLE;
+    app->sc_data[i].sc_buffs = VK_NULL_HANDLE;
+    app->sc_data[i].sems = VK_NULL_HANDLE;
+    app->sc_data[i].frame_buffs = VK_NULL_HANDLE;
+    app->sc_data[i].depth.format = VK_NULL_HANDLE;
+    app->sc_data[i].depth.view = VK_NULL_HANDLE;
+    app->sc_data[i].depth.image = VK_NULL_HANDLE;
+    app->sc_data[i].depth.mem = VK_NULL_HANDLE;
+  }
 }
 
-void set_buffs_init_values(vkcomp *app) {
-  app->buffs_data[app->bdc].buff = VK_NULL_HANDLE;
-  app->buffs_data[app->bdc].mem = VK_NULL_HANDLE;
-  app->buffs_data[app->bdc].buff_info.buffer = VK_NULL_HANDLE;
-  app->buffs_data[app->bdc].buff_info.offset = VK_NULL_HANDLE;
-  app->buffs_data[app->bdc].buff_info.range = VK_NULL_HANDLE;
-  app->buffs_data[app->bdc].name = VK_NULL_HANDLE;
+void set_buffs_data_init_values(vkcomp *app) {
+  for (uint32_t i = 0; i < app->bdc; i++) {
+    app->buffs_data[i].buff = VK_NULL_HANDLE;
+    app->buffs_data[i].mem = VK_NULL_HANDLE;
+    app->buffs_data[i].name = VK_NULL_HANDLE;
+  }
 }
 
-void set_desc_data_init_values(vkcomp *app) {
-  app->desc_data[app->ddc].dc = VK_NULL_HANDLE;
-  app->desc_data[app->ddc].desc_layouts = VK_NULL_HANDLE;
-  app->desc_data[app->ddc].desc_pool = VK_NULL_HANDLE;
-  app->desc_data[app->ddc].desc_set = VK_NULL_HANDLE;
+void set_cmd_data_init_values(vkcomp *app) {
+  for (uint32_t i = 0; i < app->cdc; i++) {
+    app->cmd_data[i].cmd_pool = VK_NULL_HANDLE;
+    app->cmd_data[i].cmd_buffs = VK_NULL_HANDLE;
+  }
 }
 
 void set_gp_data_init_values(vkcomp *app) {
-  app->gp_data[app->gpc].render_pass = VK_NULL_HANDLE;
-  app->gp_data[app->gpc].pipeline_layout = VK_NULL_HANDLE;
-  app->gp_data[app->gpc].graphics_pipelines = VK_NULL_HANDLE;
+  for (uint32_t i = 0; i < app->gdc; i++) {
+    app->gp_data[i].render_pass = VK_NULL_HANDLE;
+    app->gp_data[i].pipeline_layout = VK_NULL_HANDLE;
+    app->gp_data[i].gpc = VK_NULL_HANDLE;
+    app->gp_data[i].graphics_pipelines = VK_NULL_HANDLE;
+  }
+}
+
+void set_desc_data_init_values(vkcomp *app) {
+  for (uint32_t i = 0; i < app->ddc; i++) {
+    app->desc_data[i].dc = VK_NULL_HANDLE;
+    app->desc_data[i].desc_layouts = VK_NULL_HANDLE;
+    app->desc_data[i].desc_pool = VK_NULL_HANDLE;
+    app->desc_data[i].desc_set = VK_NULL_HANDLE;
+  }
 }

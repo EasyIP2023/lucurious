@@ -41,5 +41,5 @@ lib_wclient = static_library(
 		'shm.c',
 	),
 	include_directories: lucur_inc,
-	dependencies: [wayland_client],
+	dependencies: [wayland_client]
 )

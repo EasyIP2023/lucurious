@@ -166,9 +166,6 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, dt, &device_props, &device_feats);
   if (err) {
-    fprintf(stdout, "%s", colors[WLU_DANGER]);
-    fprintf(stdout, "[x] Failed to find physical device\n");
-    fprintf(stdout, "%s\n", colors[WLU_RESET]);
     wlu_freeup_vk(app);
     return;
   }
