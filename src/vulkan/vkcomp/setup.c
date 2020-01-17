@@ -29,7 +29,7 @@
 
 vkcomp *wlu_init_vk() {
   vkcomp *app = wlu_alloc(WLU_SMALL_BLOCK, sizeof(vkcomp));
-  if (!app) return app;
+  if (!app) { PERR(WLU_ALLOC_FAILED, 0, NULL); return app; };
   set_vkcomp_init_values(app);
   return app;
 }
@@ -122,7 +122,7 @@ void wlu_freeup_vk(void *data) {
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
       if (app->desc_data[i].desc_layouts) {
-        for (uint32_t j = 0; j < app->desc_data[i].dc; j++) {
+        for (uint32_t j = 0; j < app->desc_data[i].dlsc; j++) {
           if (app->desc_data[i].desc_layouts[j])
             vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
         }
@@ -187,27 +187,27 @@ VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
       app->sc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _sc_data));
-      if (!app->sc_data) return VK_RESULT_MAX_ENUM;
+      if (!app->sc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->sdc = arr_size;
       set_sc_data_init_values(app); break;
     case WLU_GP_DATA:
       app->gp_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _gp_data));
-      if (!app->gp_data) return VK_RESULT_MAX_ENUM;
+      if (!app->gp_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->gdc = arr_size;
       set_gp_data_init_values(app); break;
     case WLU_CMD_DATA:
       app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _cmd_data));
-      if (!app->cmd_data) return VK_RESULT_MAX_ENUM;
+      if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->cdc = arr_size;
       set_cmd_data_init_values(app); break;
     case WLU_BUFFS_DATA:
       app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _buffs_data));
-      if (!app->buffs_data) return VK_RESULT_MAX_ENUM;
+      if (!app->buffs_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->bdc = arr_size;
       set_buffs_data_init_values(app); break;
     case WLU_DESC_DATA:
       app->desc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _desc_data));
-      if (!app->desc_data) return VK_RESULT_MAX_ENUM;
+      if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->ddc = arr_size;
       set_desc_data_init_values(app); break;
     default: break;

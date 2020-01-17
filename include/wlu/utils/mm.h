@@ -53,9 +53,16 @@ void wlu_print_mb();
 #endif
 
 #ifdef INAPI_CALLS
+
+typedef enum _wlu_block_type {
+  WLU_LARGE_BLOCK = 0x00000000,
+  WLU_SMALL_BLOCK = 0x00000001
+} wlu_block_type;
+
 void *wlu_alloc(wlu_block_type type, size_t bytes);
 void *wlu_realloc(void *addr, size_t new_size);
 void wlu_free_block(void *addr);
+
 #endif
 
 #endif

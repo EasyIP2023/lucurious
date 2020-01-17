@@ -131,10 +131,10 @@ VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
   return create_info;
 }
 
-/*
- * Defines what kind of geometry will be drawn from the vertices and
- * if primitive restart should be enable
- */
+/**
+* Defines what kind of geometry will be drawn from the vertices and
+* if primitive restart should be enable
+*/
 VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 ) {
@@ -173,13 +173,13 @@ VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
   return attrib_desc;
 }
 
-/*
- * Describes the format of the vertex data passed to the vertex shader
- * Two Ways:
- * Bindings: spacing between data and whether the data is per-vertex or per-instance (see instancing)
- * Attribute descriptions: type of the attributes passed to the vertex shader,
- * which binding to load them from and at which offset
- */
+/**
+* Describes the format of the vertex data passed to the vertex shader
+* Two Ways:
+* Bindings: spacing between data and whether the data is per-vertex or per-instance (see instancing)
+* Attribute descriptions: type of the attributes passed to the vertex shader,
+* which binding to load them from and at which offset
+*/
 VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,

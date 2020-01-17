@@ -25,8 +25,7 @@
 headers = [
   'wlu/vlucur/vkall.h', 'wlu/vlucur/gp.h', 'wlu/vlucur/matrix.h',
   'wlu/vlucur/types.h', 'wlu/wclient/client.h', 'wlu/utils/log.h',
-  'wlu/utils/file.h', 'wlu/utils/mm.h', 'wlu/utils/errors.h',
-  'wlu/shader/shade.h'
+  'wlu/utils/file.h', 'wlu/utils/mm.h', 'wlu/shader/shade.h'
 ]
 
 install_headers(headers, install_dir: '/usr/include/wlu', subdir: 'wlu')

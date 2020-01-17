@@ -65,12 +65,15 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t cur_gpd,
-  uint32_t setLayoutCount,
-  VkDescriptorSetLayout *pSetLayouts,
+  uint32_t cur_dd,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 );
 
+/**
+* Create the layouts that specify which resource (VkBuffer, VkImage)
+* the shaders in the graphics pipeline will access
+*/
 VkResult wlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
@@ -86,14 +89,15 @@ VkResult wlu_create_desc_pool(
   VkDescriptorPoolSize *pool_sizes
 );
 
-/*
- * Function creates a descriptor set that you can use to
- * manipulate the data contained in a buffer (Uniform)
- */
+/**
+* Function creates a descriptor set that one can use to
+* manipulate the data contained in a VkBuffer (Uniform).
+* Specifies actual resource (VkBuffer,VkImage) that will be
+* bounded to the descriptors
+*/
 VkResult wlu_create_desc_set(
   vkcomp *app,
-  uint32_t cur_dd,
-  uint32_t psize
+  uint32_t cur_dd
 );
 
 void wlu_exec_begin_render_pass(

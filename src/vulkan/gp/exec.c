@@ -41,11 +41,7 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 ) {
 
-  if (!app->sc_data[cur_scd].frame_buffs) {
-    wlu_log_me(WLU_DANGER, "[x] Frame Buffers weren't created");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers()");
-    return;
-  }
+  if (!app->sc_data[cur_scd].frame_buffs) { PERR(WLU_VKCOMP_FRAMEBUFFER, 0, NULL); return; }
 
   VkRenderPassBeginInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

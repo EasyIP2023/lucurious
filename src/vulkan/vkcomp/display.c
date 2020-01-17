@@ -29,11 +29,7 @@
 VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->instance) {
-    wlu_log_me(WLU_DANGER, "[x] A VkInstance must be established");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
-    return res;
-  }
+  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
   VkWaylandSurfaceCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
@@ -43,6 +39,8 @@ VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surfac
   create_info.surface = (struct wl_surface *) wl_surface;
 
   res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
+  if (res) PERR(WLU_VK_CREATE_ERR, res, "WaylandSurfaceKHR")
+
   return res;
 }
 
@@ -52,17 +50,10 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   VkSurfaceFormatKHR *formats = VK_NULL_HANDLE;
   uint32_t format_count = 0;
 
-  if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    return ret_fmt;
-  }
+  if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return ret_fmt; }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    return ret_fmt;
-  }
+  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
 
   if (format_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device surface formats, format_count equals 0");
@@ -72,10 +63,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   formats = (VkSurfaceFormatKHR *) alloca(format_count * sizeof(VkSurfaceFormatKHR));
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceFormatsKHR failed, ERROR CODE: %d", err);
-    return ret_fmt;
-  }
+  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
 
   ret_fmt = formats[0];
 
@@ -101,17 +89,10 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   VkPresentModeKHR *present_modes = VK_NULL_HANDLE;
   uint32_t pres_mode_count = 0;
 
-  if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
-    return best_mode;
-  }
+  if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return best_mode; }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    return best_mode;
-  }
+  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
 
   if (pres_mode_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device presentation modes, pres_mode_count equals 0");
@@ -121,10 +102,7 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   present_modes = (VkPresentModeKHR *) alloca(pres_mode_count * sizeof(VkPresentModeKHR));
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfacePresentModesKHR failed, ERROR CODE: %d", err);
-    return best_mode;
-  }
+  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
 
   /* Only mode that is guaranteed */
   best_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -172,11 +150,7 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 VkResult wlu_acquire_next_sc_img(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sc_data[cur_scd].sems) {
-    wlu_log_me(WLU_DANGER, "[x] Image semaphores must be initialize before use");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores()");
-    return res;
-  }
+  if (!app->sc_data[cur_scd].sems) { PERR(WLU_VKCOMP_SC_SEMS, 0, NULL); return res; }
 
   res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
                               app->sc_data[cur_scd].sems[*cur_img].image, VK_NULL_HANDLE, cur_img);
@@ -209,10 +183,7 @@ VkResult wlu_queue_graphics_queue(
 
   /* Use fence to synchronize application with rendering operation */
   res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkCreateFence failed, ERROR CODE: %d", res);
-    goto finish_gq_submit;
-  }
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Fence"); goto finish_gq_submit; }
 
   VkSubmitInfo submit_info = {};
   submit_info.pNext = NULL;
@@ -228,25 +199,33 @@ VkResult wlu_queue_graphics_queue(
   do {
     /* set fence to unsignaled state */
     res = vkResetFences(app->device, 1, &draw_fence);
-    if (res) {
-      wlu_log_me(WLU_DANGER, "[x] vkResetFence failed, ERROR CODE: %d", res);
-      goto finish_gq_submit;
-    }
+    if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); goto finish_gq_submit; }
 
     /* The fence should be signaled when command buffer is finished */
     res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
-    if (res) {
-      wlu_log_me(WLU_DANGER, "[x] vkQueueSubmit failed, ERROR CODE: %d", res);
-      goto finish_gq_submit;
-    }
+    if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); goto finish_gq_submit; }
 
     /* Use fence to synchronize application with rendering operation */
     res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, GENERAL_TIMEOUT);
-    if (res) {
-      wlu_log_me(WLU_DANGER, "[x] vkWaitForFences failed, ERROR CODE: %d", res);
-      goto finish_gq_submit;
-    }
+    if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); goto finish_gq_submit; }
+
   } while (res == VK_TIMEOUT);
+
+  // VkSemaphoreSignalInfoKHR sem_sig_info = {};
+  // sem_sig_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO_KHR;
+  // sem_sig_info.pNext = NULL;
+  // sem_sig_info.semaphore = pWaitSemaphores[0];
+  // sem_sig_info.value = VK_TRUE;
+  //
+  // PFN_SignalSemaphoreKHR vk_signal_semaphore = VK_NULL_HANDLE;
+  // WLU_DR_DEVICE_PROC_ADDR(vk_signal_semaphore, app->device, "SignalSemaphoreKHR");
+  // if (!vk_signal_semaphore) return VK_ERROR_INITIALIZATION_FAILED;
+  //
+  // res = vk_signal_semaphore(app->device, &sem_sig_info);
+  // if (res) {
+  //   wlu_log_me(WLU_DANGER, "[x] vkSignalSemaphore failed, ERROR CODE: %d", res);
+  //   goto finish_gq_submit;
+  // }
 
 finish_gq_submit:
   if (draw_fence) {
@@ -278,10 +257,7 @@ VkResult wlu_queue_present_queue(
   present.pResults = pResults;
 
   res = vkQueuePresentKHR(app->present_queue, &present);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkQueuePresentKHR failed, ERROR CODE: %d", res);
-    return res;
-  }
+  if (res) { PERR(WLU_VK_QUEUE_ERR, res, "PresentKHR"); return res; }
 
   if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
     wlu_freeup_sc(app);

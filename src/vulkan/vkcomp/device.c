@@ -45,6 +45,7 @@ VkBool32 is_device_suitable(
           device_feats->robustBufferAccess);
 }
 
+/* Maybe add error messaging here later, hmm... */
 VkResult get_extension_properties(
   vkcomp *app,
   VkPhysicalDevice device,
@@ -71,7 +72,7 @@ VkResult get_extension_properties(
   *eprops = wlu_alloc(WLU_SMALL_BLOCK, extension_count * sizeof(VkExtensionProperties));
   if (!(*eprops)) return VK_RESULT_MAX_ENUM;
 
-  *eprops = memcpy(*eprops, extensions, extension_count * sizeof(extensions[0]));
+  *eprops = memmove(*eprops, extensions, extension_count * sizeof(extensions[0]));
   if (!(*eprops)) {
     wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
     return VK_RESULT_MAX_ENUM;
@@ -86,21 +87,15 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
 
-  if (!app->physical_device) {
-    wlu_log_me(WLU_DANGER, "[x] A physical device must be set");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
-    return ret;
-  }
+  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYSICAL_DEV, 0, NULL); return ret; }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
   queue_families = (VkQueueFamilyProperties *) alloca(qfc * sizeof(VkQueueFamilyProperties));
-  if (!queue_families) return ret;
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
   present_support = alloca(qfc * sizeof(VkBool32));
-  if (!present_support) return ret;
 
   if (app->surface)
     for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
@@ -142,15 +137,14 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   VkResult err;
 
   if (!app->surface) {
-    wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
+    PERR(WLU_VKCOMP_SURFACE, 0, NULL);
     capabilities.minImageCount = UINT32_MAX;
     return capabilities;
   }
 
   err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
   if (err) {
-    wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed, ERROR CODE: %d", err);
+    PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceCapabilitiesKHR");
     capabilities.minImageCount = UINT32_MAX;
     return capabilities;
   }

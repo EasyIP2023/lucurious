@@ -29,6 +29,7 @@ const char shader_src[] =
   "#version 450 en\n"
   "void main() { int x = MY_DEFINE; }\n";
 
+/* Used in test-triangle.c / test-square.c */
 const char shader_frag_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
@@ -49,7 +50,9 @@ const char shader_vert_src[] =
   "   gl_Position = vec4(i_Position, 0.0, 1.0);\n"
   "   v_Color = i_Color;\n"
   "}";
+/* Used in test-triangle.c / test-square.c */
 
+/* Used in test-cube.c */
 const char vertShaderText[] =
   "#version 400\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
@@ -74,6 +77,15 @@ const char fragShaderText[] =
   "void main() {\n"
   "   outColor = color;\n"
   "}";
+/* Used in test-cube.c */
+
+/* Used in test-spin-square.c */
+const char spin_square_frag_text[] =
+  "#version 450\n"
+  "#extension GL_ARB_separate_shader_objects : enable\n"
+  "layout(location = 0) in vec3 v_Color;\n"
+  "layout(location = 0) out vec4 o_Color;\n"
+  "void main() { o_Color = vec4(v_Color, 1.0); }";
 
 const char spin_square_vert_text[] =
   "#version 450\n"
@@ -91,5 +103,6 @@ const char spin_square_vert_text[] =
   "   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(i_Position, 0.0, 1.0);\n"
   "   v_Color = i_Color;\n"
   "}";
+/* Used in test-spin-square.c */
 
 #endif

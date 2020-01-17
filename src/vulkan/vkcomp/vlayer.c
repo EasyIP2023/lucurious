@@ -47,37 +47,32 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
   return VK_FALSE;
 }
 
-/*
- * Set vulkan validation layers properties.
- * To get these validation layers you must install
- * vulkan sdk
- */
+/**
+* Set vulkan validation layers properties.
+* To get these validation layers you must install
+* vulkan sdk
+*/
 VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
   VkResult res = VK_INCOMPLETE;
   uint32_t layer_count = 0;
 
   /* Find the amount of validation layer */
   res = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkEnumerateInstanceLayerProperties, ERROR CODE: %d", res);
-    goto finish_vk_props;
-  }
+  if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); goto finish_vk_props; }
 
   /* layer count will only be zero if vulkan sdk not installed */
   if (layer_count == 0) {
-    wlu_log_me(WLU_WARNING, "[x] failed to find Validation Layers, layer_count equals 0");
+    wlu_log_me(WLU_WARNING, "[x] failed to find any Validation Layers!!");
     goto finish_vk_props;
   }
 
   /* allocate space */
   *vk_props = wlu_alloc(WLU_SMALL_BLOCK, layer_count * sizeof(VkLayerProperties));
-  if (!(*vk_props)) {
-    res = VK_RESULT_MAX_ENUM;
-    goto finish_vk_props;
-  }
+  if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, res = VK_RESULT_MAX_ENUM, NULL); goto finish_vk_props; }
 
   /* set validation layers values */
   res = vkEnumerateInstanceLayerProperties(&layer_count, *vk_props);
+  if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); }
 
 finish_vk_props:
   return res;
@@ -86,40 +81,14 @@ finish_vk_props:
 VkResult wlu_set_debug_message(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback = VK_NULL_HANDLE;
-  PFN_vkDebugReportMessageEXT debug_messenger = VK_NULL_HANDLE;
 
-  if (!app->instance) {
-    wlu_log_me(WLU_DANGER, "[x] A Vulkan Instance must be created");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
-    return res;
-  }
+  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
-  dbg_create_report_callback = (PFN_vkCreateDebugReportCallbackEXT) \
-      vkGetInstanceProcAddr(app->instance, "vkCreateDebugReportCallbackEXT");
-  if (!dbg_create_report_callback) {
-    wlu_log_me(WLU_DANGER, "GetInstanceProcAddr: Unable to find vkCreateDebugReportCallbackEXT function");
-    return VK_ERROR_INITIALIZATION_FAILED;
-  }
+  WLU_DR_INSTANCE_PROC_ADDR(dbg_create_report_callback, app->instance, CreateDebugReportCallbackEXT);
+  if (!dbg_create_report_callback) return VK_ERROR_INITIALIZATION_FAILED;
 
-  wlu_log_me(WLU_SUCCESS, "Got dbg_create_report_callback function");
-
-  debug_messenger = (PFN_vkDebugReportMessageEXT) \
-      vkGetInstanceProcAddr(app->instance, "vkDebugReportMessageEXT");
-  if (!debug_messenger) {
-    wlu_log_me(WLU_DANGER, "GetInstanceProcAddr: Unable to find vkDebugReportMessageEXT function.");
-    return VK_ERROR_INITIALIZATION_FAILED;
-  }
-
-  wlu_log_me(WLU_SUCCESS, "Got debug_messenger function");
-
-  app->dbg_destroy_report_callback = (PFN_vkDestroyDebugReportCallbackEXT) \
-    vkGetInstanceProcAddr(app->instance, "vkDestroyDebugReportCallbackEXT");
-  if (!app->dbg_destroy_report_callback) {
-    wlu_log_me(WLU_DANGER, "GetInstanceProcAddr: Unable to find vkDestroyDebugReportCallbackEXT function.");
-    return VK_ERROR_INITIALIZATION_FAILED;
-  }
-
-  wlu_log_me(WLU_SUCCESS, "Got dbg_destroy_report_callback function");
+  WLU_DR_INSTANCE_PROC_ADDR(app->dbg_destroy_report_callback, app->instance, DestroyDebugReportCallbackEXT);
+  if (!app->dbg_destroy_report_callback) return VK_ERROR_INITIALIZATION_FAILED;
 
   VkDebugReportCallbackCreateInfoEXT create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
@@ -131,8 +100,7 @@ VkResult wlu_set_debug_message(vkcomp *app) {
   create_info.pUserData = NULL;
 
   res = dbg_create_report_callback(app->instance, &create_info, NULL, &app->debug_report_callback);
-
-  wlu_log_me(WLU_SUCCESS, "Successfully created debug report callback object");
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "CreateDebugReportCallbackEXT"); }
 
   return res;
 }

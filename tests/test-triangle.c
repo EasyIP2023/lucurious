@@ -31,7 +31,6 @@
 
 #include <wlu/vlucur/vkall.h>
 #include <wlu/wclient/client.h>
-#include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
@@ -122,7 +121,7 @@ START_TEST(test_vulkan_client_create) {
   VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0;
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
   err = wlu_create_swap_chain(app, cur_cmdd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   check_err(err, app, wc, NULL)
 
@@ -146,7 +145,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_acquire_next_sc_img(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_pipeline_layout(app, cur_gpd, 0, NULL, 0, NULL);
+  err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -356,7 +355,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_queue_present_queue(app, 1, signal_semaphores, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
   check_err(err, app, wc, NULL)
 
-  wait_seconds(1);
+  sleep(1);
   FREEME(app, wc)
 } END_TEST;
 

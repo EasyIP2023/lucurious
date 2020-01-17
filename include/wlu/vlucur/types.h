@@ -132,7 +132,7 @@ typedef struct _vkcomp {
   uint32_t ddc; /* descriptor data count */
   struct _desc_data {
     VkDescriptorPool desc_pool;
-    uint32_t dc; /* descriptor count */
+    uint32_t dlsc; /* descriptor layout/set count */
     VkDescriptorSetLayout *desc_layouts;
     VkDescriptorSet *desc_set;
   } *desc_data;

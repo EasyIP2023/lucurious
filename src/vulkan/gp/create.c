@@ -36,11 +36,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
   VkResult err;
   VkShaderModule shader_module = VK_NULL_HANDLE;
 
-  if (!app->device) {
-    wlu_log_me(WLU_DANGER, "[x] A logical device must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
-    return shader_module;
-  }
+  if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return shader_module; }
 
   VkShaderModuleCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -50,22 +46,10 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
   create_info.pCode = (const uint32_t *) code;
 
   err = vkCreateShaderModule(app->device, &create_info, NULL, &shader_module);
+  if (err) { PERR(WLU_VK_CREATE_ERR, err, "ShaderModule"); }
 
-  switch (err) {
-    case VK_SUCCESS:
-      wlu_log_me(WLU_SUCCESS, "Shader module successfully created");
-      break;
-    case VK_ERROR_OUT_OF_HOST_MEMORY:
-      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_OUT_OF_HOST_MEMORY");
-      break;
-    case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_OUT_OF_DEVICE_MEMORY");
-      break;
-    case VK_ERROR_INVALID_SHADER_NV:
-      wlu_log_me(WLU_DANGER, "[x] failed to create shader module! VK_ERROR_INVALID_SHADER_NV");
-      break;
-    default: break;
-  }
+  if (err == VK_SUCCESS)
+    wlu_log_me(WLU_SUCCESS, "Shader module successfully created");
 
   free(code);
 
@@ -84,16 +68,8 @@ VkResult wlu_create_render_pass(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->device) {
-    wlu_log_me(WLU_DANGER, "[x] A Vulkan Logical Device must be initialize");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
-    return res;
-  }
-
-  if (!app->gp_data) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_gp_data()");
-    return res;
-  }
+  if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
+  if (!app->gp_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_GP_DATA"); return res; }
 
   VkRenderPassCreateInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -107,6 +83,7 @@ VkResult wlu_create_render_pass(
   render_pass_info.pDependencies = pDependencies;
 
   res = vkCreateRenderPass(app->device, &render_pass_info, NULL, &app->gp_data[cur_gpd].render_pass);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "RenderPass"); }
 
   return res;
 }
@@ -133,15 +110,8 @@ VkResult wlu_create_graphics_pipelines(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->gp_data[cur_gpd].render_pass) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
-    return res;
-  }
-
-  if (!app->gp_data[cur_gpd].pipeline_layout) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout()");
-    return res;
-  }
+  if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
+  if (!app->gp_data[cur_gpd].pipeline_layout) { PERR(WLU_VKCOMP_PIPELINE_LAYOUT, 0, NULL); return res; }
 
   VkGraphicsPipelineCreateInfo pipeline_info = {};
   pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -165,9 +135,10 @@ VkResult wlu_create_graphics_pipelines(
 
   app->gp_data[cur_gpd].gpc = gps_count;
   app->gp_data[cur_gpd].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK, gps_count * sizeof(VkPipeline));
-  if (!app->gp_data[cur_gpd].graphics_pipelines) return res;
+  if (!app->gp_data[cur_gpd].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
 
   res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, app->gp_data[cur_gpd].graphics_pipelines);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "GraphicsPipelines"); }
 
   return res;
 }
@@ -183,6 +154,7 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
   create_info.pInitialData = pInitialData;
 
   res = vkCreatePipelineCache(app->device, &create_info, NULL, &app->pipeline_cache);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "PipelineCache"); }
 
   return res;
 }
@@ -190,29 +162,32 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
 VkResult wlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t cur_gpd,
-  uint32_t setLayoutCount,
-  VkDescriptorSetLayout *pSetLayouts,
+  uint32_t cur_dd,
   uint32_t pushConstantRangeCount,
   const VkPushConstantRange *pPushConstantRanges
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->gp_data) {
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_gp_data()");
-    return res;
-  }
+  if (!app->gp_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_GP_DATA"); return res; }
 
   VkPipelineLayoutCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
-  create_info.setLayoutCount = setLayoutCount;
-  create_info.pSetLayouts = pSetLayouts;
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
+  if (app->desc_data) {
+    create_info.setLayoutCount = app->desc_data[cur_dd].dlsc;
+    create_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
+  } else {
+    create_info.setLayoutCount = 0;
+    create_info.pSetLayouts = NULL;
+  }
+
   res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->gp_data[cur_gpd].pipeline_layout);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "PipelineLayout"); }
 
   return res;
 }
@@ -225,16 +200,12 @@ VkResult wlu_create_desc_set_layouts(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   app->desc_data[cur_dd].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK,
-    app->desc_data[cur_dd].dc * sizeof(VkDescriptorSetLayout));
-  if (!app->desc_data[cur_dd].desc_layouts) return res;
+    app->desc_data[cur_dd].dlsc * sizeof(VkDescriptorSetLayout));
+  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
 
-  for (uint32_t i = 0; i < app->desc_data[cur_dd].dc; i++) {
-    res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL,
-                                      &app->desc_data[cur_dd].desc_layouts[i]);
-    if (res) {
-      wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorSetLayout failed, ERROR CODE: %d", res);
-      return res;
-    }
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
+    res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, &app->desc_data[cur_dd].desc_layouts[i]);
+    if (res) { PERR(WLU_VK_CREATE_ERR, res, "DescriptorSetLayout"); return res; }
   }
 
   return res;
@@ -253,56 +224,38 @@ VkResult wlu_create_desc_pool(
   create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = flags;
-  create_info.maxSets = app->desc_data[cur_dd].dc;
+  create_info.maxSets = app->desc_data[cur_dd].dlsc;
   create_info.poolSizeCount = psize;
   create_info.pPoolSizes = pool_sizes;
 
   res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_data[cur_dd].desc_pool);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkCreateDescriptorPool failed, ERROR CODE: %d", res);
-    return res;
-  }
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "DescriptorPool"); return res; }
 
   return res;
 }
 
 VkResult wlu_create_desc_set(
   vkcomp *app,
-  uint32_t cur_dd,
-  uint32_t psize
+  uint32_t cur_dd
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->desc_data[cur_dd].desc_pool) {
-    wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must have a descriptor pool");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_pool()");
-    return res;
-  }
+  if (!app->desc_data[cur_dd].desc_pool) { PERR(WLU_VKCOMP_DESC_POOL, 0, NULL); return res; }
+  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_VKCOMP_DESC_LAYOUT, 0, NULL); return res; }
 
-  if (!app->desc_data[cur_dd].desc_layouts) {
-    wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
-    wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layouts()");
-    return res;
-  }
+  VkDescriptorSetAllocateInfo alloc_info;
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.pNext = NULL;
+  alloc_info.descriptorPool = app->desc_data[cur_dd].desc_pool;
+  alloc_info.descriptorSetCount = app->desc_data[cur_dd].dlsc;
+  alloc_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
 
-  VkDescriptorSetAllocateInfo alloc_info[psize];
-  for (uint32_t i = 0; i < psize; i++) {
-    alloc_info[i].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    alloc_info[i].pNext = NULL;
-    alloc_info[i].descriptorPool = app->desc_data[cur_dd].desc_pool;
-    alloc_info[i].descriptorSetCount = app->desc_data[cur_dd].dc;
-    alloc_info[i].pSetLayouts = app->desc_data[cur_dd].desc_layouts;
-  }
+  app->desc_data[cur_dd].desc_set = wlu_alloc(WLU_SMALL_BLOCK, app->desc_data[cur_dd].dlsc * sizeof(VkDescriptorSet));
+  if (!app->desc_data[cur_dd].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
 
-  app->desc_data[cur_dd].desc_set = wlu_alloc(WLU_SMALL_BLOCK, app->desc_data[cur_dd].dc * sizeof(VkDescriptorSet));
-  if (!app->desc_data[cur_dd].desc_set) return VK_RESULT_MAX_ENUM;
-
-  res = vkAllocateDescriptorSets(app->device, alloc_info, app->desc_data[cur_dd].desc_set);
-  if (res) {
-    wlu_log_me(WLU_DANGER, "[x] vkAllocateDescriptorSets failed, ERROR CODE: %d", res);
-    return res;
-  }
+  res = vkAllocateDescriptorSets(app->device, &alloc_info, app->desc_data[cur_dd].desc_set);
+  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "DescriptorSets"); return res; }
 
   return res;
 }

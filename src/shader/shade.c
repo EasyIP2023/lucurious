@@ -28,6 +28,7 @@
 
 #include <shaderc/shaderc.h>
 
+/* Allows one to specify what type of shader they with to create SPIR-V bytes for */
 static const unsigned int shader_map_table[] = {
   [0x00000000] = shaderc_glsl_infer_from_source,
   [0x00000001] = shaderc_glsl_vertex_shader,

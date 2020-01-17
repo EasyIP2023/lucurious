@@ -24,7 +24,7 @@ static void set_values(wclient *wc) {
 
 wclient *wlu_init_wc() {
   wclient *wc = wlu_alloc(WLU_SMALL_BLOCK, sizeof(wclient));
-  if (!wc) return wc;
+  if (!wc) { PERR(WLU_ALLOC_FAILED, 0, NULL); return wc; }
   set_values(wc);
   return wc;
 }

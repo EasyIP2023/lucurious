@@ -295,4 +295,20 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
   VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
+#ifdef INAPI_CALLS
+/* Dynamically retrieve a VkInstance function */
+#define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
+  do { \
+    var = (PFN_vk##func) vkGetInstanceProcAddr(inst, "vk" #func); \
+    if (!var) PERR(WLU_DR_INSTANCE_PROC_ADDR_ERR, 0, #func); \
+  } while(0);
+
+/* Dynamically retrieve a VkDevice (logical device) function */
+#define WLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
+  do { \
+    var = (PFN_vk##func) vkGetDeviceProcAddr(inst, "vk" #func); \
+    if (!var) PERR(WLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \
+  } while(0);
+#endif
+
 #endif

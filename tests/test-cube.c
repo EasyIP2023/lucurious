@@ -27,7 +27,6 @@
 #include <lucom.h>
 #include <wlu/vlucur/vkall.h>
 #include <wlu/wclient/client.h>
-#include <wlu/utils/errors.h>
 #include <wlu/utils/log.h>
 #include <wlu/shader/shade.h>
 #include <wlu/vlucur/gp.h>
@@ -201,12 +200,13 @@ START_TEST(test_vulkan_client_create_3D) {
   );
   check_err(err, app, wc, NULL)
 
+  /* Only map mvp matrix into memory so that it's binary compatible with shader variable */
   err = wlu_create_buff_mem_map(app, cur_bd, ubd.mvp);
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  /* MVP transformation is in a single uniform buffer object, So descriptor sets is 1 */
-  app->desc_data[cur_dd].dc = 1;
+  /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
+  app->desc_data[cur_dd].dlsc = NUM_DESCRIPTOR_SETS;
   VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(
     0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS, VK_SHADER_STAGE_VERTEX_BIT, NULL
   );
@@ -217,23 +217,21 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
   check_err(err, app, wc, NULL)
 
-  VkDescriptorPoolSize pool_sizes[NUM_DESCRIPTOR_SETS];
-  pool_sizes[0] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
-
-  err = wlu_create_desc_pool(app, cur_dd, 0, NUM_DESCRIPTOR_SETS, pool_sizes);
+  VkDescriptorPoolSize pool_size = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+  err = wlu_create_desc_pool(app, cur_dd, 0, 1, &pool_size);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_desc_set(app, cur_dd, NUM_DESCRIPTOR_SETS);
+  err = wlu_create_desc_set(app, cur_dd);
   check_err(err, app, wc, NULL)
 
   VkDescriptorBufferInfo buff_info = wlu_set_desc_buff_info(app->buffs_data[0].buff, 0, sizeof(ubd.mvp));
   VkWriteDescriptorSet write = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
-                               app->desc_data[cur_dd].dc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
+                               app->desc_data[cur_dd].dlsc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
                                &buff_info, NULL);
 
   wlu_update_desc_sets(app, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
-  err = wlu_create_pipeline_layout(app, cur_gpd, NUM_DESCRIPTOR_SETS, &app->desc_data[cur_dd].desc_layouts[0], 0, NULL);
+  err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
 
   /* start of render pass creation */
@@ -427,7 +425,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_queue_present_queue(app, 0, NULL, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
   check_err(err, app, wc, NULL)
 
-  wait_seconds(1);
+  sleep(1);
   FREEME(app, wc)
 } END_TEST;
 
@@ -453,7 +451,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  wait_seconds(4);
+  sleep(4);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

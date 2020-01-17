@@ -95,7 +95,11 @@ static wlu_mem_block_t *get_free_block(size_t bytes) {
     /* Put saddr at an address that doesn't contain metadata */
     block->saddr = BLOCK_SIZE + current->addr;
 
-    /* Offset memory address effectively creating space */
+    /**
+    * This is written this way becuase one needs to return the
+    * address of the start of the next block not the current one.
+    * Offset memory address effectively creating space
+    */
     block = current->addr + BLOCK_SIZE + bytes;
     block->prv_addr = current->addr;
     block->addr = block;
@@ -168,6 +172,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       nblock = get_free_block(bytes);
       if (!nblock) return NULL;
 
+      /* set small block list at current addr of the last block in the list */
       small_block_list = nblock->prv_addr;
       small_block_list->next = nblock;
 
