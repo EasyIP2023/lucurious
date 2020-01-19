@@ -22,12 +22,11 @@
 * THE SOFTWARE.
 */
 
-#include <lucom.h>
-#include <wlu/vlucur/vkall.h>
-#include <wlu/wclient/client.h>
-#include <wlu/utils/log.h>
-#include <vlucur/device.h>
 #include <check.h>
+
+#define LUCUR_VKCOMP_API
+#define LUCUR_WAYLAND_API
+#include <lucom.h>
 
 #include "test-extras.h"
 

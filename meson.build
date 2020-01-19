@@ -57,7 +57,7 @@ subdir('src')
 
 lucur_parts = [
 	lib_utils, lib_shade,
-	lib_vulkan, lib_lwayland,
+	lib_vkcomp, lib_lwayland,
 	lib_wserver, lib_wclient,
 ]
 

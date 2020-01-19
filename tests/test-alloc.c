@@ -23,7 +23,6 @@
 */
 
 #include <lucom.h>
-#include <wlu/utils/log.h>
 #include <check.h>
 
 START_TEST(basic_alloc) {

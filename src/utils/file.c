@@ -22,10 +22,8 @@
 * THE SOFTWARE.
 */
 
+#define LUCUR_FILE_API
 #include <lucom.h>
-#include <errno.h>
-#include <wlu/utils/file.h>
-#include <wlu/utils/log.h>
 
 wlu_file_info wlu_read_file(const char *filename) {
   wlu_file_info fileinfo = {NULL, 0};

@@ -27,10 +27,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define LUCUR_VKCOMP_API  // Need both for sizeof operations
+#define LUCUR_WAYLAND_API
 #include <lucom.h>
-#include <wlu/vlucur/vkall.h>
-#include <wlu/wclient/client.h>
-#include <wlu/utils/log.h>
 
 /**
 * Struct that stores block metadata

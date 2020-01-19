@@ -22,10 +22,34 @@
 # THE SOFTWARE.
 #
 
-headers = [
-  'wlu/vlucur/vkall.h', 'wlu/vlucur/gp.h', 'wlu/vlucur/matrix.h',
-  'wlu/vlucur/types.h', 'wlu/wclient/client.h', 'wlu/utils/log.h',
-  'wlu/utils/file.h', 'wlu/utils/mm.h', 'wlu/shader/shade.h'
-]
+i_dir = '/usr/include/wlu/'
+install_headers('lucurious.h', install_dir: i_dir)
 
-install_headers(headers, install_dir: '/usr/include/wlu', subdir: 'wlu')
+utils_hs = ['utils/log.h', 'utils/file.h', 'utils/mm.h']
+install_headers(utils_hs, install_dir: i_dir + 'utils')
+
+shader_hs = ['shader/shade.h']
+install_headers(shader_hs, install_dir: i_dir + 'shader')
+
+wayland_hs = [ 'wclient/client.h' ]
+install_headers(wayland_hs, install_dir: i_dir + 'wclient')
+
+vkcomp_i_dir = i_dir + 'vkcomp/'
+vkcomp_main_hs = ['vkcomp/all.h', 'vkcomp/types.h']
+install_headers(vkcomp_main_hs, install_dir: vkcomp_i_dir)
+
+vkcomp_func_hs = [
+  'vkcomp/funcs/copy.h', 'vkcomp/funcs/create.h', 'vkcomp/funcs/device.h',
+  'vkcomp/funcs/display.h', 'vkcomp/funcs/exec.h', 'vkcomp/funcs/set.h',
+  'vkcomp/funcs/setup.h', 'vkcomp/funcs/vlayer.h'
+]
+install_headers(vkcomp_func_hs, install_dir: vkcomp_i_dir + 'funcs')
+
+vkcomp_gp_hs = [
+  'vkcomp/gp/bind.h', 'vkcomp/gp/cmd.h', 'vkcomp/gp/create.h',
+  'vkcomp/gp/exec.h', 'vkcomp/gp/set.h', 'vkcomp/gp/update.h'
+]
+install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
+
+vkcomp_matrix_hs = ['vkcomp/matrix/print.h', 'vkcomp/matrix/set.h']
+install_headers(vkcomp_matrix_hs, install_dir: vkcomp_i_dir + 'matrix')

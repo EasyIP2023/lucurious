@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
+#define LUCUR_VKCOMP_API
 #include <lucom.h>
-#include <wlu/vlucur/vkall.h>
 #include <exec/helpers.h>
 
 VkQueueFlagBits ret_qfambit(char *str) {

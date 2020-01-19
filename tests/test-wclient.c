@@ -22,9 +22,10 @@
 * THE SOFTWARE.
 */
 
-#include <lucom.h>
-#include <wlu/wclient/client.h>
 #include <check.h>
+
+#define LUCUR_WAYLAND_API
+#include <lucom.h>
 
 START_TEST(init_wayland_client) {
   wlu_otma_mems ma = { .wclient_cnt = 1 };

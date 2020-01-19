@@ -4,8 +4,6 @@
 
 **Note: This is one mans attempt at something that could be cool. This is by no means official industry level software. This is just something I'm doing on the side for fun. IT WILL NOT BE DOCUMENTED!!! The only documentation you will find is from comments in the code.**
 
-If you want something more standard check out [wlroots](https://github.com/swaywm/wlroots/). I'd also take a look at [wlroots basic vulkan render PR](https://github.com/swaywm/wlroots/pull/1214) and [wlroots Vulkan Support issue](https://github.com/swaywm/wlroots/issues/642). I will continue to work on lucurious although it seems that wlroots is close to doing what I want to try and do.
-
 Inspired by the t.v series expanse and other syfy t.v shows/movies.
 
 Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) and the Wayland protocol to assist in building optimal, memory efficient, easy to use graphically amazing two/three dimensional desktop environments.

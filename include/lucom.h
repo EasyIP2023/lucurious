@@ -35,8 +35,8 @@
 #include <stdlib.h>
 
 #define INAPI_CALLS 1
-#include <utils/errors.h>
-#include <wlu/utils/mm.h>
+#include "lucurious.h"
+#include "utils/errors.h"
 
 #define FREE(ptr) { wlu_free_block(ptr); ptr = NULL; }
 

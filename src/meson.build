@@ -24,6 +24,6 @@
 
 subdir('utils')
 subdir('shader')
-subdir('vulkan')
+subdir('vkcomp')
 subdir('wayland')
 subdir('exec')

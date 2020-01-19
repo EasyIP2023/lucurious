@@ -23,7 +23,6 @@
 */
 
 #include <lucom.h>
-#include <wlu/utils/log.h>
 
 /**
 * Taken from lunarG vulkan API

@@ -24,8 +24,9 @@
 
 #include <getopt.h>
 
+#define LUCUR_VKCOMP_API
 #include <lucom.h>
-#include <wlu/vlucur/vkall.h>
+
 #include <exec/vkinfo.h>
 #include <exec/helpers.h>
 

@@ -22,9 +22,8 @@
 * THE SOFTWARE.
 */
 
+#define LUCUR_SHADE_API
 #include <lucom.h>
-#include <wlu/utils/log.h>
-#include <wlu/shader/shade.h>
 
 #include <shaderc/shaderc.h>
 

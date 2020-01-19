@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_ERRORS_H
-#define WLU_ERRORS_H
+#ifndef WLU_UTILS_ERRORS_H
+#define WLU_UTILS_ERRORS_H
 
 typedef enum _wlu_err_msg_type {
   WLU_DR_INSTANCE_PROC_ADDR_ERR = 0x00000002,

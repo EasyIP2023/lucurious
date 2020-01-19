@@ -24,7 +24,6 @@
 
 #include <lucom.h>
 #include <time.h>
-#include <wlu/utils/log.h>
 
 /* ANSI Escape Codes */
 static const char *term_colors[] = {

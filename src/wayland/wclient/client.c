@@ -1,7 +1,5 @@
+#define LUCUR_WAYLAND_API
 #include <lucom.h>
-#include <wlu/utils/log.h>
-#include <wlu/wclient/client.h>
-#include <wclient/shm.h>
 
 #include <sys/mman.h>
 

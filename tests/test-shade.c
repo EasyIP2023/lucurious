@@ -23,10 +23,9 @@
 */
 
 #include <check.h>
-#include <lucom.h>
 
-#include <wlu/shader/shade.h>
-#include <wlu/utils/log.h>
+#define LUCUR_SHADE_API
+#include <lucom.h>
 
 #include "test-shade.h"
 

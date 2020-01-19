@@ -1,13 +1,11 @@
 /* https://github.com/emersion/hello-wayland/blob/master/shm.c */
+#define LUCUR_WAYLAND_API
 #include <lucom.h>
-#include <errno.h>
+
 #include <time.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
-
-#include <wclient/shm.h>
 
 /**
  * Boilerplate to create an in-memory shared file.

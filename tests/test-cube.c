@@ -24,12 +24,11 @@
 
 #define INCLUDE_MATRIX_H 1
 
+#define LUCUR_VKCOMP_API
+#define LUCUR_VKCOMP_MATRIX_API
+#define LUCUR_WAYLAND_API
+#define LUCUR_SHADE_API
 #include <lucom.h>
-#include <wlu/vlucur/vkall.h>
-#include <wlu/wclient/client.h>
-#include <wlu/utils/log.h>
-#include <wlu/shader/shade.h>
-#include <wlu/vlucur/gp.h>
 
 #include <signal.h>
 #include <check.h>
