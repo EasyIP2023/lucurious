@@ -48,14 +48,12 @@ START_TEST(test_set_global_layers) {
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
+  check_err(!app, app, NULL, NULL)
+
   VkLayerProperties *vk_props = VK_NULL_HANDLE;
 
   err = wlu_set_global_layers(&vk_props);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] checking and setting validation layers failed");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   if (vk_props) {
     ck_assert_ptr_nonnull(vk_props);
@@ -74,20 +72,13 @@ START_TEST(test_create_instance) {
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
+  check_err(!app, app, NULL, NULL)
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_debug_message(app);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_nonnull(app->instance);
 
@@ -102,30 +93,19 @@ START_TEST(test_enumerate_device) {
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
+  check_err(!app, app, NULL, NULL)
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_debug_message(app);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_nonnull(app->physical_device);
 
@@ -136,49 +116,30 @@ START_TEST(test_set_logical_device) {
   VkResult err;
   wlu_log_me(WLU_WARNING, "FIFTH TEST");
 
-  wlu_otma_mems ma = { .vkcomp_cnt = 1 };
+  wlu_otma_mems ma = { .vkcomp_cnt = 2 };
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
+  check_err(!app, app, NULL, NULL)
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_debug_message(app);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   app->indices.present_family = app->indices.graphics_family;
   err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   FREEME(app, NULL)
 } END_TEST;
@@ -191,45 +152,26 @@ START_TEST(test_swap_chain_fail_no_surface) {
   if (!wlu_otma(ma)) ck_abort_msg(NULL);
 
   vkcomp *app = wlu_init_vk();
+  check_err(!app, app, NULL, NULL)
 
   err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to create vulkan instance");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_debug_message(app);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to setup debug message");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to find physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to set device queue family");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   app->indices.present_family = app->indices.graphics_family;
   err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
-  if (err) {
-    FREEME(app, NULL)
-    wlu_log_me(WLU_DANGER, "[x] failed to initialize logical device to physical device");
-    ck_abort_msg(NULL);
-  }
+  check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_null(app->surface);
 

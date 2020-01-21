@@ -36,7 +36,6 @@
 
 #define INAPI_CALLS 1
 #include "lucurious.h"
-#include "utils/errors.h"
 
 #define FREE(ptr) { wlu_free_block(ptr); ptr = NULL; }
 

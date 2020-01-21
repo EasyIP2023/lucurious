@@ -63,7 +63,10 @@ VkResult wlu_create_logical_device(
   const char *const *ppEnabledExtensionNames
 );
 
-/* Create the actual swap chain used to present images to a surface */
+/**
+* Create the actual swap chain used to present images to a surface.
+* Does not check if image count exceeds the max
+*/
 VkResult wlu_create_swap_chain(
   vkcomp *app,
   uint32_t cur_scd,
@@ -114,7 +117,7 @@ VkResult wlu_create_buffer(
   VkSharingMode sharingMode,
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
-  char *buff_name,
+  char buff_name,
   VkFlags requirements_mask
 );
 

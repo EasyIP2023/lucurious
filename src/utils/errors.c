@@ -187,10 +187,6 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
       wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layouts()");
       break;
-    case WLU_VKCOMP_FRAMEBUFFER:
-      wlu_log_me(WLU_DANGER, "[x] Frame Buffers weren't created");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_framebuffers()");
-      break;
     case WLU_VKCOMP_PHYSICAL_DEV:
       wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
@@ -206,10 +202,6 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
     case WLU_VKCOMP_SC:
       wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
-      break;
-    case WLU_VKCOMP_SC_BUFFS:
-      wlu_log_me(WLU_DANGER, "[x] Swap Chain buffers not setup");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_img_views()");
       break;
     case WLU_VKCOMP_SC_IC:
       wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");

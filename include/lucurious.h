@@ -27,6 +27,9 @@
 
 #include "utils/log.h"
 #include "utils/mm.h"
+#ifdef INAPI_CALLS
+#include "utils/errors.h"
+#endif
 
 #ifdef LUCUR_FILE_API
 #include "utils/file.h"
@@ -46,6 +49,7 @@
 #include "vkcomp/all.h"
 #endif
 
+/* This will remain like this for now */
 #ifdef LUCUR_WAYLAND_API
 #include "wclient/client.h"
 

@@ -146,11 +146,12 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
-VkResult wlu_acquire_next_sc_img(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
+VkResult wlu_acquire_sc_img_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data[cur_scd].sems) { PERR(WLU_VKCOMP_SC_SEMS, 0, NULL); return res; }
 
+  /* Signal image semaphore */
   res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
                               app->sc_data[cur_scd].sems[*cur_img].image, VK_NULL_HANDLE, cur_img);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -200,7 +201,7 @@ VkResult wlu_queue_graphics_queue(
     res = vkResetFences(app->device, 1, &draw_fence);
     if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); goto finish_gq_submit; }
 
-    /* The fence should be signaled when command buffer is finished */
+    /* Semaphore should be waited on & fence should be signaled when command buffer is finished */
     res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
     if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); goto finish_gq_submit; }
 
@@ -209,22 +210,6 @@ VkResult wlu_queue_graphics_queue(
     if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); goto finish_gq_submit; }
 
   } while (res == VK_TIMEOUT);
-
-  // VkSemaphoreSignalInfoKHR sem_sig_info = {};
-  // sem_sig_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO_KHR;
-  // sem_sig_info.pNext = NULL;
-  // sem_sig_info.semaphore = pWaitSemaphores[0];
-  // sem_sig_info.value = VK_TRUE;
-  //
-  // PFN_SignalSemaphoreKHR vk_signal_semaphore = VK_NULL_HANDLE;
-  // WLU_DR_DEVICE_PROC_ADDR(vk_signal_semaphore, app->device, "SignalSemaphoreKHR");
-  // if (!vk_signal_semaphore) return VK_ERROR_INITIALIZATION_FAILED;
-  //
-  // res = vk_signal_semaphore(app->device, &sem_sig_info);
-  // if (res) {
-  //   wlu_log_me(WLU_DANGER, "[x] vkSignalSemaphore failed, ERROR CODE: %d", res);
-  //   goto finish_gq_submit;
-  // }
 
 finish_gq_submit:
   if (draw_fence) {

@@ -30,6 +30,7 @@
 * unit measured in nanoseconds
 */
 #define GENERAL_TIMEOUT 100000000
+#define ALLOC_INDEX_NON 0
 
 typedef struct _vertex_2D {
   vec2 pos;
@@ -63,7 +64,10 @@ typedef enum _wlu_data_type {
   WLU_GP_DATA = 0x00000001,
   WLU_CMD_DATA = 0x00000002,
   WLU_BUFFS_DATA = 0x00000003,
-  WLU_DESC_DATA = 0x00000004
+  WLU_DESC_DATA = 0x00000004,
+  WLU_SC_DATA_MEMS = 0x00000005,
+  WLU_DESC_DATA_MEMS = 0x00000006,
+  WLU_GP_DATA_MEMS = 0x00000007
 } wlu_data_type;
 
 typedef struct _vkcomp {
@@ -90,6 +94,7 @@ typedef struct _vkcomp {
     struct swap_chain_buffers {
       VkImage image;
       VkImageView view;
+      VkFramebuffer fb;
     } *sc_buffs;
 
     struct semaphores {
@@ -97,7 +102,6 @@ typedef struct _vkcomp {
       VkSemaphore render;
     } *sems;
 
-    VkFramebuffer *frame_buffs;
     struct depth_buffer {
       VkFormat format;
       VkImage image;
@@ -126,7 +130,7 @@ typedef struct _vkcomp {
     VkBuffer buff;
     VkDeviceMemory mem;
     VkDeviceSize size;
-    char *name;
+    char name;
   } *buffs_data;
 
   uint32_t ddc; /* descriptor data count */

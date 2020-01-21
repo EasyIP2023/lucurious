@@ -42,6 +42,7 @@ VkResult wlu_create_render_pass(
 
 VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t stageCount,
   const VkPipelineShaderStageCreateInfo *pStages,
   const VkPipelineVertexInputStateCreateInfo *pVertexInputState,
@@ -55,9 +56,7 @@ VkResult wlu_create_graphics_pipelines(
   const VkPipelineDynamicStateCreateInfo *pDynamicState,
   uint32_t subpass,
   VkPipeline basePipelineHandle,
-  uint32_t basePipelineIndex,
-  uint32_t cur_gpd,
-  uint32_t gps_count /* graphic pipelines count */
+  uint32_t basePipelineIndex
 );
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);

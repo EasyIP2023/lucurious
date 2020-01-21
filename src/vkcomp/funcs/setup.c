@@ -28,31 +28,35 @@
 vkcomp *wlu_init_vk() {
   vkcomp *app = wlu_alloc(WLU_SMALL_BLOCK, sizeof(vkcomp));
   if (!app) { PERR(WLU_ALLOC_FAILED, 0, NULL); return app; };
-  set_vkcomp_init_values(app);
+
+  app->indices.graphics_family = UINT32_MAX;
+  app->indices.present_family = UINT32_MAX;
+
   return app;
 }
 
 void wlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
-  /**
-  * To destory all uniform buffers
-  * if (app->buffs_data) {
-  *  for (uint32_t i = 0; i < app->bdc; i++) {
-  *    vkDestroyBuffer(app->device, uniform_buffs[i], NULL);
-  *    vkFreeMemory(app->device, uniform_buffs_mem[i], NULL);
-  *  }
-  * }
-  * if (app->desc_data) {
-  *   for (uint32_t i = 0; i < app->ddc; i++) {
-  *     if (app->desc_data[i].desc_pool) {
-  *       vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
-  *       app->desc_data[i].desc_pool = VK_NULL_HANDLE;
-  *     }
-  *   }
-  *  FREE(app->desc_data[i].desc_set);
-  * }
-  */
+  /* destory all uniform buffers */
+  if (app->buffs_data) {
+    for (uint32_t i = 0; i < app->bdc; i++) {
+      if (app->buffs_data[i].name == 'u') {
+        vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
+        vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
+        app->buffs_data[i].buff = VK_NULL_HANDLE;
+        app->buffs_data[i].mem = VK_NULL_HANDLE;
+      }
+    }
+  }
+  if (app->desc_data) {
+    for (uint32_t i = 0; i < app->ddc; i++) {
+      if (app->desc_data[i].desc_pool) {
+        vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
+        app->desc_data[i].desc_pool = VK_NULL_HANDLE;
+      }
+    }
+  }
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++)
       if (app->cmd_data[i].cmd_buffs)
@@ -73,14 +77,14 @@ void wlu_freeup_sc(void *data) {
 
   if (app->sc_data) {
     for (uint32_t i = 0; i < app->sdc; i++) {
-      if (app->sc_data[i].sc_buffs && app->sc_data[i].frame_buffs) {
+      if (app->sc_data[i].sc_buffs) {
         for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
-          vkDestroyFramebuffer(app->device, app->sc_data[i].frame_buffs[j], NULL);
+          vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
           vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
-          app->sc_data[i].frame_buffs[j] = VK_NULL_HANDLE;
+          app->sc_data[i].sc_buffs[j].image = VK_NULL_HANDLE;
           app->sc_data[i].sc_buffs[j].view = VK_NULL_HANDLE;
+          app->sc_data[i].sc_buffs[j].fb = VK_NULL_HANDLE;
         }
-        FREE(app->sc_data[i].sc_buffs);
       }
       if (app->sc_data[i].swap_chain)
         vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
@@ -95,24 +99,18 @@ void wlu_freeup_vk(void *data) {
     app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++) {
-      if (app->cmd_data[i].cmd_pool) {
+      if (app->cmd_data[i].cmd_pool)
         vkDestroyCommandPool(app->device, app->cmd_data[i].cmd_pool, NULL);
-        app->cmd_data[i].cmd_pool = VK_NULL_HANDLE;
-      }
     }
   }
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
   if (app->gp_data) { /* leave like this for now */
     for (uint32_t i = 0; i < app->gdc; i++) {
-      if (app->gp_data[i].pipeline_layout) {
+      if (app->gp_data[i].pipeline_layout)
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
-        app->gp_data[i].pipeline_layout = VK_NULL_HANDLE;
-      }
-      if (app->gp_data[i].render_pass) {
+      if (app->gp_data[i].render_pass)
         vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
-        app->gp_data[i].render_pass = VK_NULL_HANDLE;
-      }
       for (uint32_t j = 0; j < app->gp_data[i].gpc; j++)
         vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
     }
@@ -125,22 +123,16 @@ void wlu_freeup_vk(void *data) {
             vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
         }
       }
-      if (app->desc_data[i].desc_pool) {
+      if (app->desc_data[i].desc_pool)
         vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
-        app->desc_data[i].desc_pool = VK_NULL_HANDLE;
-      }
     }
   }
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
-      if (app->buffs_data[i].buff) {
+      if (app->buffs_data[i].buff)
         vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
-        app->buffs_data[i].buff = VK_NULL_HANDLE;
-      }
-      if (app->buffs_data[i].mem) {
+      if (app->buffs_data[i].mem)
         vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
-        app->buffs_data[i].mem = VK_NULL_HANDLE;
-      }
     }
   }
   if (app->sc_data) { /* Annihilate All Swap Chain Objects */
@@ -151,20 +143,18 @@ void wlu_freeup_vk(void *data) {
         vkDestroyImage(app->device, app->sc_data[i].depth.image, NULL);
       if (app->sc_data[i].depth.mem)
         vkFreeMemory(app->device, app->sc_data[i].depth.mem, NULL);
-      if (app->sc_data[i].sc_buffs && app->sc_data[i].frame_buffs && app->sc_data[i].sems) {
+      if (app->sc_data[i].sc_buffs && app->sc_data[i].sems) {
         for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
           if (app->sc_data[i].sems[j].image && app->sc_data[i].sems[j].render) {
             vkDestroySemaphore(app->device, app->sc_data[i].sems[j].image, NULL);
             vkDestroySemaphore(app->device, app->sc_data[i].sems[j].render, NULL);
           }
-          vkDestroyFramebuffer(app->device, app->sc_data[i].frame_buffs[j], NULL);
+          vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
           vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
         }
       }
-      if (app->sc_data[i].swap_chain) {
+      if (app->sc_data[i].swap_chain)
         vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
-        app->sc_data[i].swap_chain = VK_NULL_HANDLE;
-      }
     }
   }
   if (app->device) {
@@ -175,38 +165,61 @@ void wlu_freeup_vk(void *data) {
     vkDestroySurfaceKHR(app->instance, app->surface, NULL);
   if (app->instance)
     vkDestroyInstance(app->instance, NULL);
-
-  set_vkcomp_init_values(app);
-  app = NULL;
 }
 
-VkResult wlu_otba(vkcomp *app, uint32_t arr_size, wlu_data_type type) {
+VkResult wlu_otba(vkcomp *app, uint32_t index, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
       app->sc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _sc_data));
       if (!app->sc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
-      app->sdc = arr_size;
-      set_sc_data_init_values(app); break;
+      app->sdc = arr_size; break;
     case WLU_GP_DATA:
       app->gp_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _gp_data));
       if (!app->gp_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
-      app->gdc = arr_size;
-      set_gp_data_init_values(app); break;
+      app->gdc = arr_size; break;
     case WLU_CMD_DATA:
       app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _cmd_data));
       if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
-      app->cdc = arr_size;
-      set_cmd_data_init_values(app); break;
+      app->cdc = arr_size; break;
     case WLU_BUFFS_DATA:
       app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _buffs_data));
       if (!app->buffs_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
-      app->bdc = arr_size;
-      set_buffs_data_init_values(app); break;
+      app->bdc = arr_size; break;
     case WLU_DESC_DATA:
       app->desc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _desc_data));
       if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
-      app->ddc = arr_size;
-      set_desc_data_init_values(app); break;
+      app->ddc = arr_size; break;
+    case WLU_SC_DATA_MEMS:
+      /**
+      * Don't want to stick to minimum becuase one would have to wait on the
+      * drive to complete internal operations before one can acquire another
+      * images to render to. So it's recommended to add one to minImageCount
+      */
+      arr_size += 1;
+
+      /* Allocate SwapChain Buffers (VkImage, VkImageView, VkFramebuffer) */
+      app->sc_data[index].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct swap_chain_buffers));
+      if (!app->sc_data[index].sc_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+
+      /* Allocate CommandBuffers, This is okay */
+      app->cmd_data[index].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkCommandBuffer));
+      if (!app->cmd_data[index].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+
+      /* Allocate Semaphores */
+      app->sc_data[index].sems = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct semaphores));
+      if (!app->sc_data[index].sems) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+      app->sc_data[index].sic = arr_size; break;
+    case WLU_DESC_DATA_MEMS:
+      app->desc_data[index].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkDescriptorSetLayout));
+      if (!app->desc_data[index].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+
+      app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkDescriptorSet));
+      if (!app->desc_data[index].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+      app->desc_data[index].dlsc = arr_size; break;
+    case WLU_GP_DATA_MEMS:
+      app->gp_data[index].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkPipeline));
+      if (!app->gp_data[index].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+      app->gp_data[index].gpc = arr_size; break;
     default: break;
   }
 

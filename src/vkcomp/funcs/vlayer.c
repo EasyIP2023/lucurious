@@ -74,8 +74,7 @@ VkResult wlu_set_debug_message(vkcomp *app) {
 
 /**
 * Set vulkan validation layers properties.
-* To get these validation layers you must install
-* vulkan sdk
+* To get more validation layers install vulkan sdk
 */
 VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
   VkResult res = VK_INCOMPLETE;

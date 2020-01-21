@@ -87,6 +87,7 @@ VkResult wlu_create_render_pass(
 
 VkResult wlu_create_graphics_pipelines(
   vkcomp *app,
+  uint32_t cur_gpd,
   uint32_t stageCount,
   const VkPipelineShaderStageCreateInfo *pStages,
   const VkPipelineVertexInputStateCreateInfo *pVertexInputState,
@@ -100,15 +101,14 @@ VkResult wlu_create_graphics_pipelines(
   const VkPipelineDynamicStateCreateInfo *pDynamicState,
   uint32_t subpass,
   VkPipeline basePipelineHandle,
-  uint32_t basePipelineIndex,
-  uint32_t cur_gpd,
-  uint32_t gps_count /* graphics pipelines count */
+  uint32_t basePipelineIndex
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
   if (!app->gp_data[cur_gpd].pipeline_layout) { PERR(WLU_VKCOMP_PIPELINE_LAYOUT, 0, NULL); return res; }
+  if (!app->gp_data[cur_gpd].graphics_pipelines) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_GP_DATA_MEMS"); return res; }
 
   VkGraphicsPipelineCreateInfo pipeline_info = {};
   pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -129,10 +129,6 @@ VkResult wlu_create_graphics_pipelines(
   pipeline_info.subpass = subpass;
   pipeline_info.basePipelineHandle = basePipelineHandle;
   pipeline_info.basePipelineIndex = basePipelineIndex;
-
-  app->gp_data[cur_gpd].gpc = gps_count;
-  app->gp_data[cur_gpd].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK, gps_count * sizeof(VkPipeline));
-  if (!app->gp_data[cur_gpd].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
 
   res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, app->gp_data[cur_gpd].graphics_pipelines);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "GraphicsPipelines"); }
@@ -196,9 +192,7 @@ VkResult wlu_create_desc_set_layouts(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  app->desc_data[cur_dd].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK,
-    app->desc_data[cur_dd].dlsc * sizeof(VkDescriptorSetLayout));
-  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
+  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_DESC_DATA_MEMS"); return res; }
 
   for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
     res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, &app->desc_data[cur_dd].desc_layouts[i]);
@@ -239,7 +233,9 @@ VkResult wlu_create_desc_set(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->desc_data[cur_dd].desc_pool) { PERR(WLU_VKCOMP_DESC_POOL, 0, NULL); return res; }
+  /* Leaving this error check here for now */
   if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_VKCOMP_DESC_LAYOUT, 0, NULL); return res; }
+  if (!app->desc_data[cur_dd].desc_set) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_DESC_DATA_MEMS"); return res; }
 
   VkDescriptorSetAllocateInfo alloc_info;
   alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -247,9 +243,6 @@ VkResult wlu_create_desc_set(
   alloc_info.descriptorPool = app->desc_data[cur_dd].desc_pool;
   alloc_info.descriptorSetCount = app->desc_data[cur_dd].dlsc;
   alloc_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
-
-  app->desc_data[cur_dd].desc_set = wlu_alloc(WLU_SMALL_BLOCK, app->desc_data[cur_dd].dlsc * sizeof(VkDescriptorSet));
-  if (!app->desc_data[cur_dd].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
 
   res = vkAllocateDescriptorSets(app->device, &alloc_info, app->desc_data[cur_dd].desc_set);
   if (res) { PERR(WLU_VK_ALLOC_ERR, res, "DescriptorSets"); return res; }

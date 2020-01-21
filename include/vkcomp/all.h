@@ -48,7 +48,6 @@
 
 #ifdef INAPI_CALLS
 #include "funcs/utils.h"
-#include "funcs/values.h"
 
 /* Dynamically retrieve a VkInstance function */
 #define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
@@ -60,7 +59,7 @@
 /* Dynamically retrieve a VkDevice (logical device) function */
 #define WLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
   do { \
-    var = (PFN_vk##func) vkGetDeviceProcAddr(inst, "vk" #func); \
+    var = (PFN_vk##func) vkGetDeviceProcAddr(dev, "vk" #func); \
     if (!var) PERR(WLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \
   } while(0);
 #endif

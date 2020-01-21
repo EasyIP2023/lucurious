@@ -39,7 +39,7 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 ) {
 
-  if (!app->sc_data[cur_scd].frame_buffs) { PERR(WLU_VKCOMP_FRAMEBUFFER, 0, NULL); return; }
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return; }
 
   VkRenderPassBeginInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -53,7 +53,7 @@ void wlu_exec_begin_render_pass(
   render_pass_info.pClearValues = pClearValues;
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    render_pass_info.framebuffer = app->sc_data[cur_scd].frame_buffs[i];
+    render_pass_info.framebuffer = app->sc_data[cur_scd].sc_buffs[i].fb;
     /* Instert render pass into command buffer */
     vkCmdBeginRenderPass(app->cmd_data[cur_pool].cmd_buffs[i], &render_pass_info, contents);
   }

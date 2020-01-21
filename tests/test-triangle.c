@@ -22,7 +22,6 @@
 * THE SOFTWARE.
 */
 
-#include <signal.h>
 #include <check.h>
 
 #define LUCUR_VKCOMP_API
@@ -46,16 +45,16 @@ static wlu_otma_mems ma = {
 static VkResult init_buffs(vkcomp *app) {
   VkResult err;
 
-  err = wlu_otba(app, 2, WLU_BUFFS_DATA);
+  err = wlu_otba(app, ALLOC_INDEX_NON, 2, WLU_BUFFS_DATA);
   if (err) return err;
 
-  err = wlu_otba(app, 1, WLU_SC_DATA);
+  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_SC_DATA);
   if (err) return err;
 
-  err = wlu_otba(app, 1, WLU_GP_DATA);
+  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_GP_DATA);
   if (err) return err;
 
-  err = wlu_otba(app, 1, WLU_CMD_DATA);
+  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_CMD_DATA);
   if (err) return err;
 
   return err;
@@ -118,6 +117,9 @@ START_TEST(test_vulkan_client_create) {
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
+  err = wlu_otba(app, cur_scd, capabilities.minImageCount, WLU_SC_DATA_MEMS);
+  check_err(err, app, wc, NULL)
+
   err = wlu_create_swap_chain(app, cur_cmdd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   check_err(err, app, wc, NULL)
 
@@ -138,7 +140,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_acquire_next_sc_img(app, cur_scd, &cur_buff);
+  err = wlu_acquire_sc_img_index(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
@@ -203,7 +205,7 @@ START_TEST(test_vulkan_client_create) {
   }
 
   err = wlu_create_buffer(app, cur_bd, vsize, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "staging",
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
@@ -222,7 +224,7 @@ START_TEST(test_vulkan_client_create) {
   */
   err = wlu_create_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, "vertex", VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -298,10 +300,13 @@ START_TEST(test_vulkan_client_create) {
     VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  err = wlu_create_graphics_pipelines(app, 2, shader_stages,
+  err = wlu_otba(app, cur_gpd, 1, WLU_GP_DATA_MEMS);
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX, cur_gpd, 1
+    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
   );
   check_err(err, NULL, NULL, vert_shader_module)
   check_err(err, app, wc, frag_shader_module)
@@ -331,7 +336,7 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, &offsets);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
 

@@ -194,27 +194,16 @@ VkResult wlu_create_swap_chain(
   if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
   if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
 
-  /**
-  * Don't want to stick to minimum becuase one would have to wait on the
-  * drive to complete internal operations before one can acquire another
-  * images to render to. So it's recommended to add one to minImageCount
-  */
-  app->sc_data[cur_scd].sic = capabilities.minImageCount + 1;
-
-  /* Be sure sic doesn't exceed the maximum. */
-  if (capabilities.maxImageCount > 0 && app->sc_data[cur_scd].sic > capabilities.maxImageCount)
-    app->sc_data[cur_scd].sic = capabilities.maxImageCount;
-
   VkSurfaceTransformFlagBitsKHR pre_transform;
   pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
       VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
 
   VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   VkCompositeAlphaFlagBitsKHR composite_alpha_flags[4] = {
-      VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-      VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
-      VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
-      VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+    VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+    VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+    VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
   };
 
   for (uint32_t i = 0; i < sizeof(composite_alpha_flags); i++) {
@@ -277,12 +266,6 @@ VkResult wlu_create_img_views(
   VkImage *sc_imgs = NULL;
 
   if (!app->sc_data[cur_scd].swap_chain) { PERR(WLU_VKCOMP_SC, 0, NULL); return res; }
-
-  app->sc_data[cur_scd].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK,
-    app->sc_data[cur_scd].sic * sizeof(struct swap_chain_buffers));
-  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
-
-  set_sc_buffs_init_values(app, cur_scd);
 
   /**
   * It's okay to reuse app->sc_data[cur_scd].sic,
@@ -450,7 +433,7 @@ VkResult wlu_create_buffer(
   VkSharingMode sharingMode,
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
-  char *buff_name,
+  char buff_name,
   VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -562,11 +545,7 @@ VkResult wlu_create_framebuffers(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
-  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_VKCOMP_SC_BUFFS, 0, NULL); return res; }
-
-  app->sc_data[cur_scd].frame_buffs = wlu_alloc(WLU_SMALL_BLOCK,
-    app->sc_data[cur_scd].sic * sizeof(VkFramebuffer));
-  if (!app->sc_data[cur_scd].frame_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return res; }
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     attachments[0] = app->sc_data[cur_scd].sc_buffs[i].view;
@@ -580,8 +559,8 @@ VkResult wlu_create_framebuffers(
     create_info.height = height;
     create_info.layers = layers;
 
-    res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_data[cur_scd].frame_buffs[i]);
-    if (res) { PERR(WLU_VKCOMP_FRAMEBUFFER, res, "Framebuffer"); return res; }
+    res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].fb);
+    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Framebuffer"); return res; }
   }
 
   return res;
@@ -629,10 +608,6 @@ VkResult wlu_create_cmd_buffs(
   alloc_info.level = level;
   alloc_info.commandBufferCount = (uint32_t) app->sc_data[cur_scd].sic;
 
-  app->cmd_data[cur_pool].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK,
-    app->sc_data[cur_scd].sic * sizeof(VkCommandBuffer));
-  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
-
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_data[cur_pool].cmd_buffs);
   if (res) { PERR(WLU_VK_ALLOC_ERR, res, "CommandBuffers"); return res; }
 
@@ -648,12 +623,6 @@ VkResult wlu_create_cmd_buffs(
 */
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
-
-  app->sc_data[cur_scd].sems = wlu_alloc(WLU_SMALL_BLOCK,
-    app->sc_data[cur_scd].sic * sizeof(struct semaphores));
-  if (!app->sc_data[cur_scd].sems) { PERR(WLU_ALLOC_FAILED, 0, NULL); }
-
-  set_sc_sems_init_values(app, cur_scd);
 
   VkSemaphoreCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
