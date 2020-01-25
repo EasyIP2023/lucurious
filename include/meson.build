@@ -54,3 +54,6 @@ install_headers(vkcomp_matrix_hs, install_dir: vkcomp_i_dir + 'matrix')
 wayland_i_dir = i_dir + 'wayland/'
 wayland_main_hs = ['wayland/all.h', 'wayland/types.h']
 install_headers(wayland_main_hs, install_dir: wayland_i_dir)
+
+wayland_client_hs = ['wayland/wclient/client.h']
+install_headers(wayland_client_hs, install_dir: wayland_i_dir + 'wclient')
