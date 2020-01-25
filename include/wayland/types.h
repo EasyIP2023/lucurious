@@ -22,52 +22,35 @@
 * THE SOFTWARE.
 */
 
-#include <check.h>
+#ifndef WLU_WAYLAND_TYPES_H
+#define WLU_WAYLAND_TYPES_H
 
-#define LUCUR_WAYLAND_API
-#define LUCUR_WAYLAND_CLIENT_API
-#include <lucom.h>
+#include <linux/input-event-codes.h>
 
-START_TEST(init_wayland_client) {
-  wlu_otma_mems ma = { .wclient_cnt = 1 };
-  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+#ifdef LUCUR_WAYLAND_CLIENT_API
+#include <wayland-client.h>
+#include <wayland-client-protocol.h>
 
-  wclient *wc = NULL;
-  wc = wlu_init_wc();
+typedef struct wclient {
+  struct wl_compositor *compositor;
+  struct wl_seat *seat;
 
-  ck_assert_ptr_nonnull(wc);
+  struct wl_shm *shm;
+  struct xdg_wm_base *xdg_wm_base;
+  struct xdg_toplevel *xdg_toplevel;
 
-  wlu_freeup_wc(wc);
-  wc = NULL;
-} END_TEST;
+  void *shm_data;
 
+  struct wl_display *display;
+  struct wl_registry *registry;
+  struct wl_buffer *buffer;
 
-Suite *wclient_suite(void) {
-  Suite *s = NULL;
-  TCase *tc_core = NULL;
+  struct wl_surface *surface;
+  struct xdg_surface *xdg_surface;
 
-  s = suite_create("WClient");
+  uint32_t version;
+  int running;
+} wclient;
+#endif
 
-  /* Core test case */
-  tc_core = tcase_create("Core");
-
-  tcase_add_test(tc_core, init_wayland_client);
-  suite_add_tcase(s, tc_core);
-
-  return s;
-}
-
-int main(void) {
-  int number_failed;
-
-  Suite *s;
-  SRunner *sr;
-
-  s = wclient_suite();
-  sr = srunner_create(s);
-
-  srunner_run_all(sr, CK_NORMAL);
-  number_failed = srunner_ntests_failed(sr);
-  srunner_free(sr);
-  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif

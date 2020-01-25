@@ -27,76 +27,76 @@ check = dependency('check')
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',
   'test-vulkan.c',
-  include_directories : lucur_inc,
+  include_directories: lucur_inc,
   dependencies: [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 # Testing Wayland suite
 lucur_wclient_test = executable('lucur-wclient-test',
   'test-wclient.c',
-  include_directories : lucur_inc,
+  include_directories: lucur_inc,
   dependencies: [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 # Testing shade suite
 lucur_shade_test = executable('lucur-shade-test',
   'test-shade.c',
-  include_directories : lucur_inc,
+  include_directories: lucur_inc,
   dependencies: [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 lucur_triangle_test = executable('lucur-triangle-test',
   'test-triangle.c',
-  include_directories : lucur_inc,
-  dependencies : [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 lucur_square_test = executable('lucur-square-test',
   'test-square.c',
-  include_directories : lucur_inc,
-  dependencies : [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 lucur_cube_test = executable('lucur-cube-test',
   'test-cube.c',
-  include_directories : lucur_inc,
-  dependencies : [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 lucur_spin_square_test = executable('lucur-spin-square-test',
   'test-spin-square.c',
-  include_directories : lucur_inc,
-  dependencies : [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 lucur_alloc_test = executable('lucur-alloc-test',
   'test-alloc.c',
-  include_directories : lucur_inc,
-  dependencies : [check],
-  link_with : lib_lucur,
-  c_args : '-DDEV_ENV',
-  install : false
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
 )
 
 test('lucur-alloc-test', lucur_alloc_test, suite: ['alloc'])

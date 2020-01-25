@@ -8,10 +8,10 @@
 #include <fcntl.h>
 
 /**
- * Boilerplate to create an in-memory shared file.
- *
- * Link with `-lrt`.
- */
+* Boilerplate to create an in-memory shared file.
+*
+* Link with `-lrt`.
+*/
 
 static void randname(char *buf) {
 	struct timespec ts;

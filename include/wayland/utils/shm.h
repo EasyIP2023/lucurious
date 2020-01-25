@@ -1,6 +1,6 @@
 /* https://github.com/emersion/hello-wayland/blob/master/shm.h */
-#ifndef SHM_H
-#define SHM_H
+#ifndef WLU_WAYLAND_UTILS_SHM_H
+#define WLU_WAYLAND_UTILS_SHM_H
 
 #include <sys/types.h>
 

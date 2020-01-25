@@ -48,17 +48,14 @@ add_project_arguments(
 	language : 'c'
 )
 
-add_global_link_arguments('-lrt', language : 'c')
-
-lucur_inc = include_directories('.','include')
+lucur_inc = include_directories('.', 'include')
 
 subdir('include')
 subdir('src')
 
 lucur_parts = [
 	lib_utils, lib_shade,
-	lib_vkcomp, lib_lwayland,
-	lib_wserver, lib_wclient,
+	lib_vkcomp, lib_lwayland
 ]
 
 lib_lucur = shared_library(
@@ -75,6 +72,9 @@ lucur = declare_dependency(
 	include_directories: lucur_inc,
 )
 
+# Test API calls
+subdir('tests')
+
 executable(
 	'lucur',
 	lib_exec,
@@ -83,8 +83,6 @@ executable(
 	install: true,
 	install_dir: '/usr/bin'
 )
-
-subdir('tests')
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(

@@ -35,7 +35,7 @@
 #define check_err(err,app,wc,shader) \
   do { \
     if (!shader && err) wlu_freeup_shader(app, shader); \
-    if (err) { FREEME(app, wc) ck_abort_msg(NULL); } \
+    if (err) { FREEME(app, wc); ck_abort_msg(NULL); } \
   } while(0);
 
 const char *device_extensions[] = {

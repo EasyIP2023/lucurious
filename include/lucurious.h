@@ -40,22 +40,13 @@
 #endif
 
 #ifdef LUCUR_VKCOMP_API
-#include <cglm/types.h>
-
-#define VK_USE_PLATFORM_WAYLAND_KHR 1
-#include <vulkan/vulkan.h>
-
 #include "vkcomp/types.h"
 #include "vkcomp/all.h"
 #endif
 
-/* This will remain like this for now */
 #ifdef LUCUR_WAYLAND_API
-#include "wclient/client.h"
-
-#ifdef INAPI_CALLS
-#include "wclient/shm.h"
-#endif
+#include "wayland/types.h"
+#include "wayland/all.h"
 #endif
 
 #endif

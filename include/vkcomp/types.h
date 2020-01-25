@@ -25,6 +25,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <cglm/types.h>
+
+#define VK_USE_PLATFORM_WAYLAND_KHR
+#include <vulkan/vulkan.h>
+
 /**
 * The amount of time, one waits for a command buffer to complete
 * unit measured in nanoseconds

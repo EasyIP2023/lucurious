@@ -22,11 +22,16 @@
 # THE SOFTWARE.
 #
 
-server_protocols = [
-	[wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],
-]
+wayland_server = dependency('wayland-server')
+
+wayland_scanner_server = generator(
+	wayland_scanner,
+	output: '@BASENAME@-protocol.h',
+	arguments: ['server-header', '@INPUT@', '@OUTPUT@'],
+)
 
 wserver_protos_headers = []
+server_protocols = []
 
 foreach p : server_protocols
 	xml = join_paths(p)

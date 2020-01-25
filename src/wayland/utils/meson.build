@@ -22,26 +22,11 @@
 # THE SOFTWARE.
 #
 
-wayland_client = dependency('wayland-client')
+lib_rt = cc.find_library('rt', required : true)
 
-wayland_scanner_client = generator(
-	wayland_scanner,
-	output: '@BASENAME@-client-protocol.h',
-	arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
-)
-
-wclient_protos_headers = []
-client_protocols = []
-
-foreach p : client_protocols
-	xml = join_paths(p)
-	wclient_protos_headers += wayland_scanner_client.process(xml)
-endforeach
-
-lib_wclient = static_library(
-	'wclient',
-  wclient_protos_headers,
-  files('client.c'),
+lib_wutils = static_library(
+	'lwutils',
+  files('shm.c'),
 	include_directories: lucur_inc,
-	dependencies: [wayland_client]
+  dependencies: [lib_rt]
 )

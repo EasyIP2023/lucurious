@@ -30,10 +30,10 @@ typedef struct _wlu_otma_mems {
   uint32_t cha_cnt;   /* char array count */
   uint32_t fla_cnt;    /* float array count */
   uint32_t dba_cnt;   /* double array count */
+  uint32_t wclient_cnt;
+  uint32_t vkcomp_cnt;
   uint32_t vkext_props_cnt;
   uint32_t vkval_layer_cnt;
-  uint32_t vkcomp_cnt;
-  uint32_t wclient_cnt;
   uint32_t desc_cnt;  /* descriptor count */
   uint32_t gp_cnt;    /* Graphics pipelines count */
   uint32_t si_cnt;    /* swap chain image count */

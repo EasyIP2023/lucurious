@@ -34,10 +34,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define INAPI_CALLS 1
+#define INAPI_CALLS
 #include "lucurious.h"
 
 #define FREE(ptr) { wlu_free_block(ptr); ptr = NULL; }
+
+/* macro token concatenation */
+#define DECLARE_STRUCT_TYPE(name) typedef struct name##_s name##_t
 
 #define POW2_DEC(pow) 1 << pow
 

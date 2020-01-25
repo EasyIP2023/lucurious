@@ -27,8 +27,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define LUCUR_VKCOMP_API  // Need both for sizeof operations
+/* To access header struct information in C source file */
 #define LUCUR_WAYLAND_API
+#define LUCUR_WAYLAND_CLIENT_API
+#define LUCUR_VKCOMP_API
 #include <lucom.h>
 
 /**
@@ -192,20 +194,19 @@ bool wlu_otma(wlu_otma_mems ma) {
   size += (ma.cha_cnt * sizeof(char)); /* sizeof(char) is for formality */
   size += (ma.fla_cnt * sizeof(float));
   size += (ma.dba_cnt * sizeof(double));
-  size += (ma.gp_cnt * sizeof(VkPipeline));
-  size += (ma.vkext_props_cnt * sizeof(VkExtensionProperties));
-  size += (ma.vkval_layer_cnt * sizeof(VkLayerProperties));
-  size += (ma.vkcomp_cnt * sizeof(vkcomp));
+
   size += (ma.wclient_cnt * sizeof(wclient));
 
+  size += (ma.vkcomp_cnt * sizeof(vkcomp));
+  size += (ma.vkext_props_cnt * sizeof(VkExtensionProperties));
+  size += (ma.vkval_layer_cnt * sizeof(VkLayerProperties));
+  size += (ma.gp_cnt * sizeof(VkPipeline));
   size += (ma.desc_cnt * sizeof(VkDescriptorSet));
   size += (ma.desc_cnt * sizeof(VkDescriptorSetLayout));
-
   size += (ma.si_cnt * sizeof(struct swap_chain_buffers));
   size += (ma.si_cnt * sizeof(VkFramebuffer));
   size += (ma.si_cnt * sizeof(VkCommandBuffer));
   size += (ma.si_cnt * sizeof(struct semaphores));
-
   size += (ma.scd_cnt * sizeof(struct _sc_data));
   size += (ma.gpd_cnt * sizeof(struct _gp_data));
   size += (ma.cmdd_cnt * sizeof(struct _cmd_data));

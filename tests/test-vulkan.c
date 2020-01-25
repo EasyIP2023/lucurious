@@ -25,7 +25,9 @@
 #include <check.h>
 
 #define LUCUR_VKCOMP_API
+/* Leaving these in here for now */
 #define LUCUR_WAYLAND_API
+#define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 
 #include "test-extras.h"

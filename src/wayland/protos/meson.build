@@ -22,26 +22,26 @@
 # THE SOFTWARE.
 #
 
-wayland_client = dependency('wayland-client')
+wayland_protos = dependency('wayland-protocols')
+wayland_scanner = find_program('wayland-scanner', required : true)
 
-wayland_scanner_client = generator(
+wayland_protos_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
+
+wayland_scanner_code = generator(
 	wayland_scanner,
-	output: '@BASENAME@-client-protocol.h',
-	arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
+	output: '@BASENAME@-protocol.c',
+	arguments: ['private-code', '@INPUT@', '@OUTPUT@'],
 )
 
-wclient_protos_headers = []
-client_protocols = []
+# Define wayland extension xmls and create corresponding headers
+wayland_protos_headers = []
+wayland_protos_shared = [
+	[wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],
+]
 
-foreach p : client_protocols
+foreach p : wayland_protos_shared
 	xml = join_paths(p)
-	wclient_protos_headers += wayland_scanner_client.process(xml)
+	wayland_protos_headers += wayland_scanner_code.process(xml)
 endforeach
 
-lib_wclient = static_library(
-	'wclient',
-  wclient_protos_headers,
-  files('client.c'),
-	include_directories: lucur_inc,
-	dependencies: [wayland_client]
-)
+lib_wprotos = static_library('lwayland', wayland_protos_headers)

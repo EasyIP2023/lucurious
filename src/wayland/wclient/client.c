@@ -1,29 +1,16 @@
 #define LUCUR_WAYLAND_API
+#define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 
 #include <sys/mman.h>
 
 #include "xdg-shell-client-protocol.h"
 
-static void set_values(wclient *wc) {
-  wc->display = NULL;
-  wc->registry = NULL;
-  wc->buffer = NULL;
-  wc->surface = NULL;
-  wc->xdg_surface = NULL;
-  wc->compositor = NULL;
-  wc->seat = NULL;
-  wc->shm = NULL;
-  wc->xdg_wm_base = NULL;
-  wc->xdg_toplevel = NULL;
-  wc->shm_data = NULL;
-  wc->running = 1;
-}
-
 wclient *wlu_init_wc() {
   wclient *wc = wlu_alloc(WLU_SMALL_BLOCK, sizeof(wclient));
   if (!wc) { PERR(WLU_ALLOC_FAILED, 0, NULL); return wc; }
-  set_values(wc);
+
+  wc->running = 1;
   return wc;
 }
 
@@ -76,42 +63,16 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-static struct wl_buffer *create_buffer(wclient *wc) {
-  int stride = 1024 * 4;
-  int size = stride * 681;
-
-  int fd = create_shm_file(size);
-  if (fd < 0) {
-    wlu_log_me(WLU_DANGER, "[x] creating a buffer file for %d B failed: %m\n", size);
-    return NULL;
-  }
-
-  wc->shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (wc->shm_data == MAP_FAILED) {
-    wlu_log_me(WLU_DANGER, "[x] mmap failed: %m\n");
-    close(fd);
-    return NULL;
-  }
-
-  struct wl_shm_pool *pool = wl_shm_create_pool(wc->shm, fd, size);
-  struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, 1024, 681, stride, WL_SHM_FORMAT_ARGB8888);
-  wl_shm_pool_destroy(pool);
-
-	// MagickImage is from waves.h
-	// memcpy(wc->shm_data, MagickImage, size);
-  return buffer;
-}
-
 int wlu_connect_client(wclient *wc) {
   int err = 0;
 
-  ALL_UNUSED(create_buffer);
-
+  /* establish connection to wayland server */
   wc->display = wl_display_connect(NULL);
   if (!wc->display) return EXIT_FAILURE;
 
   wlu_log_me(WLU_SUCCESS, "connected to display");
 
+  /* Registry enumerates globals for the server */
   wc->registry = wl_display_get_registry(wc->display);
   if (!wc->registry) return EXIT_FAILURE;
 
@@ -202,7 +163,4 @@ void wlu_freeup_wc(void *data) {
     munmap(wc->shm_data, 1024 * 4 * 681);
   if (wc->xdg_wm_base)
     free(wc->xdg_wm_base);
-
-  set_values(wc);
-  wc = NULL;
 }
