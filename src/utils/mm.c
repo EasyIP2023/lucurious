@@ -149,22 +149,11 @@ static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
     goto finish_alloc_mem_block;
   }
 
-  switch (type) {
-    case WLU_LARGE_BLOCK_PRIV:
-      block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, fd, 0);
-      if (block == MAP_FAILED) {
-        wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
-        goto finish_alloc_mem_block;
-      }
-      break;
-    case WLU_LARGE_BLOCK_SHARED:
-      block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, fd, 0);
-      if (block == MAP_FAILED) {
-        wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
-        goto finish_alloc_mem_block;
-      }
-      break;
-    default: break;
+  int flags = (type == WLU_LARGE_BLOCK_SHARED) ? (MAP_SHARED | MAP_ANON) : (MAP_PRIVATE | MAP_ANON);
+  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags, fd, 0);
+  if (block == MAP_FAILED) {
+    wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
+    goto finish_alloc_mem_block;
   }
 
   block->next = NULL;
@@ -190,6 +179,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
   * O(1) appending to end of linked-list
   * reset linked list to starting address of linked list
   */
+
   /* TODO: Possible rewrite of switch statement */
   switch (type) {
     case WLU_LARGE_BLOCK_PRIV:
@@ -220,7 +210,6 @@ void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
 
       /* Move back to previous block (for return status) */
       nblock = small_block_priv;
-      small_block_priv = sstart_addr_priv; /* RESET */
       break;
     case WLU_LARGE_BLOCK_SHARED:
       /* If large block allocated don't allocate another one */
@@ -250,7 +239,6 @@ void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
 
       /* Move back to previous block (for return status) */
       nblock = small_block_shared;
-      small_block_priv = sstart_addr_shared; /* RESET */
       break;
     default: break;
   }
@@ -329,6 +317,7 @@ void wlu_release_blocks() {
     }
     large_block_priv = NULL;
   }
+
   if (large_block_shared) {
     if (munmap(large_block_shared, BLOCK_SIZE + large_block_shared->size) == NEG_ONE) {
       wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
@@ -345,5 +334,4 @@ void wlu_print_mb(wlu_block_type type) {
                current, current->next, current->is_free, current->size, current->saddr);
     current = current->next;
   }
-  small_block_priv = sstart_addr_priv;
 }
