@@ -22,7 +22,6 @@
 # THE SOFTWARE.
 #
 
-wbackend_protos_cglue = []
 wayland_scanner_back = generator(
 	wayland_scanner,
 	output: '@BASENAME@-protocol.h',
@@ -30,15 +29,12 @@ wayland_scanner_back = generator(
 )
 
 foreach p : wayland_protos_shared
-  xml = join_paths(p)
-  wbackend_protos_cglue += wayland_scanner_back.process(xml)
+	xml = join_paths(p)
+	wayland_scanner_back.process(xml)
 endforeach
-
 
 lib_wbackend = static_library(
 	'lwbackend',
-	wbackend_protos_cglue,
-  files('globals.c'),
-	include_directories: lucur_inc,
-  dependencies: [wayland_client, wayland_server]
+	files('globals.c'),
+	include_directories: lucur_inc
 )

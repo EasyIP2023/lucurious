@@ -30,15 +30,13 @@ wayland_scanner_server = generator(
 	arguments: ['server-header', '@INPUT@', '@OUTPUT@'],
 )
 
-wserver_protos_cglue = []
 foreach p : wayland_protos_shared
 	xml = join_paths(p)
-	wserver_protos_cglue += wayland_scanner_server.process(xml)
+	wayland_scanner_server.process(xml)
 endforeach
 
 lib_wserver = static_library(
 	'wserver',
-	wserver_protos_cglue,
 	include_directories: lucur_inc,
 	dependencies: [wayland_server]
 )

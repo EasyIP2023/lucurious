@@ -30,15 +30,13 @@ wayland_scanner_client = generator(
 	arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
 )
 
-wclient_protos_cglue = []
 foreach p : wayland_protos_shared
 	xml = join_paths(p)
-	wclient_protos_cglue += wayland_scanner_client.process(xml)
+	wayland_scanner_client.process(xml)
 endforeach
 
 lib_wclient = static_library(
 	'wclient',
-	wclient_protos_cglue,
 	files('create.c', 'setup.c'),
 	include_directories: lucur_inc,
 	dependencies: [wayland_client]
