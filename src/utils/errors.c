@@ -213,7 +213,7 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
       break;
     case WLU_VKCOMP_BUFF_MEM:
       wlu_log_me(WLU_DANGER, "[x] VkDeviceMemory not created");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_buffer()");
+      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_vk_buffer()");
       break;
     case WLU_VKCOMP_CMD_POOL:
       wlu_log_me(WLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");
@@ -226,8 +226,14 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
     case WLU_BUFF_NOT_ALLOC:
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_otba(): %s", wlu_msg);
       break;
+    case WLU_OP_NOT_PERMITED:
+      wlu_log_me(WLU_DANGER, "[x] Failure the current operation you are trying to do is wrong");
+      break;
     case WLU_ALLOC_FAILED:
-      wlu_log_me(WLU_DANGER, "[x] something seriously went wrong can't find sub range of addresses, please create issue with information");
+      wlu_log_me(WLU_DANGER, "[x] Ugh something went wrong!! :( If you didn't forget to call wlu_otma(), please create an issue with information");
+      break;
+    case WLU_ALREADY_ALLOC:
+      wlu_log_me(WLU_DANGER, "[x] Buffer already allocated, Don't try again >>[]:");
       break;
     default: break;
   }

@@ -25,16 +25,28 @@
 i_dir = '/usr/include/wlu/'
 install_headers('lucurious.h', install_dir: i_dir)
 
-utils_hs = ['utils/log.h', 'utils/file.h', 'utils/mm.h']
+############################
+# Installing utils headers #
+############################
+utils_hs = ['utils/log.h', 'utils/file.h', 'utils/mm.h', 'utils/types.h']
 install_headers(utils_hs, install_dir: i_dir + 'utils')
 
+#############################
+# Installing shader headers #
+#############################
 shader_hs = ['shader/shade.h']
 install_headers(shader_hs, install_dir: i_dir + 'shader')
 
+#############################
+# Installing vkcomp headers #
+#############################
 vkcomp_i_dir = i_dir + 'vkcomp/'
 vkcomp_main_hs = ['vkcomp/all.h', 'vkcomp/types.h']
 install_headers(vkcomp_main_hs, install_dir: vkcomp_i_dir)
 
+#######################################
+# Installing vkcomp functions headers #
+#######################################
 vkcomp_func_hs = [
   'vkcomp/funcs/copy.h', 'vkcomp/funcs/create.h', 'vkcomp/funcs/device.h',
   'vkcomp/funcs/display.h', 'vkcomp/funcs/exec.h', 'vkcomp/funcs/set.h',
@@ -42,18 +54,30 @@ vkcomp_func_hs = [
 ]
 install_headers(vkcomp_func_hs, install_dir: vkcomp_i_dir + 'funcs')
 
+###############################################
+# Installing vkcomp graphics pipeline headers #
+###############################################
 vkcomp_gp_hs = [
   'vkcomp/gp/bind.h', 'vkcomp/gp/cmd.h', 'vkcomp/gp/create.h',
   'vkcomp/gp/exec.h', 'vkcomp/gp/set.h', 'vkcomp/gp/update.h'
 ]
 install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
 
+####################################
+# Installing vkcomp matrix headers #
+####################################
 vkcomp_matrix_hs = ['vkcomp/matrix/print.h', 'vkcomp/matrix/set.h']
 install_headers(vkcomp_matrix_hs, install_dir: vkcomp_i_dir + 'matrix')
 
+##############################
+# Installing wayland headers #
+##############################
 wayland_i_dir = i_dir + 'wayland/'
 wayland_main_hs = ['wayland/all.h', 'wayland/types.h']
 install_headers(wayland_main_hs, install_dir: wayland_i_dir)
 
-wayland_client_hs = ['wayland/wclient/client.h']
+#####################################
+# Installing wayland client headers #
+#####################################
+wayland_client_hs = ['wayland/wclient/setup.h', 'wayland/wclient/create.h']
 install_headers(wayland_client_hs, install_dir: wayland_i_dir + 'wclient')

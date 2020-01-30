@@ -22,32 +22,45 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#define LUCUR_WAYLAND_API
+#define LUCUR_WAYLAND_CLIENT_API
+#include <lucom.h>
 
-#include "utils/types.h"
-#include "utils/log.h"
-#include "utils/mm.h"
-#ifdef INAPI_CALLS
-#include "utils/errors.h"
-#endif
+#include "xdg-shell-client-protocol.h"
 
-#ifdef LUCUR_FILE_API
-#include "utils/file.h"
-#endif
+bool wlu_run_client(wclient *wc) {
+  if (wl_display_dispatch(wc->display) != NEG_ONE && wc->running)
+    return false;
+  return true;
+}
 
-#ifdef LUCUR_SHADE_API
-#include "shader/shade.h"
-#endif
+wclient *wlu_init_wc() {
+  wclient *wc = wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(wclient), NEG_ONE);
+  if (!wc) { PERR(WLU_ALLOC_FAILED, 0, NULL); return wc; }
 
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
+  wc->running = 1;
+  return wc;
+}
 
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+void wlu_freeup_wc(void *data) {
+  wclient *wc = (wclient *) data;
 
-#endif
+  if (wc->shm)
+    wl_shm_destroy(wc->shm);
+  if (wc->buffer)
+    wl_buffer_destroy(wc->buffer);
+  if (wc->surface)
+    wl_surface_destroy(wc->surface);
+  if (wc->xdg_surface)
+    xdg_surface_destroy(wc->xdg_surface);
+  if (wc->shell)
+    xdg_wm_base_destroy(wc->shell);
+  if (wc->xdg_toplevel)
+    xdg_toplevel_destroy(wc->xdg_toplevel);
+  if (wc->registry)
+    wl_registry_destroy(wc->registry);
+  if (wc->compositor)
+    wl_compositor_destroy(wc->compositor);
+  if (wc->display)
+    wl_display_disconnect(wc->display);
+}

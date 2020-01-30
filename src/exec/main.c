@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     .vkval_layer_cnt = 200,
     .vkext_props_cnt = 200
   };
-  if (!wlu_otma(ma)) return EXIT_FAILURE;
+  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
 
   while (1) {
     int option_index = 0;
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     c = getopt_long(argc, argv, "vhlid:",
         long_options, &option_index);
 
-    if (c == -1) { goto exit_loop; }
+    if (c == NEG_ONE) { goto exit_loop; }
     track++;
 
     switch (c) {
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
   }
 
 exit_loop:
-  if (c == -1 && track == 0) help_message();
-  wlu_release_block();
+  if (c == NEG_ONE && track == 0) help_message();
+  wlu_release_blocks();
   return EXIT_SUCCESS;
 }

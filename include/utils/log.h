@@ -25,17 +25,6 @@
 #ifndef WLU_UTILS_LOG_H
 #define WLU_UTILS_LOG_H
 
-/* Used to help determine which ANSI Escape Codes to use */
-typedef enum wlu_log_type {
-  WLU_NONE    = 0x00000000,
-  WLU_SUCCESS = 0x00000001,
-  WLU_DANGER  = 0x00000002,
-  WLU_INFO    = 0x00000003,
-  WLU_WARNING = 0x00000004,
-  WLU_RESET   = 0x00000005,
-  WLU_MAX_LOG_ENUM = 0xFFFFFFFF
-} wlu_log_type;
-
 void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...);
 const char *_wlu_strip_path(const char *filepath);
 

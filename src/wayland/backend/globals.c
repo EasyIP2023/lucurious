@@ -22,57 +22,45 @@
 * THE SOFTWARE.
 */
 
-/**
-* Boilerplate to create an in-memory shared file.
-* Taken from: https://github.com/emersion/hello-wayland/blob/master/shm.c
-* And slightly modified
-*/
-
-#include <time.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #define LUCUR_WAYLAND_API
+#define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 
-static void randname(char *buf) {
-	struct timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts);
-	long r = ts.tv_nsec;
-	for (int i = 0; i < 6; ++i) {
-		buf[i] = 'A'+(r&15)+(r&16)*2;
-		r >>= 5;
-	}
+#include "xdg-shell-protocol.h"
+
+static void shm_format(void *data, struct wl_shm *wl_shm, uint32_t format) {
+  ALL_UNUSED(data, wl_shm, format);
 }
 
-static int anonymous_shm_open(void) {
-	char name[] = "/lucurious-shared-XXXXXX";
-	int retries = 100;
+static struct wl_shm_listener shm_listener = {
+	shm_format
+};
 
-	do {
-		randname(name + strlen(name) - 6);
+void global_registry_handler(
+  void *data,
+  struct wl_registry *registry,
+  uint32_t name,
+  const char *interface,
+  uint32_t version
+) {
+  struct _wlu_way_core *wc = (struct _wlu_way_core *) data;
+  wc->version = version;
 
-		--retries;
-		/* shm_open guarantees that O_CLOEXEC is set */
-		int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
-		if (fd >= 0) {
-			shm_unlink(name);
-			return fd;
-		}
-	} while (retries > 0 && errno == EEXIST);
-
-	return NEG_ONE;
+  // wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
+  if (!strcmp(interface, wl_compositor_interface.name)) {
+    wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
+  } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
+    wc->shell = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
+  } else if (!strcmp(interface, wl_shm_interface.name)) {
+    wc->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+    wl_shm_add_listener(wc->shm, &shm_listener, NULL);
+  }
 }
 
-int create_shm_file(off_t size) {
-	int fd = anonymous_shm_open();
-	if (fd < 0) return fd;
-
-	if (ftruncate(fd, size) < 0) {
-		close(fd);
-		return NEG_ONE;
-	}
-
-	return fd;
+void global_registry_remover(
+  void *data,
+  struct wl_registry *registry,
+  uint32_t name
+) {
+  ALL_UNUSED(data, registry, name);
 }

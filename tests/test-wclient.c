@@ -30,7 +30,7 @@
 
 START_TEST(init_wayland_client) {
   wlu_otma_mems ma = { .wclient_cnt = 1 };
-  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   wclient *wc = NULL;
   wc = wlu_init_wc();

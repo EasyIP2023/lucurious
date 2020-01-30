@@ -77,7 +77,7 @@ static VkResult init_buffs(vkcomp *app) {
 START_TEST(test_vulkan_client_create) {
   VkResult err;
 
-  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   wclient *wc = wlu_init_wc();
   check_err(!wc, NULL, NULL, NULL)
@@ -94,7 +94,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_set_debug_message(app);
   check_err(err, app, wc, NULL)
 
-  check_err(wlu_connect_client(wc), app, wc, NULL)
+  check_err(!wlu_create_client(wc), app, wc, NULL)
 
   /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
@@ -302,7 +302,7 @@ START_TEST(test_vulkan_client_create) {
     wlu_print_vector(&verts[i].color, WLU_VEC3);
   }
 
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -321,7 +321,7 @@ START_TEST(test_vulkan_client_create) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
@@ -340,7 +340,7 @@ START_TEST(test_vulkan_client_create) {
   /* Start of index buffer creation */
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = isize / sizeof(uint16_t);
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -351,7 +351,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i',
@@ -369,7 +369,7 @@ START_TEST(test_vulkan_client_create) {
 
   /* Now Creating uniform buffers */
   for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
-    err = wlu_create_buffer(app, i, sizeof(struct uniform_block_data), 0,
+    err = wlu_create_vk_buffer(app, i, sizeof(struct uniform_block_data), 0,
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );

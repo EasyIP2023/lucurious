@@ -22,32 +22,11 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_WAYLAND_WCLIENT_SETUP_H
+#define WLU_WAYLAND_WCLIENT_SETUP_H
 
-#include "utils/types.h"
-#include "utils/log.h"
-#include "utils/mm.h"
-#ifdef INAPI_CALLS
-#include "utils/errors.h"
-#endif
-
-#ifdef LUCUR_FILE_API
-#include "utils/file.h"
-#endif
-
-#ifdef LUCUR_SHADE_API
-#include "shader/shade.h"
-#endif
-
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+bool wlu_run_client(wclient *wc);;
+wclient *wlu_init_wc();
+void wlu_freeup_wc(void *data);
 
 #endif

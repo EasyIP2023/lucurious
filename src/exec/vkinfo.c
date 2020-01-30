@@ -99,7 +99,6 @@ void print_gvalidation_layers() {
   fprintf(stdout, "\n\tValidation Layer Count: %d\n", lcount);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
-  FREE(vk_props);
   wlu_freeup_vk(app);
 }
 
@@ -141,7 +140,6 @@ void print_instance_extensions() {
   fprintf(stdout, "\n  Instance Extension Count: %d\n", eip_count);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
-  FREE(ie_props);
   wlu_freeup_vk(app);
 }
 
@@ -191,6 +189,5 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   printf("\n  Device Extension Count: %d\n", de_count);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);
 
-  FREE(de_props);
   wlu_freeup_vk(app);
 }

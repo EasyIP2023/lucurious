@@ -26,11 +26,13 @@
 #define WLU_WAYLAND_ALL_H
 
 #ifdef LUCUR_WAYLAND_CLIENT_API
-#include "wclient/client.h"
+#include "wclient/create.h"
+#include "wclient/setup.h"
 #endif
 
 #ifdef INAPI_CALLS
 #include "utils/shm.h"
+#include "backend/globals.h"
 #endif
 
 #endif

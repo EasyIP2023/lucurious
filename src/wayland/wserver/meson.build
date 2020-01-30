@@ -26,21 +26,19 @@ wayland_server = dependency('wayland-server')
 
 wayland_scanner_server = generator(
 	wayland_scanner,
-	output: '@BASENAME@-protocol.h',
+	output: '@BASENAME@-server-protocol.h',
 	arguments: ['server-header', '@INPUT@', '@OUTPUT@'],
 )
 
-wserver_protos_headers = []
-server_protocols = []
-
-foreach p : server_protocols
+wserver_protos_cglue = []
+foreach p : wayland_protos_shared
 	xml = join_paths(p)
-	wserver_protos_headers += wayland_scanner_server.process(xml)
+	wserver_protos_cglue += wayland_scanner_server.process(xml)
 endforeach
 
 lib_wserver = static_library(
 	'wserver',
-  wserver_protos_headers,
+	wserver_protos_cglue,
 	include_directories: lucur_inc,
 	dependencies: [wayland_server]
 )

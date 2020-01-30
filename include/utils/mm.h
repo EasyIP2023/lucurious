@@ -22,47 +22,21 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_MM_H
-#define WLU_MM_H
-
-typedef struct _wlu_otma_mems {
-  uint32_t inta_cnt;  /* int array count */
-  uint32_t cha_cnt;   /* char array count */
-  uint32_t fla_cnt;    /* float array count */
-  uint32_t dba_cnt;   /* double array count */
-  uint32_t wclient_cnt;
-  uint32_t vkcomp_cnt;
-  uint32_t vkext_props_cnt;
-  uint32_t vkval_layer_cnt;
-  uint32_t desc_cnt;  /* descriptor count */
-  uint32_t gp_cnt;    /* Graphics pipelines count */
-  uint32_t si_cnt;    /* swap chain image count */
-  uint32_t scd_cnt;   /* swap chain data count */
-  uint32_t gpd_cnt;   /* graphics pipeline data count */
-  uint32_t cmdd_cnt;  /* command data count */
-  uint32_t bd_cnt;    /* buffer data count */
-  uint32_t dd_cnt;    /* descriptor data count */
-} wlu_otma_mems;
+#ifndef WLU_UTILS_MM_H
+#define WLU_UTILS_MM_H
 
 /* [one time memory allocater] For creating large memory blocks once */
-bool wlu_otma(wlu_otma_mems ma);
-void wlu_release_block();
+bool wlu_otma(wlu_block_type type, wlu_otma_mems ma);
+void wlu_release_blocks();
 
 #ifdef DEV_ENV
-void wlu_print_mb();
+void wlu_print_mb(wlu_block_type type);
 #endif
 
 #ifdef INAPI_CALLS
-
-typedef enum _wlu_block_type {
-  WLU_LARGE_BLOCK = 0x00000000,
-  WLU_SMALL_BLOCK = 0x00000001
-} wlu_block_type;
-
-void *wlu_alloc(wlu_block_type type, size_t bytes);
-void *wlu_realloc(void *addr, size_t new_size);
-void wlu_free_block(void *addr);
-
+void *wlu_alloc(wlu_block_type type, size_t bytes, int fd);
+void *wlu_realloc(wlu_block_type type, void *addr, size_t new_size); /* NOT in use still prototype */
+void wlu_free_block(wlu_block_type type, void *addr);
 #endif
 
 #endif

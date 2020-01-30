@@ -26,7 +26,7 @@
 #include <lucom.h>
 
 vkcomp *wlu_init_vk() {
-  vkcomp *app = wlu_alloc(WLU_SMALL_BLOCK, sizeof(vkcomp));
+  vkcomp *app = wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(vkcomp), NEG_ONE);
   if (!app) { PERR(WLU_ALLOC_FAILED, 0, NULL); return app; };
 
   app->indices.graphics_family = UINT32_MAX;
@@ -170,23 +170,23 @@ void wlu_freeup_vk(void *data) {
 VkResult wlu_otba(vkcomp *app, uint32_t index, uint32_t arr_size, wlu_data_type type) {
   switch (type) {
     case WLU_SC_DATA:
-      app->sc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _sc_data));
+      app->sc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data), NEG_ONE);
       if (!app->sc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->sdc = arr_size; break;
     case WLU_GP_DATA:
-      app->gp_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _gp_data));
+      app->gp_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data), NEG_ONE);
       if (!app->gp_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->gdc = arr_size; break;
     case WLU_CMD_DATA:
-      app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _cmd_data));
+      app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data), NEG_ONE);
       if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->cdc = arr_size; break;
     case WLU_BUFFS_DATA:
-      app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _buffs_data));
+      app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buffs_data), NEG_ONE);
       if (!app->buffs_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->bdc = arr_size; break;
     case WLU_DESC_DATA:
-      app->desc_data = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct _desc_data));
+      app->desc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data), NEG_ONE);
       if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->ddc = arr_size; break;
     case WLU_SC_DATA_MEMS:
@@ -198,26 +198,26 @@ VkResult wlu_otba(vkcomp *app, uint32_t index, uint32_t arr_size, wlu_data_type 
       arr_size += 1;
 
       /* Allocate SwapChain Buffers (VkImage, VkImageView, VkFramebuffer) */
-      app->sc_data[index].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct swap_chain_buffers));
+      app->sc_data[index].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers), NEG_ONE);
       if (!app->sc_data[index].sc_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
       /* Allocate CommandBuffers, This is okay */
-      app->cmd_data[index].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkCommandBuffer));
+      app->cmd_data[index].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer), NEG_ONE);
       if (!app->cmd_data[index].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
       /* Allocate Semaphores */
-      app->sc_data[index].sems = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(struct semaphores));
+      app->sc_data[index].sems = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _semaphores), NEG_ONE);
       if (!app->sc_data[index].sems) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->sc_data[index].sic = arr_size; break;
     case WLU_DESC_DATA_MEMS:
-      app->desc_data[index].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkDescriptorSetLayout));
+      app->desc_data[index].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout), NEG_ONE);
       if (!app->desc_data[index].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-      app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkDescriptorSet));
+      app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet), NEG_ONE);
       if (!app->desc_data[index].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->desc_data[index].dlsc = arr_size; break;
     case WLU_GP_DATA_MEMS:
-      app->gp_data[index].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK, arr_size * sizeof(VkPipeline));
+      app->gp_data[index].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline), NEG_ONE);
       if (!app->gp_data[index].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
       app->gp_data[index].gpc = arr_size; break;
     default: break;

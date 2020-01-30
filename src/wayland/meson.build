@@ -26,8 +26,9 @@ subdir('protos')
 subdir('utils')
 subdir('wserver')
 subdir('wclient')
+subdir('backend')
 
 lib_lwayland = [
-	lib_wprotos, lib_wutils,
-	lib_wclient, lib_wserver
+	lib_wprotos, lib_wutils, lib_wclient,
+	lib_wserver, lib_wbackend
 ]

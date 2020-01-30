@@ -93,7 +93,7 @@ static VkResult init_buffs(vkcomp *app) {
 START_TEST(test_vulkan_client_create_3D) {
   VkResult err;
 
-  if (!wlu_otma(ma)) ck_abort_msg(NULL);
+  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   wclient *wc = wlu_init_wc();
   check_err(!wc, NULL, NULL, NULL)
@@ -110,7 +110,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_set_debug_message(app);
   check_err(err, app, wc, NULL)
 
-  check_err(wlu_connect_client(wc), app, wc, NULL)
+  check_err(!wlu_create_client(wc), app, wc, NULL)
 
   /* initialize vulkan app surface */
   err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
@@ -190,7 +190,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_print_matrices();
 
   /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, sizeof(ubd.mvp), 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -286,7 +286,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   /* Start of vertex buffer */
   VkDeviceSize vsize = sizeof(vertices);
-  err = wlu_create_buffer(
+  err = wlu_create_vk_buffer(
     app, cur_bd, vsize, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT

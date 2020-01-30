@@ -38,7 +38,7 @@ wlu_file_info wlu_read_file(const char *filename) {
 
   /* Go to the end of the file */
   fileinfo.byte_size = fseek(stream, 0, SEEK_END);
-  if (fileinfo.byte_size == -1) {
+  if (fileinfo.byte_size == NEG_ONE) {
     wlu_log_me(WLU_DANGER, "[x] fseek: %s", strerror(errno));
     return fileinfo;
   }
@@ -49,7 +49,7 @@ wlu_file_info wlu_read_file(const char *filename) {
   * buffer we need to allocate
   */
   fileinfo.byte_size = ftell(stream);
-  if (fileinfo.byte_size == -1) {
+  if (fileinfo.byte_size == NEG_ONE) {
     wlu_log_me(WLU_DANGER, "[x] ftell: %s", strerror(errno));
     return fileinfo;
   }

@@ -424,7 +424,7 @@ VkResult wlu_create_depth_buff(
   return res;
 }
 
-VkResult wlu_create_buffer(
+VkResult wlu_create_vk_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,

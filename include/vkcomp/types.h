@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef WLU_VKCOMP_TYPES_H
+#define WLU_VKCOMP_TYPES_H
 
 #include <cglm/types.h>
 
@@ -48,31 +48,31 @@ typedef struct _vertex_3D {
 } vertex_3D;
 
 typedef enum _wlu_rotate_type {
-  WLU_X = 0x00000000,
-  WLU_Y = 0x00000001,
-  WLU_Z = 0x00000002
+  WLU_X = 0x0000,
+  WLU_Y = 0x0001,
+  WLU_Z = 0x0002
 } wlu_rotate_type;
 
 typedef enum _wlu_vec_type {
-  WLU_VEC2 = 0x00000000,
-  WLU_VEC3 = 0x00000001,
-  WLU_VEC4 = 0x00000002
+  WLU_VEC2 = 0x0000,
+  WLU_VEC3 = 0x0001,
+  WLU_VEC4 = 0x0002
 } wlu_vec_type;
 
 typedef enum _wlu_matrix_type {
-  WLU_MAT3 = 0x00000000,
-  WLU_MAT4 = 0x00000001
+  WLU_MAT3 = 0x0000,
+  WLU_MAT4 = 0x0001
 } wlu_matrix_type;
 
 typedef enum _wlu_data_type {
-  WLU_SC_DATA = 0x00000000,
-  WLU_GP_DATA = 0x00000001,
-  WLU_CMD_DATA = 0x00000002,
-  WLU_BUFFS_DATA = 0x00000003,
-  WLU_DESC_DATA = 0x00000004,
-  WLU_SC_DATA_MEMS = 0x00000005,
-  WLU_DESC_DATA_MEMS = 0x00000006,
-  WLU_GP_DATA_MEMS = 0x00000007
+  WLU_SC_DATA = 0x0000,
+  WLU_GP_DATA = 0x0001,
+  WLU_CMD_DATA = 0x0002,
+  WLU_BUFFS_DATA = 0x0003,
+  WLU_DESC_DATA = 0x0004,
+  WLU_SC_DATA_MEMS = 0x0005,
+  WLU_DESC_DATA_MEMS = 0x0006,
+  WLU_GP_DATA_MEMS = 0x0007
 } wlu_data_type;
 
 typedef struct _vkcomp {
@@ -96,18 +96,18 @@ typedef struct _vkcomp {
   struct _sc_data {
     uint32_t sic; /* swap chain image count */
     VkSwapchainKHR swap_chain;
-    struct swap_chain_buffers {
+    struct _swap_chain_buffers {
       VkImage image;
       VkImageView view;
       VkFramebuffer fb;
     } *sc_buffs;
 
-    struct semaphores {
+    struct _semaphores {
       VkSemaphore image;
       VkSemaphore render;
     } *sems;
 
-    struct depth_buffer {
+    struct _depth_buffer {
       VkFormat format;
       VkImage image;
       VkDeviceMemory mem;

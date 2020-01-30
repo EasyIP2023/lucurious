@@ -22,12 +22,21 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_WAYLAND_WCLIENT_H
-#define WLU_WAYLAND_WCLIENT_H
+#ifndef WLU_WAYLAND_BACKEND_GLOBALS_H
+#define WLU_WAYLAND_BACKEND_GLOBALS_H
 
-wclient *wlu_init_wc();
-int wlu_connect_client(wclient *wc);
-int wlu_run_client(wclient *wc);
-void wlu_freeup_wc(void *data);
+void global_registry_handler(
+  void *data,
+  struct wl_registry *registry,
+  uint32_t name,
+  const char *interface,
+  uint32_t version
+);
+
+void global_registry_remover(
+  void *data,
+  struct wl_registry *registry,
+  uint32_t name
+);
 
 #endif

@@ -108,7 +108,7 @@ VkResult wlu_create_depth_buff(
 * in a read-only fashion constant parameter data. Function also
 * creates buffers like a vertex buffer so that it's visible to the CPU
 */
-VkResult wlu_create_buffer(
+VkResult wlu_create_vk_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,

@@ -27,30 +27,36 @@
 
 #include <linux/input-event-codes.h>
 
-#ifdef LUCUR_WAYLAND_CLIENT_API
-#include <wayland-client.h>
-#include <wayland-client-protocol.h>
-
-typedef struct wclient {
-  struct wl_compositor *compositor;
-  struct wl_seat *seat;
-
-  struct wl_shm *shm;
-  struct xdg_wm_base *xdg_wm_base;
-  struct xdg_toplevel *xdg_toplevel;
-
-  void *shm_data;
-
+struct _wlu_way_core {
   struct wl_display *display;
+  struct wl_compositor *compositor;
   struct wl_registry *registry;
-  struct wl_buffer *buffer;
 
   struct wl_surface *surface;
   struct xdg_surface *xdg_surface;
 
+  struct xdg_wm_base *shell;
+  struct xdg_toplevel *xdg_toplevel;
+
+  void *shm_data;
+  struct wl_shm *shm;
+  struct wl_buffer *buffer;
+
   uint32_t version;
   int running;
-} wclient;
+};
+
+#ifdef LUCUR_WAYLAND_CLIENT_API
+#include <wayland-client.h>
+#include <wayland-client-protocol.h>
+typedef struct _wlu_way_core wclient;
+#endif
+
+/* For now */
+#ifdef LUCUR_WAYLAND_SERVER_API
+#include <wayland-server.h>
+#include <wayland-server-protocol.h>
+typedef struct _wlu_way_core wserver;
 #endif
 
 #endif
