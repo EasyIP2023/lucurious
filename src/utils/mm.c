@@ -76,7 +76,7 @@ static wlu_mem_block_t *small_block_shared = NULL;
 * First check if sub-block was allocated and is currently free
 * If block not free, sub allocate more from larger memory block
 */
-static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes, int fd) {
+static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
   wlu_mem_block_t *current = NULL;
   size_t abytes = 0;
 
@@ -89,7 +89,7 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes, int fd
       return current;
     }
     current = current->next;
-	}
+  }
 
   if (abytes >= bytes) {
     wlu_mem_block_t *block = current->addr;
@@ -109,22 +109,6 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes, int fd
     block = current->addr + BLOCK_SIZE + bytes;
     block->prv_addr = current->addr;
     block->addr = block;
-
-    if (fd != NEG_ONE) {
-      /* Allocate 32KB, done at compile time */
-      char buff[POW2_DEC(15)];
-      /* read contents from the wayland file into buff */
-      if (read(fd, buff, bytes) == NEG_ONE) {
-        wlu_log_me(WLU_DANGER, "[x] read: %s", strerror(errno));
-        return NULL;
-      }
-
-      /* then memmove contents from the buff (which is a wayland file) into the block */
-      if (!memmove(block + BLOCK_SIZE, buff, bytes)) {
-        wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy file content");
-        return NULL;
-      }
-    }
 
     /* Decrement larger block available memory */
     if (type == WLU_SMALL_BLOCK_SHARED) {
@@ -149,8 +133,8 @@ static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
     goto finish_alloc_mem_block;
   }
 
-  int flags = (type == WLU_LARGE_BLOCK_SHARED) ? (MAP_SHARED | MAP_ANON) : (MAP_PRIVATE | MAP_ANON);
-  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags, fd, 0);
+  int flags = (type == WLU_LARGE_BLOCK_SHARED) ? MAP_SHARED : MAP_PRIVATE;
+  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags | MAP_ANON, fd, 0);
   if (block == MAP_FAILED) {
     wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
     goto finish_alloc_mem_block;
@@ -169,7 +153,7 @@ finish_alloc_mem_block:
   return block;
 }
 
-void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
+void *wlu_alloc(wlu_block_type type, size_t bytes) {
   wlu_mem_block_t *nblock = NULL;
 
   /**
@@ -201,7 +185,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
       /* If large block not allocated return NULL until allocated */
       if (!large_block_priv) return NULL;
 
-      nblock = get_free_block(type, bytes, fd);
+      nblock = get_free_block(type, bytes);
       if (!nblock) return NULL;
 
       /* set small block list at current addr of the last block in the list */
@@ -230,7 +214,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes, int fd) {
       /* If large block not allocated return NULL until allocated */
       if (!large_block_shared) return NULL;
 
-      nblock = get_free_block(type, bytes, fd);
+      nblock = get_free_block(type, bytes);
       if (!nblock) return NULL;
 
       /* set small block list at current addr of the last block in the list */
@@ -284,7 +268,7 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.desc_cnt * sizeof(VkDescriptorSetLayout));
   size += (ma.dd_cnt * sizeof(struct _desc_data));
 
-  if (!wlu_alloc(type, size, NEG_ONE)) return false;
+  if (!wlu_alloc(type, size)) return false;
 
   return true;
 }

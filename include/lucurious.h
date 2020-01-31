@@ -33,7 +33,7 @@
 #endif
 
 #ifdef LUCUR_FILE_API
-#include "utils/file.h"
+#include "shader/file.h"
 #endif
 
 #ifdef LUCUR_SHADE_API

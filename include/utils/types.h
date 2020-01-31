@@ -25,13 +25,8 @@
 #ifndef WLU_UTILS_TYPES_H
 #define WLU_UTILS_TYPES_H
 
-typedef struct wlu_file_info {
-  char *bytes;
-  long byte_size;
-} wlu_file_info;
-
 /* Used to help determine which ANSI Escape Codes to use */
-typedef enum wlu_log_type {
+typedef enum _wlu_log_type {
   WLU_NONE    = 0x0000,
   WLU_SUCCESS = 0x0001,
   WLU_DANGER  = 0x0002,

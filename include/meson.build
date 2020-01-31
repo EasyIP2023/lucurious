@@ -28,13 +28,13 @@ install_headers('lucurious.h', install_dir: i_dir)
 ############################
 # Installing utils headers #
 ############################
-utils_hs = ['utils/log.h', 'utils/file.h', 'utils/mm.h', 'utils/types.h']
+utils_hs = ['utils/log.h', 'utils/mm.h', 'utils/types.h']
 install_headers(utils_hs, install_dir: i_dir + 'utils')
 
 #############################
 # Installing shader headers #
 #############################
-shader_hs = ['shader/shade.h']
+shader_hs = ['shader/file.h', 'shader/shade.h', 'shader/types.h']
 install_headers(shader_hs, install_dir: i_dir + 'shader')
 
 #############################

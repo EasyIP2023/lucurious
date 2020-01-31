@@ -32,10 +32,10 @@ START_TEST(basic_priv_alloc) {
   };
   if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
-  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(int), NEG_ONE);
-  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_PRIV, 2 * sizeof(b), NEG_ONE);
-  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float), NEG_ONE);
-  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float), NEG_ONE);
+  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(int));
+  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_PRIV, 2 * sizeof(b));
+  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float));
+  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float));
 
   *bytes = 30;
   b[0] = "abcdegf";
@@ -67,10 +67,10 @@ START_TEST(basic_shared_alloc) {
   };
   if (!wlu_otma(WLU_LARGE_BLOCK_SHARED, ma)) ck_abort_msg(NULL);
 
-  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(int), NEG_ONE);
-  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_SHARED, 2 * sizeof(b), NEG_ONE);
-  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float), NEG_ONE);
-  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float), NEG_ONE);
+  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(int));
+  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_SHARED, 2 * sizeof(b));
+  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float));
+  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float));
 
   *bytes = 30;
   b[0] = "abcdegf";

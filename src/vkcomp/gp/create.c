@@ -48,8 +48,6 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
   if (err == VK_SUCCESS)
     wlu_log_me(WLU_SUCCESS, "Shader module successfully created");
 
-  free(code);
-
   return shader_module;
 }
 

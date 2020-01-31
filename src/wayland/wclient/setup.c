@@ -35,7 +35,7 @@ bool wlu_run_client(wclient *wc) {
 }
 
 wclient *wlu_init_wc() {
-  wclient *wc = wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(wclient), NEG_ONE);
+  wclient *wc = wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(wclient));
   if (!wc) { PERR(WLU_ALLOC_FAILED, 0, NULL); return wc; }
 
   wc->running = 1;

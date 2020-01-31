@@ -22,13 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_SHADE_H
-#define WLU_SHADE_H
+#ifndef WLU_SHADER_SHADE_H
+#define WLU_SHADER_SHADE_H
 
-typedef struct wlu_shader_info {
-  char *bytes;
-  long byte_size;
-} wlu_shader_info;
+#include "types.h"
 
 wlu_shader_info wlu_preprocess_shader(
   unsigned int kind,

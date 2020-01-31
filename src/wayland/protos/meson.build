@@ -32,7 +32,7 @@ wayland_scanner_code = generator(
 	arguments: ['private-code', '@INPUT@', '@OUTPUT@'],
 )
 
-# Define wayland extension xmls and create corresponding headers
+# Create corresponding C glue code from wayland xml protocls extension files
 wayland_protos_cglue = []
 wayland_protos_shared = [
 	[wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],

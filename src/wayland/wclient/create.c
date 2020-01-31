@@ -133,13 +133,28 @@ bool wlu_create_wc_buffer(wclient *wc, uint32_t width, uint32_t height) {
   fd = create_shm_file(size);
   if (fd < 0) return false;
 
-  wc->shm_data = wlu_alloc(WLU_SMALL_BLOCK_SHARED, size, fd);
+  /**
+  * asynchronously (set fd to non blocking mode into shm.c)
+  * read contents from wayland shared file into buff
+  */
+  void *buff = alloca(size);
+  if (read(fd, buff, size) == NEG_ONE) {
+    wlu_log_me(WLU_DANGER, "[x] read: %s", strerror(errno));
+    return false;
+  }
+
+  wc->shm_data = wlu_alloc(WLU_SMALL_BLOCK_SHARED, size);
   if (!wc->shm_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return false; }
+
+  /* then memmove contents from the buff (which is a wayland shared file) into the block */
+  if (!memmove(wc->shm_data, buff, size)) {
+    wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy file content");
+    return false;
+  }
 
   pool = wl_shm_create_pool(wc->shm, fd, size);
   wc->buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);
 
   wl_shm_pool_destroy(pool);
-
   return true;
 }

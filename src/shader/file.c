@@ -57,8 +57,8 @@ wlu_file_info wlu_read_file(const char *filename) {
   /* Jump back to the beginning of the file */
   rewind(stream);
 
-  fileinfo.bytes = (char *) calloc(1, fileinfo.byte_size+1);
-  if (!fileinfo.bytes) return fileinfo;
+  fileinfo.bytes = (char *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, fileinfo.byte_size);
+  if (!fileinfo.bytes) { PERR(WLU_ALLOC_FAILED, 0, NULL); return fileinfo; }
 
   /* Read in the entire file */
   if (fread(fileinfo.bytes, fileinfo.byte_size, 1, stream) == 0) {

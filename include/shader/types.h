@@ -22,10 +22,30 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_FILE_H
-#define WLU_UTILS_FILE_H
+#ifndef WLU_SHADER_TYPES_H
+#define WLU_SHADER_TYPES_H
 
-/* A way to load SPIR-V byte code */
-wlu_file_info wlu_read_file(const char *filename);
+typedef enum _wlu_spirv_type {
+  WLU_UTILS_FILE_SPRIV = 0x0000, /* Define spirv bytes from file */
+  WLU_LIB_SHADERC_SPRIV = 0x0001
+} wlu_spirv_type;
+
+#ifdef LUCUR_FILE_API
+typedef struct _wlu_file_info {
+  char *bytes;
+  long byte_size;
+} wlu_file_info;
+#endif
+
+#ifdef LUCUR_SHADE_API
+typedef struct _wlu_shader_info {
+  void *result;
+  char *bytes;
+  long byte_size;
+} wlu_shader_info;
+#endif
+
+/* Only function defined in a types.h file ;) */
+void wlu_freeup_spriv_bytes(wlu_spirv_type type, void *bytes);
 
 #endif

@@ -91,7 +91,7 @@ VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
   }
 
   /* allocate space */
-  *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, layer_count * sizeof(VkLayerProperties), NEG_ONE);
+  *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, layer_count * sizeof(VkLayerProperties));
   if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, res = VK_RESULT_MAX_ENUM, NULL); goto finish_vk_props; }
 
   /* set validation layers values */

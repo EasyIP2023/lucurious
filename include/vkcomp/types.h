@@ -35,7 +35,7 @@
 * unit measured in nanoseconds
 */
 #define GENERAL_TIMEOUT 100000000
-#define ALLOC_INDEX_NON 0
+#define ALLOC_INDEX_NON -1
 
 typedef struct _vertex_2D {
   vec2 pos;
