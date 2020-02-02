@@ -103,7 +103,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
   /**
-  * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
+  * VK_FORMAT_B8G8R8A8_UNORM will store the R, G, B and alpha channels
   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
   * SRGB if used for colorSpace if available, because it
   * results in more accurate perceived colors
@@ -172,17 +172,6 @@ START_TEST(test_vulkan_client_create) {
   wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
   /* ending point for render pass creation */
 
-  wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
-
-  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
-                             shader_frag_src, "frag.spv", "main");
-  check_err(!shi_frag.bytes, app, wc, NULL)
-
-  wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
-  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
-                             shader_vert_src, "vert.spv", "main");
-  check_err(!shi_vert.bytes, app, wc, NULL)
-
   VkImageView vkimg_attach[1];
   err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   check_err(err, app, wc, NULL)
@@ -234,6 +223,7 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
   check_err(err, app, wc, NULL)
+  /* End of vertex buffer */
 
   /* 0 is the binding # this is bytes between successive structs */
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
@@ -246,7 +236,14 @@ START_TEST(test_vulkan_client_create) {
     1, &vi_binding, 2, vi_attribs
   );
 
-  /* End of vertex buffer */
+  wlu_log_me(WLU_INFO, "Start of shader creation");
+  wlu_log_me(WLU_WARNING, "Compiling the fragment shader code to spirv bytes");
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT, shader_frag_src, "frag.spv", "main");
+  check_err(!shi_frag.bytes, app, wc, NULL)
+
+  wlu_log_me(WLU_WARNING, "Compiling the vertex shader code into spirv bytes");
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT, shader_vert_src, "vert.spv", "main");
+  check_err(!shi_vert.bytes, app, wc, NULL)
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   check_err(!frag_shader_module, app, wc, NULL)
@@ -256,6 +253,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shi_vert.result);
   wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shi_frag.result);
+  wlu_log_me(WLU_INFO, "End of shader creation");
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL

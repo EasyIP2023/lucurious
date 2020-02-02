@@ -48,13 +48,6 @@ START_TEST(basic_priv_alloc) {
   wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
   wlu_print_mb(WLU_SMALL_BLOCK_PRIV);
-  FREE(WLU_SMALL_BLOCK_PRIV, b);
-  wlu_log_me(WLU_WARNING, "After freeing char **b alloc");
-  wlu_print_mb(WLU_SMALL_BLOCK_PRIV);
-
-  FREE(WLU_SMALL_BLOCK_PRIV, f);
-  wlu_log_me(WLU_WARNING, "After freeing float *f alloc");
-  wlu_print_mb(WLU_SMALL_BLOCK_PRIV);
 
   wlu_release_blocks();
   bytes=NULL; q=NULL;
@@ -82,13 +75,6 @@ START_TEST(basic_shared_alloc) {
   wlu_log_me(WLU_INFO, "f: %0.2f", *f);
   wlu_log_me(WLU_INFO, "q: %0.2f", *q);
 
-  wlu_print_mb(WLU_SMALL_BLOCK_SHARED);
-  FREE(WLU_SMALL_BLOCK_SHARED, b);
-  wlu_log_me(WLU_WARNING, "After freeing char **b alloc");
-  wlu_print_mb(WLU_SMALL_BLOCK_SHARED);
-
-  FREE(WLU_SMALL_BLOCK_SHARED, f);
-  wlu_log_me(WLU_WARNING, "After freeing float *f alloc");
   wlu_print_mb(WLU_SMALL_BLOCK_SHARED);
 
   wlu_release_blocks();

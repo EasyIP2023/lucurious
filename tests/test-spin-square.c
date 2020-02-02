@@ -116,7 +116,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
   /**
-  * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
+  * VK_FORMAT_B8G8R8A8_UNORM will store the R, G, B and alpha channels
   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
   * SRGB if used for colorSpace if available, because it
   * results in more accurate perceived colors
@@ -164,9 +164,8 @@ START_TEST(test_vulkan_client_create) {
     0, NULL, 1, &color_ref, NULL, NULL, 0, NULL
   );
 
-  VkSubpassDependency subdep = wlu_set_subpass_dep(
-    VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+  VkSubpassDependency subdep = wlu_set_subpass_dep(VK_SUBPASS_EXTERNAL, 0,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
@@ -194,7 +193,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_pipeline_cache(app, 0, NULL);
   check_err(err, app, wc, NULL)
 
-  /* 0 is the binding # this is bytes between successive structs */
+  /* 0 is the binding. The # of is bytes there is between successive structs */
   VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[2];
@@ -202,9 +201,8 @@ START_TEST(test_vulkan_client_create) {
   vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_2D, color));
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(1, &vi_binding, 2, vi_attribs);
-  /* End of vertex buffer */
 
-  err = wlu_otba(app, cur_dd, app->sc_data[cur_scd].sic, WLU_GP_DATA_MEMS);
+  err = wlu_otba(app, cur_dd, app->sc_data[cur_scd].sic, WLU_DESC_DATA_MEMS);
   check_err(err, app, wc, NULL)
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
@@ -277,6 +275,9 @@ START_TEST(test_vulkan_client_create) {
     VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
+  err = wlu_otba(app, cur_dd, 1, WLU_GP_DATA_MEMS);
+  check_err(err, app, wc, NULL)
+
   err = wlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
@@ -305,9 +306,8 @@ START_TEST(test_vulkan_client_create) {
     wlu_print_vector(&verts[i].color, WLU_VEC3);
   }
 
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
@@ -324,11 +324,9 @@ START_TEST(test_vulkan_client_create) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0,
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -343,9 +341,8 @@ START_TEST(test_vulkan_client_create) {
   /* Start of index buffer creation */
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = isize / sizeof(uint16_t);
-  err = wlu_create_vk_buffer(
-    app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
@@ -354,11 +351,9 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_create_vk_buffer(
-    app, cur_bd, isize, 0,
+  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i',
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -411,7 +406,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_log_me(WLU_SUCCESS, "ALL ALLOCATED BUFFERS");
   for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %s", i, app->buffs_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
 

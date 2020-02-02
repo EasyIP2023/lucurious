@@ -180,7 +180,7 @@ wlu_shader_info wlu_compile_to_spirv(
 
 void wlu_freeup_spriv_bytes(wlu_spirv_type type, void *res) {
   switch (type) {
-    case WLU_UTILS_FILE_SPRIV: wlu_free_block(WLU_SMALL_BLOCK_PRIV, res); break;
+    case WLU_UTILS_FILE_SPRIV: free(res); break;
     case WLU_LIB_SHADERC_SPRIV: shaderc_result_release(res); break;
     default: break;
   }

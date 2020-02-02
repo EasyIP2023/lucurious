@@ -39,8 +39,6 @@
 #define INAPI_CALLS
 #include "lucurious.h"
 
-#define FREE(type, ptr) { wlu_free_block(type, ptr); ptr = NULL; }
-
 #define POW2_DEC(pow) 1 << pow
 
 /**

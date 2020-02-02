@@ -34,6 +34,7 @@ void wlu_print_mb(wlu_block_type type);
 #endif
 
 #ifdef INAPI_CALLS
+/* Function is reserve for one time use. Only use when allocating space for struct members */
 void *wlu_alloc(wlu_block_type type, size_t bytes);
 void *wlu_realloc(wlu_block_type type, void *addr, size_t new_size); /* NOT in use still prototype */
 void wlu_free_block(wlu_block_type type, void *addr);

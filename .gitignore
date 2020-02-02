@@ -24,3 +24,5 @@ valgrind-out.txt
 vgcore.*
 
 peda*
+
+xdg-shell-protocol.h

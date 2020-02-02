@@ -35,7 +35,6 @@
 * Struct that stores block metadata
 * Using linked list to keep track of memory allocated
 * next     | points to next memory block
-* is_free  | checks if memory block is free or not
 * size     | allocated memory size
 * abytes   | available bytes left in block
 * addr     | Current address of the block
@@ -44,7 +43,6 @@
 */
 typedef struct mblock {
   struct mblock *next;
-  bool is_free;
   size_t size;
   size_t abytes;
   void *addr;
@@ -80,33 +78,37 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
   wlu_mem_block_t *current = NULL;
   size_t abytes = 0;
 
-  abytes = (type == WLU_SMALL_BLOCK_SHARED) ? large_block_shared->abytes : large_block_priv->abytes;
-  current = (type == WLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
-
-  while (current->next) {
-    if (current->is_free && current->size >= bytes) {
-      current->is_free = false;
-      return current;
-    }
-    current = current->next;
+  /**
+  * This allows for O(1) allocation
+  * If next block doesn't exists use large_block_priv/shared->saddr address
+  * else set current to next block (which would be the block waiting to be allocated)
+  */
+  switch(type) {
+    case WLU_SMALL_BLOCK_PRIV:
+      abytes = large_block_priv->abytes;
+      current = (!small_block_priv->next) ? sstart_addr_priv : small_block_priv->next;
+      break;
+    case WLU_SMALL_BLOCK_SHARED:
+      abytes = large_block_shared->abytes;
+      current = (!small_block_shared->next) ? sstart_addr_shared : small_block_shared->next;
+      break;
+    default: break;
   }
 
   if (abytes >= bytes) {
+    /* current block thats about to be allocated set few metadata */
     wlu_mem_block_t *block = current->addr;
-
-    block->next = NULL;
-    block->is_free = false;
     block->size = bytes;
-
     /* Put saddr at an address that doesn't contain metadata */
     block->saddr = BLOCK_SIZE + current->addr;
 
     /**
-    * This is written this way becuase one needs to return the
-    * address of the start of the next block not the current one.
-    * Offset memory address effectively creating space
+    * Set next blocks metadata
+    * This is written this way because one needs the return address
+    * to be the address of the next block not the current one.
+    * Basically offset the memory address. Thus, allocating space.
     */
-    block = current->addr + BLOCK_SIZE + bytes;
+    block = current->addr + BLOCK_SIZE + bytes; /* sbrk() */
     block->prv_addr = current->addr;
     block->addr = block;
 
@@ -141,7 +143,6 @@ static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
   }
 
   block->next = NULL;
-  block->is_free = false;
   block->size = block->abytes = bytes;
 
   /* Put saddr at an address that doesn't contain metadata */
@@ -153,6 +154,7 @@ finish_alloc_mem_block:
   return block;
 }
 
+/* Function is reserve for one time use. Only use when allocating space for struct members */
 void *wlu_alloc(wlu_block_type type, size_t bytes) {
   wlu_mem_block_t *nblock = NULL;
 
@@ -188,7 +190,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       nblock = get_free_block(type, bytes);
       if (!nblock) return NULL;
 
-      /* set small block list at current addr of the last block in the list */
+      /* set small block list to address of the previous block in the list */
       small_block_priv = nblock->prv_addr;
       small_block_priv->next = nblock;
 
@@ -217,7 +219,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       nblock = get_free_block(type, bytes);
       if (!nblock) return NULL;
 
-      /* set small block list at current addr of the last block in the list */
+      /* set small block list to address of the previous block in the list */
       small_block_shared = nblock->prv_addr;
       small_block_shared->next = nblock;
 
@@ -274,22 +276,6 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
 }
 
 /**
-* Freeing memory in this case means to override the contents
-* If memory address can't be accessed break
-* Node is most likely the end of linked list
-*/
-void wlu_free_block(wlu_block_type type, void *addr) {
-  wlu_mem_block_t *current = (type == WLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
-  while (current->next) {
-    if (addr == current->saddr) {
-      current->is_free = true;
-      return;
-    }
-    current = current->next;
-  }
-}
-
-/**
 * Releasing memory in this case means to
 * unmap all virtual pages (remove page tables)
 */
@@ -314,8 +300,8 @@ void wlu_release_blocks() {
 void wlu_print_mb(wlu_block_type type) {
   wlu_mem_block_t *current = (type == WLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
   while (current->next) {
-    wlu_log_me(WLU_INFO, "current block = %p, next block = %p, isfree = %d, block size = %d, saddr = %p",
-               current, current->next, current->is_free, current->size, current->saddr);
+    wlu_log_me(WLU_INFO, "current block = %p, next block = %p, block size = %d, saddr = %p",
+                          current, current->next, current->size, current->saddr);
     current = current->next;
   }
 }

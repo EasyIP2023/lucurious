@@ -525,19 +525,12 @@ VkResult wlu_create_buff_mem_map(
   return res;
 }
 
-/**
-* This function creates the framebuffers.
-* Attachments specified when creating the render pass
-* are bounded by wrapping them into a VkFramebuffer object.
-* A framebuffer object references all VkImageView objects this
-* is represented by "attachments"
-*/
 VkResult wlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_gpd,
   uint32_t attachmentCount,
-  VkImageView *attachments,
+  VkImageView *pAttachments,
   uint32_t width,
   uint32_t height,
   uint32_t layers
@@ -548,13 +541,13 @@ VkResult wlu_create_framebuffers(
   if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return res; }
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    attachments[0] = app->sc_data[cur_scd].sc_buffs[i].view;
+    pAttachments[0] = app->sc_data[cur_scd].sc_buffs[i].view;
 
     VkFramebufferCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     create_info.renderPass = app->gp_data[cur_gpd].render_pass;
     create_info.attachmentCount = attachmentCount;
-    create_info.pAttachments = attachments;
+    create_info.pAttachments = pAttachments;
     create_info.width = width;
     create_info.height = height;
     create_info.layers = layers;

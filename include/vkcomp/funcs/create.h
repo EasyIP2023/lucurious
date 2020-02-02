@@ -127,12 +127,18 @@ VkResult wlu_create_buff_mem_map(
   void *data
 );
 
+/**
+* Attachments specified when creating the render pass
+* are bounded by wrapping them into a VkFramebuffer object.
+* A framebuffer object references all VkImageView objects this
+* is represented by "attachments"
+*/
 VkResult wlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_gpd,
   uint32_t attachmentCount,
-  VkImageView *attachments,
+  VkImageView *pAttachments,
   uint32_t width,
   uint32_t height,
   uint32_t layers

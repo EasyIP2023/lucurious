@@ -63,6 +63,10 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 /* Acquire the swapchain image in order to set its layout */
 VkResult wlu_acquire_sc_img_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img);
 
+/**
+* Puts command buffers into the graphics queue,
+* to later be received and processed by the GPU
+*/
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
   uint32_t commandBufferCount,
@@ -74,7 +78,7 @@ VkResult wlu_queue_graphics_queue(
   const VkSemaphore *pSignalSemaphores
 );
 
-/* Submit results back to the swap chain */
+/* Submit results back to the swap chain, to be presented on the screen */
 VkResult wlu_queue_present_queue(
   vkcomp *app,
   uint32_t waitSemaphoreCount,
