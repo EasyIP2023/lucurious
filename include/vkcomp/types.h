@@ -64,17 +64,6 @@ typedef enum _wlu_matrix_type {
   WLU_MAT4 = 0x0001
 } wlu_matrix_type;
 
-typedef enum _wlu_data_type {
-  WLU_SC_DATA = 0x0000,
-  WLU_GP_DATA = 0x0001,
-  WLU_CMD_DATA = 0x0002,
-  WLU_BUFFS_DATA = 0x0003,
-  WLU_DESC_DATA = 0x0004,
-  WLU_SC_DATA_MEMS = 0x0005,
-  WLU_DESC_DATA_MEMS = 0x0006,
-  WLU_GP_DATA_MEMS = 0x0007
-} wlu_data_type;
-
 typedef struct _vkcomp {
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
   VkDebugReportCallbackEXT debug_report_callback;

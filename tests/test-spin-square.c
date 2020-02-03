@@ -53,22 +53,22 @@ struct uniform_block_data {
   mat4 proj;
 };
 
-static VkResult init_buffs(vkcomp *app) {
-  VkResult err;
+static bool init_buffs(vkcomp *app) {
+  bool err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 9, WLU_BUFFS_DATA);
+  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 9);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_SC_DATA);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_GP_DATA);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_CMD_DATA);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_DESC_DATA);
+  err = wlu_otba(WLU_DESC_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
   return err;
@@ -131,7 +131,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
-  err = wlu_otba(app, cur_scd, capabilities.minImageCount, WLU_SC_DATA_MEMS);
+  err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
   /* Does not check if image count exceeds the max */
@@ -175,17 +175,6 @@ START_TEST(test_vulkan_client_create) {
   wlu_log_me(WLU_SUCCESS, "Successfully created render pass");
   /* ending point for render pass creation */
 
-  wlu_log_me(WLU_WARNING, "Compiling the frag code to spirv shader");
-
-  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT,
-                             spin_square_frag_text, "frag.spv", "main");
-  check_err(!shi_frag.bytes, app, wc, NULL)
-
-  wlu_log_me(WLU_WARNING, "Compiling the vert code to spirv shader");
-  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT,
-                             spin_square_vert_text, "vert.spv", "main");
-  check_err(!shi_vert.bytes, app, wc, NULL)
-
   VkImageView vkimg_attach[1];
   err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   check_err(err, app, wc, NULL)
@@ -202,7 +191,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(1, &vi_binding, 2, vi_attribs);
 
-  err = wlu_otba(app, cur_dd, app->sc_data[cur_scd].sic, WLU_DESC_DATA_MEMS);
+  err = wlu_otba(WLU_DESC_DATA_MEMS, app, cur_dd, app->sc_data[cur_scd].sic);
   check_err(err, app, wc, NULL)
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
@@ -219,6 +208,16 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
 
+  wlu_log_me(WLU_INFO, "Start of shader creation");
+  wlu_log_me(WLU_WARNING, "Compiling the fragment shader code to spirv bytes");
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT, spin_square_frag_text, "frag.spv", "main");
+  check_err(!shi_frag.bytes, app, wc, NULL)
+
+  wlu_log_me(WLU_WARNING, "Compiling the vertex shader code into spirv bytes");
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT, spin_square_vert_text, "vert.spv", "main");
+  check_err(!shi_vert.bytes, app, wc, NULL)
+  wlu_log_me(WLU_SUCCESS, "vert.spv and frag.spv officially created");
+
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
   check_err(!frag_shader_module, app, wc, NULL)
 
@@ -227,6 +226,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shi_vert.result);
   wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shi_frag.result);
+  wlu_log_me(WLU_INFO, "End of shader creation");
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = wlu_set_shader_stage_info(
     vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
@@ -275,7 +275,7 @@ START_TEST(test_vulkan_client_create) {
     VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  err = wlu_otba(app, cur_dd, 1, WLU_GP_DATA_MEMS);
+  err = wlu_otba(WLU_GP_DATA_MEMS, app, cur_dd, 1);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,

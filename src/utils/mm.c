@@ -154,7 +154,7 @@ finish_alloc_mem_block:
   return block;
 }
 
-/* Function is reserve for one time use. Only use when allocating space for struct members */
+/* Function is reserve for one time use. Only used when allocating space for struct members */
 void *wlu_alloc(wlu_block_type type, size_t bytes) {
   wlu_mem_block_t *nblock = NULL;
 
@@ -271,6 +271,89 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.dd_cnt * sizeof(struct _desc_data));
 
   if (!wlu_alloc(type, size)) return false;
+
+  return true;
+}
+
+bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size) {
+  switch (type) {
+    case WLU_SC_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->sc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data));
+        if (!app->sc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sdc = arr_size; return false;
+      }
+    case WLU_GP_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->gp_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data));
+        if (!app->gp_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->gdc = arr_size; return false;
+      }
+    case WLU_CMD_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data));
+        if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->cdc = arr_size; return false;
+      }
+    case WLU_BUFFS_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buffs_data));
+        if (!app->buffs_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->bdc = arr_size; return false;
+      }
+    case WLU_DESC_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->desc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
+        if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->ddc = arr_size; return false;
+      }
+    case WLU_SC_DATA_MEMS:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        /**
+        * Don't want to stick to minimum because one would have to wait on the
+        * drive to complete internal operations before one can acquire another
+        * images to render to. So it's recommended to add one to minImageCount
+        */
+        arr_size += 1;
+
+        /* Allocate SwapChain Buffers (VkImage, VkImageView, VkFramebuffer) */
+        app->sc_data[index].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers));
+        if (!app->sc_data[index].sc_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+
+        /* Allocate CommandBuffers, This is okay */
+        app->cmd_data[index].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer));
+        if (!app->cmd_data[index].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+
+        /* Allocate Semaphores */
+        app->sc_data[index].sems = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _semaphores));
+        if (!app->sc_data[index].sems) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sc_data[index].sic = arr_size; return false;
+      }
+    case WLU_DESC_DATA_MEMS:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->desc_data[index].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
+        if (!app->desc_data[index].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+
+        app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
+        if (!app->desc_data[index].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->desc_data[index].dlsc = arr_size; return false;
+      }
+    case WLU_GP_DATA_MEMS:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->gp_data[index].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline));
+        if (!app->gp_data[index].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->gp_data[index].gpc = arr_size; return false;
+      }
+    default: break;
+  }
 
   return true;
 }

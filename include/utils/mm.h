@@ -25,8 +25,11 @@
 #ifndef WLU_UTILS_MM_H
 #define WLU_UTILS_MM_H
 
-/* [one time memory allocater] For creating large memory blocks once */
+/* [One Time Memory Allocater] For creating large memory blocks once */
 bool wlu_otma(wlu_block_type type, wlu_otma_mems ma);
+/* [One Time Buffer Allocater] for suballocating blocks of memory from large block */
+bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size);
+
 void wlu_release_blocks();
 
 #ifdef DEV_ENV
@@ -34,10 +37,8 @@ void wlu_print_mb(wlu_block_type type);
 #endif
 
 #ifdef INAPI_CALLS
-/* Function is reserve for one time use. Only use when allocating space for struct members */
+/* Function is reserve for one time use. Only used when allocating space for struct members */
 void *wlu_alloc(wlu_block_type type, size_t bytes);
-void *wlu_realloc(wlu_block_type type, void *addr, size_t new_size); /* NOT in use still prototype */
-void wlu_free_block(wlu_block_type type, void *addr);
 #endif
 
 #endif

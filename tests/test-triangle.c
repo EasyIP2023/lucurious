@@ -43,19 +43,19 @@ static wlu_otma_mems ma = {
   .cmdd_cnt = 10, .bd_cnt = 10
 };
 
-static VkResult init_buffs(vkcomp *app) {
-  VkResult err;
+static bool init_buffs(vkcomp *app) {
+  bool err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 2, WLU_BUFFS_DATA);
+  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 2);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_SC_DATA);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_GP_DATA);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_CMD_DATA);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
   return err;
@@ -118,7 +118,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
-  err = wlu_otba(app, cur_scd, capabilities.minImageCount, WLU_SC_DATA_MEMS);
+  err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_swap_chain(app, cur_cmdd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
@@ -302,7 +302,7 @@ START_TEST(test_vulkan_client_create) {
     VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  err = wlu_otba(app, cur_gpd, 1, WLU_GP_DATA_MEMS);
+  err = wlu_otba(WLU_GP_DATA_MEMS, app, cur_gpd, 1);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,

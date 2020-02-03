@@ -69,22 +69,22 @@ static void wlu_print_matrices() {
   wlu_print_matrix(ubd.mvp, WLU_MAT4);
 }
 
-static VkResult init_buffs(vkcomp *app) {
-  VkResult err;
+static bool init_buffs(vkcomp *app) {
+  bool err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 2, WLU_BUFFS_DATA);
+  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 2);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_SC_DATA);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_GP_DATA);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_CMD_DATA);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
-  err = wlu_otba(app, ALLOC_INDEX_NON, 1, WLU_DESC_DATA);
+  err = wlu_otba(WLU_DESC_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
   return err;
@@ -147,7 +147,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(extent3D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0, cur_bd = 0, cur_cmd = 0;
-  err = wlu_otba(app, cur_scd, capabilities.minImageCount, WLU_SC_DATA_MEMS);
+  err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent3D.width, extent3D.height);
@@ -203,7 +203,7 @@ START_TEST(test_vulkan_client_create_3D) {
   cur_bd++;
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
-  err = wlu_otba(app, cur_dd, NUM_DESCRIPTOR_SETS, WLU_DESC_DATA_MEMS);
+  err = wlu_otba(WLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
   check_err(err, app, wc, NULL)
 
   VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(
@@ -370,7 +370,7 @@ START_TEST(test_vulkan_client_create_3D) {
     VK_SAMPLE_COUNT_1_BIT, VK_FALSE, 0.0f, NULL, VK_FALSE, VK_FALSE
   );
 
-  err = wlu_otba(app, cur_gpd, 1, WLU_GP_DATA_MEMS);
+  err = wlu_otba(WLU_GP_DATA_MEMS, app, cur_gpd, 1);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,

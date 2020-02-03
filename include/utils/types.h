@@ -43,6 +43,17 @@ typedef enum _wlu_block_type {
   WLU_SMALL_BLOCK_SHARED = 0x0004
 } wlu_block_type;
 
+typedef enum _wlu_data_type {
+  WLU_SC_DATA = 0x0000,
+  WLU_GP_DATA = 0x0001,
+  WLU_CMD_DATA = 0x0002,
+  WLU_BUFFS_DATA = 0x0003,
+  WLU_DESC_DATA = 0x0004,
+  WLU_SC_DATA_MEMS = 0x0005,
+  WLU_DESC_DATA_MEMS = 0x0006,
+  WLU_GP_DATA_MEMS = 0x0007
+} wlu_data_type;
+
 typedef struct _wlu_otma_mems {
   uint32_t inta_cnt;  /* int array count */
   uint32_t cha_cnt;   /* char array count */

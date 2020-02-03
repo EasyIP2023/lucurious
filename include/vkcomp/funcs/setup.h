@@ -33,7 +33,4 @@ void wlu_freeup_sc(void *data);
 /* Free up any and all allocated vkcomp related memory */
 void wlu_freeup_vk(void *data);
 
-/* Simple Effective One Time Buffer Allocater */
-VkResult wlu_otba(vkcomp *app, uint32_t index, uint32_t arr_size, wlu_data_type type);
-
 #endif
