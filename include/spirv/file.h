@@ -22,25 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_SPIRV_FILE_H
+#define WLU_SPIRV_FILE_H
 
-#include "utils/types.h"
-#include "utils/all.h"
-
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
-#endif
-
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+/* A way to load SPIR-V byte code */
+wlu_file_info wlu_read_file(const char *filename);
 
 #endif

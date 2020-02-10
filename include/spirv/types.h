@@ -22,25 +22,23 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_SPIRV_TYPES_H
+#define WLU_SPIRV_TYPES_H
 
-#include "utils/types.h"
-#include "utils/all.h"
+typedef enum _wlu_spirv_type {
+  WLU_UTILS_FILE_SPRIV = 0x0000, /* Define spirv bytes from file */
+  WLU_LIB_SHADERC_SPRIV = 0x0001
+} wlu_spirv_type;
 
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
-#endif
+typedef struct _wlu_file_info {
+  char *bytes;
+  long byte_size;
+} wlu_file_info;
 
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+typedef struct _wlu_shader_info {
+  void *result;
+  char *bytes;
+  long byte_size;
+} wlu_shader_info;
 
 #endif

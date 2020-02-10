@@ -22,25 +22,13 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_UTILS_ALL_H
+#define WLU_UTILS_ALL_H
 
-#include "utils/types.h"
-#include "utils/all.h"
-
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
-#endif
-
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
+#include "log.h"
+#include "mm.h"
+#ifdef INAPI_CALLS
+#include "errors.h"
 #endif
 
 #endif

@@ -22,25 +22,12 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_SPIRV_ALL_H
+#define WLU_SPIRV_ALL_H
 
-#include "utils/types.h"
-#include "utils/all.h"
+#include "file.h"
+#include "shade.h"
 
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
-#endif
-
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+void wlu_freeup_spriv_bytes(wlu_spirv_type type, void *bytes);
 
 #endif

@@ -277,28 +277,28 @@ VkResult wlu_create_img_views(
 
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, sc_imgs);
   if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
-
+	
+	VkImageViewCreateInfo create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	create_info.viewType = type;
+ 	create_info.format = format;
+ 	create_info.components.r = VK_COMPONENT_SWIZZLE_R;
+ 	create_info.components.g = VK_COMPONENT_SWIZZLE_G;
+ 	create_info.components.b = VK_COMPONENT_SWIZZLE_B;
+ 	create_info.components.a = VK_COMPONENT_SWIZZLE_A;
+ 	/**
+ 	* describe what the image's purpose is and which
+  * part of the image should be accessed
+  */
+	create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	create_info.subresourceRange.baseMipLevel = 0;
+	create_info.subresourceRange.levelCount = 1;
+	create_info.subresourceRange.baseArrayLayer = 0;
+ 	create_info.subresourceRange.layerCount = 1;
+    
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    VkImageViewCreateInfo create_info = {};
-    create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
-    wlu_log_me(WLU_WARNING, "image: %p", sc_imgs[i]);
-    create_info.viewType = type;
-    create_info.format = format;
-    create_info.components.r = VK_COMPONENT_SWIZZLE_R;
-    create_info.components.g = VK_COMPONENT_SWIZZLE_G;
-    create_info.components.b = VK_COMPONENT_SWIZZLE_B;
-    create_info.components.a = VK_COMPONENT_SWIZZLE_A;
-    /**
-    * describe what the image's purpose is and which
-    * part of the image should be accessed
-    */
-    create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    create_info.subresourceRange.baseMipLevel = 0;
-    create_info.subresourceRange.levelCount = 1;
-    create_info.subresourceRange.baseArrayLayer = 0;
-    create_info.subresourceRange.layerCount = 1;
-
+    // wlu_log_me(WLU_WARNING, "image: %p", sc_imgs[i]);
     res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
     if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
   }

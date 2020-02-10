@@ -22,25 +22,29 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef WLU_SPIRV_SHADE_H
+#define WLU_SPIRV_SHADE_H
 
-#include "utils/types.h"
-#include "utils/all.h"
+wlu_shader_info wlu_preprocess_shader(
+  unsigned int kind,
+  const char *source,
+  const char *input_file_name,
+  const char *entry_point_name
+);
 
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
-#endif
+wlu_shader_info wlu_compile_to_assembly(
+  unsigned int kind,
+  const char *source,
+  const char *input_file_name,
+  const char *entry_point_name
+);
 
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
+/* Compile GLSL/HLSL into spirv byte code */
+wlu_shader_info wlu_compile_to_spirv(
+  unsigned int kind,
+  const char *source,
+  const char *input_file_name,
+  const char *entry_point_name
+);
 
 #endif
