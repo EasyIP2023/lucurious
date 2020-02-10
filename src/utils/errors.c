@@ -187,7 +187,7 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
       wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layouts()");
       break;
-    case WLU_VKCOMP_PHYSICAL_DEV:
+    case WLU_VKCOMP_PHYS_DEV:
       wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
       break;

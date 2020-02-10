@@ -50,6 +50,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   uint32_t format_count = 0;
 
   if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return ret_fmt; }
+  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL);  return ret_fmt; }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
   if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }

@@ -16,6 +16,7 @@
 # Ignore all se executables in examples
 examples/**/*se
 
+# Ignore all build folders
 build/
 ibuild/
 
@@ -26,3 +27,4 @@ vgcore.*
 peda*
 
 xdg-shell-protocol.h
+

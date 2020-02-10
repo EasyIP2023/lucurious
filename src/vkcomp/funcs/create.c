@@ -83,7 +83,7 @@ VkResult wlu_create_physical_device(
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
   if (res) { PERR(WLU_VK_ENUM_ERR, res, "PhysicalDevices"); return res; }
-
+	
   if (device_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] failed to find GPU with Vulkan support!!!");
     return VK_RESULT_MAX_ENUM;
@@ -128,12 +128,10 @@ VkResult wlu_create_logical_device(
   VkDeviceQueueCreateInfo *pQueueCreateInfos = NULL;
   float queue_priorities[1] = {1.0};
 
-  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYSICAL_DEV, 0, NULL); return res; }
-  if (app->indices.graphics_family == UINT32_MAX ||
-      app->indices.present_family == UINT32_MAX)
-      { PERR(WLU_VKCOMP_INDICES, 0, NULL); return res; }
+  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL); return res; }
+  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) { PERR(WLU_VKCOMP_INDICES, 0, NULL); return res; }
 
-  /* Will need to change this later but for now, This two hardware queues should currently always be the same */
+  /* Will need to change this later but for now, These two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
   uint32_t dq_count = 1;
 
@@ -284,6 +282,7 @@ VkResult wlu_create_img_views(
     VkImageViewCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     create_info.image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
+    wlu_log_me(WLU_WARNING, "image: %p", sc_imgs[i]);
     create_info.viewType = type;
     create_info.format = format;
     create_info.components.r = VK_COMPONENT_SWIZZLE_R;

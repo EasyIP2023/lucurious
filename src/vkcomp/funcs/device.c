@@ -31,7 +31,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
 
-  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYSICAL_DEV, 0, NULL); return ret; }
+  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL); return ret; }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
@@ -53,7 +53,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
         wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
       }
 
-      /* Check to see if a device can create images on the surface we may have created */
+      /* Check to see if a device can present images onto a surface */
       if (app->surface && present_support[i]) {
         /* Retrieve Present Family Queue index */
         app->indices.present_family = i; ret = VK_FALSE;
@@ -96,7 +96,10 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
   return capabilities;
 }
 
-/* This function is mainly the point where we query a given physical device properties/features */
+/**
+* This function is mainly where we query a given physical device 
+* properties/features and assign data to addresses 
+*/
 VkBool32 is_device_suitable(
   VkPhysicalDevice device,
   VkPhysicalDeviceType vkpdtype,

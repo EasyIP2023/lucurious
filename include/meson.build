@@ -32,10 +32,10 @@ utils_hs = ['utils/log.h', 'utils/mm.h', 'utils/types.h']
 install_headers(utils_hs, install_dir: i_dir + 'utils')
 
 #############################
-# Installing shader headers #
+# Installing spir-v headers #
 #############################
-shader_hs = ['shader/file.h', 'shader/shade.h', 'shader/types.h']
-install_headers(shader_hs, install_dir: i_dir + 'shader')
+spirv_hs = ['spirv/all.h', 'spirv/file.h', 'spirv/shade.h', 'spirv/types.h']
+install_headers(spirv_hs, install_dir: i_dir + 'spirv')
 
 #############################
 # Installing vkcomp headers #

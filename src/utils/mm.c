@@ -113,10 +113,11 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
     block->addr = block;
 
     /* Decrement larger block available memory */
-    if (type == WLU_SMALL_BLOCK_SHARED) {
-      large_block_shared->abytes -= (BLOCK_SIZE + bytes);
-    } else {
-      large_block_priv->abytes -= (BLOCK_SIZE + bytes);
+    switch(type) {
+			case WLU_SMALL_BLOCK_SHARED: large_block_shared->abytes -= (BLOCK_SIZE + bytes); break;
+			case WLU_SMALL_BLOCK_PRIV: large_block_priv->abytes -= (BLOCK_SIZE + bytes); break;
+				break;
+			default: break;    
     }
 
     return block;

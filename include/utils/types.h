@@ -54,25 +54,6 @@ typedef enum _wlu_data_type {
   WLU_GP_DATA_MEMS = 0x0007
 } wlu_data_type;
 
-typedef struct _wlu_otma_mems {
-  uint32_t inta_cnt;  /* int array count */
-  uint32_t cha_cnt;   /* char array count */
-  uint32_t fla_cnt;    /* float array count */
-  uint32_t dba_cnt;   /* double array count */
-  uint32_t wclient_cnt;
-  uint32_t vkcomp_cnt;
-  uint32_t vkext_props_cnt;
-  uint32_t vkval_layer_cnt;
-  uint32_t desc_cnt;  /* descriptor count */
-  uint32_t gp_cnt;    /* Graphics pipelines count */
-  uint32_t si_cnt;    /* swap chain image count */
-  uint32_t scd_cnt;   /* swap chain data count */
-  uint32_t gpd_cnt;   /* graphics pipeline data count */
-  uint32_t cmdd_cnt;  /* command data count */
-  uint32_t bd_cnt;    /* buffer data count */
-  uint32_t dd_cnt;    /* descriptor data count */
-} wlu_otma_mems;
-
 typedef enum _wlu_err_msg_type {
   WLU_DR_INSTANCE_PROC_ADDR_ERR = 0x0001,
   WLU_DR_DEVICE_PROC_ADDR_ERR = 0x0002,
@@ -94,7 +75,7 @@ typedef enum _wlu_err_msg_type {
   WLU_VKCOMP_PIPELINE_LAYOUT = 0x0103,
   WLU_VKCOMP_DESC_POOL = 0x0104,
   WLU_VKCOMP_DESC_LAYOUT = 0x0105,
-  WLU_VKCOMP_PHYSICAL_DEV = 0x0106,
+  WLU_VKCOMP_PHYS_DEV = 0x0106,
   WLU_VKCOMP_INDICES = 0x0107,
   WLU_VKCOMP_SURFACE = 0x0108,
   WLU_VKCOMP_SC = 0x0109,
@@ -108,5 +89,24 @@ typedef enum _wlu_err_msg_type {
   WLU_ALLOC_FAILED = 0x0FFE,
   WLU_ALREADY_ALLOC = 0x0FFF
 } wlu_err_msg_type;
+
+typedef struct _wlu_otma_mems {
+  uint32_t inta_cnt;  /* int array count */
+  uint32_t cha_cnt;   /* char array count */
+  uint32_t fla_cnt;    /* float array count */
+  uint32_t dba_cnt;   /* double array count */
+  uint32_t wclient_cnt;
+  uint32_t vkcomp_cnt;
+  uint32_t vkext_props_cnt;
+  uint32_t vkval_layer_cnt;
+  uint32_t desc_cnt;  /* descriptor count */
+  uint32_t gp_cnt;    /* Graphics pipelines count */
+  uint32_t si_cnt;    /* swap chain image count */
+  uint32_t scd_cnt;   /* swap chain data count */
+  uint32_t gpd_cnt;   /* graphics pipeline data count */
+  uint32_t cmdd_cnt;  /* command data count */
+  uint32_t bd_cnt;    /* buffer data count */
+  uint32_t dd_cnt;    /* descriptor data count */
+} wlu_otma_mems;
 
 #endif

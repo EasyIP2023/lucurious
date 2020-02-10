@@ -28,7 +28,7 @@
 #define LUCUR_VKCOMP_MATRIX_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
-#define LUCUR_SHADE_API
+#define LUCUR_SPIRV_API
 #include <lucom.h>
 
 #include "test-extras.h"
@@ -124,11 +124,8 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_swap_chain(app, cur_cmdd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_cmd_pool(app, cur_scd, cur_cmdd, app->indices.graphics_family,
-                            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
-                            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+  err = wlu_create_cmd_pool(app, cur_scd, cur_cmdd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
   check_err(err, app, wc, NULL)
-
 
   err = wlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   check_err(err, app, wc, NULL)
@@ -160,10 +157,9 @@ START_TEST(test_vulkan_client_create) {
     0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL
   );
 
-  VkSubpassDependency subdep = wlu_set_subpass_dep(
-    VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
-    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
+  VkSubpassDependency subdep = wlu_set_subpass_dep(VK_SUBPASS_EXTERNAL, 0,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
   err = wlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);

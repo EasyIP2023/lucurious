@@ -24,7 +24,7 @@
 
 #include <check.h>
 
-#define LUCUR_SHADE_API
+#define LUCUR_SPIRV_API
 #include <lucom.h>
 
 #include "test-shade.h"

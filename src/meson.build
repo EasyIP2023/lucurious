@@ -23,7 +23,7 @@
 #
 
 subdir('utils')
-subdir('shader')
+subdir('spirv')
 subdir('vkcomp')
 subdir('wayland')
 subdir('exec')

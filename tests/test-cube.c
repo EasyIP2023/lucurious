@@ -28,7 +28,7 @@
 #define LUCUR_VKCOMP_MATRIX_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
-#define LUCUR_SHADE_API
+#define LUCUR_SPIRV_API
 #include <lucom.h>
 
 #include "test-extras.h"

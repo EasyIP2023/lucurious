@@ -29,7 +29,7 @@
 #define LUCUR_VKCOMP_MATRIX_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
-#define LUCUR_SHADE_API
+#define LUCUR_SPIRV_API
 #include <lucom.h>
 
 #include "test-extras.h"
@@ -439,7 +439,6 @@ START_TEST(test_vulkan_client_create) {
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
 
-  // uint32_t image_index = 0;
   VkSemaphore image_sems[app->sc_data[cur_scd].sic], render_sems[app->sc_data[cur_scd].sic];
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {

@@ -32,12 +32,9 @@
 #include "utils/errors.h"
 #endif
 
-#ifdef LUCUR_FILE_API
-#include "shader/file.h"
-#endif
-
-#ifdef LUCUR_SHADE_API
-#include "shader/shade.h"
+#ifdef LUCUR_SPIRV_API
+#include "spirv/types.h"
+#include "spirv/all.h"
 #endif
 
 #ifdef LUCUR_VKCOMP_API
