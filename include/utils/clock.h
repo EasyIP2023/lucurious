@@ -22,23 +22,19 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_MM_H
-#define WLU_UTILS_MM_H
+#ifndef WLU_UTILS_CLOCK_H
+#define WLU_UTILS_CLOCK_H
 
-/* [One Time Memory Allocater] For creating large memory blocks once */
-bool wlu_otma(wlu_block_type type, wlu_otma_mems ma);
-/* [One Time Buffer Allocater] For sub-allocating blocks of memory from large block */
-bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size);
-
-void wlu_release_blocks();
-
-#ifdef DEV_ENV
-void wlu_print_mb(wlu_block_type type);
+/* Taken From: https://www.roxlu.com/2014/047/high-resolution-timer-function-in-c-c-- */
+#define HAVE_POSIX_TIMER
+#include <time.h>
+#ifdef CLOCK_MONOTONIC
+#define CLOCKID CLOCK_MONOTONIC
+#else
+#define CLOCKID CLOCK_REALTIME
 #endif
 
-#ifdef INAPI_CALLS
-/* Function is reserve for one time use. Only used when allocating space for struct members */
-void *wlu_alloc(wlu_block_type type, size_t bytes);
-#endif
+/* Returns the current time in nanoseconds */
+uint64_t wlu_hrnst();
 
 #endif

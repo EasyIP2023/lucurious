@@ -110,7 +110,11 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
     */
     block = current->addr + BLOCK_SIZE + bytes; /* sbrk() */
     block->prv_addr = current->addr;
+
     block->addr = block;
+    block->next = NULL;
+    block->abytes = 0;
+    block->saddr = NULL;
 
     /* Decrement larger block available memory */
     switch(type) {

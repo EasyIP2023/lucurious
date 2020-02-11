@@ -22,5 +22,5 @@
 # THE SOFTWARE.
 #
 
-fs = ['log.c','errors.c','mm.c']
+fs = ['log.c','errors.c','mm.c','clock.c']
 lib_utils = static_library('lutils', files(fs), include_directories: lucur_inc)

@@ -27,8 +27,14 @@
 
 #include "log.h"
 #include "mm.h"
+
+#ifdef LUCUR_CLOCK_API
+#include "clock.h"
+#endif
+
 #ifdef INAPI_CALLS
 #include "errors.h"
 #endif
 
 #endif
+

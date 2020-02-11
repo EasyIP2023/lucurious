@@ -28,7 +28,7 @@ install_headers('lucurious.h', install_dir: i_dir)
 ############################
 # Installing utils headers #
 ############################
-utils_hs = ['utils/all.h', 'utils/log.h', 'utils/mm.h', 'utils/types.h']
+utils_hs = ['utils/all.h', 'utils/log.h', 'utils/mm.h', 'utils/types.h', 'utils/clock.h', 'utils/errors.h']
 install_headers(utils_hs, install_dir: i_dir + 'utils')
 
 #############################
