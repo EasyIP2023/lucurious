@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -42,9 +42,9 @@ VkResult wlu_create_instance(
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pNext = NULL;
   app_info.pApplicationName = app_name;
-  app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
   app_info.pEngineName = engine_name;
-  app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
   app_info.apiVersion = VK_API_VERSION_1_0;
 
   /**
@@ -83,7 +83,7 @@ VkResult wlu_create_physical_device(
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
   if (res) { PERR(WLU_VK_ENUM_ERR, res, "PhysicalDevices"); return res; }
-	
+
   if (device_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] failed to find GPU with Vulkan support!!!");
     return VK_RESULT_MAX_ENUM;
@@ -100,7 +100,12 @@ VkResult wlu_create_physical_device(
   */
   for (uint32_t i = 0; i < device_count; i++) {
     if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
-      memcpy(&app->physical_device, &devices[i], sizeof(devices[i]));
+      memmove(&app->physical_device, &devices[i], sizeof(devices[i]));
+      if (!app->physical_device) {
+        wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy physical device information");
+        break;
+      }
+
       wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
     }
@@ -164,7 +169,7 @@ VkResult wlu_create_logical_device(
 
   /**
   * Queues are automatically created with
-  * the logical device, but you need a queue
+  * the logical device, but you need a vkqueue
   * handle to interface with them
   */
   vkGetDeviceQueue(app->device, app->indices.graphics_family, 0, &app->graphics_queue);
@@ -204,7 +209,7 @@ VkResult wlu_create_swap_chain(
     VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
   };
 
-  for (uint32_t i = 0; i < sizeof(composite_alpha_flags); i++) {
+  for (uint32_t i = 0; i < sizeof(composite_alpha_flags) / sizeof(composite_alpha_flags[0]); i++) {
     if (capabilities.supportedCompositeAlpha & composite_alpha_flags[i]) {
       composite_alpha = composite_alpha_flags[i];
       break;
@@ -277,7 +282,7 @@ VkResult wlu_create_img_views(
 
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, sc_imgs);
   if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
-	
+
 	VkImageViewCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	create_info.viewType = type;
@@ -295,10 +300,9 @@ VkResult wlu_create_img_views(
 	create_info.subresourceRange.levelCount = 1;
 	create_info.subresourceRange.baseArrayLayer = 0;
  	create_info.subresourceRange.layerCount = 1;
-    
+
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     create_info.image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
-    // wlu_log_me(WLU_WARNING, "image: %p", sc_imgs[i]);
     res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
     if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
   }
@@ -415,7 +419,7 @@ VkResult wlu_create_depth_buff(
   res = vkBindImageMemory(app->device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);
   if (res) { PERR(WLU_VK_BIND_ERR, res, "ImageMemory"); return res; }
 
-  /* Create image view object */
+  /* Create an image view object for depth buffer */
   create_view_info.image = app->sc_data[cur_scd].depth.image;
   res = vkCreateImageView(app->device, &create_view_info, NULL, &app->sc_data[cur_scd].depth.view);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); }
@@ -501,7 +505,7 @@ VkResult wlu_create_buff_mem_map(
   if (data) {
     p_data = memmove(p_data, data, app->buffs_data[cur_bd].size);
     if (!p_data) {
-      wlu_log_me(WLU_DANGER, "[x] void *p_data memmove failed");
+      wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy vertex data into CPU accessible memory");
       return res;
     }
   }
@@ -631,3 +635,4 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
 
   return res;
 }
+

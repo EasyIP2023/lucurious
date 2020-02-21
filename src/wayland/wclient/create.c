@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,10 @@ bool wlu_create_client(wclient *wc) {
 
   /* establish connection to wayland server */
   wc->display = wl_display_connect(NULL);
-  if (!wc->display) return false;
+  if (!wc->display) {
+    wlu_log_me(WLU_DANGER, "[x] wl_diplay_connect: %s", strerror(errno));
+    return false;
+  }
 
   /* Registry gets server global information */
   wc->registry = wl_display_get_registry(wc->display);
@@ -147,7 +150,8 @@ bool wlu_create_wc_buffer(wclient *wc, uint32_t width, uint32_t height) {
   if (!wc->shm_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return false; }
 
   /* then memmove contents from the buff (which is a wayland shared file) into the block */
-  if (!memmove(wc->shm_data, buff, size)) {
+  wc->shm_data = memmove(wc->shm_data, buff, size);
+  if (!wc->shm_data) {
     wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy file content");
     return false;
   }

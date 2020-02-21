@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 VkResult wlu_set_debug_message(vkcomp *app);
 
 #ifdef INAPI_CALLS
-VkResult wlu_set_global_layers(VkLayerProperties **vk_props);
+VkResult wlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size);
 #endif
 
 #endif

@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -97,8 +97,8 @@ VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app) {
 }
 
 /**
-* This function is mainly where we query a given physical device 
-* properties/features and assign data to addresses 
+* This function is mainly where we query a given physical device
+* properties/features and assign data to addresses
 */
 VkBool32 is_device_suitable(
   VkPhysicalDevice device,
@@ -121,34 +121,25 @@ VkBool32 is_device_suitable(
 VkResult get_extension_properties(
   vkcomp *app,
   VkPhysicalDevice device,
-  VkExtensionProperties **eprops
+  VkExtensionProperties **eprops,
+  uint32_t *size
 ) {
   VkResult res = VK_INCOMPLETE;
-  VkExtensionProperties *extensions = NULL;
-  uint32_t extension_count = 0;
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, size, NULL);
   if (res) return res;
 
   /* Rare but may happen for instances. If so continue on with the app */
-  if (extension_count == 0) return res;
+  if (*size == 0) return res = VK_RESULT_MAX_ENUM;
 
-  extensions = (VkExtensionProperties *) alloca(extension_count * sizeof(VkExtensionProperties));
+    /* set available instance extensions */
+  *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkExtensionProperties));
+  if (!(*eprops)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions) :
-                vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, extensions);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) :
+                vkEnumerateDeviceExtensionProperties(device, NULL, size, *eprops);
   if (res) return res;
-
-  /* set available instance extensions */
-  *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, extension_count * sizeof(VkExtensionProperties));
-  if (!(*eprops)) return VK_RESULT_MAX_ENUM;
-
-  *eprops = memmove(*eprops, extensions, extension_count * sizeof(extensions[0]));
-  if (!(*eprops)) {
-    wlu_log_me(WLU_DANGER, "[x] memcpy of VkExtensionProperties *extensions to app->eprops failed");
-    return VK_RESULT_MAX_ENUM;
-  }
 
   return res;
 }

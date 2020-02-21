@@ -25,6 +25,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
+### [Benchmarks](https://github.com/EasyIP2023/lucurious-benchmarks)
 
 ## References
 * [Wayland freedesktop](https://wayland.freedesktop.org/)

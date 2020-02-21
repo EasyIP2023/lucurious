@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 
 #define LUCUR_VKCOMP_API
 #define LUCUR_VKCOMP_MATRIX_API
-#define LUCUR_WAYLAND_API 
+#define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
 #include <lucom.h>
@@ -227,7 +227,7 @@ START_TEST(test_vulkan_client_create) {
   /* End of vertex buffer */
 
   VkDeviceSize isize = sizeof(indices);
-  const uint32_t index_count = isize / sizeof(uint16_t);
+  const uint32_t index_count = isize / sizeof(uint16_t); // 2 bytes
   err = wlu_create_vk_buffer(
     app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',

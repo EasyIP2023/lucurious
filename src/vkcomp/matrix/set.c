@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,8 @@ void wlu_set_matrix(void *dest, void *src, wlu_matrix_type type) {
 void wlu_set_vector(void *dest, void *src, wlu_vec_type type) {
   switch(type) {
     case WLU_VEC2:
-      memcpy(dest, src, sizeof(vec2)); // cglm doesn't have a vec2 to copy func
+      dest = memmove(dest, src, sizeof(vec2)); /* cglm doesn't have a vec2 to copy func */
+      if (!dest) wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy vectors");
       break;
     case WLU_VEC3:
       glm_vec3_copy(src, dest);

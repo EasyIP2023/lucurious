@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -53,8 +53,9 @@ START_TEST(test_set_global_layers) {
   check_err(!app, app, NULL, NULL)
 
   VkLayerProperties *vk_props = VK_NULL_HANDLE;
+	uint32_t size = 0;
 
-  err = wlu_set_global_layers(&vk_props);
+  err = wlu_set_global_layers(&vk_props, &size);
   check_err(err, app, NULL, NULL)
 
   if (vk_props) {

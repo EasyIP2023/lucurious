@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -340,7 +340,7 @@ START_TEST(test_vulkan_client_create) {
 
   /* Start of index buffer creation */
   VkDeviceSize isize = sizeof(indices);
-  const uint32_t index_count = isize / sizeof(uint16_t);
+  const uint32_t index_count = isize / sizeof(uint16_t); // 2 bytes
   err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -441,9 +441,11 @@ START_TEST(test_vulkan_client_create) {
 
   VkSemaphore image_sems[app->sc_data[cur_scd].sic], render_sems[app->sc_data[cur_scd].sic];
 
+  uint32_t image_index[app->sc_data[cur_scd].sic];
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     image_sems[i] = app->sc_data[cur_scd].sems[i].image;
     render_sems[i] = app->sc_data[cur_scd].sems[i].render;
+    image_index[i] = i;
 
     err = wlu_acquire_sc_img_index(app, cur_scd, &i);
     check_err(err, app, wc, NULL)
@@ -455,13 +457,20 @@ START_TEST(test_vulkan_client_create) {
 
     err = wlu_create_buff_mem_map(app, cur_bd+i, &ubd);
     check_err(err, app, wc, NULL)
-
-    err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, &image_sems[i], wait_stages, 1, &render_sems[i]);
+/*
+    err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, &image_sems[image_index], wait_stages, 1, &render_sems[image_index]);
     check_err(err, app, wc, NULL)
 
-    err = wlu_queue_present_queue(app, 1, &render_sems[i], 1, &app->sc_data[cur_scd].swap_chain, &i, NULL);
+    err = wlu_queue_present_queue(app, 1, &render_sems[image_index], 1, &app->sc_data[cur_scd].swap_chain, &image_index, NULL);
     check_err(err, app, wc, NULL)
+*/
   }
+
+  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 5, image_sems, wait_stages, 5, render_sems);
+  check_err(err, app, wc, NULL)
+
+  err = wlu_queue_present_queue(app, 5, render_sems, 1, &app->sc_data[cur_scd].swap_chain, image_index, NULL);
+  check_err(err, app, wc, NULL)
 
   sleep(3);
   FREEME(app, wc)

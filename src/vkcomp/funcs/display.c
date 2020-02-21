@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -147,6 +147,10 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
   return actual_extent;
 }
 
+/**
+* Vince: KEEP COMMENT FOR FUTURE REFERENCE
+* https://www.reddit.com/r/vulkan/comments/5vzijc/question_about_vksemaphore_usage/
+*/
 VkResult wlu_acquire_sc_img_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
@@ -201,7 +205,7 @@ VkResult wlu_queue_graphics_queue(
     /* set fence to unsignaled state */
     res = vkResetFences(app->device, 1, &draw_fence);
     if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); goto finish_gq_submit; }
-
+	
     /* Semaphore should be waited on & fence should be signaled when command buffer is finished */
     res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
     if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); goto finish_gq_submit; }
@@ -225,7 +229,7 @@ VkResult wlu_queue_present_queue(
   uint32_t waitSemaphoreCount,
   const VkSemaphore *pWaitSemaphores,
   uint32_t swapchainCount,
-  const VkSwapchainKHR *Swapchains,
+  const VkSwapchainKHR *pSwapchains,
   const uint32_t *pImageIndices,
   VkResult *pResults
 ) {
@@ -237,7 +241,7 @@ VkResult wlu_queue_present_queue(
   present.waitSemaphoreCount = waitSemaphoreCount;
   present.pWaitSemaphores = pWaitSemaphores;
   present.swapchainCount = swapchainCount;
-  present.pSwapchains = Swapchains;
+  present.pSwapchains = pSwapchains;
   present.pImageIndices = pImageIndices;
   present.pResults = pResults;
 

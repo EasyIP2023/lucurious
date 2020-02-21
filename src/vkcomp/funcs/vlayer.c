@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -35,13 +35,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
   const char *pMessage,
   void *pUserData
 ) {
-
-  ALL_UNUSED(flags, objectType, object,
-             messageCode, location,
-             pLayerPrefix, pUserData);
-
+  ALL_UNUSED(flags, objectType, object, messageCode, location, pLayerPrefix, pUserData);
   wlu_log_me(WLU_DANGER, "%s", pMessage);
-
   return VK_FALSE;
 }
 
@@ -60,9 +55,7 @@ VkResult wlu_set_debug_message(vkcomp *app) {
   VkDebugReportCallbackCreateInfoEXT create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
   create_info.pNext = NULL;
-  create_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT   |
-                     VK_DEBUG_REPORT_WARNING_BIT_EXT |
-                     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+  create_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
   create_info.pfnCallback = debug_report_callbackFN;
   create_info.pUserData = NULL;
 
@@ -76,26 +69,26 @@ VkResult wlu_set_debug_message(vkcomp *app) {
 * Set vulkan validation layers properties.
 * To get more validation layers install vulkan sdk
 */
-VkResult wlu_set_global_layers(VkLayerProperties **vk_props) {
+VkResult wlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size) {
   VkResult res = VK_INCOMPLETE;
-  uint32_t layer_count = 0;
 
   /* Find the amount of validation layer */
-  res = vkEnumerateInstanceLayerProperties(&layer_count, NULL);
+  res = vkEnumerateInstanceLayerProperties(size, NULL);
   if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); goto finish_vk_props; }
 
   /* layer count will only be zero if vulkan sdk not installed */
-  if (layer_count == 0) {
+  if (*size == 0) {
+    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_WARNING, "[x] failed to find any Validation Layers!!");
     goto finish_vk_props;
   }
 
   /* allocate space */
-  *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, layer_count * sizeof(VkLayerProperties));
+  *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkLayerProperties));
   if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, res = VK_RESULT_MAX_ENUM, NULL); goto finish_vk_props; }
 
   /* set validation layers values */
-  res = vkEnumerateInstanceLayerProperties(&layer_count, *vk_props);
+  res = vkEnumerateInstanceLayerProperties(size, *vk_props);
   if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); }
 
 finish_vk_props:

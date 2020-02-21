@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,8 @@ VkBool32 is_device_suitable(
 VkResult get_extension_properties(
   vkcomp *app,
   VkPhysicalDevice device,
-  VkExtensionProperties **eprops
+  VkExtensionProperties **eprops,
+  uint32_t *size
 );
 #endif
 

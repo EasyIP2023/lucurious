@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019 Vincent Davis Jr.
+* Copyright (c) 2019-2020 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,12 @@
 uint64_t wlu_hrnst() {
   static uint64_t is_init = 0;
   static struct timespec linux_rate;
-   
+
   if (is_init == 0) {
     clock_getres(CLOCKID, &linux_rate);
     is_init = 1;
   }
-	
+
   uint64_t now;
   struct timespec spec;
   clock_gettime(CLOCKID, &spec);
