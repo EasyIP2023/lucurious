@@ -177,4 +177,20 @@ VkResult wlu_create_cmd_buffs(
 */
 VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd);
 
+/**
+* Takes a VkImage object in memory and converts it to a texture
+*/
+VkResult wlu_create_texture_image(
+  vkcomp *app,
+  uint32_t cur_tex,
+  VkExtent3D extent,
+  VkImageType imageType,
+  VkFormat format,
+  VkSampleCountFlagBits samples,
+  VkImageTiling tiling,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  VkImageLayout initialLayout
+);
+
 #endif

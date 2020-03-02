@@ -69,8 +69,7 @@ void lower_to_upper(char *s) {
 
 void print_gvalidation_layers() {
   VkResult err;
-  vkcomp *app = NULL;
-  app = wlu_init_vk();
+  vkcomp *app = wlu_init_vk();
 
   VkLayerProperties *vk_props = VK_NULL_HANDLE;
   uint32_t lcount = 0;
@@ -80,8 +79,8 @@ void print_gvalidation_layers() {
     wlu_freeup_vk(app);
     fprintf(stdout, "%s", colors[WLU_DANGER]);
     fprintf(stdout, "[x] Vulkan SDK must not be installed\n");
-    fprintf(stdout, "[x] wlu_set_global_layers failed");
-    fprintf(stdout, "%s\n", colors[WLU_RESET]);
+    fprintf(stdout, "[x] wlu_set_global_layers failed\n");
+    fprintf(stdout, "%s", colors[WLU_RESET]);
     return;
   }
 
@@ -103,17 +102,10 @@ void print_gvalidation_layers() {
 
 void print_instance_extensions() {
   VkResult err;
-  vkcomp *app = NULL;
-  app = wlu_init_vk();
+  vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
-  if (err) {
-    fprintf(stdout, "%s", colors[WLU_DANGER]);
-    fprintf(stdout, "[x] Failed to create instance\n");
-    fprintf(stdout, "%s\n", colors[WLU_RESET]);
-    wlu_freeup_vk(app);
-    return;
-  }
+  if (err) { wlu_freeup_vk(app); return; }
 
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
@@ -122,12 +114,9 @@ void print_instance_extensions() {
   /* set available instance extensions */
   VkExtensionProperties *ie_props = VK_NULL_HANDLE;
   uint32_t eip_count = 0;
+
   err = get_extension_properties(app, NULL, &ie_props, &eip_count);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
-    wlu_freeup_vk(app);
-    return;
-  }
+  if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < eip_count; i++) {
     lower_to_upper(ie_props[i].extensionName);
@@ -143,26 +132,16 @@ void print_instance_extensions() {
 
 void print_device_extensions(VkPhysicalDeviceType dt) {
   VkResult err;
-  vkcomp *app = NULL;
-  app = wlu_init_vk();
+  vkcomp *app = wlu_init_vk();
 
   err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
-  if (err) {
-    fprintf(stdout, "%s", colors[WLU_DANGER]);
-    fprintf(stdout, "[x] Failed to create instance\n");
-    fprintf(stdout, "%s\n", colors[WLU_RESET]);
-    wlu_freeup_vk(app);
-    return;
-  }
+  if (err) { wlu_freeup_vk(app); return; }
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
   err = wlu_create_physical_device(app, dt, &device_props, &device_feats);
-  if (err) {
-    wlu_freeup_vk(app);
-    return;
-  }
+  if (err) { wlu_freeup_vk(app); return; }
 
   fprintf(stdout, "%s", colors[WLU_SUCCESS]);
   fprintf(stdout, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
@@ -170,17 +149,15 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
 
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
   uint32_t de_count = 0;
+
   err = get_extension_properties(app, NULL, &de_props, &de_count);
-  if (err) {
-    wlu_log_me(WLU_DANGER, "[x] get_extension_properties failed, ERROR CODE: %d", err);
-    wlu_freeup_vk(app);
-    return;
-  }
+  if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < de_count; i++) {
     lower_to_upper(de_props[i].extensionName);
     fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n", de_props[i].specVersion, de_props[i].extensionName);
   }
+
   fprintf(stdout, "%s", colors[WLU_WARNING]);
   fprintf(stdout, "\n  Device Extension Count: %d\n", de_count);
   fprintf(stdout, "%s\n", colors[WLU_RESET]);

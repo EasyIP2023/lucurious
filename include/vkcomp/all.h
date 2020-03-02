@@ -32,6 +32,7 @@
 #include "funcs/exec.h"
 #include "funcs/set.h"
 #include "funcs/setup.h"
+#include "funcs/utils.h"
 #include "funcs/vlayer.h"
 
 #include "gp/bind.h"
@@ -47,8 +48,6 @@
 #endif
 
 #ifdef INAPI_CALLS
-#include "funcs/utils.h"
-
 /* Dynamically retrieve a VkInstance function */
 #define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
   do { \

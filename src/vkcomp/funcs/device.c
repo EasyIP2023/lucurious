@@ -39,7 +39,7 @@ VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
 
-  present_support = alloca(qfc * sizeof(VkBool32));
+  present_support = (VkBool32 *) alloca(qfc * sizeof(VkBool32));
 
   if (app->surface)
     for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
@@ -110,10 +110,8 @@ VkBool32 is_device_suitable(
   vkGetPhysicalDeviceProperties(device, device_props); /* Query device properties */
   vkGetPhysicalDeviceFeatures(device, device_feats); /* Query device features */
 
-  return (device_props->deviceType == vkpdtype    &&
-          device_feats->depthClamp                &&
-          device_feats->depthBiasClamp            &&
-          device_feats->logicOp                   &&
+  return (device_props->deviceType == vkpdtype && device_feats->depthClamp &&
+          device_feats->depthBiasClamp         && device_feats->logicOp    &&
           device_feats->robustBufferAccess);
 }
 
@@ -124,22 +122,20 @@ VkResult get_extension_properties(
   VkExtensionProperties **eprops,
   uint32_t *size
 ) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) :
-                vkEnumerateDeviceExtensionProperties(device, NULL, size, NULL);
-  if (res) return res;
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, size, NULL);
+  if (res) { PERR(WLU_VK_ENUM_ERR, res, (app) ? "InstanceExtensionProperties" : "DeviceExtensionProperties"); return res; }
 
   /* Rare but may happen for instances. If so continue on with the app */
-  if (*size == 0) return res = VK_RESULT_MAX_ENUM;
+  if (*size == 0) return VK_RESULT_MAX_ENUM;
 
-    /* set available instance extensions */
+  /* set available instance extensions */
   *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkExtensionProperties));
   if (!(*eprops)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) :
-                vkEnumerateDeviceExtensionProperties(device, NULL, size, *eprops);
-  if (res) return res;
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, size, *eprops);
+  if (res) { PERR(WLU_VK_ENUM_ERR, res, (app) ? "InstanceExtensionProperties" : "DeviceExtensionProperties"); return res; }
 
   return res;
 }

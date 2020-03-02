@@ -25,6 +25,8 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+#include "stb_image.h"
+
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -327,23 +329,23 @@ VkResult wlu_create_depth_buff(
   VkResult res = VK_RESULT_MAX_ENUM;
   VkBool32 pass;
 
-  app->sc_data[cur_scd].depth.format = depth_format;
-
   VkImageCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   create_info.pNext = NULL;
   create_info.flags = 0;
+  /* set the type of coordinate system the texels in the image are going to address */
   create_info.imageType = imageType;
-  create_info.format = app->sc_data[cur_scd].depth.format;
+  create_info.format = depth_format;
   create_info.extent.width = extent.width;
   create_info.extent.height = extent.height;
   create_info.extent.depth = extent.depth;
   create_info.mipLevels = 1;
   create_info.arrayLayers = 1;
   create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-
+  
+  /* Choose the best way to map an image object into memory based off the choosen depth_format */
   VkFormatProperties props;
-  vkGetPhysicalDeviceFormatProperties(app->physical_device, app->sc_data[cur_scd].depth.format, &props);
+  vkGetPhysicalDeviceFormatProperties(app->physical_device, depth_format, &props);
   if (props.linearTilingFeatures & linearTilingFeatures) {
     create_info.tiling = VK_IMAGE_TILING_LINEAR;
   } else if (props.optimalTilingFeatures & optimalTilingFeatures) {
@@ -372,7 +374,7 @@ VkResult wlu_create_depth_buff(
   create_view_info.pNext = NULL;
   create_view_info.flags = 0;
   create_view_info.image = VK_NULL_HANDLE;
-  create_view_info.format = app->sc_data[cur_scd].depth.format;
+  create_view_info.format = depth_format;
   create_view_info.components.r = VK_COMPONENT_SWIZZLE_R;
   create_view_info.components.g = VK_COMPONENT_SWIZZLE_G;
   create_view_info.components.b = VK_COMPONENT_SWIZZLE_B;
@@ -384,10 +386,8 @@ VkResult wlu_create_depth_buff(
   create_view_info.subresourceRange.layerCount = 1;
   create_view_info.viewType = viewType;
 
-  if (app->sc_data[cur_scd].depth.format == VK_FORMAT_D16_UNORM_S8_UINT ||
-      app->sc_data[cur_scd].depth.format == VK_FORMAT_D24_UNORM_S8_UINT ||
-      app->sc_data[cur_scd].depth.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
-      create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+  if (depth_format == VK_FORMAT_D16_UNORM_S8_UINT || depth_format == VK_FORMAT_D24_UNORM_S8_UINT || depth_format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+    create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
   /* Create image object */
   res = vkCreateImage(app->device, &create_info, NULL, &app->sc_data[cur_scd].depth.image);
@@ -602,7 +602,7 @@ VkResult wlu_create_cmd_buffs(
   alloc_info.pNext = NULL;
   alloc_info.commandPool = app->cmd_data[cur_pool].cmd_pool;
   alloc_info.level = level;
-  alloc_info.commandBufferCount = (uint32_t) app->sc_data[cur_scd].sic;
+  alloc_info.commandBufferCount = app->sc_data[cur_scd].sic;
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_data[cur_pool].cmd_buffs);
   if (res) { PERR(WLU_VK_ALLOC_ERR, res, "CommandBuffers"); return res; }
@@ -636,3 +636,39 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
   return res;
 }
 
+VkResult wlu_create_texture_image(
+  vkcomp *app,
+  uint32_t cur_tex,
+  VkExtent3D extent,
+  VkImageType imageType,
+  VkFormat format,
+  VkSampleCountFlagBits samples,
+  VkImageTiling tiling,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  VkImageLayout initialLayout
+) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+  
+  VkImageCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.extent.width = extent.width;
+  create_info.extent.height = extent.height;
+  create_info.extent.depth = 1;
+  create_info.imageType = imageType;
+  create_info.format = format;
+  create_info.mipLevels = 1;
+  create_info.arrayLayers = 1;
+  create_info.samples = samples;
+  create_info.tiling = tiling;
+  create_info.usage = usage;	
+  create_info.sharingMode = sharingMode;
+  create_info.initialLayout = initialLayout;
+
+  res = vkCreateImage(app->device, &create_info, NULL, &app->text_data[cur_tex].img);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); }
+
+  return res;
+}

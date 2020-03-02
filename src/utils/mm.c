@@ -141,7 +141,7 @@ static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
   }
 
   int flags = (type == WLU_LARGE_BLOCK_SHARED) ? MAP_SHARED : MAP_PRIVATE;
-  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags | MAP_ANON, fd, 0);
+  block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags | MAP_ANONYMOUS, fd, 0);
   if (block == MAP_FAILED) {
     wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
     goto finish_alloc_mem_block;
@@ -316,6 +316,13 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         app->desc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
         if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
         app->ddc = arr_size; return false;
+      }
+    case WLU_TEXT_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->text_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
+        if (!app->text_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->tdc = arr_size; return false;
       }
     case WLU_SC_DATA_MEMS:
       {

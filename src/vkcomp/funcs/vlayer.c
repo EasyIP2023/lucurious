@@ -70,27 +70,25 @@ VkResult wlu_set_debug_message(vkcomp *app) {
 * To get more validation layers install vulkan sdk
 */
 VkResult wlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size) {
-  VkResult res = VK_INCOMPLETE;
+  VkResult res = VK_RESULT_MAX_ENUM;
 
   /* Find the amount of validation layer */
   res = vkEnumerateInstanceLayerProperties(size, NULL);
-  if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); goto finish_vk_props; }
+  if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); return VK_RESULT_MAX_ENUM; }
 
   /* layer count will only be zero if vulkan sdk not installed */
   if (*size == 0) {
-    res = VK_RESULT_MAX_ENUM;
     wlu_log_me(WLU_WARNING, "[x] failed to find any Validation Layers!!");
-    goto finish_vk_props;
+    return VK_RESULT_MAX_ENUM;
   }
 
   /* allocate space */
   *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkLayerProperties));
-  if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, res = VK_RESULT_MAX_ENUM, NULL); goto finish_vk_props; }
+  if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
   /* set validation layers values */
   res = vkEnumerateInstanceLayerProperties(size, *vk_props);
   if (res) { PERR(WLU_VK_ENUM_ERR, res, "InstanceLayerProperties"); }
 
-finish_vk_props:
   return res;
 }

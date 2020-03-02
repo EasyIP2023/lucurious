@@ -1,6 +1,6 @@
 # Development
 
-Install [valgrind](http://valgrind.org/) to find memory leaks or memory related issues.
+Lucurious uses [valgrind](http://valgrind.org/) for memory leak checks
 
 **To produce valgrind generic output**
 ```bash

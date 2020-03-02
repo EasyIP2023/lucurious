@@ -25,6 +25,32 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+void wlu_freeup_pixels(void *pixels) {
+  /* stbi_uc (Vincent Keep for references) */
+  stbi_image_free((stbi_uc *) pixels);
+}
+
+VkResult wlu_load_texture_image(VkExtent3D *extent, void **pixels, const char *image_path) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+  int width = 0, height = 0, channels = 0;
+
+  /* First load the image */
+  *pixels = stbi_load(image_path, &width, &height, &channels, STBI_rgb_alpha);
+  if (!(*pixels)) {
+    wlu_log_me(WLU_DANGER, "[x] stbi_load: failed to load texture image %s", image_path);
+    return res;
+  }
+
+  extent->width = width;
+  extent->height = height;
+  extent->depth = channels;
+
+  return res = VK_SUCCESS;
+}
+
 /* Can find in vulkan SDK API-Samples/utils/util.cpp */
 bool memory_type_from_properties(vkcomp *app, uint32_t typeBits, VkFlags requirements_mask, uint32_t *typeIndex) {
 

@@ -28,13 +28,13 @@
 * And slightly modified
 */
 
+#define LUCUR_WAYLAND_API
+#include <lucom.h>
+
 #include <time.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#define LUCUR_WAYLAND_API
-#include <lucom.h>
 
 static void randname(char *buf) {
 	struct timespec ts;

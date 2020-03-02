@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2019 Vincent Davis Jr.
+# Copyright (c) 2019-2020 Vincent Davis Jr.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -81,8 +81,8 @@ lucur_cube_test = executable('lucur-cube-test',
   install: false
 )
 
-lucur_spin_square_test = executable('lucur-spin-square-test',
-  'test-spin-square.c',
+lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
+  'test-rotate-rect.c',
   include_directories: lucur_inc,
   dependencies: [check],
   link_with: lib_lucur,
@@ -99,6 +99,15 @@ lucur_alloc_test = executable('lucur-alloc-test',
   install: false
 )
 
+lucur_img_texture_test = executable('lucur-img-texture-test',
+  'test-image-texture.c',
+  include_directories: lucur_inc,
+  dependencies: [check],
+  link_with: lib_lucur,
+  c_args: '-DDEV_ENV',
+  install: false
+)
+
 test('lucur-alloc-test', lucur_alloc_test, suite: ['alloc'])
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
@@ -106,4 +115,5 @@ test('lucur-shade-test', lucur_shade_test, suite: ['all'])
 test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
 test('lucur-square-test', lucur_square_test, suite: ['images'])
 test('lucur-cube-test', lucur_cube_test, suite: ['images'])
-# test('lucur-spin-square-test', lucur_spin_square_test, suite: ['images'])
+# test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['images'])
+# test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])

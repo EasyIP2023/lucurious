@@ -49,9 +49,10 @@ typedef enum _wlu_data_type {
   WLU_CMD_DATA = 0x0002,
   WLU_BUFFS_DATA = 0x0003,
   WLU_DESC_DATA = 0x0004,
-  WLU_SC_DATA_MEMS = 0x0005,
-  WLU_DESC_DATA_MEMS = 0x0006,
-  WLU_GP_DATA_MEMS = 0x0007
+  WLU_TEXT_DATA = 0x0005,
+  WLU_SC_DATA_MEMS = 0x0006,
+  WLU_DESC_DATA_MEMS = 0x0007,
+  WLU_GP_DATA_MEMS = 0x0008
 } wlu_data_type;
 
 typedef enum _wlu_err_msg_type {

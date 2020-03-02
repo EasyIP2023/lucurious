@@ -97,7 +97,6 @@ typedef struct _vkcomp {
     } *sems;
 
     struct _depth_buffer {
-      VkFormat format;
       VkImage image;
       VkDeviceMemory mem;
       VkImageView view;
@@ -134,6 +133,12 @@ typedef struct _vkcomp {
     VkDescriptorSetLayout *desc_layouts;
     VkDescriptorSet *desc_set;
   } *desc_data;
+  
+  uint32_t tdc; /* texture data count */
+  struct _text_data {
+    VkImage img;
+    VkDeviceMemory mem;
+  } *text_data;
 } vkcomp;
 
 #endif

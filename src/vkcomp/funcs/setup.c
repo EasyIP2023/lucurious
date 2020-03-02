@@ -49,6 +49,7 @@ void wlu_freeup_sc(void *data) {
       }
     }
   }
+
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
       if (app->desc_data[i].desc_pool) {
@@ -57,13 +58,16 @@ void wlu_freeup_sc(void *data) {
       }
     }
   }
+
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++)
       if (app->cmd_data[i].cmd_buffs)
         vkFreeCommandBuffers(app->device, app->cmd_data[i].cmd_pool, app->sc_data[i].sic, app->cmd_data[i].cmd_buffs);
   }
+
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+
   if (app->gp_data) { /* leave like this for now */
     for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout)
@@ -97,14 +101,17 @@ void wlu_freeup_vk(void *data) {
 
   if (app->debug_report_callback)
     app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
+
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++) {
       if (app->cmd_data[i].cmd_pool)
         vkDestroyCommandPool(app->device, app->cmd_data[i].cmd_pool, NULL);
     }
   }
+
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+
   if (app->gp_data) { /* leave like this for now */
     for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout)
@@ -115,6 +122,7 @@ void wlu_freeup_vk(void *data) {
         vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
     }
   }
+
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
       if (app->desc_data[i].desc_layouts) {
@@ -127,6 +135,7 @@ void wlu_freeup_vk(void *data) {
         vkDestroyDescriptorPool(app->device, app->desc_data[i].desc_pool, NULL);
     }
   }
+
   if (app->buffs_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
       if (app->buffs_data[i].buff)
@@ -135,6 +144,7 @@ void wlu_freeup_vk(void *data) {
         vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
     }
   }
+
   if (app->sc_data) { /* Annihilate All Swap Chain Objects */
     for (uint32_t i = 0; i < app->sdc; i++) {
       if (app->sc_data[i].depth.view)
@@ -157,12 +167,15 @@ void wlu_freeup_vk(void *data) {
         vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
     }
   }
+
   if (app->device) {
     vkDeviceWaitIdle(app->device);
     vkDestroyDevice(app->device, NULL);
   }
+
   if (app->surface)
     vkDestroySurfaceKHR(app->instance, app->surface, NULL);
+
   if (app->instance)
     vkDestroyInstance(app->instance, NULL);
 }
