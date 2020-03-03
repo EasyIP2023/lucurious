@@ -25,7 +25,6 @@
 #ifndef WLU_VKCOMP_ALL_H
 #define WLU_VKCOMP_ALL_H
 
-#include "funcs/copy.h"
 #include "funcs/create.h"
 #include "funcs/device.h"
 #include "funcs/display.h"

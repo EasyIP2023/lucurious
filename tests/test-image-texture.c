@@ -24,6 +24,8 @@
 
 #include <check.h>
 
+/* This File is not finished */
+
 #define LUCUR_VKCOMP_API
 #define LUCUR_VKCOMP_MATRIX_API
 #define LUCUR_WAYLAND_API
@@ -37,16 +39,18 @@
 #define WIDTH 800
 #define HEIGHT 600
 
+char *concat(char *fmt, ...);
+
 static wlu_otma_mems ma = {
   .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
   .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
-  .cmdd_cnt = 10, .bd_cnt = 10
+  .cmdd_cnt = 10, .bd_cnt = 10, .td_cnt = 10
 };
 
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 2);
+  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
   err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
@@ -56,6 +60,9 @@ static bool init_buffs(vkcomp *app) {
   if (err) return err;
 
   err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
+  if (err) return err;
+
+  err = wlu_otba(WLU_TEXT_DATA, app, ALLOC_INDEX_NON, 1);
   if (err) return err;
 
   return err;
@@ -114,14 +121,14 @@ START_TEST(test_vulkan_client_create) {
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
-  VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
-  check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
+  VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
+  check_err(extent.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
   err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
+  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent.width, extent.height);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_cmd_pool(app, cur_scd, cur_cmdd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -170,17 +177,22 @@ START_TEST(test_vulkan_client_create) {
   /* ending point for render pass creation */
 
   VkImageView vkimg_attach[1];
-  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
+  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent.width, extent.height, 1);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
   check_err(err, app, wc, NULL)
-
-  void *pixels = NULL; VkDeviceSize img_size; VkExtent3D extent;
-	err = wlu_load_texture_image(&extent, &pixels, "textures/pics.jpg"); 
+  
+  void *pixels = NULL; VkDeviceSize img_size; VkExtent3D img_extent;
+  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg"); 
+ 
+  err = wlu_load_texture_image(&img_extent, &pixels, picture); 
   check_err(err, app, wc, NULL)
-	
-  img_size = extent.width * extent.height * 4;
+
+  wlu_log_me(WLU_SUCCESS, "textures/water_train.jpg successfully loaded", picture);
+  free(picture); picture = NULL;
+
+  img_size = img_extent.width * img_extent.height * 4;
 
   /**
   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -195,20 +207,19 @@ START_TEST(test_vulkan_client_create) {
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
-	cur_bd++;
 
   err = wlu_create_buff_mem_map(app, cur_bd, pixels);
   check_err(err, app, wc, NULL)
+  cur_bd++;
 
-	wlu_freeup_pixels(pixels);
-  
-  /*
+  wlu_freeup_pixels(pixels);
+
   uint32_t cur_tex = 0;
-  err = wlu_create_texture_image(app, cur_tex, extent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED
-    
+  err = wlu_create_texture_image(app, cur_tex, img_extent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_SAMPLE_COUNT_1_BIT,
+    VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_SHARING_MODE_EXCLUSIVE, 
+    VK_IMAGE_LAYOUT_UNDEFINED, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT    
   );
- */
+  check_err(err, app, wc, NULL)
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(0, NULL, 0, NULL);
 
@@ -254,8 +265,8 @@ START_TEST(test_vulkan_client_create) {
     VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
   );
 
-  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
-  VkRect2D scissor = wlu_set_rect2D(0, 0, extent2D.width, extent2D.height);
+  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f);
+  VkRect2D scissor = wlu_set_rect2D(0, 0, extent.width, extent.height);
   VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(1, &viewport, 1, &scissor);
 
   VkPipelineRasterizationStateCreateInfo rasterizer = wlu_set_rasterization_state_info(
@@ -305,8 +316,8 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
-                             extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent.width,
+                             extent.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
   wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
 
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
@@ -315,11 +326,6 @@ START_TEST(test_vulkan_client_create) {
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
     wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
   }
-
-///
-////
-////
-///
 
   wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
@@ -343,7 +349,7 @@ Suite *main_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
-  s = suite_create("TestSquare");
+  s = suite_create("TestImageTexture");
 
   /* Core test case */
   tc_core = tcase_create("Core");
@@ -360,7 +366,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  sleep(2);
+  sleep(6);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

@@ -217,7 +217,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_buff_mem_map(app, cur_bd, NULL);
   check_err(err, app, wc, NULL)
 
-  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
+  err = wlu_exec_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer */
 

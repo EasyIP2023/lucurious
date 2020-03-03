@@ -27,18 +27,19 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-#include <exec/vkinfo.h>
-#include <exec/helpers.h>
+VkQueueFlagBits ret_qfambit(char *str);
+VkPhysicalDeviceType ret_dtype(char *str);
+void help_message();
+void version_num();
+void print_gvalidation_layers();
+void print_instance_extensions();
+void print_device_extensions(VkPhysicalDeviceType dt);
 
 int main(int argc, char **argv) {
   int c = 0;
   int8_t track = 0;
 
-  wlu_otma_mems ma = {
-    .vkcomp_cnt = 1,
-    .vkval_layer_cnt = 200,
-    .vkext_props_cnt = 200
-  };
+  wlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 200, .vkext_props_cnt = 200 };
   if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
 
   while (1) {

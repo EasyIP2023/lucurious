@@ -46,3 +46,48 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
 
   return create_info;
 }
+
+
+VkImageSubresourceRange wlu_set_img_sub_resource_range(
+  VkImageAspectFlags aspectMask,
+  uint32_t baseMipLevel,
+  uint32_t levelCount,
+  uint32_t baseArrayLayer,
+  uint32_t layerCount
+) {
+
+  VkImageSubresourceRange create_info = {};
+  create_info.aspectMask = aspectMask;
+  create_info.baseMipLevel = baseMipLevel;
+  create_info.levelCount = levelCount;
+  create_info.baseArrayLayer = baseArrayLayer;
+  create_info.layerCount = layerCount;
+
+  return create_info;
+}
+
+VkImageMemoryBarrier wlu_set_img_mem_barrier(
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  VkImageLayout oldLayout,
+  VkImageLayout newLayout,
+  uint32_t srcQueueFamilyIndex,
+  uint32_t dstQueueFamilyIndex,
+  VkImage image,
+  VkImageSubresourceRange subresourceRange
+) {
+
+  VkImageMemoryBarrier create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  create_info.pNext = NULL;
+  create_info.srcAccessMask = srcAccessMask;
+  create_info.dstAccessMask = dstAccessMask;
+  create_info.oldLayout = oldLayout;
+  create_info.newLayout = newLayout;
+  create_info.srcQueueFamilyIndex = srcQueueFamilyIndex;
+  create_info.dstQueueFamilyIndex = dstQueueFamilyIndex;
+  create_info.image = image;
+  create_info.subresourceRange = subresourceRange;
+
+  return create_info;
+}

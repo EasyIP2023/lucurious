@@ -24,7 +24,6 @@
 
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
-#include <exec/helpers.h>
 
 VkQueueFlagBits ret_qfambit(char *str) {
   if (!strcmp(str, "VK_QUEUE_GRAPHICS_BIT")) return VK_QUEUE_GRAPHICS_BIT;

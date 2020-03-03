@@ -35,4 +35,31 @@ VkResult wlu_exec_begin_cmd_buffs(
 
 VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
 
+VkResult wlu_exec_copy_buffer(
+  vkcomp *app,
+  uint32_t cur_pool,
+  VkBuffer src_buffer,
+  VkBuffer dst_buffer,
+  VkDeviceSize size
+);
+
+/**
+* Using image memory barrier to preform layout transitions.
+* Used to synchronize access to resources. 
+* Example: writing to a buffer completely before reading from it
+*/
+VkResult wlu_exec_transition_img_layout(
+  vkcomp *app, 
+  uint32_t cur_pool,
+  VkPipelineStageFlags srcStageMask,
+  VkPipelineStageFlags dstStageMask,
+  VkDependencyFlags dependencyFlags,
+  uint32_t memoryBarrierCount,
+  const VkMemoryBarrier *pMemoryBarriers,
+  uint32_t bufferMemoryBarrierCount,
+  const VkBufferMemoryBarrier *pBufferMemoryBarriers,
+  uint32_t imageMemoryBarrierCount,
+  const VkImageMemoryBarrier *pImageMemoryBarriers
+);
+
 #endif

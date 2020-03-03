@@ -323,7 +323,8 @@ VkResult wlu_create_depth_buff(
   VkImageUsageFlags usage,
   VkSharingMode sharingMode,
   VkImageLayout initialLayout,
-  VkImageViewType viewType
+  VkImageViewType viewType,
+  VkFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -363,12 +364,6 @@ VkResult wlu_create_depth_buff(
   /* Come back to me */
   create_info.initialLayout = initialLayout;
 
-  VkMemoryAllocateInfo mem_alloc = {};
-  mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  mem_alloc.pNext = NULL;
-  mem_alloc.allocationSize = 0;
-  mem_alloc.memoryTypeIndex = 0;
-
   VkImageViewCreateInfo create_view_info = {};
   create_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   create_view_info.pNext = NULL;
@@ -403,9 +398,14 @@ VkResult wlu_create_depth_buff(
   VkMemoryRequirements mem_reqs;
   vkGetImageMemoryRequirements(app->device, app->sc_data[cur_scd].depth.image, &mem_reqs);
 
+  VkMemoryAllocateInfo mem_alloc = {};
+  mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  mem_alloc.pNext = NULL;
   mem_alloc.allocationSize = mem_reqs.size;
-  /* Use the memory properties to determine the type of memory required */
-  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &mem_alloc.memoryTypeIndex);
+  mem_alloc.memoryTypeIndex = 0;
+ 
+  /* find a suitable memory type for depth bufffer */
+  pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &mem_alloc.memoryTypeIndex);
   if (!pass) {
     wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
     return pass;
@@ -466,6 +466,7 @@ VkResult wlu_create_vk_buffer(
   alloc_info.allocationSize = app->buffs_data[cur_bd].size = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
+  /* find a suitable memory type for VkBuffer */
   res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
   if (!res) {
     wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
@@ -646,10 +647,13 @@ VkResult wlu_create_texture_image(
   VkImageTiling tiling,
   VkImageUsageFlags usage,
   VkSharingMode sharingMode,
-  VkImageLayout initialLayout
+  VkImageLayout initialLayout,
+  VkFlags requirements_mask
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
-  
+
+  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+
   VkImageCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   create_info.pNext = NULL;
@@ -667,8 +671,29 @@ VkResult wlu_create_texture_image(
   create_info.sharingMode = sharingMode;
   create_info.initialLayout = initialLayout;
 
-  res = vkCreateImage(app->device, &create_info, NULL, &app->text_data[cur_tex].img);
+  res = vkCreateImage(app->device, &create_info, NULL, &app->text_data[cur_tex].image);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); }
+
+  VkMemoryRequirements mem_reqs;
+  vkGetImageMemoryRequirements(app->device, app->text_data[cur_tex].image, &mem_reqs);
+
+  VkMemoryAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  alloc_info.pNext = NULL;
+  alloc_info.allocationSize = mem_reqs.size;
+  alloc_info.memoryTypeIndex = 0;
+  
+  /* find a suitable memory type for image */
+  res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
+  if (!res) {
+    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
+    return res;
+  }
+
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->text_data[cur_tex].mem);
+  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "Memory"); return res; }
+
+  vkBindImageMemory(app->device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
 
   return res;
 }

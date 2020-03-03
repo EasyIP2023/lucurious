@@ -335,7 +335,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
+  err = wlu_exec_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer creation */
 
@@ -362,7 +362,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_copy_buffer(app, cur_pool, app->buffs_data[2].buff, app->buffs_data[3].buff, isize);
+  err = wlu_exec_copy_buffer(app, cur_pool, app->buffs_data[2].buff, app->buffs_data[3].buff, isize);
   check_err(err, app, wc, NULL)
   /* End of index buffer creation */
 
@@ -484,7 +484,7 @@ Suite *main_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
 
-  s = suite_create("TestSquare");
+  s = suite_create("TestRotateRect");
 
   /* Core test case */
   tc_core = tcase_create("Core");

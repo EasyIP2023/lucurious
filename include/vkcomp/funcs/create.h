@@ -100,7 +100,8 @@ VkResult wlu_create_depth_buff(
   VkImageUsageFlags usage,
   VkSharingMode sharingMode,
   VkImageLayout initialLayout,
-  VkImageViewType viewType
+  VkImageViewType viewType,
+  VkFlags requirements_mask
 );
 
 /**
@@ -190,7 +191,8 @@ VkResult wlu_create_texture_image(
   VkImageTiling tiling,
   VkImageUsageFlags usage,
   VkSharingMode sharingMode,
-  VkImageLayout initialLayout
+  VkImageLayout initialLayout,
+  VkFlags requirements_mask
 );
 
 #endif

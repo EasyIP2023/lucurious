@@ -24,7 +24,6 @@
 
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
-#include <exec/vkinfo.h>
 
 static const char *instance_extensions[] = {
   VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,

@@ -32,7 +32,10 @@ void wlu_freeup_pixels(void *pixels);
 VkResult wlu_load_texture_image(VkExtent3D *extent, void **pixels, const char *image_path);
 
 #ifdef INAPI_CALLS
-/* Can find in vulkan SDK API-Samples/utils/util.cpp */
+/**
+* Can find in vulkan SDK API-Samples/utils/util.cpp
+* Used to find a suitable memory type
+*/
 bool memory_type_from_properties(
   vkcomp *app,
   uint32_t typeBits,

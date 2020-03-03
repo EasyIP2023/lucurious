@@ -48,9 +48,9 @@ install_headers(vkcomp_main_hs, install_dir: vkcomp_i_dir)
 # Installing vkcomp functions headers #
 #######################################
 vkcomp_func_hs = [
-  'vkcomp/funcs/copy.h', 'vkcomp/funcs/create.h', 'vkcomp/funcs/device.h',
-  'vkcomp/funcs/display.h', 'vkcomp/funcs/exec.h', 'vkcomp/funcs/set.h',
-  'vkcomp/funcs/setup.h', 'vkcomp/funcs/utils.h', 'vkcomp/funcs/vlayer.h' 
+  'vkcomp/funcs/create.h', 'vkcomp/funcs/device.h', 'vkcomp/funcs/display.h', 
+  'vkcomp/funcs/exec.h', 'vkcomp/funcs/set.h', 'vkcomp/funcs/setup.h', 
+  'vkcomp/funcs/utils.h', 'vkcomp/funcs/vlayer.h' 
 ]
 install_headers(vkcomp_func_hs, install_dir: vkcomp_i_dir + 'funcs')
 

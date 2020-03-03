@@ -34,4 +34,23 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
   VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
+VkImageSubresourceRange wlu_set_img_sub_resource_range(
+  VkImageAspectFlags aspectMask,
+  uint32_t baseMipLevel,
+  uint32_t levelCount,
+  uint32_t baseArrayLayer,
+  uint32_t layerCount
+);
+
+VkImageMemoryBarrier wlu_set_img_mem_barrier(
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  VkImageLayout oldLayout,
+  VkImageLayout newLayout,
+  uint32_t srcQueueFamilyIndex,
+  uint32_t dstQueueFamilyIndex,
+  VkImage image,
+  VkImageSubresourceRange subresourceRange
+);
+
 #endif

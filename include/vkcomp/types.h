@@ -136,7 +136,7 @@ typedef struct _vkcomp {
   
   uint32_t tdc; /* texture data count */
   struct _text_data {
-    VkImage img;
+    VkImage image;
     VkDeviceMemory mem;
   } *text_data;
 } vkcomp;

@@ -108,6 +108,7 @@ typedef struct _wlu_otma_mems {
   uint32_t cmdd_cnt;  /* command data count */
   uint32_t bd_cnt;    /* buffer data count */
   uint32_t dd_cnt;    /* descriptor data count */
+  uint32_t td_cnt;    /* texture data count */
 } wlu_otma_mems;
 
 #endif

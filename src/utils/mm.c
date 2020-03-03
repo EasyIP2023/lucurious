@@ -275,6 +275,8 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.desc_cnt * sizeof(VkDescriptorSetLayout));
   size += (ma.dd_cnt * sizeof(struct _desc_data));
 
+  size += (ma.td_cnt * sizeof(struct _text_data));
+
   if (!wlu_alloc(type, size)) return false;
 
   return true;

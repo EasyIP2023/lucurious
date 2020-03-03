@@ -111,6 +111,15 @@ void wlu_freeup_vk(void *data) {
 
   if (app->pipeline_cache)  /* leave like this for now */
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+ 
+  if (app->text_data) {
+    for (uint32_t i = 0; i < app->tdc; i++) {
+      if (app->text_data[i].mem)
+        vkFreeMemory(app->device, app->text_data[i].mem, NULL);
+      if (app->text_data[i].image)
+        vkDestroyImage(app->device, app->text_data[i].image, NULL);
+    }
+  }
 
   if (app->gp_data) { /* leave like this for now */
     for (uint32_t i = 0; i < app->gdc; i++) {

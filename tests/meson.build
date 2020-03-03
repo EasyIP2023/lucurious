@@ -100,7 +100,7 @@ lucur_alloc_test = executable('lucur-alloc-test',
 )
 
 lucur_img_texture_test = executable('lucur-img-texture-test',
-  'test-image-texture.c',
+  ['test-image-texture.c', 'helpers.c'], 
   include_directories: lucur_inc,
   dependencies: [check],
   link_with: lib_lucur,
@@ -116,4 +116,4 @@ test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
 test('lucur-square-test', lucur_square_test, suite: ['images'])
 test('lucur-cube-test', lucur_cube_test, suite: ['images'])
 # test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['images'])
-# test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
+test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
