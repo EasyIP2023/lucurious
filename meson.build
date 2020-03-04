@@ -23,16 +23,16 @@
 #
 
 project(
-	'lucurious',
-	'c',
-	version: '0.0.1',
-	license: 'MIT',
-	meson_version: '>=0.52.0',
-	default_options: [
-		'c_std=c11',
-		'warning_level=2',
-		'werror=true',
-	],
+  'lucurious',
+  'c',
+  version: '0.0.1',
+  license: 'MIT',
+  meson_version: '>=0.52.0',
+  default_options: [
+    'c_std=gnu18',
+    'warning_level=2',
+    'werror=true',
+  ],
 )
 
 so_version = ['1']
@@ -40,12 +40,11 @@ so_version = ['1']
 cc = meson.get_compiler('c')
 
 add_project_arguments(
-	[
-		'-DLUCUR_VERSION="@0@"'.format(meson.project_version()),
-		'-DWLU_DIR_SRC="@0@"'.format(meson.current_source_dir()),
-		'-D_GNU_SOURCE'
-	],
-	language : 'c'
+  [
+    '-DLUCUR_VERSION="@0@"'.format(meson.project_version()),
+    '-DWLU_DIR_SRC="@0@"'.format(meson.current_source_dir())
+  ],
+  language : 'c'
 )
 
 lucur_inc = include_directories('.', 'include')
@@ -54,42 +53,42 @@ subdir('include')
 subdir('src')
 
 lucur_parts = [
-	lib_utils, lib_shade,
-	lib_vkcomp, lib_lwayland
+  lib_utils, lib_shade,
+  lib_vkcomp, lib_lwayland
 ]
 
 lib_lucur = shared_library(
-	meson.project_name(),
-	version: '.'.join(so_version),
-	link_whole: lucur_parts,
-	include_directories: lucur_inc,
-	install_dir: '/usr/lib',
-	install: true
+  meson.project_name(),
+  version: '.'.join(so_version),
+  link_whole: lucur_parts,
+  include_directories: lucur_inc,
+  install_dir: '/usr/lib',
+  install: true
 )
 
 lucur = declare_dependency(
-	link_with: lib_lucur,
-	include_directories: lucur_inc,
+  link_with: lib_lucur,
+  include_directories: lucur_inc,
 )
 
 # Test API calls
 subdir('tests')
 
 executable(
-	'lucur',
-	lib_exec,
-	link_with: lib_lucur,
-	include_directories: lucur_inc,
-	install: true,
-	install_dir: '/usr/bin'
+  'lucur',
+  lib_exec,
+  link_with: lib_lucur,
+  include_directories: lucur_inc,
+  install: true,
+  install_dir: '/usr/bin'
 )
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(
-	libraries: lib_lucur,
-	version: meson.project_version(),
-	name: meson.project_name(),
-	filebase:  meson.project_name(),
-	install_dir: '/usr/lib/pkgconfig',
-	description: 'Library for building and styling 2D/3D Wayland Compositors'
+  libraries: lib_lucur,
+  version: meson.project_version(),
+  name: meson.project_name(),
+  filebase:  meson.project_name(),
+  install_dir: '/usr/lib/pkgconfig',
+  description: 'Library for building and styling 2D/3D Wayland Compositors'
 )
