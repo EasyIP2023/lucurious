@@ -25,6 +25,12 @@
 #ifndef WLU_VKCOMP_SET_FUNCS_H
 #define WLU_VKCOMP_SET_FUNCS_H
 
+/**
+* Usage of functions in set.h files is optional
+* Added set functions as an extra options for those
+* who don't want to fill out the entire VK struct themselves
+*/
+
 VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
   VkRenderPass renderPass,
   uint32_t subpass,
@@ -52,5 +58,38 @@ VkImageMemoryBarrier wlu_set_img_mem_barrier(
   VkImage image,
   VkImageSubresourceRange subresourceRange
 );
+
+VkImageCreateInfo wlu_set_image_info(
+  VkImageCreateFlags flags,
+  VkImageType imageType,
+  VkFormat format,
+  VkExtent3D extent,
+  uint32_t mipLevels,
+  uint32_t arrayLayers,
+  VkSampleCountFlagBits samples,
+  VkImageTiling tiling,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
+  VkImageLayout initialLayout
+);
+
+VkImageViewCreateInfo wlu_set_image_view_info(
+  VkImageViewCreateFlags flags,
+  VkImage image,
+  VkImageViewType viewType,
+  VkFormat format,
+  VkComponentMapping components,
+  VkImageSubresourceRange subresourceRange
+);
+
+VkComponentMapping wlu_set_component_mapping(
+  VkComponentSwizzle r,
+  VkComponentSwizzle g,
+  VkComponentSwizzle b,
+  VkComponentSwizzle a
+);
+
 
 #endif

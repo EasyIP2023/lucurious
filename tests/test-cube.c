@@ -162,10 +162,16 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_img_views(app, cur_scd, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_depth_buff(app, cur_scd, VK_FORMAT_D16_UNORM, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_TYPE_2D, extent3D, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_VIEW_TYPE_2D, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extent3D, 1, 1,
+    VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
+
+  VkComponentMapping comp_map = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
+  VkImageSubresourceRange img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1);
+  VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, comp_map, img_sub_rr);
+
+  err = wlu_create_depth_buff(app, cur_scd, &img_info, &img_view_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_semaphores(app, cur_scd);

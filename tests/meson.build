@@ -24,87 +24,70 @@
 
 check = dependency('check')
 
+lucur_alloc_test = executable('lucur-alloc-test',
+  'test-alloc.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
+  install: false
+)
+
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',
-  'test-vulkan.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-vulkan.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 # Testing Wayland suite
 lucur_wclient_test = executable('lucur-wclient-test',
-  'test-wclient.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-wclient.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 # Testing shade suite
 lucur_shade_test = executable('lucur-shade-test',
-  'test-shade.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-shade.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 lucur_triangle_test = executable('lucur-triangle-test',
-  'test-triangle.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-triangle.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 lucur_square_test = executable('lucur-square-test',
-  'test-square.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-square.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 lucur_cube_test = executable('lucur-cube-test',
-  'test-cube.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-cube.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
 lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
-  'test-rotate-rect.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  'test-rotate-rect.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
-lucur_alloc_test = executable('lucur-alloc-test',
-  'test-alloc.c',
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
-  install: false
-)
-
+it_files = ['test-image-texture.c', 'helpers.c']
 lucur_img_texture_test = executable('lucur-img-texture-test',
-  ['test-image-texture.c', 'helpers.c'], 
-  include_directories: lucur_inc,
-  dependencies: [check],
-  link_with: lib_lucur,
-  c_args: '-DDEV_ENV',
+  it_files, include_directories: lucur_inc,
+  dependencies: [check], link_with: lib_lucur,
+  c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )
 
@@ -116,4 +99,4 @@ test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
 test('lucur-square-test', lucur_square_test, suite: ['images'])
 test('lucur-cube-test', lucur_cube_test, suite: ['images'])
 # test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['images'])
-test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
+# test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])

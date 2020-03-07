@@ -88,19 +88,17 @@ VkResult wlu_create_img_views(
   VkImageViewType type
 );
 
-/* Need to depth buffer to render 3D images (only need one) */
+/**
+* Need to depth buffer to render 3D images (only need one)
+* Function will create the VkImage handle for the depth buffer
+* Allocate memory and bind that memory to the VkImage Handle
+* Then create the corresponding image view
+*/
 VkResult wlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
-  VkFormat depth_format,
-  VkFormatFeatureFlags linearTilingFeatures,
-  VkFormatFeatureFlags optimalTilingFeatures,
-  VkImageType imageType,
-  VkExtent3D extent,
-  VkImageUsageFlags usage,
-  VkSharingMode sharingMode,
-  VkImageLayout initialLayout,
-  VkImageViewType viewType,
+  VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *img_view_info,
   VkFlags requirements_mask
 );
 
@@ -184,14 +182,7 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd);
 VkResult wlu_create_texture_image(
   vkcomp *app,
   uint32_t cur_tex,
-  VkExtent3D extent,
-  VkImageType imageType,
-  VkFormat format,
-  VkSampleCountFlagBits samples,
-  VkImageTiling tiling,
-  VkImageUsageFlags usage,
-  VkSharingMode sharingMode,
-  VkImageLayout initialLayout,
+  VkImageCreateInfo *img_info,
   VkFlags requirements_mask
 );
 

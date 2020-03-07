@@ -91,3 +91,71 @@ VkImageMemoryBarrier wlu_set_img_mem_barrier(
 
   return create_info;
 }
+
+VkImageCreateInfo wlu_set_image_info(
+  VkImageCreateFlags flags,
+  VkImageType imageType,
+  VkFormat format,
+  VkExtent3D extent,
+  uint32_t mipLevels,
+  uint32_t arrayLayers,
+  VkSampleCountFlagBits samples,
+  VkImageTiling tiling,
+  VkImageUsageFlags usage,
+  VkSharingMode sharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
+  VkImageLayout initialLayout
+) {
+
+  VkImageCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.imageType = imageType;
+  create_info.format = format;
+  create_info.extent = extent;
+  create_info.mipLevels = mipLevels;
+  create_info.arrayLayers = arrayLayers;
+  create_info.samples = samples;
+  create_info.tiling = tiling;
+  create_info.usage = usage;
+  create_info.sharingMode = sharingMode;
+  create_info.queueFamilyIndexCount = queueFamilyIndexCount;
+  create_info.pQueueFamilyIndices = pQueueFamilyIndices;
+  create_info.initialLayout = initialLayout;
+
+  return create_info;
+}
+
+VkImageViewCreateInfo wlu_set_image_view_info(
+  VkImageViewCreateFlags flags,
+  VkImage image,
+  VkImageViewType viewType,
+  VkFormat format,
+  VkComponentMapping components,
+  VkImageSubresourceRange subresourceRange
+) {
+
+  VkImageViewCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.image = image;
+  create_info.viewType = viewType;
+  create_info.format = format;
+  create_info.components = components;
+  create_info.subresourceRange = subresourceRange;
+
+  return create_info;
+}
+
+VkComponentMapping wlu_set_component_mapping(
+  VkComponentSwizzle r,
+  VkComponentSwizzle g,
+  VkComponentSwizzle b,
+  VkComponentSwizzle a
+) {
+  VkComponentMapping create_info = {.r = r, .g = g, .b = b, .a = a};
+  return create_info;
+}

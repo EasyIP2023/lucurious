@@ -315,77 +315,18 @@ VkResult wlu_create_img_views(
 VkResult wlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
-  VkFormat depth_format,
-  VkFormatFeatureFlags linearTilingFeatures,
-  VkFormatFeatureFlags optimalTilingFeatures,
-  VkImageType imageType,
-  VkExtent3D extent,
-  VkImageUsageFlags usage,
-  VkSharingMode sharingMode,
-  VkImageLayout initialLayout,
-  VkImageViewType viewType,
+  VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *img_view_info,
   VkFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkBool32 pass;
 
-  VkImageCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  /* set the type of coordinate system the texels in the image are going to address */
-  create_info.imageType = imageType;
-  create_info.format = depth_format;
-  create_info.extent.width = extent.width;
-  create_info.extent.height = extent.height;
-  create_info.extent.depth = extent.depth;
-  create_info.mipLevels = 1;
-  create_info.arrayLayers = 1;
-  create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-  
-  /* Choose the best way to map an image object into memory based off the choosen depth_format */
-  VkFormatProperties props;
-  vkGetPhysicalDeviceFormatProperties(app->physical_device, depth_format, &props);
-  if (props.linearTilingFeatures & linearTilingFeatures) {
-    create_info.tiling = VK_IMAGE_TILING_LINEAR;
-  } else if (props.optimalTilingFeatures & optimalTilingFeatures) {
-    create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-  } else {
-    wlu_log_me(WLU_DANGER, "[x] Depth format currently not supported.\n");
-    return res;
-  }
-
-  create_info.usage = usage;
-  create_info.sharingMode = sharingMode;
-  /* Come back to me */
-  create_info.queueFamilyIndexCount = 0;
-  create_info.pQueueFamilyIndices = NULL;
-  /* Come back to me */
-  create_info.initialLayout = initialLayout;
-
-  VkImageViewCreateInfo create_view_info = {};
-  create_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  create_view_info.pNext = NULL;
-  create_view_info.flags = 0;
-  create_view_info.image = VK_NULL_HANDLE;
-  create_view_info.format = depth_format;
-  create_view_info.components.r = VK_COMPONENT_SWIZZLE_R;
-  create_view_info.components.g = VK_COMPONENT_SWIZZLE_G;
-  create_view_info.components.b = VK_COMPONENT_SWIZZLE_B;
-  create_view_info.components.a = VK_COMPONENT_SWIZZLE_A;
-  create_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-  create_view_info.subresourceRange.baseMipLevel = 0;
-  create_view_info.subresourceRange.levelCount = 1;
-  create_view_info.subresourceRange.baseArrayLayer = 0;
-  create_view_info.subresourceRange.layerCount = 1;
-  create_view_info.viewType = viewType;
-
-  if (depth_format == VK_FORMAT_D16_UNORM_S8_UINT || depth_format == VK_FORMAT_D24_UNORM_S8_UINT || depth_format == VK_FORMAT_D32_SFLOAT_S8_UINT)
-    create_view_info.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+  if (img_view_info->format == VK_FORMAT_D16_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D24_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+    img_view_info->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
   /* Create image object */
-  res = vkCreateImage(app->device, &create_info, NULL, &app->sc_data[cur_scd].depth.image);
+  res = vkCreateImage(app->device, img_info, NULL, &app->sc_data[cur_scd].depth.image);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); return res; }
 
   /**
@@ -403,8 +344,8 @@ VkResult wlu_create_depth_buff(
   mem_alloc.pNext = NULL;
   mem_alloc.allocationSize = mem_reqs.size;
   mem_alloc.memoryTypeIndex = 0;
- 
-  /* find a suitable memory type for depth bufffer */
+
+  VkBool32 pass; /* find a suitable memory type for depth bufffer */
   pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &mem_alloc.memoryTypeIndex);
   if (!pass) {
     wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
@@ -420,8 +361,8 @@ VkResult wlu_create_depth_buff(
   if (res) { PERR(WLU_VK_BIND_ERR, res, "ImageMemory"); return res; }
 
   /* Create an image view object for depth buffer */
-  create_view_info.image = app->sc_data[cur_scd].depth.image;
-  res = vkCreateImageView(app->device, &create_view_info, NULL, &app->sc_data[cur_scd].depth.view);
+  img_view_info->image = app->sc_data[cur_scd].depth.image;
+  res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_scd].depth.view);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); }
 
   return res;
@@ -640,38 +581,15 @@ VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
 VkResult wlu_create_texture_image(
   vkcomp *app,
   uint32_t cur_tex,
-  VkExtent3D extent,
-  VkImageType imageType,
-  VkFormat format,
-  VkSampleCountFlagBits samples,
-  VkImageTiling tiling,
-  VkImageUsageFlags usage,
-  VkSharingMode sharingMode,
-  VkImageLayout initialLayout,
+  VkImageCreateInfo *img_info,
   VkFlags requirements_mask
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
 
-  VkImageCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.extent.width = extent.width;
-  create_info.extent.height = extent.height;
-  create_info.extent.depth = 1;
-  create_info.imageType = imageType;
-  create_info.format = format;
-  create_info.mipLevels = 1;
-  create_info.arrayLayers = 1;
-  create_info.samples = samples;
-  create_info.tiling = tiling;
-  create_info.usage = usage;	
-  create_info.sharingMode = sharingMode;
-  create_info.initialLayout = initialLayout;
-
-  res = vkCreateImage(app->device, &create_info, NULL, &app->text_data[cur_tex].image);
+  res = vkCreateImage(app->device, img_info, NULL, &app->text_data[cur_tex].image);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); }
 
   VkMemoryRequirements mem_reqs;

@@ -49,10 +49,10 @@ void wlu_freeup_wc(void *data) {
     wl_shm_destroy(wc->shm);
   if (wc->buffer)
     wl_buffer_destroy(wc->buffer);
-  if (wc->surface)
-    wl_surface_destroy(wc->surface);
   if (wc->xdg_surface)
     xdg_surface_destroy(wc->xdg_surface);
+  if (wc->surface)
+    wl_surface_destroy(wc->surface);
   if (wc->shell)
     xdg_wm_base_destroy(wc->shell);
   if (wc->xdg_toplevel)

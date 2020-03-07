@@ -25,6 +25,12 @@
 #ifndef WLU_VKCOMP_GP_SET_H
 #define WLU_VKCOMP_GP_SET_H
 
+/**
+* Usage of functions in set.h files is optional
+* Added set functions as an extra options for those
+* who don't want to fill out the entire VK struct themselves
+*/
+
 VkAttachmentDescription wlu_set_attachment_desc(
   VkFormat format,
   VkSampleCountFlagBits samples,

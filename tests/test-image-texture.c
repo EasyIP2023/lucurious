@@ -188,6 +188,7 @@ START_TEST(test_vulkan_client_create) {
  
   err = wlu_load_texture_image(&img_extent, &pixels, picture); 
   check_err(err, app, wc, NULL)
+  img_extent.depth = 1;
 
   wlu_log_me(WLU_SUCCESS, "textures/water_train.jpg successfully loaded", picture);
   free(picture); picture = NULL;
@@ -212,17 +213,22 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
+  /* Now that the image has been moved into CPU visible momory the original pixels are no longer needed */
   wlu_freeup_pixels(pixels);
 
-  uint32_t cur_tex = 0;
-  err = wlu_create_texture_image(app, cur_tex, img_extent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_SAMPLE_COUNT_1_BIT,
-    VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_SHARING_MODE_EXCLUSIVE, 
-    VK_IMAGE_LAYOUT_UNDEFINED, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT    
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
+    VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
+
+  uint32_t cur_tex = 0;
+  err = wlu_create_texture_image(app, cur_tex, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
-  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(0, NULL, 0, NULL);
+  // err = wlu_exec_transition_layout();
+  // check_err(err, app, wc, NULL)
 
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(0, NULL, 0, NULL);
   wlu_log_me(WLU_INFO, "Start of shader creation");
   wlu_log_me(WLU_WARNING, "Compiling the fragment shader code to spirv bytes");
   wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT, shader_frag_src, "frag.spv", "main");
