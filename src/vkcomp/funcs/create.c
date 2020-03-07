@@ -205,10 +205,8 @@ VkResult wlu_create_swap_chain(
 
   VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   VkCompositeAlphaFlagBitsKHR composite_alpha_flags[4] = {
-    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-    VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
-    VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
-    VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+    VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
   };
 
   for (uint32_t i = 0; i < sizeof(composite_alpha_flags) / sizeof(composite_alpha_flags[0]); i++) {
@@ -261,12 +259,7 @@ VkResult wlu_create_swap_chain(
   return res;
 }
 
-VkResult wlu_create_img_views(
-  vkcomp *app,
-  uint32_t cur_scd,
-  VkFormat format,
-  VkImageViewType type
-) {
+VkResult wlu_create_img_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *sc_imgs = NULL;
 
@@ -285,27 +278,9 @@ VkResult wlu_create_img_views(
   res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, sc_imgs);
   if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
 
-	VkImageViewCreateInfo create_info = {};
-	create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	create_info.viewType = type;
- 	create_info.format = format;
- 	create_info.components.r = VK_COMPONENT_SWIZZLE_R;
- 	create_info.components.g = VK_COMPONENT_SWIZZLE_G;
- 	create_info.components.b = VK_COMPONENT_SWIZZLE_B;
- 	create_info.components.a = VK_COMPONENT_SWIZZLE_A;
- 	/**
- 	* describe what the image's purpose is and which
-  * part of the image should be accessed
-  */
-	create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	create_info.subresourceRange.baseMipLevel = 0;
-	create_info.subresourceRange.levelCount = 1;
-	create_info.subresourceRange.baseArrayLayer = 0;
- 	create_info.subresourceRange.layerCount = 1;
-
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    create_info.image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
-    res = vkCreateImageView(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
+    img_view_info->image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
+    res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
     if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
   }
 
@@ -380,6 +355,7 @@ VkResult wlu_create_vk_buffer(
   char buff_name,
   VkFlags requirements_mask
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->buffs_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_BUFFS_DATA"); return res; }
@@ -480,6 +456,7 @@ VkResult wlu_create_framebuffers(
   uint32_t height,
   uint32_t layers
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }

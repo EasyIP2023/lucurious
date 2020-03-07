@@ -137,7 +137,11 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_img_views(app, cur_scd, surface_fmt.format, VK_IMAGE_VIEW_TYPE_2D);
+  VkComponentMapping comp_map = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
+  VkImageSubresourceRange img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
+
+  err = wlu_create_img_views(app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   /* This is where creation of the graphics pipeline begins */
