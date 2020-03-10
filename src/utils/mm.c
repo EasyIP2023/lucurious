@@ -269,7 +269,7 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.si_cnt * sizeof(VkCommandBuffer));
   size += (ma.cmdd_cnt * sizeof(struct _cmd_data));
 
-  size += (ma.bd_cnt * sizeof(struct _buffs_data));
+  size += (ma.bd_cnt * sizeof(struct _buff_data));
 
   size += (ma.desc_cnt * sizeof(VkDescriptorSet));
   size += (ma.desc_cnt * sizeof(VkDescriptorSetLayout));
@@ -305,11 +305,11 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
         app->cdc = arr_size; return false;
       }
-    case WLU_BUFFS_DATA:
+    case WLU_BUFF_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->buffs_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buffs_data));
-        if (!app->buffs_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->buff_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buff_data));
+        if (!app->buff_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
         app->bdc = arr_size; return false;
       }
     case WLU_DESC_DATA:

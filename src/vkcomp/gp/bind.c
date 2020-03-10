@@ -63,8 +63,7 @@ void wlu_bind_vertex_buffs_to_cmd_buff(
   const VkDeviceSize *offsets
 ) {
   vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
-                        firstBinding, bindingCount,
-                        pBuffers, offsets);
+                        firstBinding, bindingCount, pBuffers, offsets);
 }
 
 void wlu_bind_index_buff_to_cmd_buff(

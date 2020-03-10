@@ -40,7 +40,7 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
   VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
-VkImageSubresourceRange wlu_set_img_sub_resource_range(
+VkImageSubresourceRange wlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,
   uint32_t baseMipLevel,
   uint32_t levelCount,
@@ -48,7 +48,8 @@ VkImageSubresourceRange wlu_set_img_sub_resource_range(
   uint32_t layerCount
 );
 
-VkImageMemoryBarrier wlu_set_img_mem_barrier(
+/* set info for resource synchronization access */
+VkImageMemoryBarrier wlu_set_image_mem_barrier(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
   VkImageLayout oldLayout,
@@ -91,5 +92,27 @@ VkComponentMapping wlu_set_component_mapping(
   VkComponentSwizzle a
 );
 
+/* Allows for multiple different copies of from one buffer to the image in one operation */
+VkBufferImageCopy wlu_set_buff_image_copy(
+  VkDeviceSize bufferOffset,
+  uint32_t bufferRowLength,
+  uint32_t bufferImageHeight,
+  VkImageSubresourceLayers imageSubresource,
+  VkOffset3D imageOffset,
+  VkExtent3D imageExtent
+);
+
+VkImageSubresourceLayers wlu_set_image_sub_resource_layers(
+  VkImageAspectFlags aspectMask,
+  uint32_t mipLevel,
+  uint32_t baseArrayLayer,
+  uint32_t layerCount
+);
+
+VkExtent2D wlu_set_extent2D(uint32_t width, uint32_t height);
+
+VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth);
+
+VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z);
 
 #endif

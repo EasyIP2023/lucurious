@@ -259,7 +259,7 @@ VkResult wlu_create_swap_chain(
   return res;
 }
 
-VkResult wlu_create_img_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info) {
+VkResult wlu_create_image_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info) {
   VkResult res = VK_RESULT_MAX_ENUM;
   VkImage *sc_imgs = NULL;
 
@@ -358,7 +358,7 @@ VkResult wlu_create_vk_buffer(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->buffs_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_BUFFS_DATA"); return res; }
+  if (!app->buff_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_buff_data"); return res; }
 
   VkBufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -370,17 +370,17 @@ VkResult wlu_create_vk_buffer(
   create_info.queueFamilyIndexCount = queueFamilyIndexCount;
   create_info.pQueueFamilyIndices = pQueueFamilyIndices;
 
-  app->buffs_data[cur_bd].name = buff_name;
-  res = vkCreateBuffer(app->device, &create_info, NULL, &app->buffs_data[cur_bd].buff);
+  app->buff_data[cur_bd].name = buff_name;
+  res = vkCreateBuffer(app->device, &create_info, NULL, &app->buff_data[cur_bd].buff);
   if (res) { PERR(WLU_VK_CREATE_ERR, res, "Buffer"); return res; }
 
   VkMemoryRequirements mem_reqs;
-  vkGetBufferMemoryRequirements(app->device, app->buffs_data[cur_bd].buff, &mem_reqs);
+  vkGetBufferMemoryRequirements(app->device, app->buff_data[cur_bd].buff, &mem_reqs);
 
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   alloc_info.pNext = NULL;
-  alloc_info.allocationSize = app->buffs_data[cur_bd].size = mem_reqs.size;
+  alloc_info.allocationSize = app->buff_data[cur_bd].size = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
   /* find a suitable memory type for VkBuffer */
@@ -390,11 +390,11 @@ VkResult wlu_create_vk_buffer(
     return res;
   }
 
-  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buffs_data[cur_bd].mem);
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buff_data[cur_bd].mem);
   if (res) { PERR(WLU_VK_ALLOC_ERR, res, "Memory"); return res; }
 
   /* associate the memory allocated with the buffer object */
-  res = vkBindBufferMemory(app->device, app->buffs_data[cur_bd].buff, app->buffs_data[cur_bd].mem, 0);
+  res = vkBindBufferMemory(app->device, app->buff_data[cur_bd].buff, app->buff_data[cur_bd].mem, 0);
   if (res) { PERR(WLU_VK_BIND_ERR, res, "BufferMemory"); }
 
   return res;
@@ -408,7 +408,7 @@ VkResult wlu_create_buff_mem_map(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->buffs_data[cur_bd].mem) { PERR(WLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
+  if (!app->buff_data[cur_bd].mem) { PERR(WLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
 
   /**
   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -417,11 +417,11 @@ VkResult wlu_create_buff_mem_map(
   * the memory, you need to map it
   */
   void *p_data = NULL;
-  res = vkMapMemory(app->device, app->buffs_data[cur_bd].mem, 0, app->buffs_data[cur_bd].size, 0, &p_data);
+  res = vkMapMemory(app->device, app->buff_data[cur_bd].mem, 0, app->buff_data[cur_bd].size, 0, &p_data);
   if (res) { PERR(WLU_VK_MAP_ERR, res, "Memory"); return res; }
 
   if (data) {
-    p_data = memmove(p_data, data, app->buffs_data[cur_bd].size);
+    p_data = memmove(p_data, data, app->buff_data[cur_bd].size);
     if (!p_data) {
       wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy vertex data into CPU accessible memory");
       return res;
@@ -431,17 +431,17 @@ VkResult wlu_create_buff_mem_map(
   VkMappedMemoryRange flush_range;
   flush_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   flush_range.pNext = NULL;
-  flush_range.memory = app->buffs_data[cur_bd].mem;
+  flush_range.memory = app->buff_data[cur_bd].mem;
   /* the region that was modified will be flushed */
   flush_range.offset = 0;
-  flush_range.size = app->buffs_data[cur_bd].size;
+  flush_range.size = app->buff_data[cur_bd].size;
   /* from offset 0 to size of buffer */
 
   /* refresh the cache */
   res = vkFlushMappedMemoryRanges(app->device, 1, &flush_range);
   if (res) { PERR(WLU_VK_FLUSH_ERR, res, "MappedMemoryRanges"); return res; }
 
-  vkUnmapMemory(app->device, app->buffs_data[cur_bd].mem);
+  vkUnmapMemory(app->device, app->buff_data[cur_bd].mem);
 
   return res;
 }

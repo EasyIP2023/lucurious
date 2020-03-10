@@ -82,7 +82,7 @@ VkResult wlu_create_swap_chain(
 * on how you intend to use the images in a swap chain.
 * It creates VkImageView handles for a particular swapchain
 */
-VkResult wlu_create_img_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info);
+VkResult wlu_create_image_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info);
 
 /**
 * Need to depth buffer to render 3D images (only need one)

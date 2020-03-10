@@ -151,7 +151,7 @@ VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint
 * Vince: KEEP COMMENT FOR FUTURE REFERENCE
 * https://www.reddit.com/r/vulkan/comments/5vzijc/question_about_vksemaphore_usage/
 */
-VkResult wlu_acquire_sc_img_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
+VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data[cur_scd].sems) { PERR(WLU_VKCOMP_SC_SEMS, 0, NULL); return res; }

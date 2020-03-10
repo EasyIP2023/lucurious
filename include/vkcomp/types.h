@@ -35,7 +35,7 @@
 * unit measured in nanoseconds
 */
 #define GENERAL_TIMEOUT 100000000
-#define ALLOC_INDEX_NON -1
+#define ALLOC_INDEX_IGNORE -1
 
 typedef struct _vertex_2D {
   vec2 pos;
@@ -119,12 +119,12 @@ typedef struct _vkcomp {
   } *cmd_data;
 
   uint32_t bdc; /* buffer data count */
-  struct _buffs_data {
+  struct _buff_data {
     VkBuffer buff;
     VkDeviceMemory mem;
     VkDeviceSize size;
     char name;
-  } *buffs_data;
+  } *buff_data;
 
   uint32_t ddc; /* descriptor data count */
   struct _desc_data {

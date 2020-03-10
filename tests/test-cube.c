@@ -72,19 +72,19 @@ static void wlu_print_matrices() {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 2);
+  err = wlu_otba(WLU_BUFF_DATA, app, ALLOC_INDEX_IGNORE, 2);
   if (err) return err;
 
-  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_DESC_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_DESC_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
   return err;
@@ -161,10 +161,10 @@ START_TEST(test_vulkan_client_create_3D) {
 
   /* describe what the image's purpose is and which part of the image should be accessed */
   VkComponentMapping comp_map = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  VkImageSubresourceRange img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageSubresourceRange img_sub_rr = wlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
   VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
-  err = wlu_create_img_views(app, cur_scd, &img_view_info);
+  err = wlu_create_image_views(app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extent3D, 1, 1,
@@ -172,7 +172,7 @@ START_TEST(test_vulkan_client_create_3D) {
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
 
-  img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1);
+  img_sub_rr = wlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1);
   img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, comp_map, img_sub_rr);
   err = wlu_create_depth_buff(app, cur_scd, &img_info, &img_view_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
@@ -181,7 +181,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_acquire_sc_img_index(app, cur_scd, &cur_buff);
+  err = wlu_acquire_sc_image_index(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   float fovy = wlu_set_fovy(45.0f);
@@ -228,7 +228,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_desc_set(app, cur_dd);
   check_err(err, app, wc, NULL)
 
-  VkDescriptorBufferInfo buff_info = wlu_set_desc_buff_info(app->buffs_data[0].buff, 0, sizeof(ubd.mvp));
+  VkDescriptorBufferInfo buff_info = wlu_set_desc_buff_info(app->buff_data[0].buff, 0, sizeof(ubd.mvp));
   VkWriteDescriptorSet write = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
                                app->desc_data[cur_dd].dlsc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
                                &buff_info, NULL);
@@ -406,12 +406,12 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
   }
 
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
+  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, offsets);
   wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   wlu_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
 

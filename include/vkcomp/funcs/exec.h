@@ -35,20 +35,42 @@ VkResult wlu_exec_begin_cmd_buffs(
 
 VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
 
+/**
+* cur_pool: Function uses one time command buffer allocate/submit
+* src_bd: must be a valid VkBuffer
+* dst_bd: must be a valid VkBuffer
+*/
 VkResult wlu_exec_copy_buffer(
   vkcomp *app,
   uint32_t cur_pool,
-  VkBuffer src_buffer,
-  VkBuffer dst_buffer,
+  uint32_t src_bd,
+  uint32_t dst_bd,
+  VkDeviceSize srcOffset,
+  VkDeviceSize dstOffset,
   VkDeviceSize size
 );
 
 /**
+* cur_pool: Function uses one time command buffer allocate/submit
+* cur_bd: must be a valid VkBuffer that contains your image pixels
+*/
+VkResult wlu_exec_copy_buff_to_image(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_bd,
+  uint32_t cur_tex,
+  VkImageLayout dstImageLayout,
+  uint32_t regionCount,
+  const VkBufferImageCopy *pRegions
+);
+
+/**
+* cur_pool: Function uses one time command buffer allocate/submit
 * Using image memory barrier to preform layout transitions.
-* Used to synchronize access to resources. 
+* Image memory barrier is used to synchronize access to image resources.
 * Example: writing to a buffer completely before reading from it
 */
-VkResult wlu_exec_transition_img_layout(
+VkResult wlu_exec_transition_image_layout(
   vkcomp *app, 
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

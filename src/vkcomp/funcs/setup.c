@@ -39,13 +39,13 @@ void wlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
   /* destory all uniform buffers */
-  if (app->buffs_data) {
+  if (app->buff_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
-      if (app->buffs_data[i].name == 'u') {
-        vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
-        vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
-        app->buffs_data[i].buff = VK_NULL_HANDLE;
-        app->buffs_data[i].mem = VK_NULL_HANDLE;
+      if (app->buff_data[i].name == 'u') {
+        vkDestroyBuffer(app->device, app->buff_data[i].buff, NULL);
+        vkFreeMemory(app->device, app->buff_data[i].mem, NULL);
+        app->buff_data[i].buff = VK_NULL_HANDLE;
+        app->buff_data[i].mem = VK_NULL_HANDLE;
       }
     }
   }
@@ -145,12 +145,12 @@ void wlu_freeup_vk(void *data) {
     }
   }
 
-  if (app->buffs_data) {
+  if (app->buff_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
-      if (app->buffs_data[i].buff)
-        vkDestroyBuffer(app->device, app->buffs_data[i].buff, NULL);
-      if (app->buffs_data[i].mem)
-        vkFreeMemory(app->device, app->buffs_data[i].mem, NULL);
+      if (app->buff_data[i].buff)
+        vkDestroyBuffer(app->device, app->buff_data[i].buff, NULL);
+      if (app->buff_data[i].mem)
+        vkFreeMemory(app->device, app->buff_data[i].mem, NULL);
     }
   }
 

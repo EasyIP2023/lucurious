@@ -48,7 +48,7 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
 }
 
 
-VkImageSubresourceRange wlu_set_img_sub_resource_range(
+VkImageSubresourceRange wlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,
   uint32_t baseMipLevel,
   uint32_t levelCount,
@@ -66,7 +66,7 @@ VkImageSubresourceRange wlu_set_img_sub_resource_range(
   return create_info;
 }
 
-VkImageMemoryBarrier wlu_set_img_mem_barrier(
+VkImageMemoryBarrier wlu_set_image_mem_barrier(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
   VkImageLayout oldLayout,
@@ -156,6 +156,65 @@ VkComponentMapping wlu_set_component_mapping(
   VkComponentSwizzle b,
   VkComponentSwizzle a
 ) {
+
   VkComponentMapping create_info = {.r = r, .g = g, .b = b, .a = a};
+
+  return create_info;
+}
+
+VkBufferImageCopy wlu_set_buff_image_copy(
+  VkDeviceSize bufferOffset,
+  uint32_t bufferRowLength,
+  uint32_t bufferImageHeight,
+  VkImageSubresourceLayers imageSubresource,
+  VkOffset3D imageOffset,
+  VkExtent3D imageExtent
+) {
+
+  VkBufferImageCopy create_info = {};
+  create_info.bufferOffset = bufferOffset;
+  create_info.bufferRowLength = bufferRowLength;
+  create_info.bufferImageHeight = bufferImageHeight;
+  create_info.imageSubresource = imageSubresource;
+  create_info.imageOffset = imageOffset;
+  create_info.imageExtent = imageExtent;
+
+  return create_info;
+}
+
+VkImageSubresourceLayers wlu_set_image_sub_resource_layers(
+  VkImageAspectFlags aspectMask,
+  uint32_t mipLevel,
+  uint32_t baseArrayLayer,
+  uint32_t layerCount
+) {
+
+  VkImageSubresourceLayers create_info = {};
+  create_info.aspectMask = aspectMask;
+  create_info.mipLevel = mipLevel;
+  create_info.baseArrayLayer = baseArrayLayer;
+  create_info.layerCount = layerCount;
+
+  return create_info;
+}
+
+VkExtent2D wlu_set_extent2D(uint32_t width, uint32_t height) {
+
+  VkExtent2D create_info = { .width = width, .height = height };
+
+  return create_info;
+}
+
+VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth) {
+
+  VkExtent3D create_info = { .width = width, .height = height, .depth = depth };
+
+  return create_info;
+}
+
+VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z) {
+
+  VkOffset3D create_info = { .x = x, .y = y, .z = z };
+
   return create_info;
 }

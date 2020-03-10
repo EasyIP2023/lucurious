@@ -46,16 +46,16 @@ static wlu_otma_mems ma = {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 4);
+  err = wlu_otba(WLU_BUFF_DATA, app, ALLOC_INDEX_IGNORE, 4);
   if (err) return err;
 
-  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
   return err;
@@ -131,10 +131,10 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   VkComponentMapping comp_map = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  VkImageSubresourceRange img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageSubresourceRange img_sub_rr = wlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
   VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
-  err = wlu_create_img_views(app, cur_scd, &img_view_info);
+  err = wlu_create_image_views(app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   /* This is where creation of the graphics pipeline begins */
@@ -142,7 +142,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_acquire_sc_img_index(app, cur_scd, &cur_buff);
+  err = wlu_acquire_sc_image_index(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
@@ -226,7 +226,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, app->buffs_data[0].buff, app->buffs_data[1].buff, vsize);
+  err = wlu_exec_copy_buffer(app, cur_pool, 0, 1, 0, 0, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer */
 
@@ -254,7 +254,7 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_buff_mem_map(app, cur_bd, NULL);
   check_err(err, app, wc, NULL)
 
-  err = wlu_exec_copy_buffer(app, cur_pool, app->buffs_data[2].buff, app->buffs_data[3].buff, isize);
+  err = wlu_exec_copy_buffer(app, cur_pool, 2, 3, 0, 0, isize);
   check_err(err, app, wc, NULL)
 
   /* 0 is the binding # this is bytes between successive structs */
@@ -368,13 +368,13 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
   }
 
   const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buffs_data[1].buff, offsets);
-  wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buffs_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, offsets);
+  wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
 
   wlu_cmd_draw_indexed(app, cur_pool, cur_buff, index_count, 1, 0, offsets[0], 0);
 

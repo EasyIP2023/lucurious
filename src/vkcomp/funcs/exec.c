@@ -44,7 +44,11 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   res = vkBeginCommandBuffer(cmd_buff, &begin_info);
-  if (res) { PERR(WLU_VK_BEGIN_ERR, res, "CommandBuffer"); return VK_NULL_HANDLE; }
+  if (res) {
+    vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
+    PERR(WLU_VK_BEGIN_ERR, res, "CommandBuffer");
+    return VK_NULL_HANDLE;
+  }
 
   return cmd_buff;
 }
@@ -67,8 +71,7 @@ static VkResult exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, Vk
   if (res) { PERR(WLU_VK_QUEUE_ERR, res, "WaitIdle"); goto finish_estcb; }
 
 finish_estcb:
-  if (*cmd_buff)
-    vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
+  vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
 
   return res;
 }
@@ -113,8 +116,10 @@ VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc
 VkResult wlu_exec_copy_buffer(
   vkcomp *app,
   uint32_t cur_pool,
-  VkBuffer src_buffer,
-  VkBuffer dst_buffer,
+  uint32_t src_bd,
+  uint32_t dst_bd,
+  VkDeviceSize srcOffset,
+  VkDeviceSize dstOffset,
   VkDeviceSize size
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -123,10 +128,11 @@ VkResult wlu_exec_copy_buffer(
   if (!cmd_buff) return res;
 
   VkBufferCopy copy_region = {};
-  copy_region.srcOffset = 0; // Optional
-  copy_region.dstOffset = 0; // Optional
+  copy_region.srcOffset = srcOffset;
+  copy_region.dstOffset = dstOffset;
   copy_region.size = size;
-  vkCmdCopyBuffer(cmd_buff, src_buffer, dst_buffer, 1, &copy_region);
+
+  vkCmdCopyBuffer(cmd_buff, app->buff_data[src_bd].buff, app->buff_data[dst_bd].buff, 1, &copy_region);
 
   res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
   if (res) return res;
@@ -134,7 +140,32 @@ VkResult wlu_exec_copy_buffer(
   return res;
 }
 
-VkResult wlu_exec_transition_img_layout(
+VkResult wlu_exec_copy_buff_to_image(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_bd,
+  uint32_t cur_tex,
+  VkImageLayout dstImageLayout,
+  uint32_t regionCount,
+  const VkBufferImageCopy *pRegions
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  VkCommandBuffer cmd_buff = exec_begin_single_time_cmd_buff(app, cur_pool);
+  if (!cmd_buff) return res;
+
+  vkCmdCopyBufferToImage(cmd_buff, app->buff_data[cur_bd].buff,
+                        app->text_data[cur_tex].image,
+                        dstImageLayout, regionCount, pRegions);
+
+  res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
+  if (res) return res;
+
+  return res;
+}
+
+VkResult wlu_exec_transition_image_layout(
   vkcomp *app,
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

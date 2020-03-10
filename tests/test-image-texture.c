@@ -50,19 +50,19 @@ static wlu_otma_mems ma = {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFFS_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_BUFF_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_TEXT_DATA, app, ALLOC_INDEX_NON, 1);
+  err = wlu_otba(WLU_TEXT_DATA, app, ALLOC_INDEX_IGNORE, 1);
   if (err) return err;
 
   return err;
@@ -138,10 +138,10 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   VkComponentMapping comp_map = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  VkImageSubresourceRange img_sub_rr = wlu_set_img_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageSubresourceRange img_sub_rr = wlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
   VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
-  err = wlu_create_img_views(app, cur_scd, &img_view_info);
+  err = wlu_create_image_views(app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   /* This is where creation of the graphics pipeline begins */
@@ -149,7 +149,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_acquire_sc_img_index(app, cur_scd, &cur_buff);
+  err = wlu_acquire_sc_image_index(app, cur_scd, &cur_buff);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
@@ -229,8 +229,37 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_texture_image(app, cur_tex, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
-  // err = wlu_exec_transition_layout();
-  // check_err(err, app, wc, NULL)
+  VkImageMemoryBarrier barrier = wlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
+    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_QUEUE_FAMILY_IGNORED,
+    VK_QUEUE_FAMILY_IGNORED, app->text_data[cur_tex].image, img_sub_rr
+  );
+
+  /* Using image memory barrier to perform layout transitions */
+  err = wlu_exec_transition_image_layout(app, cur_pool, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
+  );
+  check_err(err, app, wc, NULL)
+
+  VkOffset3D offset3D = {0, 0, 0};
+  VkImageSubresourceLayers img_sub_rl = wlu_set_image_sub_resource_layers(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
+
+  /* Allows for multiple different copies of from one buffer to the image in one operation */
+  VkBufferImageCopy region = wlu_set_buff_image_copy(0, 0, 0, img_sub_rl, offset3D, img_extent);
+
+  /* cur_bd: must be a VkBuffer that contains your image pixels */
+  err = wlu_exec_copy_buff_to_image(app, cur_pool, cur_bd-1, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+  check_err(err, app, wc, NULL)
+
+  /**
+  * Allows for in shader sampling of a texture image,
+  * There is one last transition to run to prepare for shader access
+  */
+  barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  err = wlu_exec_transition_image_layout(app, cur_pool, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
+  );
+  check_err(err, app, wc, NULL)
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(0, NULL, 0, NULL);
   wlu_log_me(WLU_INFO, "Start of shader creation");
@@ -333,8 +362,8 @@ START_TEST(test_vulkan_client_create) {
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].name: %c", i, app->buffs_data[i].name);
-    wlu_log_me(WLU_INFO, "app->buffs_data[%d].buff: %p - %p", i, &app->buffs_data[i].buff, app->buffs_data[i].buff);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
   }
 
   wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
