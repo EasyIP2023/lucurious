@@ -137,7 +137,7 @@ START_TEST(test_set_logical_device) {
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, NULL, NULL)
 
-  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  err = wlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, NULL, NULL)
 
   app->indices.present_family = app->indices.graphics_family;
@@ -169,7 +169,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, NULL, NULL)
 
-  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  err = wlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, NULL, NULL)
 
   app->indices.present_family = app->indices.graphics_family;

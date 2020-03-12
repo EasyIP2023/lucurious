@@ -37,15 +37,10 @@
 #define GENERAL_TIMEOUT 100000000
 #define ALLOC_INDEX_IGNORE -1
 
-typedef struct _vertex_2D {
-  vec2 pos;
-  vec3 color;
-} vertex_2D;
-
-typedef struct _vertex_3D {
-  vec4 pos;
-  vec4 color;
-} vertex_3D;
+typedef enum _wlu_image_view_type {
+  WLU_SC_IMAGE_VIEWS = 0x0000,   /* Swapchain image views */
+  WLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
+} wlu_image_view_type;
 
 typedef enum _wlu_rotate_type {
   WLU_X = 0x0000,
@@ -63,6 +58,16 @@ typedef enum _wlu_matrix_type {
   WLU_MAT3 = 0x0000,
   WLU_MAT4 = 0x0001
 } wlu_matrix_type;
+
+typedef struct _vertex_2D {
+  vec2 pos;
+  vec3 color;
+} vertex_2D;
+
+typedef struct _vertex_3D {
+  vec4 pos;
+  vec4 color;
+} vertex_3D;
 
 typedef struct _vkcomp {
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
@@ -98,8 +103,8 @@ typedef struct _vkcomp {
 
     struct _depth_buffer {
       VkImage image;
-      VkDeviceMemory mem;
       VkImageView view;
+      VkDeviceMemory mem;
     } depth;
   } *sc_data;
 
@@ -137,7 +142,9 @@ typedef struct _vkcomp {
   uint32_t tdc; /* texture data count */
   struct _text_data {
     VkImage image;
+    VkImageView view;
     VkDeviceMemory mem;
+    VkSampler sampler;
   } *text_data;
 } vkcomp;
 

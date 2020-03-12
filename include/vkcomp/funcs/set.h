@@ -115,4 +115,23 @@ VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth);
 
 VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z);
 
+VkSamplerCreateInfo wlu_set_sampler(
+  VkSamplerCreateFlags flags,
+  VkFilter magFilter,
+  VkFilter minFilter,
+  float mipLodBias,
+  VkSamplerMipmapMode mipmapMode,
+  VkSamplerAddressMode addressModeU,
+  VkSamplerAddressMode addressModeV,
+  VkSamplerAddressMode addressModeW,
+  float maxAnisotropy,
+  VkBool32 anisotropyEnable,
+  VkBool32 compareEnable,
+  VkCompareOp compareOp,
+  float minLod,
+  float maxLod,
+  VkBorderColor borderColor,
+  VkBool32 unnormalizedCoordinates
+);
+
 #endif

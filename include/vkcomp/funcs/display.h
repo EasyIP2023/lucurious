@@ -26,12 +26,11 @@
 #define WLU_VKCOMP_DISPLAY_FUNCS_H
 
 /**
-* How Vulkan establishes connection with window system.
-* Through the use of Window System Integration (WSI).
-* This fuction exposes a VkSurfaceKHR object that represents
-* a surface to present rendered images to.
+* Needed to create the swap chain. This function queries your physical device's
+* surface capabilities. Mainly used to get minImageCount and the extent/resolution
+* that a particular physical device
 */
-VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
+VkSurfaceCapabilitiesKHR wlu_get_physical_device_surface_capabilities(vkcomp *app);
 
 /**
 * Needed to create the swap chain. This will specify the format and

@@ -70,7 +70,24 @@ VkResult wlu_create_instance(
   return res;
 }
 
-/* Get user physical device */
+VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
+
+  VkWaylandSurfaceCreateInfoKHR create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+  create_info.pNext = NULL;
+  create_info.flags = 0;
+  create_info.display = (struct wl_display *) wl_display;
+  create_info.surface = (struct wl_surface *) wl_surface;
+
+  res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
+  if (res) PERR(WLU_VK_CREATE_ERR, res, "WaylandSurfaceKHR")
+
+  return res;
+}
+
 VkResult wlu_create_physical_device(
   vkcomp *app,
   VkPhysicalDeviceType vkpdtype,
@@ -120,6 +137,57 @@ VkResult wlu_create_physical_device(
 
   return res;
 }
+
+VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
+  VkBool32 ret = VK_TRUE;
+  VkBool32 *present_support = NULL;
+  VkQueueFamilyProperties *queue_families = NULL;
+  uint32_t qfc = 0; /* queue family count */
+
+  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL); return ret; }
+
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
+
+  queue_families = (VkQueueFamilyProperties *) alloca(qfc * sizeof(VkQueueFamilyProperties));
+
+  vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, queue_families);
+
+  present_support = (VkBool32 *) alloca(qfc * sizeof(VkBool32));
+
+  if (app->surface)
+    for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
+      vkGetPhysicalDeviceSurfaceSupportKHR(app->physical_device, i, app->surface, &present_support[i]);
+
+  for (uint32_t i = 0; i < qfc; i++) {
+    if (queue_families[i].queueFlags & vkqfbits) {
+      if (app->indices.graphics_family == UINT32_MAX) {
+        /* Retrieve Graphics Family Queue index */
+        app->indices.graphics_family = i; ret = VK_FALSE;
+        wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
+      }
+
+      /* Check to see if a device can present images onto a surface */
+      if (app->surface && present_support[i]) {
+        /* Retrieve Present Family Queue index */
+        app->indices.present_family = i; ret = VK_FALSE;
+        wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
+        break;
+      }
+    }
+  }
+
+  if (app->surface && app->indices.present_family == UINT32_MAX) {
+    for (uint32_t i = 0; i < qfc; i++) {
+      if (present_support[i]) {
+        app->indices.present_family = i; ret = VK_FALSE;
+        break;
+      }
+    }
+  }
+
+  return ret;
+}
+
 
 VkResult wlu_create_logical_device(
   vkcomp *app,
@@ -259,29 +327,48 @@ VkResult wlu_create_swap_chain(
   return res;
 }
 
-VkResult wlu_create_image_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info) {
+VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info) {
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkImage *sc_imgs = NULL;
 
-  if (!app->sc_data[cur_scd].swap_chain) { PERR(WLU_VKCOMP_SC, 0, NULL); return res; }
+  switch (type) {
+    case WLU_SC_IMAGE_VIEWS:
+      {
+        VkImage *imgs = NULL;
 
-  /**
-  * It's okay to reuse app->sc_data[cur_scd].sic,
-  * It'll give same result as minImageCount + 1.
-  * Removal of function will result in validation layer errors
-  */
-  res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, NULL);
-  if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
+        if (!app->sc_data[cur_index].swap_chain) { PERR(WLU_VKCOMP_SC, 0, NULL); return res; }
 
-  sc_imgs = (VkImage *) alloca(app->sc_data[cur_scd].sic * sizeof(VkImage));
+        /**
+        * It's okay to reuse app->sc_data[cur_scd].sic,
+        * It'll give same result as minImageCount + 1.
+        * Removal of function will result in validation layer errors
+        */
+        res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, NULL);
+        if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
 
-  res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, sc_imgs);
-  if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
+        imgs = (VkImage *) alloca(app->sc_data[cur_index].sic * sizeof(VkImage));
 
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    img_view_info->image = app->sc_data[cur_scd].sc_buffs[i].image = sc_imgs[i];
-    res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
+        res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, imgs);
+        if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
+
+        for (uint32_t i = 0; i < app->sc_data[cur_index].sic; i++) {
+          img_view_info->image = app->sc_data[cur_index].sc_buffs[i].image = imgs[i];
+          res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_index].sc_buffs[i].view);
+          if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
+        }
+      }
+
+      break;
+    case WLU_TEXT_IMAGE_VIEWS:
+      /**
+      * Can set the image inside the VkImageViewCreateInfo struct,
+      * but for reduncy and to ensure the image is correct assigning it here.
+      */
+      img_view_info->image = app->text_data[cur_index].image;
+      res = vkCreateImageView(app->device, img_view_info, NULL, &app->text_data[cur_index].view);
+      if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
+
+      break;
+    default: break;
   }
 
   return res;
@@ -592,3 +679,15 @@ VkResult wlu_create_texture_image(
 
   return res;
 }
+
+VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+
+  res = vkCreateSampler(app->device, sample_info, NULL, &app->text_data[cur_tex].sampler);
+  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Sampler"); }
+
+  return res;
+}
+

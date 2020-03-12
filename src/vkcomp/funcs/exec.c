@@ -105,6 +105,8 @@ VkResult wlu_exec_begin_cmd_buffs(
 VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
+  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(WLU_VKCOMP_CMD_BUFFS, 0, NULL); return res; }
+
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     res = vkEndCommandBuffer(app->cmd_data[cur_pool].cmd_buffs[i]);
     if (res) { PERR(WLU_VK_END_ERR, res, "CommandBuffer"); return res; }

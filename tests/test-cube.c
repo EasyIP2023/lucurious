@@ -113,7 +113,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(!wlu_create_client(wc), app, wc, NULL)
 
   /* initialize vulkan app surface */
-  err = wlu_vkconnect_surfaceKHR(app, wc->display, wc->surface);
+  err = wlu_create_vkwayland_surfaceKHR(app, wc->display, wc->surface);
   check_err(err, app, wc, NULL)
 
   /* This will get the physical device, it's properties, and features */
@@ -122,13 +122,13 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, wc, NULL)
 
-  err = wlu_set_queue_family(app, VK_QUEUE_GRAPHICS_BIT);
+  err = wlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
   check_err(err, app, wc, NULL)
 
-  VkSurfaceCapabilitiesKHR capabilities = wlu_q_device_capabilities(app);
+  VkSurfaceCapabilitiesKHR capabilities = wlu_get_physical_device_surface_capabilities(app);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
   /**
@@ -164,7 +164,7 @@ START_TEST(test_vulkan_client_create_3D) {
   VkImageSubresourceRange img_sub_rr = wlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
   VkImageViewCreateInfo img_view_info = wlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
-  err = wlu_create_image_views(app, cur_scd, &img_view_info);
+  err = wlu_create_image_views(WLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extent3D, 1, 1,

@@ -37,6 +37,14 @@ VkResult wlu_create_instance(
 );
 
 /**
+* How Vulkan establishes connection with window system.
+* Through the use of Window System Integration (WSI).
+* This fuction exposes a VkSurfaceKHR object. This object
+* represents a surface to present rendered images to.
+*/
+VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
+
+/**
 * This function will select the physical device of
 * your choosing based off of VkPhysicalDeviceType
 */
@@ -46,6 +54,15 @@ VkResult wlu_create_physical_device(
   VkPhysicalDeviceProperties *device_properties,
   VkPhysicalDeviceFeatures *device_features
 );
+
+/**
+* Almost every operation in Vulkan, from submitting command buffers
+* to presenting images to a surface, requires commands to be submitted
+* to a hardware queue. This will create multiple queue families
+* that are supported by the VkQueueFlagBits set and assign the
+* available graphics and present queues
+*/
+VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
 
 /**
 * After selecting a physical device to use.
@@ -79,10 +96,11 @@ VkResult wlu_create_swap_chain(
 
 /**
 * Create image views which is the way you communicate to vulkan
-* on how you intend to use the images in a swap chain.
-* It creates VkImageView handles for a particular swapchain
+* on how you intend to use and access VkImages
+* It creates VkImageView handles for any particular image
+* cur_index: Corresponds to the index of either vkcomp members text_data/sc_data
 */
-VkResult wlu_create_image_views(vkcomp *app, uint32_t cur_scd, VkImageViewCreateInfo *img_view_info);
+VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info);
 
 /**
 * Need to depth buffer to render 3D images (only need one)
@@ -181,5 +199,14 @@ VkResult wlu_create_texture_image(
   VkImageCreateInfo *img_info,
   VkFlags requirements_mask
 );
+
+/**
+* Concept of Sampling: https://www.tutorialspoint.com/dip/concept_of_sampling.htm
+* Generally textures are accessed through samplers.
+* Function creates samplers which apply filtering and transformations
+* to compute the final color that is retrieved. The sampler is used in
+* the shader to read colors from the texture.
+*/
+VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info);
 
 #endif

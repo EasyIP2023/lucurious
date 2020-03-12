@@ -25,23 +25,6 @@
 #ifndef WLU_VKCOMP_DEVICE_FUNCS_H
 #define WLU_VKCOMP_DEVICE_FUNCS_H
 
-/**
-* Almost every operation in Vulkan, from submitting command buffers
-* to presenting images to a surface, requires commands to be submitted
-* to a hardware queue. This will create multiple queue families
-* that are supported by the VkQueueFlagBits set and assign the
-* available graphics and present queues
-*/
-VkBool32 wlu_set_queue_family(vkcomp *app, VkQueueFlagBits vkqfbits);
-
-/**
-* Needed to create the swap chain. This function queries your physical device's
-* capabilities. Mainly used to get minImageCount and the extent/resolution
-* that a particular physical device
-*/
-VkSurfaceCapabilitiesKHR wlu_q_device_capabilities(vkcomp *app);
-
-#ifdef INAPI_CALLS
 VkBool32 is_device_suitable(
   VkPhysicalDevice device,
   VkPhysicalDeviceType vkpdtype,
@@ -55,6 +38,5 @@ VkResult get_extension_properties(
   VkExtensionProperties **eprops,
   uint32_t *size
 );
-#endif
 
 #endif

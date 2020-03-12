@@ -193,11 +193,11 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
       break;
     case WLU_VKCOMP_INDICES:
       wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_set_queue_family(3)");
+      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_queue_families()");
       break;
     case WLU_VKCOMP_SURFACE:
       wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_vkconnect_surfaceKHR()");
+      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_vkwayland_surfaceKHR()");
       break;
     case WLU_VKCOMP_SC:
       wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");

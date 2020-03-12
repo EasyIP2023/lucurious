@@ -26,7 +26,6 @@
 #define WLU_VKCOMP_ALL_H
 
 #include "funcs/create.h"
-#include "funcs/device.h"
 #include "funcs/display.h"
 #include "funcs/exec.h"
 #include "funcs/set.h"
@@ -47,6 +46,7 @@
 #endif
 
 #ifdef INAPI_CALLS
+#include "funcs/device.h"
 /* Dynamically retrieve a VkInstance function */
 #define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
   do { \

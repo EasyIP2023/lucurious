@@ -25,22 +25,25 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-VkResult wlu_vkconnect_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
-  VkResult res = VK_RESULT_MAX_ENUM;
+VkSurfaceCapabilitiesKHR wlu_get_physical_device_surface_capabilities(vkcomp *app) {
+  VkSurfaceCapabilitiesKHR capabilities;
+  VkResult err;
 
-  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
+  if (!app->surface) {
+    PERR(WLU_VKCOMP_SURFACE, 0, NULL);
+    capabilities.minImageCount = UINT32_MAX;
+    return capabilities;
+  }
 
-  VkWaylandSurfaceCreateInfoKHR create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.display = (struct wl_display *) wl_display;
-  create_info.surface = (struct wl_surface *) wl_surface;
+  /* Not going to check if physical device present user should know by now */
+  err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
+  if (err) {
+    PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceCapabilitiesKHR");
+    capabilities.minImageCount = UINT32_MAX;
+    return capabilities;
+  }
 
-  res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
-  if (res) PERR(WLU_VK_CREATE_ERR, res, "WaylandSurfaceKHR")
-
-  return res;
+  return capabilities;
 }
 
 VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace) {
