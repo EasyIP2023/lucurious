@@ -260,7 +260,7 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.vkval_layer_cnt * sizeof(VkLayerProperties));
 
   size += (ma.si_cnt * sizeof(struct _swap_chain_buffers));
-  size += (ma.si_cnt * sizeof(struct _semaphores));
+  size += (ma.si_cnt * sizeof(struct _synchronizers));
   size += (ma.scd_cnt * sizeof(struct _sc_data));
 
   size += (ma.gp_cnt * sizeof(VkPipeline));
@@ -345,8 +345,8 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         if (!app->cmd_data[index].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
 
         /* Allocate Semaphores */
-        app->sc_data[index].sems = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _semaphores));
-        if (!app->sc_data[index].sems) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sc_data[index].syncs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
+        if (!app->sc_data[index].syncs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
         app->sc_data[index].sic = arr_size; return false;
       }
     case WLU_DESC_DATA_MEMS:

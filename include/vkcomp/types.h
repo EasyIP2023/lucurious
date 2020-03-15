@@ -37,6 +37,13 @@
 #define GENERAL_TIMEOUT 100000000
 #define ALLOC_INDEX_IGNORE -1
 
+typedef enum _wlu_call_vkfence_type {
+  WLU_VK_WAIT_RENDER_FENCE = 0x0000,
+  WLU_VK_WAIT_IMAGE_FENCE = 0x0001,
+  WLU_VK_RESET_FENCE = 0x0002,
+  WLU_VK_GET_FENCE = 0x0003
+} wlu_call_vkfence_type;
+
 typedef enum _wlu_image_view_type {
   WLU_SC_IMAGE_VIEWS = 0x0000,   /* Swapchain image views */
   WLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
@@ -96,10 +103,23 @@ typedef struct _vkcomp {
       VkFramebuffer fb;
     } *sc_buffs;
 
-    struct _semaphores {
-      VkSemaphore image;
-      VkSemaphore render;
-    } *sems;
+    /**
+    * VkFence image:
+    * VkFence render:
+    * VkSemaphore image: Signal that an image has been acquire
+    * VkSemaphore render: Signal that an image is ready for rendering
+    */
+    struct _synchronizers {
+      struct {
+        VkFence image;
+        VkFence render;
+      } fence;
+
+      struct {
+        VkSemaphore image;
+        VkSemaphore render;
+      } sem;
+    } *syncs;
 
     struct _depth_buffer {
       VkImage image;

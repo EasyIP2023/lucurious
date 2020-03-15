@@ -143,14 +143,14 @@ START_TEST(test_vulkan_client_create_3D) {
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
-  VkExtent3D extent3D = wlu_choose_3D_swap_extent(capabilities, WIDTH, HEIGHT, DEPTH);
-  check_err(extent3D.width == UINT32_MAX, app, wc, NULL)
+  VkExtent2D extent2D = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
+  check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0, cur_bd = 0, cur_cmd = 0;
   err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent3D.width, extent3D.height);
+  err = wlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_cmd_pool(app, cur_scd, cur_cmd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -167,8 +167,9 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_image_views(WLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
-  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extent3D, 1, 1,
-    VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+  VkExtent3D extend3D = {extent2D.width, extent2D.height, DEPTH};
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extend3D, 1,
+    1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
 
@@ -177,7 +178,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_create_depth_buff(app, cur_scd, &img_info, &img_view_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_semaphores(app, cur_scd);
+  err = wlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
@@ -185,8 +186,8 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   float fovy = wlu_set_fovy(45.0f);
-  float hw = (float) extent3D.width / (float) extent3D.height;
-  if (extent3D.width > extent3D.height) fovy *= hw;
+  float hw = (float) extent2D.width / (float) extent2D.height;
+  if (extent2D.width > extent2D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(ubd.view, eye, center, up);
   wlu_set_matrix(ubd.model, model_matrix, WLU_MAT4);
@@ -267,7 +268,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkImageView vkimg_attach[2];
   vkimg_attach[1] = app->sc_data[cur_scd].depth.view;
-  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 2, vkimg_attach, extent3D.width, extent3D.height, 1);
+  err = wlu_create_framebuffers(app, cur_scd, cur_gpd, 2, vkimg_attach, extent2D.width, extent2D.height, 1);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
@@ -356,8 +357,8 @@ START_TEST(test_vulkan_client_create_3D) {
     VK_FALSE, VK_LOGIC_OP_NO_OP, 1, &color_blend_attachment, blend_const
   );
 
-  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent3D.width, (float) extent3D.height, 0.0f, 1.0f);
-  VkRect2D scissor = wlu_set_rect2D(0, 0, extent3D.width, extent3D.height);
+  VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
+  VkRect2D scissor = wlu_set_rect2D(0, 0, extent2D.width, extent2D.height);
   VkPipelineViewportStateCreateInfo view_port_info = wlu_set_view_port_state_info(1, &viewport, 1, &scissor);
 
   VkStencilOpState back = wlu_set_stencil_op_state(
@@ -400,8 +401,8 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent3D.width,
-                             extent3D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
+                             extent2D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
 
@@ -423,10 +424,14 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   VkPipelineStageFlags pipe_stage_flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  VkSemaphore image_sems[1] = {app->sc_data[cur_scd].sems[cur_buff].image};
-  VkSemaphore render_sems[1] = {app->sc_data[cur_scd].sems[cur_buff].render};
+  VkSemaphore acquire_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.image};
+  VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
-  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, image_sems, pipe_stage_flags, 1, render_sems);
+
+  err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, 0);
+  check_err(err, app, wc, NULL)
+
+  err = wlu_queue_graphics_queue(app, cur_scd, 0, 1, cmd_buffs, 1, acquire_sems, pipe_stage_flags, 1, render_sems);
   check_err(err, app, wc, NULL)
 
   err = wlu_queue_present_queue(app, 1, render_sems, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);

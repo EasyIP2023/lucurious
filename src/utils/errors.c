@@ -207,9 +207,9 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
       wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");
       wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
       break;
-    case WLU_VKCOMP_SC_SEMS:
-      wlu_log_me(WLU_DANGER, "[x] Image semaphores must be initialize before use");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_semaphores()");
+    case WLU_VKCOMP_SC_SYNCS:
+      wlu_log_me(WLU_DANGER, "[x] Swapchain sychronizers must be initialize before use");
+      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_syncs()");
       break;
     case WLU_VKCOMP_BUFF_MEM:
       wlu_log_me(WLU_DANGER, "[x] VkDeviceMemory not created");

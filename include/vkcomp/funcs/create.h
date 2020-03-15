@@ -188,7 +188,7 @@ VkResult wlu_create_cmd_buffs(
 * operation until the image is actually available. This function
 * creates semaphores
 */
-VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd);
+VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd);
 
 /**
 * Takes a VkImage object in memory and converts it to a texture

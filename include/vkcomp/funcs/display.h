@@ -26,16 +26,17 @@
 #define WLU_VKCOMP_DISPLAY_FUNCS_H
 
 /**
-* Needed to create the swap chain. This function queries your physical device's
-* surface capabilities. Mainly used to get minImageCount and the extent/resolution
-* that a particular physical device
+* Needed to create the swap chain
+* This function queries your physical device's surface capabilities.
+* Mainly used to get minImageCount and the extent/resolution
 */
 VkSurfaceCapabilitiesKHR wlu_get_physical_device_surface_capabilities(vkcomp *app);
 
 /**
-* Needed to create the swap chain. This will specify the format and
-* the surace of an image. The "format" variable refers to the pixel
-* formats and the "colorSpace" variable refers to the Color Depth
+* Needed to create the swap chain
+* Function returns the best format and the color depth for an image(s).
+* The "format" variable refers to the pixel formats and the
+* "colorSpace" variable refers to the Color Depth
 */
 VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace);
 
@@ -47,27 +48,26 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
 VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app);
 
 /**
-* Needed to create the swap chain. Pick the resolution
-* for the images in the swap chain
+* Needed to create the swap chain
+* Function returns the best resolution for the images in the swap chain
 */
-VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
-
-/**
-* Needed to create the swap chain. Pick the resolution
-* for the images in the swap chain along with the depth
-* of the 3D object
-*/
-VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth);
+VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
 
 /* Acquire the swapchain image in order to set its layout */
 VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img);
 
+/* Allows for vkFence related function calling */
+VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
+
 /**
-* Puts command buffers into the graphics queue,
-* to later be received and processed by the GPU
+* Puts command buffers into the graphics queue, to be received and processed by the GPU
+* cur_scd: Current swap chain struct index data member
+* sycni: Represents the current vkcomp->sc_data->synchronize struct index
 */
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
+  uint32_t cur_scd,
+  uint32_t synci,
   uint32_t commandBufferCount,
   VkCommandBuffer *pCommandBuffers,
   uint32_t waitSemaphoreCount,

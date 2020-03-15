@@ -37,4 +37,10 @@
 /* Returns the current time in nanoseconds */
 uint64_t wlu_hrnst();
 
+/**
+* Gratuitous function that works similarly to memcpy instead
+* it makes a bit by bit copy from source to dest
+*/
+void *wlu_bitcpy(void *dest, void *src, size_t bits);
+
 #endif

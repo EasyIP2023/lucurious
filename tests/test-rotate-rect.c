@@ -24,13 +24,14 @@
 
 /* This will be put on hold for the time being */
 #include <check.h>
-#include <time.h>
 
 #define LUCUR_VKCOMP_API
 #define LUCUR_VKCOMP_MATRIX_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
+#define LUCUR_CLOCK_API
+#define CLOCK_MONOTONIC
 #include <lucom.h>
 
 #include "test-extras.h"
@@ -38,8 +39,7 @@
 
 #define WIDTH 800
 #define HEIGHT 600
-
-#define drand48() ((float)(rand() / (RAND_MAX + 1.0)))
+#define MAX_FRAMES 2
 
 static wlu_otma_mems ma = {
   .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
@@ -128,7 +128,7 @@ START_TEST(test_vulkan_client_create) {
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
-  VkExtent2D extent2D = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
+  VkExtent2D extent2D = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
@@ -153,7 +153,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_semaphores(app, cur_scd);
+  err = wlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -432,55 +432,64 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
   check_err(err, app, wc, NULL)
 
-  struct uniform_block_data ubd;
+  VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
+  VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+  ALL_UNUSED(acquire_sems);
+
+  VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
 
   float fovy = wlu_set_fovy(45.0f);
   float hw = (float) extent2D.width / (float) extent2D.height;
-
   if (extent2D.width > extent2D.height) fovy *= hw;
+
+  struct uniform_block_data ubd;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
 
-  uint32_t image_indices[app->sc_data[cur_scd].sic];
-  VkSemaphore image_sems[app->sc_data[cur_scd].sic], render_sems[app->sc_data[cur_scd].sic];
-  VkPipelineStageFlags wait_stages[app->sc_data[cur_scd].sic];
-  
-  VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
-  uint32_t img_index;
-  ALL_UNUSED(image_indices);
+  uint64_t current = 0, start = wlu_hrnst();
+  uint32_t cur_frame = 0, img_index;
 
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    wait_stages[i] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    image_sems[i] = app->sc_data[cur_scd].sems[i].image;
-    render_sems[i] = app->sc_data[cur_scd].sems[i].render;
+  while (1) {
+    acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
+    render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
+
+    err = wlu_call_vkfence(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
+    check_err(err, app, wc, NULL)
+
+    err = wlu_call_vkfence(WLU_VK_GET_FENCE, app, cur_scd, cur_frame);
+    check_err(err, app, wc, NULL)
 
     err = wlu_acquire_sc_image_index(app, cur_scd, &img_index);
     check_err(err, app, wc, NULL)
 
-    image_indices[i] = img_index;
-
-    srand((unsigned int)time(NULL));
+    current = wlu_hrnst();
     wlu_set_matrix(ubd.model, model_matrix_default, WLU_MAT4);
-    wlu_set_rotate(ubd.model, ubd.model, drand48() * wlu_set_fovy(90.0f), WLU_Z);
+    wlu_set_rotate(ubd.model, ubd.model, ((float) (current - start) / 1000000000.0f) * wlu_set_fovy(90.0f), WLU_Z);
     wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
 
     err = wlu_create_buff_mem_map(app, cur_bd + img_index, &ubd);
     check_err(err, app, wc, NULL)
 
-    // err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, &image_sems[img_index], &wait_stages[img_index], 1, &render_sems[img_index]);
-    // check_err(err, app, wc, NULL)
+    if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
+      err = wlu_call_vkfence(WLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
+      check_err(err, app, wc, NULL)
+    }
 
-    // err = wlu_queue_present_queue(app, 1, &render_sems[img_index], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);
-    // check_err(err, app, wc, NULL)
+    app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
+
+    err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, cur_frame);
+    check_err(err, app, wc, NULL)
+
+    err = wlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, cmd_buffs, 0, VK_NULL_HANDLE, wait_stages, 1, &render_sems[cur_frame]);
+    check_err(err, app, wc, NULL)
+
+    err = wlu_queue_present_queue(app, 1, &render_sems[cur_frame], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);
+    check_err(err, app, wc, NULL)
+
+    cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
 
-  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 5, image_sems, wait_stages, 5, render_sems);
-  check_err(err, app, wc, NULL)
-
-  err = wlu_queue_present_queue(app, 5, render_sems, 1, &app->sc_data[cur_scd].swap_chain, image_indices, NULL);
-  check_err(err, app, wc, NULL)
-
-  sleep(3);
   FREEME(app, wc)
 } END_TEST;
 
@@ -505,7 +514,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-//  sleep(7);
+  // sleep(6);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

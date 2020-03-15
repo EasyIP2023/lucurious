@@ -122,7 +122,7 @@ START_TEST(test_vulkan_client_create) {
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
-  VkExtent2D extent = wlu_choose_2D_swap_extent(capabilities, WIDTH, HEIGHT);
+  VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
@@ -147,7 +147,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* This is where creation of the graphics pipeline begins */
-  err = wlu_create_semaphores(app, cur_scd);
+  err = wlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
@@ -388,10 +388,14 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   VkPipelineStageFlags pipe_stage_flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  VkSemaphore image_sems[1] = {app->sc_data[cur_scd].sems[cur_buff].image};
-  VkSemaphore render_sems[1] = {app->sc_data[cur_scd].sems[cur_buff].render};
+  VkSemaphore acquire_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.image};
+  VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
-  err = wlu_queue_graphics_queue(app, 1, cmd_buffs, 1, image_sems, pipe_stage_flags, 1, render_sems);
+
+  err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, 0);
+  check_err(err, app, wc, NULL)
+
+  err = wlu_queue_graphics_queue(app, cur_scd, 0, 1, cmd_buffs, 1, acquire_sems, pipe_stage_flags, 1, render_sems);
   check_err(err, app, wc, NULL)
 
   err = wlu_queue_present_queue(app, 1, render_sems, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
@@ -422,7 +426,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  sleep(6);
+  sleep(8);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

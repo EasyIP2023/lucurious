@@ -25,6 +25,12 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+/**
+* alloca()'s usage here is meant for stack space efficiency
+* Fixed size arrays tend to over allocate, while alloca will
+* allocate the exact amount of bytes that you want
+*/
+
 VkSurfaceCapabilitiesKHR wlu_get_physical_device_surface_capabilities(vkcomp *app) {
   VkSurfaceCapabilitiesKHR capabilities;
   VkResult err;
@@ -79,7 +85,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   for (uint32_t i = 0; i < format_count; i++) {
     if (formats[i].format == format && formats[i].colorSpace == colorSpace) {
       ret_fmt = formats[i];
-      return ret_fmt;
+      break;
     }
   }
 
@@ -123,45 +129,77 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   return best_mode;
 }
 
-VkExtent2D wlu_choose_2D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height) {
-  if (capabilities.currentExtent.width != UINT32_MAX) {
-    return capabilities.currentExtent;
-  } else {
-    VkExtent2D actual_extent = {width, height};
+/**
+* If the width retrieved from making a call to wlu_get_physical_device_surface_capabilities()
+* doesn't equal -1 then leave VkExtent2D struct in VkSurfaceCapabilitiesKHR struct the same
+* else find a suitable replacement
+*/
+VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR cap, uint32_t width, uint32_t height) {
+  VkExtent2D extent = {width, height};
 
-    actual_extent.width = fmax(capabilities.minImageExtent.width,
-                          fmin(capabilities.maxImageExtent.width,
-                               actual_extent.width));
-    actual_extent.height = fmax(capabilities.minImageExtent.height,
-                           fmin(capabilities.maxImageExtent.height,
-                                actual_extent.height));
-    return actual_extent;
+  if (cap.currentExtent.width != UINT32_MAX) {
+    extent = cap.currentExtent;
+  } else {
+    extent.width = fmax(cap.minImageExtent.width, fmin(cap.maxImageExtent.width, extent.width));
+    extent.height = fmax(cap.minImageExtent.height, fmin(cap.maxImageExtent.height, extent.height)); 
   }
+
+  return extent;
 }
 
-VkExtent3D wlu_choose_3D_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height, uint32_t depth) {
-  VkExtent3D actual_extent = {width, height, depth};
-  actual_extent.width = fmax(capabilities.minImageExtent.width,
-                        fmin(capabilities.maxImageExtent.width,
-                             actual_extent.width));
-  actual_extent.height = fmax(capabilities.minImageExtent.height,
-                         fmin(capabilities.maxImageExtent.height,
-                              actual_extent.height));
-  return actual_extent;
+VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->sc_data[cur_scd].syncs) { PERR(WLU_VKCOMP_SC_SYNCS, 0, NULL); return res; }
+
+  switch (type) {
+    case WLU_VK_WAIT_IMAGE_FENCE:
+      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.image, VK_TRUE, GENERAL_TIMEOUT);
+      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
+    break;
+    case WLU_VK_WAIT_RENDER_FENCE:
+      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
+      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
+    break;
+    case WLU_VK_RESET_FENCE:
+      /* set fence to unsignaled state */
+      res = vkResetFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render);
+      if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); break; }
+    break;
+    case WLU_VK_GET_FENCE:
+      res = vkGetFenceStatus(app->device, app->sc_data[cur_scd].syncs[synci].fence.render);
+      switch(res) {
+        case VK_SUCCESS:
+          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is signaled.", cur_scd, synci);
+          break;
+        case VK_NOT_READY:
+          wlu_log_me(WLU_WARNING, "The fence specified by fence is unsignaled.");
+          break;
+        case VK_ERROR_DEVICE_LOST:
+          wlu_log_me(WLU_WARNING, "The device has been lost.");
+          break;
+        default: break;
+      }
+    break;
+    default: break;
+  }
+
+  return res;
 }
 
 /**
 * Vince: KEEP COMMENT FOR FUTURE REFERENCE
 * https://www.reddit.com/r/vulkan/comments/5vzijc/question_about_vksemaphore_usage/
+* Need to change function to work with both VkSemaphores/VkFences
 */
 VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sc_data[cur_scd].sems) { PERR(WLU_VKCOMP_SC_SEMS, 0, NULL); return res; }
+  if (!app->sc_data[cur_scd].syncs) { PERR(WLU_VKCOMP_SC_SYNCS, 0, NULL); return res; }
 
   /* Signal image semaphore */
   res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
-                              app->sc_data[cur_scd].sems[*cur_img].image, VK_NULL_HANDLE, cur_img);
+                              app->sc_data[cur_scd].syncs[*cur_img].sem.image, VK_NULL_HANDLE, cur_img);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
     wlu_freeup_sc(app);
     return res;
@@ -172,6 +210,8 @@ VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur
 
 VkResult wlu_queue_graphics_queue(
   vkcomp *app,
+  uint32_t cur_scd,
+  uint32_t synci,
   uint32_t commandBufferCount,
   VkCommandBuffer *pCommandBuffers,
   uint32_t waitSemaphoreCount,
@@ -181,17 +221,6 @@ VkResult wlu_queue_graphics_queue(
   const VkSemaphore *pSignalSemaphores
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkFence draw_fence = VK_NULL_HANDLE;
-
-  /* Queue the command buffer for execution */
-  VkFenceCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-  /* Use fence to synchronize application with rendering operation */
-  res = vkCreateFence(app->device, &create_info, NULL, &draw_fence);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Fence"); goto finish_gq_submit; }
 
   VkSubmitInfo submit_info = {};
   submit_info.pNext = NULL;
@@ -204,26 +233,10 @@ VkResult wlu_queue_graphics_queue(
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  do {
-    /* set fence to unsignaled state */
-    res = vkResetFences(app->device, 1, &draw_fence);
-    if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); goto finish_gq_submit; }
-	
-    /* Semaphore should be waited on & fence should be signaled when command buffer is finished */
-    res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, draw_fence);
-    if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); goto finish_gq_submit; }
+  /* Semaphore should be waited on & fence should be signaled when command buffer is finished */
+  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, app->sc_data[cur_scd].syncs[synci].fence.render);
+  if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); }
 
-    /* Use fence to synchronize application with rendering operation */
-    res = vkWaitForFences(app->device, 1, &draw_fence, VK_TRUE, GENERAL_TIMEOUT);
-    if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); goto finish_gq_submit; }
-
-  } while (res == VK_TIMEOUT);
-
-finish_gq_submit:
-  if (draw_fence) {
-    vkDestroyFence(app->device, draw_fence, NULL);
-    draw_fence = VK_NULL_HANDLE;
-  }
   return res;
 }
 
@@ -253,9 +266,6 @@ VkResult wlu_queue_present_queue(
 
   if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
     wlu_freeup_sc(app);
-
-  /* Wait for operations in present queue to finish */
-  vkQueueWaitIdle(app->present_queue);
 
   return res;
 }

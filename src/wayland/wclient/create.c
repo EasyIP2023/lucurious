@@ -28,6 +28,12 @@
 
 #include "xdg-shell-client-protocol.h"
 
+/**
+* alloca()'s usage here is meant for stack space efficiency
+* Fixed size arrays tend to over allocate, while alloca will
+* allocate the exact amount of bytes that you want
+*/
+
 static void noop() {
   // This space intentionally left blank
 }

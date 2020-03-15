@@ -27,6 +27,12 @@
 
 #include "stb_image.h"
 
+/**
+* alloca()'s usage here is meant for stack space efficiency
+* Fixed size arrays tend to over allocate, while alloca will
+* allocate the exact amount of bytes that you want
+*/
+
 VkResult wlu_create_instance(
   vkcomp *app,
   char *app_name,
@@ -620,23 +626,33 @@ VkResult wlu_create_cmd_buffs(
 * (This comment is for me)
 * Use a image semaphore to signal that an image
 * has been acquired and is ready for rendering.
-* Use a render semaphore to singal that rendering
+* Use a render semaphore to signal that rendering
+* Use fence to synchronize application with rendering operation
 * has finished and presentation can happen.
 */
-VkResult wlu_create_semaphores(vkcomp *app, uint32_t cur_scd) {
+VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  VkSemaphoreCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
+  VkSemaphoreCreateInfo sem_info = {};
+  sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  sem_info.pNext = NULL;
+  sem_info.flags = 0;
+
+  /* Queue the command buffer for execution */
+  VkFenceCreateInfo fence_info = {};
+  fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fence_info.pNext = NULL;
+  fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sc_data[cur_scd].sems[i].image);
+    res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.image);
     if (res) { PERR(WLU_VK_CREATE_ERR, res, "Semaphore"); return res; }
 
-    res = vkCreateSemaphore(app->device, &create_info, NULL, &app->sc_data[cur_scd].sems[i].render);
+    res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.render);
     if (res) { PERR(WLU_VK_CREATE_ERR, res, "Semaphore"); return res; }
+
+    res = vkCreateFence(app->device, &fence_info, NULL, &app->sc_data[cur_scd].syncs[i].fence.render);
+    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Fence"); return res; }
   }
 
   return res;
