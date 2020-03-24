@@ -153,16 +153,15 @@ VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_
   if (!app->sc_data[cur_scd].syncs) { PERR(WLU_VKCOMP_SC_SYNCS, 0, NULL); return res; }
 
   switch (type) {
-    case WLU_VK_WAIT_IMAGE_FENCE:
+    case WLU_VK_WAIT_IMAGE_FENCE: /* set fence to signal state */
       res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.image, VK_TRUE, GENERAL_TIMEOUT);
       if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
     break;
-    case WLU_VK_WAIT_RENDER_FENCE:
+    case WLU_VK_WAIT_RENDER_FENCE: /* set fence to signal state */
       res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
       if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
     break;
-    case WLU_VK_RESET_FENCE:
-      /* set fence to unsignaled state */
+    case WLU_VK_RESET_FENCE: /* set fence to unsignaled state */
       res = vkResetFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render);
       if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); break; }
     break;
@@ -173,7 +172,7 @@ VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_
           wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is signaled.", cur_scd, synci);
           break;
         case VK_NOT_READY:
-          wlu_log_me(WLU_WARNING, "The fence specified by fence is unsignaled.");
+          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is unsignaled.", cur_scd, synci);
           break;
         case VK_ERROR_DEVICE_LOST:
           wlu_log_me(WLU_WARNING, "The device has been lost.");
@@ -192,14 +191,14 @@ VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_
 * https://www.reddit.com/r/vulkan/comments/5vzijc/question_about_vksemaphore_usage/
 * Need to change function to work with both VkSemaphores/VkFences
 */
-VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img) {
+VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t cur_sync, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data[cur_scd].syncs) { PERR(WLU_VKCOMP_SC_SYNCS, 0, NULL); return res; }
 
   /* Signal image semaphore */
   res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
-                              app->sc_data[cur_scd].syncs[*cur_img].sem.image, VK_NULL_HANDLE, cur_img);
+                              app->sc_data[cur_scd].syncs[cur_sync].sem.image, VK_NULL_HANDLE, cur_img);
   if (res == VK_ERROR_OUT_OF_DATE_KHR) {
     wlu_freeup_sc(app);
     return res;
@@ -233,7 +232,10 @@ VkResult wlu_queue_graphics_queue(
   submit_info.signalSemaphoreCount = signalSemaphoreCount;
   submit_info.pSignalSemaphores = pSignalSemaphores;
 
-  /* Semaphore should be waited on & fence should be signaled when command buffer is finished */
+  /**
+  * Fence will be in signaled state when the command buffers finish execution
+  * VkFence render: Used to signal that a frame has finished rendering
+  */
   res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, app->sc_data[cur_scd].syncs[synci].fence.render);
   if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); }
 

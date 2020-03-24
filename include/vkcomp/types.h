@@ -105,9 +105,9 @@ typedef struct _vkcomp {
 
     /**
     * VkFence image:
-    * VkFence render:
-    * VkSemaphore image: Signal that an image has been acquire
-    * VkSemaphore render: Signal that an image is ready for rendering
+    * VkFence render: Used to signal that a frame has finished rendering
+    * VkSemaphore image: Signal that a swapchaine image has been acquire
+    * VkSemaphore render: Signal that an swapchain image is ready for & done rendering
     */
     struct _synchronizers {
       struct {

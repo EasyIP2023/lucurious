@@ -345,7 +345,7 @@ START_TEST(test_vulkan_client_create) {
 
   /* Start of index buffer creation */
   VkDeviceSize isize = sizeof(indices);
-  const uint32_t index_count = isize / sizeof(uint16_t); // 2 bytes
+  const uint32_t index_count = isize / sizeof(uint16_t); /* 2 bytes */
   err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -432,43 +432,39 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
   check_err(err, app, wc, NULL)
 
-  VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
-  VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  uint64_t current = 0, start = wlu_hrnst();
+  uint32_t cur_frame = 0, img_index;
 
-  ALL_UNUSED(acquire_sems);
-
-  VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
-
+  struct uniform_block_data ubd;
   float fovy = wlu_set_fovy(45.0f);
   float hw = (float) extent2D.width / (float) extent2D.height;
   if (extent2D.width > extent2D.height) fovy *= hw;
-
-  struct uniform_block_data ubd;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
 
-  uint64_t current = 0, start = wlu_hrnst();
-  uint32_t cur_frame = 0, img_index;
+  VkCommandBuffer cmd_buffs[app->sc_data[cur_scd].sic];
+  VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
+  VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
   while (1) {
     acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
     render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
 
+    /* set fence to signal state */
     err = wlu_call_vkfence(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
 
-    err = wlu_call_vkfence(WLU_VK_GET_FENCE, app, cur_scd, cur_frame);
+    err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &img_index);
     check_err(err, app, wc, NULL)
 
-    err = wlu_acquire_sc_image_index(app, cur_scd, &img_index);
-    check_err(err, app, wc, NULL)
+    cmd_buffs[img_index] = app->cmd_data[cur_cmdd].cmd_buffs[img_index];
 
     current = wlu_hrnst();
     wlu_set_matrix(ubd.model, model_matrix_default, WLU_MAT4);
     wlu_set_rotate(ubd.model, ubd.model, ((float) (current - start) / 1000000000.0f) * wlu_set_fovy(90.0f), WLU_Z);
     wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
 
-    err = wlu_create_buff_mem_map(app, cur_bd + img_index, &ubd);
+    err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
     check_err(err, app, wc, NULL)
 
     if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
@@ -478,10 +474,11 @@ START_TEST(test_vulkan_client_create) {
 
     app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
 
+    /* set fence to unsignal state */
     err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
 
-    err = wlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, cmd_buffs, 0, VK_NULL_HANDLE, wait_stages, 1, &render_sems[cur_frame]);
+    err = wlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, &cmd_buffs[img_index], 1, &acquire_sems[cur_frame], &wait_stage, 1, &render_sems[cur_frame]);
     check_err(err, app, wc, NULL)
 
     err = wlu_queue_present_queue(app, 1, &render_sems[cur_frame], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);

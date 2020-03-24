@@ -53,8 +53,13 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app);
 */
 VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
 
-/* Acquire the swapchain image in order to set its layout */
-VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t *cur_img);
+/**
+* Acquire the swapchain image in order to set its layout
+* cur_scd: Current Swapchain Data Members. Will auto choose current swapchain and synchronization members
+* cur_sync: Current Synchronization Members. Will auto select image semaphore to signal (vkcomp->sc_data->syncs)
+* cur_img: Allows for vkAcquireNextImageKHR to set the image index
+*/
+VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t cur_sync, uint32_t *cur_img);
 
 /* Allows for vkFence related function calling */
 VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);

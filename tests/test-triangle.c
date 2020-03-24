@@ -143,7 +143,8 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Acquire the swapchain image in order to set its layout */
-  err = wlu_acquire_sc_image_index(app, cur_scd, &cur_buff);
+  uint32_t cur_img, cur_frame = 0;
+  err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
@@ -354,6 +355,7 @@ START_TEST(test_vulkan_client_create) {
   VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
 
+  /* set fence to unsignal state */
   err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, 0);
   check_err(err, app, wc, NULL)
 
