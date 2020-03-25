@@ -147,25 +147,31 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR cap, uint32_t width, 
   return extent;
 }
 
-VkResult wlu_call_vkfence(wlu_call_vkfence_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci) {
+VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->sc_data[cur_scd].syncs) { PERR(WLU_VKCOMP_SC_SYNCS, 0, NULL); return res; }
-
   switch (type) {
-    case WLU_VK_WAIT_IMAGE_FENCE: /* set fence to signal state */
+    case WLU_VK_WAIT_IMAGE_FENCE: /* set render fence to signal state */
       res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.image, VK_TRUE, GENERAL_TIMEOUT);
-      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
-    break;
-    case WLU_VK_WAIT_RENDER_FENCE: /* set fence to signal state */
+      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); }
+      break;
+    case WLU_VK_WAIT_RENDER_FENCE: /* set image fence to signal state */
       res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
-      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); break; }
-    break;
-    case WLU_VK_RESET_FENCE: /* set fence to unsignaled state */
+      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); }
+      break;
+    case WLU_VK_WAIT_PRESENT_QUEUE:
+      res = vkQueueWaitIdle(app->present_queue);
+      if (res) { PERR(WLU_VK_QUEUE_ERR, res, "WaitIdle"); }
+      break;
+    case WLU_VK_WAIT_GRAPHICS_QUEUE:
+      res = vkQueueWaitIdle(app->graphics_queue);
+      if (res) { PERR(WLU_VK_QUEUE_ERR, res, "WaitIdle"); }
+      break;
+    case WLU_VK_RESET_RENDER_FENCE: /* set fence to unsignaled state */
       res = vkResetFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render);
-      if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); break; }
-    break;
-    case WLU_VK_GET_FENCE:
+      if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); }
+      break;
+    case WLU_VK_GET_RENDER_FENCE:
       res = vkGetFenceStatus(app->device, app->sc_data[cur_scd].syncs[synci].fence.render);
       switch(res) {
         case VK_SUCCESS:

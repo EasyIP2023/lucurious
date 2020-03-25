@@ -27,15 +27,15 @@ wayland_scanner = find_program('wayland-scanner', required : true)
 wayland_protos_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 
 wayland_scanner_code = generator(
-	wayland_scanner,
-	output: '@BASENAME@-protocol.c',
-	arguments: ['private-code', '@INPUT@', '@OUTPUT@'],
+  wayland_scanner,
+  output: '@BASENAME@-protocol.c',
+  arguments: ['private-code', '@INPUT@', '@OUTPUT@'],
 )
 
 # Create corresponding C glue code from wayland xml protocls extension files
 wayland_protos_cglue = []
 wayland_protos_shared = [
-	[wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],
+  [wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],
 ]
 
 foreach p : wayland_protos_shared

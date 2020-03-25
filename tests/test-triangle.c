@@ -46,16 +46,16 @@ static wlu_otma_mems ma = {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFF_DATA, app, ALLOC_INDEX_IGNORE, 2);
+  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 2);
   if (err) return err;
 
-  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_SC_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_GP_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_CMD_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
   return err;
@@ -356,13 +356,17 @@ START_TEST(test_vulkan_client_create) {
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
 
   /* set fence to unsignal state */
-  err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, 0);
+  err = wlu_vk_sync(WLU_VK_RESET_RENDER_FENCE, app, cur_scd, 0);
   check_err(err, app, wc, NULL)
 
   err = wlu_queue_graphics_queue(app, cur_scd, 0, 1, cmd_buffs, 1, acquire_sems, pipe_stage_flags, 1, render_sems);
   check_err(err, app, wc, NULL)
 
   err = wlu_queue_present_queue(app, 1, render_sems, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
+  check_err(err, app, wc, NULL)
+
+  /* This allows for all objects to be properly destroyed, via synchronous wait */
+  err = wlu_vk_sync(WLU_VK_WAIT_PRESENT_QUEUE, app, INDEX_IGNORE, INDEX_IGNORE);
   check_err(err, app, wc, NULL)
 
   sleep(1);

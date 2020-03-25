@@ -57,19 +57,19 @@ struct uniform_block_data {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFF_DATA, app, ALLOC_INDEX_IGNORE, 9);
+  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 9);
   if (err) return err;
 
-  err = wlu_otba(WLU_SC_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_SC_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_GP_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_GP_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_CMD_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_CMD_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
-  err = wlu_otba(WLU_DESC_DATA, app, ALLOC_INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_DESC_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
   return err;
@@ -446,12 +446,12 @@ START_TEST(test_vulkan_client_create) {
   VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
   VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-  while (1) {
+  for (int c = 0; c < 999; c++) {
     acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
     render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
 
     /* set fence to signal state */
-    err = wlu_call_vkfence(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
+    err = wlu_vk_sync(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
 
     err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &img_index);
@@ -467,15 +467,17 @@ START_TEST(test_vulkan_client_create) {
     err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
     check_err(err, app, wc, NULL)
 
+    /* Check if a previous frame is using image */
     if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
-      err = wlu_call_vkfence(WLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
+      err = wlu_vk_sync(WLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
       check_err(err, app, wc, NULL)
     }
 
+    /* Mark the image as being in use by current frame */
     app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
 
     /* set fence to unsignal state */
-    err = wlu_call_vkfence(WLU_VK_RESET_FENCE, app, cur_scd, cur_frame);
+    err = wlu_vk_sync(WLU_VK_RESET_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
 
     err = wlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, &cmd_buffs[img_index], 1, &acquire_sems[cur_frame], &wait_stage, 1, &render_sems[cur_frame]);
@@ -487,6 +489,11 @@ START_TEST(test_vulkan_client_create) {
     cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
 
+  /* This allows for all objects to be properly destroyed, via synchronous wait */
+  err = wlu_vk_sync(WLU_VK_WAIT_PRESENT_QUEUE, app, INDEX_IGNORE, INDEX_IGNORE);
+  check_err(err, app, wc, NULL)
+
+  sleep(1);
   FREEME(app, wc)
 } END_TEST;
 
@@ -511,7 +518,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  // sleep(6);
+  sleep(6);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

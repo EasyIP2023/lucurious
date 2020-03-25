@@ -27,7 +27,7 @@ project(
   'c',
   version: '0.0.1',
   license: 'MIT',
-  meson_version: '>=0.52.0',
+  meson_version: '>=0.53.0',
   default_options: [
     'c_std=gnu18',
     'warning_level=2',

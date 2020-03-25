@@ -25,22 +25,22 @@
 wayland_client = dependency('wayland-client')
 
 wayland_scanner_client = generator(
-	wayland_scanner,
-	output: '@BASENAME@-client-protocol.h',
-	arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
+  wayland_scanner,
+  output: '@BASENAME@-client-protocol.h',
+  arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
 )
 
 # Create corresponding C glue code from wayland xml protocls extension files
 wayland_client_cglue = []
 foreach p : wayland_protos_shared
-	xml = join_paths(p)
-	wayland_client_cglue += wayland_scanner_client.process(xml)
+  xml = join_paths(p)
+  wayland_client_cglue += wayland_scanner_client.process(xml)
 endforeach
 
 lib_wclient = static_library(
-	'wclient',
-	wayland_client_cglue,
-	files('create.c', 'setup.c'),
-	include_directories: lucur_inc,
-	dependencies: [wayland_client]
+  'wclient',
+  wayland_client_cglue,
+  files('create.c', 'setup.c'),
+  include_directories: lucur_inc,
+  dependencies: [wayland_client]
 )

@@ -35,14 +35,16 @@
 * unit measured in nanoseconds
 */
 #define GENERAL_TIMEOUT 100000000
-#define ALLOC_INDEX_IGNORE -1
+#define INDEX_IGNORE -1
 
-typedef enum _wlu_call_vkfence_type {
-  WLU_VK_WAIT_RENDER_FENCE = 0x0000,
-  WLU_VK_WAIT_IMAGE_FENCE = 0x0001,
-  WLU_VK_RESET_FENCE = 0x0002,
-  WLU_VK_GET_FENCE = 0x0003
-} wlu_call_vkfence_type;
+typedef enum _wlu_sync_type {
+  WLU_VK_WAIT_RENDER_FENCE = 0x0000,   /* Set render fence to signal state */
+  WLU_VK_WAIT_IMAGE_FENCE = 0x0001,    /* Set image fence to signal state */
+  WLU_VK_WAIT_PRESENT_QUEUE = 0x0002,  /* Synchronously wait on the present queue */
+  WLU_VK_WAIT_GRAPHICS_QUEUE = 0x0003, /* Synchronously wait on the present queue */
+  WLU_VK_RESET_RENDER_FENCE = 0x0004,  /* Set Render Fence in unsignaled state */
+  WLU_VK_GET_RENDER_FENCE = 0x0005     /* Get the state of the fence */
+} wlu_sync_type;
 
 typedef enum _wlu_image_view_type {
   WLU_SC_IMAGE_VIEWS = 0x0000,   /* Swapchain image views */
@@ -104,7 +106,7 @@ typedef struct _vkcomp {
     } *sc_buffs;
 
     /**
-    * VkFence image:
+    * VkFence image: Used to have a sync object to wait on before a new frame can use that image
     * VkFence render: Used to signal that a frame has finished rendering
     * VkSemaphore image: Signal that a swapchaine image has been acquire
     * VkSemaphore render: Signal that an swapchain image is ready for & done rendering

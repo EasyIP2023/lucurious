@@ -33,13 +33,13 @@ wayland_scanner_server = generator(
 # Create corresponding C glue code from wayland xml protocls extension files
 wayland_server_cglue = []
 foreach p : wayland_protos_shared
-	xml = join_paths(p)
-	wayland_server_cglue += wayland_scanner_server.process(xml)
+  xml = join_paths(p)
+  wayland_server_cglue += wayland_scanner_server.process(xml)
 endforeach
 
 lib_wserver = static_library(
-	'wserver',
-	wayland_server_cglue,
-	include_directories: lucur_inc,
-	dependencies: [wayland_server]
+  'wserver',
+  wayland_server_cglue,
+  include_directories: lucur_inc,
+  dependencies: [wayland_server]
 )
