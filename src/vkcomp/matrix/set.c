@@ -23,12 +23,12 @@
 */
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_VKCOMP_MATRIX_API
+#define LUCUR_MATH_API
 #include <lucom.h>
 
 #include <cglm/call.h>
 
-float wlu_set_fovy(float fovy) {
+float wlu_set_radian(float fovy) {
   return glm_rad(fovy);
 }
 

@@ -31,7 +31,7 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
-float wlu_set_fovy(float fovy);
+float wlu_set_radian(float fovy);
 
 void wlu_set_perspective(mat4 proj, float fovy, float aspect, float nearVal, float farVal);
 

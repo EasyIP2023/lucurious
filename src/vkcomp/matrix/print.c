@@ -68,7 +68,7 @@ void vec_print(vec2 vec, wlu_vec_type type) {
   fprintf(stdout, "\x1b[0m" "\n");
 }
 
-void wlu_print_vector(void *vector, wlu_vec_type type) {
+void wlu_print_vector(wlu_vec_type type, void *vector) {
   switch (type) {
     case WLU_VEC2: vec_print(*((vec2*) vector), type); break;
     case WLU_VEC3: vec_print(*((vec3*) vector), type); break;
@@ -76,7 +76,7 @@ void wlu_print_vector(void *vector, wlu_vec_type type) {
   }
 }
 
-void wlu_print_matrix(void *matrix, wlu_matrix_type type) {
+void wlu_print_matrix(wlu_matrix_type type, void *matrix) {
   switch (type) {
     case WLU_MAT3: mat3_print(*((mat3*) matrix)); break;
     case WLU_MAT4: mat4_print(*((mat4*) matrix)); break;

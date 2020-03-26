@@ -131,7 +131,7 @@ START_TEST(test_vulkan_client_create) {
   VkExtent2D extent2D = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0; ALL_UNUSED(cur_buff); 
   err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
@@ -308,8 +308,8 @@ START_TEST(test_vulkan_client_create) {
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(&vertices[i].pos, WLU_VEC2);
-    wlu_print_vector(&vertices[i].color, WLU_VEC3);
+    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
+    wlu_print_vector(WLU_VEC3, &vertices[i].color);
   }
 
   err = wlu_create_vk_buffer(
@@ -439,14 +439,15 @@ START_TEST(test_vulkan_client_create) {
   wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
                              extent2D.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
-  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
-  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-  wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
-
-  const VkDeviceSize offsets[1] = {0};
-  wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, offsets);
-  wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
-  wlu_cmd_draw_indexed(app, cur_pool, cur_buff, index_count, 1, 0, offsets[0], 0);
+  const VkDeviceSize offsets[1] = {0}; /* Bind and draw in all available command buffers */
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
+    wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
+    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
+    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+    wlu_bind_desc_sets(app, cur_pool, i, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[i], 0, NULL);
+    wlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
+  }
 
   wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
@@ -456,10 +457,11 @@ START_TEST(test_vulkan_client_create) {
   uint32_t cur_frame = 0, img_index;
 
   struct uniform_block_data ubd;
-  float fovy = wlu_set_fovy(45.0f);
+  float fovy = wlu_set_radian(45.0f);
   float hw = (float) extent2D.width / (float) extent2D.height;
   if (extent2D.width > extent2D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
+  wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
 
   VkCommandBuffer cmd_buffs[app->sc_data[cur_scd].sic];
@@ -481,8 +483,8 @@ START_TEST(test_vulkan_client_create) {
 
     current = wlu_hrnst();
     wlu_set_matrix(ubd.model, model_matrix_default, WLU_MAT4);
-    wlu_set_rotate(ubd.model, ubd.model, ((float) (current - start) / 1000000000.0f) * wlu_set_fovy(90.0f), WLU_Z);
-    wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
+    wlu_set_rotate(ubd.model, ubd.model, ((float) (current - start) / 1000000000.0f) * wlu_set_radian(90.0f), WLU_Z);
+    wlu_print_matrix(WLU_MAT4, ubd.model);
 
     err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
     check_err(err, app, wc, NULL)

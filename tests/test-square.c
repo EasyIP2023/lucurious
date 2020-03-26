@@ -285,8 +285,8 @@ START_TEST(test_vulkan_client_create) {
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(&vertices[i].pos, WLU_VEC2);
-    wlu_print_vector(&vertices[i].color, WLU_VEC3);
+    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
+    wlu_print_vector(WLU_VEC3, &vertices[i].color);
   }
 
   err = wlu_create_vk_buffer(

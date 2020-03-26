@@ -56,17 +56,17 @@ static struct uniform_block_data {
 static void wlu_print_matrices() {
   wlu_log_me(WLU_INFO, "Perspective Matrix");
   wlu_log_me(WLU_INFO, "Projection from camera to screen");
-  wlu_print_matrix(ubd.proj, WLU_MAT4);
+  wlu_print_matrix(WLU_MAT4, ubd.proj);
   wlu_log_me(WLU_INFO, "View Matrix");
   wlu_log_me(WLU_INFO, "View from world space to camera space");
-  wlu_print_matrix(ubd.view, WLU_MAT4);
+  wlu_print_matrix(WLU_MAT4, ubd.view);
   wlu_log_me(WLU_INFO, "Model Matrix");
   wlu_log_me(WLU_INFO, "Mapping object's local coordinate space into world space");
-  wlu_print_matrix(ubd.model, WLU_MAT4);
+  wlu_print_matrix(WLU_MAT4, ubd.model);
   wlu_log_me(WLU_INFO, "Clip Matrix");
-  wlu_print_matrix(ubd.clip, WLU_MAT4);
+  wlu_print_matrix(WLU_MAT4, ubd.clip);
   wlu_log_me(WLU_INFO, "MVP Matrix");
-  wlu_print_matrix(ubd.mvp, WLU_MAT4);
+  wlu_print_matrix(WLU_MAT4, ubd.mvp);
 }
 
 static bool init_buffs(vkcomp *app) {
@@ -186,7 +186,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
   check_err(err, app, wc, NULL)
 
-  float fovy = wlu_set_fovy(45.0f);
+  float fovy = wlu_set_radian(45.0f);
   float hw = (float) extent2D.width / (float) extent2D.height;
   if (extent2D.width > extent2D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 100.0f);
@@ -405,7 +405,7 @@ START_TEST(test_vulkan_client_create_3D) {
   wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
                              extent2D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-  wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
+  wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[0], 0, NULL);
 
   for (uint32_t i = 0; i < app->bdc; i++) {
     wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);

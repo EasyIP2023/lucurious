@@ -37,10 +37,11 @@ void wlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  uint32_t cur_dd,
   uint32_t cur_gpd,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t firstSet,
+  uint32_t descriptorSetCount,
+  const VkDescriptorSet *pDescriptorSets,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 );

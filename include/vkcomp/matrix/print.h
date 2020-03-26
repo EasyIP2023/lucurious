@@ -25,8 +25,8 @@
 #ifndef WLU_VKCOMP_MATRIX_PRINT_H
 #define WLU_VKCOMP_MATRIX_PRINT_H
 
-void wlu_print_vector(void *vector, wlu_vec_type type);
+void wlu_print_vector(wlu_vec_type type, void *vector);
 
-void wlu_print_matrix(void *matrix, wlu_matrix_type type);
+void wlu_print_matrix(wlu_matrix_type type, void *matrix);
 
 #endif
