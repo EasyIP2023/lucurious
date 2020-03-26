@@ -71,7 +71,7 @@ VkResult wlu_create_instance(
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Instance"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateInstance"); }
 
   return res;
 }
@@ -89,7 +89,7 @@ VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl
   create_info.surface = (struct wl_surface *) wl_surface;
 
   res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
-  if (res) PERR(WLU_VK_CREATE_ERR, res, "WaylandSurfaceKHR")
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateWaylandSurfaceKHR")
 
   return res;
 }
@@ -107,7 +107,7 @@ VkResult wlu_create_physical_device(
   if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
-  if (res) { PERR(WLU_VK_ENUM_ERR, res, "PhysicalDevices"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
 
   if (device_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] failed to find GPU with Vulkan support!!!");
@@ -117,7 +117,7 @@ VkResult wlu_create_physical_device(
   devices = (VkPhysicalDevice *) alloca(device_count * sizeof(VkPhysicalDevice));
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
-  if (res) { PERR(WLU_VK_ENUM_ERR, res, "PhysicalDevices"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
 
   /**
   * get a physical device that is suitable
@@ -241,7 +241,7 @@ VkResult wlu_create_logical_device(
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Device"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateDevice"); return res; }
 
   /**
   * Queues are automatically created with
@@ -328,7 +328,7 @@ VkResult wlu_create_swap_chain(
   }
 
   res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->sc_data[cur_scd].swap_chain);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "SwapchainKHR"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }
 
   return res;
 }
@@ -349,17 +349,17 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
         * Removal of function will result in validation layer errors
         */
         res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, NULL);
-        if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
+        if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
 
         imgs = (VkImage *) alloca(app->sc_data[cur_index].sic * sizeof(VkImage));
 
         res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, imgs);
-        if (res) { PERR(WLU_VK_GET_ERR, res, "SwapchainImagesKHR"); return res; }
+        if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
 
         for (uint32_t i = 0; i < app->sc_data[cur_index].sic; i++) {
           img_view_info->image = app->sc_data[cur_index].sc_buffs[i].image = imgs[i];
           res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_index].sc_buffs[i].view);
-          if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
+          if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
         }
       }
 
@@ -371,7 +371,7 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
       */
       img_view_info->image = app->text_data[cur_index].image;
       res = vkCreateImageView(app->device, img_view_info, NULL, &app->text_data[cur_index].view);
-      if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); return res; }
+      if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
 
       break;
     default: break;
@@ -395,7 +395,7 @@ VkResult wlu_create_depth_buff(
 
   /* Create image object */
   res = vkCreateImage(app->device, img_info, NULL, &app->sc_data[cur_scd].depth.image);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); return res; }
 
   /**
   * Although you know the width, height, and the size of a buffer element,
@@ -422,16 +422,16 @@ VkResult wlu_create_depth_buff(
 
   /* Allocate memory */
   res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->sc_data[cur_scd].depth.mem);
-  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "Memory"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   /* Associate memory with image object by binding */
   res = vkBindImageMemory(app->device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);
-  if (res) { PERR(WLU_VK_BIND_ERR, res, "ImageMemory"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
 
   /* Create an image view object for depth buffer */
   img_view_info->image = app->sc_data[cur_scd].depth.image;
   res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_scd].depth.view);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "ImageView"); }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView")
 
   return res;
 }
@@ -465,7 +465,7 @@ VkResult wlu_create_vk_buffer(
 
   app->buff_data[cur_bd].name = buff_name;
   res = vkCreateBuffer(app->device, &create_info, NULL, &app->buff_data[cur_bd].buff);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Buffer"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateBuffer"); return res; }
 
   VkMemoryRequirements mem_reqs;
   vkGetBufferMemoryRequirements(app->device, app->buff_data[cur_bd].buff, &mem_reqs);
@@ -478,17 +478,14 @@ VkResult wlu_create_vk_buffer(
 
   /* find a suitable memory type for VkBuffer */
   res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
-  if (!res) {
-    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
-    return res;
-  }
+  if (!res) { PERR(WLU_MEM_TYPE_ERR, 0, NULL) return res; }
 
   res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buff_data[cur_bd].mem);
-  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "Memory"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   /* associate the memory allocated with the buffer object */
   res = vkBindBufferMemory(app->device, app->buff_data[cur_bd].buff, app->buff_data[cur_bd].mem, 0);
-  if (res) { PERR(WLU_VK_BIND_ERR, res, "BufferMemory"); }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkBindBufferMemory")
 
   return res;
 }
@@ -511,7 +508,7 @@ VkResult wlu_create_buff_mem_map(
   */
   void *p_data = NULL;
   res = vkMapMemory(app->device, app->buff_data[cur_bd].mem, 0, app->buff_data[cur_bd].size, 0, &p_data);
-  if (res) { PERR(WLU_VK_MAP_ERR, res, "Memory"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
 
   if (data) {
     p_data = memmove(p_data, data, app->buff_data[cur_bd].size);
@@ -532,7 +529,7 @@ VkResult wlu_create_buff_mem_map(
 
   /* refresh the cache */
   res = vkFlushMappedMemoryRanges(app->device, 1, &flush_range);
-  if (res) { PERR(WLU_VK_FLUSH_ERR, res, "MappedMemoryRanges"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkFlushMappedMemoryRanges"); return res; }
 
   vkUnmapMemory(app->device, app->buff_data[cur_bd].mem);
 
@@ -568,7 +565,7 @@ VkResult wlu_create_framebuffers(
     create_info.layers = layers;
 
     res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].fb);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Framebuffer"); return res; }
+    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateFramebuffer"); return res; }
   }
 
   return res;
@@ -593,7 +590,7 @@ VkResult wlu_create_cmd_pool(
   create_info.queueFamilyIndex = queueFamilyIndex;
 
   res = vkCreateCommandPool(app->device, &create_info, NULL, &app->cmd_data[cur_cmdd].cmd_pool);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "CommandPool"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateCommandPool"); return res; }
 
   return res;
 }
@@ -617,7 +614,7 @@ VkResult wlu_create_cmd_buffs(
   alloc_info.commandBufferCount = app->sc_data[cur_scd].sic;
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_data[cur_pool].cmd_buffs);
-  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "CommandBuffers"); return res; }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers")
 
   return res;
 }
@@ -646,13 +643,13 @@ VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.image);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Semaphore"); return res; }
+    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
 
     res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.render);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Semaphore"); return res; }
+    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
 
     res = vkCreateFence(app->device, &fence_info, NULL, &app->sc_data[cur_scd].syncs[i].fence.render);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "Fence"); return res; }
+    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateFence"); return res; }
   }
 
   return res;
@@ -670,7 +667,7 @@ VkResult wlu_create_texture_image(
   if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
 
   res = vkCreateImage(app->device, img_info, NULL, &app->text_data[cur_tex].image);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Image"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); }
 
   VkMemoryRequirements mem_reqs;
   vkGetImageMemoryRequirements(app->device, app->text_data[cur_tex].image, &mem_reqs);
@@ -683,13 +680,10 @@ VkResult wlu_create_texture_image(
   
   /* find a suitable memory type for image */
   res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
-  if (!res) {
-    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
-    return res;
-  }
+  if (!res) { PERR(WLU_MEM_TYPE_ERR, 0, NULL); return res; }
 
   res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->text_data[cur_tex].mem);
-  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "Memory"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   vkBindImageMemory(app->device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
 
@@ -702,7 +696,7 @@ VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCrea
   if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
 
   res = vkCreateSampler(app->device, sample_info, NULL, &app->text_data[cur_tex].sampler);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "Sampler"); }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateSampler")
 
   return res;
 }

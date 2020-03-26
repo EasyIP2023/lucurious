@@ -23,14 +23,15 @@
 */
 
 #ifndef WLU_VKCOMP_SETUP_FUNCS_H
+#define WLU_VKCOMP_SETUP_FUNCS_H
 
 /* Initailize vulkan struct */
 vkcomp *wlu_init_vk();
 
-/* Free up swap chain to recreate window */
+/* Free up all swapchain related memory, must reinitialize these objects */
 void wlu_freeup_sc(void *data);
 
-/* Free up any and all allocated vkcomp related memory */
+/* Free up all allocated vkcomp related memory */
 void wlu_freeup_vk(void *data);
 
 #endif

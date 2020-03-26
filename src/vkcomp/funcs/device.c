@@ -54,7 +54,7 @@ VkResult get_extension_properties(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, size, NULL);
-  if (res) { PERR(WLU_VK_ENUM_ERR, res, (app) ? "InstanceExtensionProperties" : "DeviceExtensionProperties"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, (app) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   /* Rare but may happen for instances. If so continue on with the app */
   if (*size == 0) return VK_RESULT_MAX_ENUM;
@@ -64,7 +64,7 @@ VkResult get_extension_properties(
   if (!(*eprops)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
   res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, size, *eprops);
-  if (res) { PERR(WLU_VK_ENUM_ERR, res, (app) ? "InstanceExtensionProperties" : "DeviceExtensionProperties"); return res; }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, (app) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   return res;
 }

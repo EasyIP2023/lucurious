@@ -196,6 +196,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(1, &vi_binding, 2, vi_attribs);
 
+  /* This also sets the descriptor count */
   err = wlu_otba(WLU_DESC_DATA_MEMS, app, cur_dd, app->sc_data[cur_scd].sic);
   check_err(err, app, wc, NULL)
 
@@ -292,34 +293,38 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, frag_shader_module)
 
   wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
-  wlu_freeup_shader(app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
-  wlu_freeup_shader(app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
-
+  wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
   /* Ending setup for graphics pipeline */
 
-  /* Start of vertex buffer */
-  vertex_2D verts[4] = {
+  /* Start of staging buffer for vertex */
+  vertex_2D vertices[4] = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
   };
-  VkDeviceSize vsize = sizeof(verts);
+  VkDeviceSize vsize = sizeof(vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
+
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(&verts[i].pos, WLU_VEC2);
-    wlu_print_vector(&verts[i].color, WLU_VEC3);
+    wlu_print_vector(&vertices[i].pos, WLU_VEC2);
+    wlu_print_vector(&vertices[i].color, WLU_VEC3);
   }
 
-  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(
+    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, verts);
+  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
   check_err(err, app, wc, NULL)
   cur_bd++;
+  /* End of staging buffer for vertex */
+
+  /* Start of vertex buffer */
 
   /**
   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -329,9 +334,11 @@ START_TEST(test_vulkan_client_create) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
+  err = wlu_create_vk_buffer(
+    app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -341,13 +348,18 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_exec_copy_buffer(app, cur_pool, 0, 1, 0, 0, vsize);
   check_err(err, app, wc, NULL)
-  /* End of vertex buffer creation */
+  /* End of vertex buffer */
 
-  /* Start of index buffer creation */
+  /* Destroy staging buffer as it is no longer needed */
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
+
+  /* Start of staging buffer for index */
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = isize / sizeof(uint16_t); /* 2 bytes */
-  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(
+    app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
@@ -355,10 +367,14 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_buff_mem_map(app, cur_bd, indices);
   check_err(err, app, wc, NULL)
   cur_bd++;
+  /* End of staging buffer for index */
 
-  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
+  /* Start of index buffer */
+  err = wlu_create_vk_buffer(
+    app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i',
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -368,7 +384,11 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_exec_copy_buffer(app, cur_pool, 2, 3, 0, 0, isize);
   check_err(err, app, wc, NULL)
-  /* End of index buffer creation */
+  /* End of index buffer */
+
+  /* Destroy staging buffer as it is no longer needed */
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
 
   /* Now Creating uniform buffers */
   for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
@@ -400,6 +420,12 @@ START_TEST(test_vulkan_client_create) {
     wlu_update_desc_sets(app, 1, &write, 0, NULL);
   }
 
+  wlu_log_me(WLU_SUCCESS, "ALL ALLOCATED BUFFERS");
+  for (uint32_t i = 0; i < app->bdc; i++) {
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
+  }
+
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   uint32_t uint32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -409,15 +435,10 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_exec_begin_cmd_buffs(app, cur_pool, cur_scd, 0, NULL);
   check_err(err, app, wc, NULL)
 
-  wlu_log_me(WLU_SUCCESS, "ALL ALLOCATED BUFFERS");
-  for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
-    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
-  }
-
   /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
                              extent2D.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+
   wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   wlu_bind_desc_sets(app, cur_pool, cur_buff, cur_dd, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 0, NULL);
@@ -425,7 +446,6 @@ START_TEST(test_vulkan_client_create) {
   const VkDeviceSize offsets[1] = {0};
   wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, offsets);
   wlu_bind_index_buff_to_cmd_buff(app, cur_pool, cur_buff, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
-
   wlu_cmd_draw_indexed(app, cur_pool, cur_buff, index_count, 1, 0, offsets[0], 0);
 
   wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
@@ -488,10 +508,6 @@ START_TEST(test_vulkan_client_create) {
 
     cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
-
-  /* This allows for all objects to be properly destroyed, via synchronous wait */
-  err = wlu_vk_sync(WLU_VK_WAIT_PRESENT_QUEUE, app, INDEX_IGNORE, INDEX_IGNORE);
-  check_err(err, app, wc, NULL)
 
   sleep(1);
   FREEME(app, wc)

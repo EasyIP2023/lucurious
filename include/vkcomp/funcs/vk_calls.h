@@ -22,45 +22,13 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_ALL_H
-#define WLU_VKCOMP_ALL_H
+#ifndef WLU_VKCOMP_VK_CALLS_FUNCS_H
+#define WLU_VKCOMP_VK_CALLS_FUNCS_H
 
-#include "funcs/create.h"
-#include "funcs/display.h"
-#include "funcs/exec.h"
-#include "funcs/set.h"
-#include "funcs/setup.h"
-#include "funcs/utils.h"
-#include "funcs/vlayer.h"
-#include "funcs/vk_calls.h"
+/* Allows for vulkan synchronization function calling within lucurious */
+VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
 
-#include "gp/bind.h"
-#include "gp/cmd.h"
-#include "gp/create.h"
-#include "gp/exec.h"
-#include "gp/set.h"
-#include "gp/update.h"
-
-#ifdef LUCUR_VKCOMP_MATRIX_API
-#include "matrix/print.h"
-#include "matrix/set.h"
-#endif
-
-#ifdef INAPI_CALLS
-#include "funcs/device.h"
-/* Dynamically retrieve a VkInstance function */
-#define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
-  do { \
-    var = (PFN_vk##func) vkGetInstanceProcAddr(inst, "vk" #func); \
-    if (!var) PERR(WLU_DR_INSTANCE_PROC_ADDR_ERR, 0, #func); \
-  } while(0);
-
-/* Dynamically retrieve a VkDevice (logical device) function */
-#define WLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
-  do { \
-    var = (PFN_vk##func) vkGetDeviceProcAddr(dev, "vk" #func); \
-    if (!var) PERR(WLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \
-  } while(0);
-#endif
+/* Allows for more developer vulkan object destruction control */
+void wlu_vk_destroy(wlu_destroy_type type, vkcomp *app, void *data);
 
 #endif

@@ -29,7 +29,7 @@ math = cc.find_library('m')
 funcs_files = [
   'funcs/create.c', 'funcs/device.c', 'funcs/display.c', 
   'funcs/exec.c', 'funcs/set.c', 'funcs/setup.c', 
-  'funcs/utils.c', 'funcs/vlayer.c'
+  'funcs/utils.c', 'funcs/vlayer.c', 'funcs/vk_calls.c'
 ]
 
 gp_files = [

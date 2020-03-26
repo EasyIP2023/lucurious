@@ -25,8 +25,6 @@
 #ifndef WLU_GP_CREATE_H
 #define WLU_GP_CREATE_H
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module);
-
 VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
 
 VkResult wlu_create_render_pass(

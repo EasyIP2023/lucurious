@@ -61,9 +61,6 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_
 */
 VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t cur_sync, uint32_t *cur_img);
 
-/* Allows for vkFence related function calling */
-VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
-
 /**
 * Puts command buffers into the graphics queue, to be received and processed by the GPU
 * cur_scd: Current swap chain struct index data member

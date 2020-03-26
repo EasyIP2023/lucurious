@@ -34,7 +34,7 @@
 
 #define check_err(err,app,wc,shader) \
   do { \
-    if (!shader && err) wlu_freeup_shader(app, shader); \
+    if (!shader && err) wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, shader); \
     if (err) { FREEME(app, wc); ck_abort_msg(NULL); } \
   } while(0);
 

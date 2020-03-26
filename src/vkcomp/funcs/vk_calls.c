@@ -1,0 +1,148 @@
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019-2020 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
+#define LUCUR_VKCOMP_API
+#include <lucom.h>
+
+VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  switch (type) {
+    case WLU_VK_WAIT_IMAGE_FENCE: /* set render fence to signal state */
+      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.image, VK_TRUE, GENERAL_TIMEOUT);
+      if (res) PERR(WLU_VK_FUNC_ERR, res, "vkWaitForFences")
+      break;
+    case WLU_VK_WAIT_RENDER_FENCE: /* set image fence to signal state */
+      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
+      if (res) PERR(WLU_VK_FUNC_ERR, res, "vkWaitForFences")
+      break;
+    case WLU_VK_WAIT_PRESENT_QUEUE:
+      res = vkQueueWaitIdle(app->present_queue);
+      if (res) PERR(WLU_VK_FUNC_ERR, res, "vkQueueWaitIdle")
+      break;
+    case WLU_VK_WAIT_GRAPHICS_QUEUE:
+      res = vkQueueWaitIdle(app->graphics_queue);
+      if (res) PERR(WLU_VK_FUNC_ERR, res, "vkQueueWaitIdle") 
+      break;
+    case WLU_VK_RESET_RENDER_FENCE: /* set fence to unsignaled state */
+      res = vkResetFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render);
+      if (res) PERR(WLU_VK_FUNC_ERR, res, "vkResetFences")
+      break;
+    case WLU_VK_GET_RENDER_FENCE:
+      res = vkGetFenceStatus(app->device, app->sc_data[cur_scd].syncs[synci].fence.render);
+      switch(res) {
+        case VK_SUCCESS:
+          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is signaled.", cur_scd, synci);
+          break;
+        case VK_NOT_READY:
+          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is unsignaled.", cur_scd, synci);
+          break;
+        case VK_ERROR_DEVICE_LOST:
+          wlu_log_me(WLU_WARNING, "The device has been lost.");
+          break;
+        default: break;
+      }
+    break;
+    default: break;
+  }
+
+  return res;
+}
+
+void wlu_vk_destroy(wlu_destroy_type type, vkcomp *app, void *data) {
+  switch (type) {
+      case WLU_DESTROY_VK_SHADER:
+        {VkShaderModule shader_module = (VkShaderModule) data;
+         if (shader_module) vkDestroyShaderModule(app->device, shader_module, NULL);} 
+        break;
+      case WLU_DESTROY_VK_BUFFER:
+        {VkBuffer buff = (VkBuffer) data;
+         if (buff) vkDestroyBuffer(app->device, buff, NULL);}
+        break;
+      case WLU_DESTROY_VK_MEMORY:
+        {VkDeviceMemory mem = (VkDeviceMemory) data;
+         if (mem) vkFreeMemory(app->device, mem, NULL);}
+        break;
+      case WLU_DESTROY_VK_CMD_POOL:
+        {VkCommandPool pool = (VkCommandPool) data; 
+         if (pool) vkDestroyCommandPool(app->device, pool, NULL); }
+        break;
+      case WLU_DESTROY_VK_DESC_POOL:
+        {VkDescriptorPool pool = (VkDescriptorPool) data; 
+         if (pool) vkDestroyDescriptorPool(app->device, pool, NULL); }
+        break;
+      case WLU_DESTROY_VK_DESC_SET_LAYOUT:
+        {VkDescriptorSetLayout layout = (VkDescriptorSetLayout) data;
+         if (layout) vkDestroyDescriptorSetLayout(app->device, layout, NULL); }
+        break;
+      case WLU_DESTROY_PIPELINE_CACHE:
+        {VkPipelineCache cache = (VkPipelineCache) data;
+         if (cache) vkDestroyPipelineCache(app->device, cache, NULL); }
+        break;
+      case WLU_DESTROY_VK_FRAME_BUFFER:
+        {VkFramebuffer frame = (VkFramebuffer) data;
+         if (frame) vkDestroyFramebuffer(app->device, frame, NULL);}
+        break;
+      case WLU_DESTROY_VK_RENDER_PASS:
+        {VkRenderPass rp = (VkRenderPass) data;
+         if (rp) vkDestroyRenderPass(app->device, rp, NULL);}
+        break;
+      case WLU_DESTROY_VK_PIPE_LAYOUT:
+        {VkPipelineLayout pipe_layout = (VkPipelineLayout) data;
+         if (pipe_layout) vkDestroyPipelineLayout(app->device, pipe_layout, NULL);}
+        break;
+      case WLU_DESTROY_PIPELINE:
+        {VkPipeline pipeline = (VkPipeline) data;
+         if (pipeline) vkDestroyPipeline(app->device, pipeline, NULL);}
+        break;
+      case WLU_DESTROY_VK_SAMPLER:
+        {VkSampler sampler = (VkSampler) data;
+         if (sampler) vkDestroySampler(app->device, sampler, NULL);}
+        break;
+      case WLU_DESTROY_VK_IMAGE:
+        {VkImage image = (VkImage) data;
+         if (image) vkDestroyImage(app->device, image, NULL);}
+        break;
+      case WLU_DESTROY_VK_IMAGE_VIEW:
+        {VkImageView view = (VkImageView) data;
+         if (view) vkDestroyImageView(app->device, view, NULL);}
+        break;
+      case WLU_DESTROY_VK_SWAPCHAIN:
+        {VkSwapchainKHR swapchain = (VkSwapchainKHR) data;
+         if (swapchain) vkDestroySwapchainKHR(app->device, swapchain, NULL);}
+        break;
+      case WLU_DESTROY_VK_SEMAPHORE:
+        {VkSemaphore semaphore = (VkSemaphore) data;
+         if (semaphore) vkDestroySemaphore(app->device, semaphore, NULL);}
+        break;
+      case WLU_DESTROY_VK_FENCE:
+        {VkFence fence = (VkFence) data;
+         if (fence) vkDestroyFence(app->device, fence, NULL);}
+        break;
+      case WLU_DESTROY_VK_LOGIC_DEVICE:
+         if (app->device) vkDestroyDevice(app->device, NULL);
+        break;
+      default: break;
+  }
+}

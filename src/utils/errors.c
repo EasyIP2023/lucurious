@@ -128,41 +128,11 @@ void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
     case WLU_DR_DEVICE_PROC_ADDR_ERR:
       wlu_log_me(WLU_DANGER, "[x] vkGetDeviceProcAddr: Unable to find %s function", wlu_msg);
       break;
-    case WLU_VK_ENUM_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkEnumerate%s: %s", wlu_msg, vkres_msg(vkerr));
+    case WLU_VK_FUNC_ERR:
+      wlu_log_me(WLU_DANGER, "[x] %s:", wlu_msg, vkres_msg(vkerr));
       break;
-    case WLU_VK_CREATE_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkCreate%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_ALLOC_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkAllocate%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_BEGIN_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkBegin%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_END_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkEnd%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_QUEUE_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkQueue%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_GET_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkGet%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_BIND_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkBind%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_MAP_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkMap%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_FLUSH_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkFlush%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_RESET_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkReset%s: %s", wlu_msg, vkres_msg(vkerr));
-      break;
-    case WLU_VK_WAIT_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkWait%s: %s", wlu_msg, vkres_msg(vkerr));
+    case WLU_MEM_TYPE_ERR:
+      wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
       break;
     case WLU_VKCOMP_INSTANCE:
       wlu_log_me(WLU_DANGER, "[x] A Vulkan Instance must be created");

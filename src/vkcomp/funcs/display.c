@@ -44,7 +44,7 @@ VkSurfaceCapabilitiesKHR wlu_get_physical_device_surface_capabilities(vkcomp *ap
   /* Not going to check if physical device present user should know by now */
   err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(app->physical_device, app->surface, &capabilities);
   if (err) {
-    PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceCapabilitiesKHR");
+    PERR(WLU_VK_FUNC_ERR, err, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
     capabilities.minImageCount = UINT32_MAX;
     return capabilities;
   }
@@ -62,7 +62,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL);  return ret_fmt; }
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, NULL);
-  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
+  if (err) { PERR(WLU_VK_FUNC_ERR, err, "vkGetPhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
 
   if (format_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device surface formats");
@@ -72,7 +72,7 @@ VkSurfaceFormatKHR wlu_choose_swap_surface_format(vkcomp *app, VkFormat format, 
   formats = (VkSurfaceFormatKHR *) alloca(format_count * sizeof(VkSurfaceFormatKHR));
 
   err = vkGetPhysicalDeviceSurfaceFormatsKHR(app->physical_device, app->surface, &format_count, formats);
-  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
+  if (err) { PERR(WLU_VK_FUNC_ERR, err, "vkGetPhysicalDeviceSurfaceFormatsKHR"); return ret_fmt; }
 
   ret_fmt = formats[0];
 
@@ -101,7 +101,7 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return best_mode; }
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, NULL);
-  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
+  if (err) { PERR(WLU_VK_FUNC_ERR, err, "vkGetPhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
 
   if (pres_mode_count == 0) {
     wlu_log_me(WLU_DANGER, "[x] Failed to find Physical Device presentation modes");
@@ -111,7 +111,7 @@ VkPresentModeKHR wlu_choose_swap_present_mode(vkcomp *app) {
   present_modes = (VkPresentModeKHR *) alloca(pres_mode_count * sizeof(VkPresentModeKHR));
 
   err = vkGetPhysicalDeviceSurfacePresentModesKHR(app->physical_device, app->surface, &pres_mode_count, present_modes);
-  if (err) { PERR(WLU_VK_GET_ERR, err, "PhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
+  if (err) { PERR(WLU_VK_FUNC_ERR, err, "vkGetPhysicalDeviceSurfacePresentModesKHR"); return best_mode; }
 
   /* Only mode that is guaranteed */
   best_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -147,56 +147,6 @@ VkExtent2D wlu_choose_swap_extent(VkSurfaceCapabilitiesKHR cap, uint32_t width, 
   return extent;
 }
 
-VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci) {
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  switch (type) {
-    case WLU_VK_WAIT_IMAGE_FENCE: /* set render fence to signal state */
-      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.image, VK_TRUE, GENERAL_TIMEOUT);
-      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); }
-      break;
-    case WLU_VK_WAIT_RENDER_FENCE: /* set image fence to signal state */
-      res = vkWaitForFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
-      if (res) { PERR(WLU_VK_WAIT_ERR, res, "ForFences"); }
-      break;
-    case WLU_VK_WAIT_PRESENT_QUEUE:
-      res = vkQueueWaitIdle(app->present_queue);
-      if (res) { PERR(WLU_VK_QUEUE_ERR, res, "WaitIdle"); }
-      break;
-    case WLU_VK_WAIT_GRAPHICS_QUEUE:
-      res = vkQueueWaitIdle(app->graphics_queue);
-      if (res) { PERR(WLU_VK_QUEUE_ERR, res, "WaitIdle"); }
-      break;
-    case WLU_VK_RESET_RENDER_FENCE: /* set fence to unsignaled state */
-      res = vkResetFences(app->device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render);
-      if (res) { PERR(WLU_VK_RESET_ERR, res, "Fences"); }
-      break;
-    case WLU_VK_GET_RENDER_FENCE:
-      res = vkGetFenceStatus(app->device, app->sc_data[cur_scd].syncs[synci].fence.render);
-      switch(res) {
-        case VK_SUCCESS:
-          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is signaled.", cur_scd, synci);
-          break;
-        case VK_NOT_READY:
-          wlu_log_me(WLU_WARNING, "The fence specified app->sc_data[%d].syncs[%d].fence.render is unsignaled.", cur_scd, synci);
-          break;
-        case VK_ERROR_DEVICE_LOST:
-          wlu_log_me(WLU_WARNING, "The device has been lost.");
-          break;
-        default: break;
-      }
-    break;
-    default: break;
-  }
-
-  return res;
-}
-
-/**
-* Vince: KEEP COMMENT FOR FUTURE REFERENCE
-* https://www.reddit.com/r/vulkan/comments/5vzijc/question_about_vksemaphore_usage/
-* Need to change function to work with both VkSemaphores/VkFences
-*/
 VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t cur_sync, uint32_t *cur_img) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
@@ -205,10 +155,7 @@ VkResult wlu_acquire_sc_image_index(vkcomp *app, uint32_t cur_scd, uint32_t cur_
   /* Signal image semaphore */
   res = vkAcquireNextImageKHR(app->device, app->sc_data[cur_scd].swap_chain, GENERAL_TIMEOUT,
                               app->sc_data[cur_scd].syncs[cur_sync].sem.image, VK_NULL_HANDLE, cur_img);
-  if (res == VK_ERROR_OUT_OF_DATE_KHR) {
-    wlu_freeup_sc(app);
-    return res;
-  }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkAcquireNextImageKHR")
 
   return res;
 }
@@ -243,7 +190,7 @@ VkResult wlu_queue_graphics_queue(
   * VkFence render: Used to signal that a frame has finished rendering
   */
   res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, app->sc_data[cur_scd].syncs[synci].fence.render);
-  if (res) { PERR(WLU_VK_QUEUE_ERR, res, "Submit"); }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkQueueSubmit")
 
   return res;
 }
@@ -270,10 +217,7 @@ VkResult wlu_queue_present_queue(
   present.pResults = pResults;
 
   res = vkQueuePresentKHR(app->present_queue, &present);
-  if (res) { PERR(WLU_VK_QUEUE_ERR, res, "PresentKHR"); return res; }
-
-  if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
-    wlu_freeup_sc(app);
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkQueuePresentKHR")
 
   return res;
 }

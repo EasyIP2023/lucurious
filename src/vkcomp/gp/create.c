@@ -25,10 +25,6 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-void wlu_freeup_shader(vkcomp *app, VkShaderModule shader_module) {
-  if (shader_module) vkDestroyShaderModule(app->device, shader_module, NULL);
-}
-
 VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size) {
   VkResult err;
   VkShaderModule shader_module = VK_NULL_HANDLE;
@@ -43,7 +39,7 @@ VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_siz
   create_info.pCode = (const uint32_t *) code;
 
   err = vkCreateShaderModule(app->device, &create_info, NULL, &shader_module);
-  if (err) { PERR(WLU_VK_CREATE_ERR, err, "ShaderModule"); }
+  if (err) { PERR(WLU_VK_FUNC_ERR, err, "vkCreateShaderModule"); }
 
   if (err == VK_SUCCESS)
     wlu_log_me(WLU_SUCCESS, "Shader module successfully created");
@@ -78,7 +74,7 @@ VkResult wlu_create_render_pass(
   render_pass_info.pDependencies = pDependencies;
 
   res = vkCreateRenderPass(app->device, &render_pass_info, NULL, &app->gp_data[cur_gpd].render_pass);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "RenderPass"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateRenderPass"); }
 
   return res;
 }
@@ -129,7 +125,7 @@ VkResult wlu_create_graphics_pipelines(
   pipeline_info.basePipelineIndex = basePipelineIndex;
 
   res = vkCreateGraphicsPipelines(app->device, app->pipeline_cache, 1, &pipeline_info, NULL, app->gp_data[cur_gpd].graphics_pipelines);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "GraphicsPipelines"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateGraphicsPipelines"); }
 
   return res;
 }
@@ -145,7 +141,7 @@ VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const vo
   create_info.pInitialData = pInitialData;
 
   res = vkCreatePipelineCache(app->device, &create_info, NULL, &app->pipeline_cache);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "PipelineCache"); }
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreatePipelineCache"); }
 
   return res;
 }
@@ -178,7 +174,7 @@ VkResult wlu_create_pipeline_layout(
   }
 
   res = vkCreatePipelineLayout(app->device, &create_info, NULL, &app->gp_data[cur_gpd].pipeline_layout);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "PipelineLayout"); }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreatePipelineLayout")
 
   return res;
 }
@@ -194,7 +190,7 @@ VkResult wlu_create_desc_set_layouts(
 
   for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
     res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, &app->desc_data[cur_dd].desc_layouts[i]);
-    if (res) { PERR(WLU_VK_CREATE_ERR, res, "DescriptorSetLayout"); return res; }
+    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout"); return res; }
   }
 
   return res;
@@ -218,7 +214,7 @@ VkResult wlu_create_desc_pool(
   create_info.pPoolSizes = pool_sizes;
 
   res = vkCreateDescriptorPool(app->device, &create_info, NULL, &app->desc_data[cur_dd].desc_pool);
-  if (res) { PERR(WLU_VK_CREATE_ERR, res, "DescriptorPool"); return res; }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateDescriptorPool")
 
   return res;
 }
@@ -243,7 +239,7 @@ VkResult wlu_create_desc_set(
   alloc_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
 
   res = vkAllocateDescriptorSets(app->device, &alloc_info, app->desc_data[cur_dd].desc_set);
-  if (res) { PERR(WLU_VK_ALLOC_ERR, res, "DescriptorSets"); return res; }
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkAllocateDescriptorSets")
 
   return res;
 }

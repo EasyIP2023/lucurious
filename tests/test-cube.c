@@ -388,8 +388,8 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, frag_shader_module)
 
   wlu_log_me(WLU_SUCCESS, "Successfully created graphics pipeline");
-  wlu_freeup_shader(app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
-  wlu_freeup_shader(app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
 
   VkClearValue clear_values[2];
   float float32[4] = {0.2f, 0.2f, 0.2f, 0.2f};
@@ -437,10 +437,6 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   err = wlu_queue_present_queue(app, 1, render_sems, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
-  check_err(err, app, wc, NULL)
-
-  /* This allows for all objects to be properly destroyed, via synchronous wait */
-  err = wlu_vk_sync(WLU_VK_WAIT_PRESENT_QUEUE, app, INDEX_IGNORE, INDEX_IGNORE);
   check_err(err, app, wc, NULL)
 
   sleep(1);

@@ -99,6 +99,10 @@ void wlu_freeup_sc(void *data) {
 void wlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
+  /* Synchronous wait for present queue to empty. So that all objects can be properly destroyed */
+  if (app->present_queue)
+    vkQueueWaitIdle(app->present_queue);
+
   if (app->debug_report_callback)
     app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
 
