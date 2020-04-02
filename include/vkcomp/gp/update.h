@@ -37,6 +37,7 @@ VkWriteDescriptorSet wlu_write_desc_set(
   const VkBufferView *pTexelBufferView
 );
 
+/* Update the configurations of descriptors */
 void wlu_update_desc_sets(
   vkcomp *app,
   uint32_t descriptorWriteCount,

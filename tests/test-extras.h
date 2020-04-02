@@ -55,6 +55,7 @@ const char *enabled_validation_layers[] = {
   "VK_LAYER_KHRONOS_validation"
 };
 
+#ifdef LUCUR_MATH_API
 /* used in test-cube */
 vec3 eye = {-5, 3, -10};
 vec3 center = {0, 0, 0};
@@ -65,20 +66,6 @@ mat4 clip_matrix = {
   { 0.0f,-1.0f, 0.0f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 0.0f },
   { 0.0f, 0.0f, 0.5f, 1.0f },
-};
-
-mat4 model_matrix = {
-  { 1.0f, 0.0f, 0.0f, 0.0f },
-  { 0.0f, 1.0f, 0.0f, 0.0f },
-  { 0.0f, 0.0f, 1.0f, 0.0f },
-  { 0.0f, 0.0f, 0.0f, 1.0f }
-};
-
-mat4 model_matrix_default = {
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f },
-  { 1.0f, 1.0f, 1.0f, 1.0f }
 };
 
 // { position }, { color }
@@ -128,14 +115,15 @@ vertex_3D vertices[36] = {
 };
 /* used in test-cube */
 
-/* used in test-square */
+/* used in test-square and test-rotate-rect.c */
 uint16_t indices[6] = {0, 1, 2, 2, 3, 0};
-/* used in test-square */
+/* used in test-square and test-rotate-rect.c */
 
 /* used in test-spin-square.c */
 vec3 spin_eye = {2.0f, 2.0f, 2.0f};
 vec3 spin_center = {0.0f, 0.0f, 0.0f};
 vec3 spin_up = {0.0f, 0.0f, 1.0f};
 /* used in test-spin-square.c */
+#endif
 
 #endif

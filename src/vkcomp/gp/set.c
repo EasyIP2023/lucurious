@@ -61,6 +61,7 @@ VkAttachmentReference wlu_set_attachment_ref(
 }
 
 VkSubpassDescription wlu_set_subpass_desc(
+  VkPipelineBindPoint pipelineBindPoint,
   uint32_t inputAttachmentCount,
   const VkAttachmentReference *pInputAttachments,
   uint32_t colorAttachmentCount,
@@ -74,7 +75,7 @@ VkSubpassDescription wlu_set_subpass_desc(
   VkSubpassDescription subpass = {};
   subpass.flags = 0;
   /* used to indicate if this is a graphics or a compute subpass */
-  subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subpass.pipelineBindPoint = pipelineBindPoint;
   subpass.inputAttachmentCount = inputAttachmentCount;
   subpass.pInputAttachments = pInputAttachments;
   subpass.colorAttachmentCount = colorAttachmentCount;

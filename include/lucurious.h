@@ -33,6 +33,11 @@
 #include "spirv/all.h"
 #endif
 
+#ifdef LUCUR_MATH_API
+#include "math/types.h"
+#include "math/all.h"
+#endif
+
 #ifdef LUCUR_VKCOMP_API
 #include "vkcomp/types.h"
 #include "vkcomp/all.h"

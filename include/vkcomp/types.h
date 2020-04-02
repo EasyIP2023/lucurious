@@ -25,8 +25,6 @@
 #ifndef WLU_VKCOMP_TYPES_H
 #define WLU_VKCOMP_TYPES_H
 
-#include <cglm/types.h>
-
 #define VK_USE_PLATFORM_WAYLAND_KHR
 #include <vulkan/vulkan.h>
 
@@ -71,33 +69,6 @@ typedef enum _wlu_image_view_type {
   WLU_SC_IMAGE_VIEWS   = 0x0000, /* Swapchain image views */
   WLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
 } wlu_image_view_type;
-
-typedef enum _wlu_rotate_type {
-  WLU_X = 0x0000,
-  WLU_Y = 0x0001,
-  WLU_Z = 0x0002
-} wlu_rotate_type;
-
-typedef enum _wlu_vec_type {
-  WLU_VEC2 = 0x0000,
-  WLU_VEC3 = 0x0001,
-  WLU_VEC4 = 0x0002
-} wlu_vec_type;
-
-typedef enum _wlu_matrix_type {
-  WLU_MAT3 = 0x0000,
-  WLU_MAT4 = 0x0001
-} wlu_matrix_type;
-
-typedef struct _vertex_2D {
-  vec2 pos;
-  vec3 color;
-} vertex_2D;
-
-typedef struct _vertex_3D {
-  vec4 pos;
-  vec4 color;
-} vertex_3D;
 
 typedef struct _vkcomp {
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;

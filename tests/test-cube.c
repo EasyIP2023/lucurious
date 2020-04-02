@@ -25,7 +25,7 @@
 #include <check.h>
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_VKCOMP_MATRIX_API
+#define LUCUR_MATH_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
@@ -191,8 +191,8 @@ START_TEST(test_vulkan_client_create_3D) {
   if (extent2D.width > extent2D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 100.0f);
   wlu_set_lookat(ubd.view, eye, center, up);
-  wlu_set_matrix(ubd.model, model_matrix, WLU_MAT4);
-  wlu_set_matrix(ubd.clip, clip_matrix, WLU_MAT4);
+  wlu_set_matrix(WLU_MAT4_IDENTITY, ubd.model, NULL);
+  wlu_set_matrix(WLU_MAT4, ubd.clip, clip_matrix);
   wlu_set_mvp_matrix(ubd.mvp, &ubd.clip, &ubd.proj, &ubd.view, &ubd.model);
   wlu_print_matrices();
 
@@ -259,7 +259,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkAttachmentReference color_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
   VkAttachmentReference depth_ref = wlu_set_attachment_ref(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-  VkSubpassDescription subpass = wlu_set_subpass_desc(0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
+  VkSubpassDescription subpass = wlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
 
   err = wlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL);
   check_err(err, app, wc, NULL)

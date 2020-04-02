@@ -156,11 +156,7 @@ bool wlu_create_wc_buffer(wclient *wc, uint32_t width, uint32_t height) {
   if (!wc->shm_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return false; }
 
   /* then memmove contents from the buff (which is a wayland shared file) into the block */
-  wc->shm_data = memmove(wc->shm_data, buff, size);
-  if (!wc->shm_data) {
-    wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy file content");
-    return false;
-  }
+  memmove(wc->shm_data, buff, size);
 
   pool = wl_shm_create_pool(wc->shm, fd, size);
   wc->buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);

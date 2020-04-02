@@ -47,6 +47,7 @@ VkAttachmentReference wlu_set_attachment_ref(
 );
 
 VkSubpassDescription wlu_set_subpass_desc(
+  VkPipelineBindPoint pipelineBindPoint,
   uint32_t inputAttachmentCount,
   const VkAttachmentReference *pInputAttachments,
   uint32_t colorAttachmentCount,

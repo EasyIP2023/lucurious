@@ -23,8 +23,6 @@
 #
 
 vulkan = dependency('vulkan')
-cglm = cc.find_library('cglm')
-math = cc.find_library('m')
 
 funcs_files = [
   'funcs/create.c', 'funcs/device.c', 'funcs/display.c', 
@@ -33,15 +31,13 @@ funcs_files = [
 ]
 
 gp_files = [
-	'gp/bind.c', 'gp/cmd.c', 'gp/create.c',
-	'gp/exec.c', 'gp/set.c', 'gp/update.c'
+  'gp/bind.c', 'gp/cmd.c', 'gp/create.c',
+  'gp/exec.c', 'gp/set.c', 'gp/update.c'
 ]
 
-matrix_files = ['matrix/print.c', 'matrix/set.c']
-
 lib_vkcomp = static_library(
-	'lvkcomp',
-	files(funcs_files, gp_files, matrix_files),
-	include_directories: lucur_inc,
-	dependencies: [vulkan,cglm,math]
+  'lvkcomp',
+  files(funcs_files, gp_files),
+  include_directories: lucur_inc,
+  dependencies: [vulkan,math]
 )

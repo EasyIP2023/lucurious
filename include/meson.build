@@ -38,6 +38,12 @@ spirv_hs = ['spirv/all.h', 'spirv/file.h', 'spirv/shade.h', 'spirv/types.h']
 install_headers(spirv_hs, install_dir: i_dir + 'spirv')
 
 #############################
+#  Installing math headers  #
+#############################
+math_hs = ['math/all.h', 'math/types.h', 'math/print.h', 'math/set.h']
+install_headers(math_hs, install_dir: i_dir + 'math')
+
+#############################
 # Installing vkcomp headers #
 #############################
 vkcomp_i_dir = i_dir + 'vkcomp/'
@@ -62,12 +68,6 @@ vkcomp_gp_hs = [
   'vkcomp/gp/exec.h', 'vkcomp/gp/set.h', 'vkcomp/gp/update.h'
 ]
 install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
-
-####################################
-# Installing vkcomp matrix headers #
-####################################
-vkcomp_matrix_hs = ['vkcomp/matrix/print.h', 'vkcomp/matrix/set.h']
-install_headers(vkcomp_matrix_hs, install_dir: vkcomp_i_dir + 'matrix')
 
 ##############################
 # Installing wayland headers #

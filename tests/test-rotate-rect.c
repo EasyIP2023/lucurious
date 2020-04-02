@@ -26,7 +26,7 @@
 #include <check.h>
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_VKCOMP_MATRIX_API
+#define LUCUR_MATH_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
@@ -164,10 +164,7 @@ START_TEST(test_vulkan_client_create) {
   );
 
   VkAttachmentReference color_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-  VkSubpassDescription subpass = wlu_set_subpass_desc(
-    0, NULL, 1, &color_ref, NULL, NULL, 0, NULL
-  );
+  VkSubpassDescription subpass = wlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_ref, NULL, NULL, 0, NULL);
 
   VkSubpassDependency subdep = wlu_set_subpass_dep(VK_SUBPASS_EXTERNAL, 0,
     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
@@ -201,10 +198,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
-  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(
-    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL
-  );
-
+  VkDescriptorSetLayoutBinding desc_set = wlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_layout_info(0, 1, &desc_set);
 
   /* Using same layout for all obects for now */
@@ -299,11 +293,10 @@ START_TEST(test_vulkan_client_create) {
 
   /* Start of staging buffer for vertex */
   vertex_2D vertices[4] = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
   };
+
   VkDeviceSize vsize = sizeof(vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
@@ -390,7 +383,11 @@ START_TEST(test_vulkan_client_create) {
   wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
   wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
 
-  /* Now Creating uniform buffers */
+  /**
+  * Now Creating uniform buffers
+  * Passing u character here so that wlu_freeup_sc() function can
+  * destroy uniform buffers allowing for easier swap chain recreation
+  */
   for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
     err = wlu_create_vk_buffer(app, i, sizeof(struct uniform_block_data), 0,
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
@@ -404,7 +401,7 @@ START_TEST(test_vulkan_client_create) {
   /* Done creating uniform buffers */
 
   VkDescriptorPoolSize pool_size = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
-  err = wlu_create_desc_pool(app, cur_dd, 0, 1, &pool_size);
+  err = wlu_create_desc_pool(app, cur_dd, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, 1, &pool_size);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_desc_set(app, cur_dd);
@@ -436,8 +433,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
-                             extent2D.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
   const VkDeviceSize offsets[1] = {0}; /* Bind and draw in all available command buffers */
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
@@ -453,25 +449,23 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
   check_err(err, app, wc, NULL)
 
-  uint64_t current = 0, start = wlu_hrnst();
+  uint64_t time = 0, start = wlu_hrnst();
   uint32_t cur_frame = 0, img_index;
 
   struct uniform_block_data ubd;
-  float fovy = wlu_set_radian(45.0f);
+  float convert = 1000000000.0f;
+  float fovy = wlu_set_radian(45.0f), angle = wlu_set_radian(90.f);
   float hw = (float) extent2D.width / (float) extent2D.height;
   if (extent2D.width > extent2D.height) fovy *= hw;
   wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
   wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
-
+    
   VkCommandBuffer cmd_buffs[app->sc_data[cur_scd].sic];
   VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
   VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-  for (int c = 0; c < 999; c++) {
-    acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
-    render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
-
+  for (int c = 0; c < 3000; c++) {
     /* set fence to signal state */
     err = wlu_vk_sync(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
@@ -480,10 +474,12 @@ START_TEST(test_vulkan_client_create) {
     check_err(err, app, wc, NULL)
 
     cmd_buffs[img_index] = app->cmd_data[cur_cmdd].cmd_buffs[img_index];
+    acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
+    render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
 
-    current = wlu_hrnst();
-    wlu_set_matrix(ubd.model, model_matrix_default, WLU_MAT4);
-    wlu_set_rotate(ubd.model, ubd.model, ((float) (current - start) / 1000000000.0f) * wlu_set_radian(90.0f), WLU_Z);
+    time = wlu_hrnst() - start;
+    wlu_set_matrix(WLU_MAT4_IDENTITY, ubd.model, NULL);
+    wlu_set_rotate(WLU_AXIS_Z, ubd.model, ((float) time / convert) * angle, spin_up);
     wlu_print_matrix(WLU_MAT4, ubd.model);
 
     err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
@@ -511,7 +507,6 @@ START_TEST(test_vulkan_client_create) {
     cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
 
-  sleep(1);
   FREEME(app, wc)
 } END_TEST;
 

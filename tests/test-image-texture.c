@@ -27,7 +27,7 @@
 /* This File is not finished */
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_VKCOMP_MATRIX_API
+#define LUCUR_MATH_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
@@ -167,9 +167,7 @@ START_TEST(test_vulkan_client_create) {
 
   VkAttachmentReference color_attachment_ref = wlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-  VkSubpassDescription subpass = wlu_set_subpass_desc(
-    0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL
-  );
+  VkSubpassDescription subpass = wlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL);
 
   VkSubpassDependency subdep = wlu_set_subpass_dep(
     VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,

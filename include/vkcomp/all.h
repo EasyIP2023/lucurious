@@ -41,11 +41,6 @@
 #include "gp/set.h"
 #include "gp/update.h"
 
-#ifdef LUCUR_VKCOMP_MATRIX_API
-#include "matrix/print.h"
-#include "matrix/set.h"
-#endif
-
 #ifdef INAPI_CALLS
 #include "funcs/device.h"
 /* Dynamically retrieve a VkInstance function */

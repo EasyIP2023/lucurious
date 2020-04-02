@@ -126,11 +126,6 @@ VkResult wlu_create_physical_device(
   for (uint32_t i = 0; i < device_count; i++) {
     if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
       memmove(&app->physical_device, &devices[i], sizeof(devices[i]));
-      if (!app->physical_device) {
-        wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy physical device information");
-        break;
-      }
-
       wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
     }
@@ -509,14 +504,7 @@ VkResult wlu_create_buff_mem_map(
   void *p_data = NULL;
   res = vkMapMemory(app->device, app->buff_data[cur_bd].mem, 0, app->buff_data[cur_bd].size, 0, &p_data);
   if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
-
-  if (data) {
-    p_data = memmove(p_data, data, app->buff_data[cur_bd].size);
-    if (!p_data) {
-      wlu_log_me(WLU_DANGER, "[x] memmove failed: Failed to copy vertex data into CPU accessible memory");
-      return res;
-    }
-  }
+  if (data) memmove(p_data, data, app->buff_data[cur_bd].size);
 
   VkMappedMemoryRange flush_range;
   flush_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;

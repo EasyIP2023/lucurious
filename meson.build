@@ -53,7 +53,7 @@ subdir('include')
 subdir('src')
 
 lucur_parts = [
-  lib_utils, lib_shade,
+  lib_utils, lib_shade, lib_math,
   lib_vkcomp, lib_lwayland
 ]
 

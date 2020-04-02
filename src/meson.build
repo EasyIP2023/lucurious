@@ -24,6 +24,7 @@
 
 subdir('utils')
 subdir('spirv')
+subdir('math')
 subdir('vkcomp')
 subdir('wayland')
 subdir('exec')
