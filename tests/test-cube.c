@@ -219,7 +219,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_layout_info(0, 1, &desc_set);
 
-  /* Using same layout for all obects for now */
+  /* Using same layout for all VkDescriptorSetLayout objects */
   err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
   check_err(err, app, wc, NULL)
 

@@ -229,4 +229,10 @@ VkClearValue wlu_set_clear_value(
   uint32_t stencil
 );
 
+VkDescriptorImageInfo wlu_set_desc_img_info(
+  VkSampler sampler,
+  VkImageView imageView,
+  VkImageLayout imageLayout
+);
+
 #endif

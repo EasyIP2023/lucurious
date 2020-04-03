@@ -24,13 +24,13 @@
 
 #include <check.h>
 
-/* This File is not finished */
-
 #define LUCUR_VKCOMP_API
 #define LUCUR_MATH_API
 #define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
+#define LUCUR_CLOCK_API
+#define CLOCK_MONOTONIC
 #include <lucom.h>
 
 #include "test-extras.h"
@@ -38,6 +38,7 @@
 
 #define WIDTH 800
 #define HEIGHT 600
+#define MAX_FRAMES 2
 
 char *concat(char *fmt, ...);
 
@@ -45,6 +46,13 @@ static wlu_otma_mems ma = {
   .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
   .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
   .cmdd_cnt = 10, .bd_cnt = 10, .td_cnt = 10
+};
+
+/* Be sure to make struct binary compatible with shader variable */
+struct uniform_block_data {
+  mat4 model;
+  mat4 view;
+  mat4 proj;
 };
 
 static bool init_buffs(vkcomp *app) {
@@ -60,6 +68,9 @@ static bool init_buffs(vkcomp *app) {
   if (err) return err;
 
   err = wlu_otba(WLU_CMD_DATA, app, INDEX_IGNORE, 1);
+  if (err) return err;
+
+  err = wlu_otba(WLU_DESC_DATA, app, INDEX_IGNORE, 1);
   if (err) return err;
 
   err = wlu_otba(WLU_TEXT_DATA, app, INDEX_IGNORE, 1);
@@ -125,7 +136,7 @@ START_TEST(test_vulkan_client_create) {
   VkExtent2D extent = wlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
+  uint32_t cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
   err = wlu_otba(WLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(err, app, wc, NULL)
 
@@ -148,14 +159,6 @@ START_TEST(test_vulkan_client_create) {
 
   /* This is where creation of the graphics pipeline begins */
   err = wlu_create_syncs(app, cur_scd);
-  check_err(err, app, wc, NULL)
-
-  /* Acquire the swapchain image in order to set its layout */
-  uint32_t cur_img, cur_frame = 0;
-  err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
-  check_err(err, app, wc, NULL)
-
-  err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -187,7 +190,8 @@ START_TEST(test_vulkan_client_create) {
 
   err = wlu_create_pipeline_cache(app, 0, NULL);
   check_err(err, app, wc, NULL)
-  
+
+  /* Start of image loader */
   void *pixels = NULL; VkDeviceSize img_size; VkExtent3D img_extent;
   char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg"); 
  
@@ -197,6 +201,7 @@ START_TEST(test_vulkan_client_create) {
 
   wlu_log_me(WLU_SUCCESS, "textures/water_train.jpg successfully loaded", picture);
   free(picture); picture = NULL;
+  /* End of image loader */
 
   img_size = img_extent.width * img_extent.height * 4;
 
@@ -277,14 +282,46 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_texture_sampler(app, cur_tex, &sampler);
   check_err(err, app, wc, NULL)
 
-  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(0, NULL, 0, NULL);
+  /* 0 is the binding. The # of is bytes there is between successive structs */
+  VkVertexInputBindingDescription vi_binding = wlu_set_vertex_input_binding_desc(0, sizeof(vertex_text_2D), VK_VERTEX_INPUT_RATE_VERTEX);
+
+  VkVertexInputAttributeDescription vi_attribs[3];
+  vi_attribs[0] = wlu_set_vertex_input_attrib_desc(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_text_2D, pos));
+  vi_attribs[1] = wlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_text_2D, color));
+  vi_attribs[2] = wlu_set_vertex_input_attrib_desc(2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_text_2D, tex_coord));
+
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = wlu_set_vertex_input_state_info(1, &vi_binding, 3, vi_attribs);
+
+  /* This also sets the descriptor count */
+  err = wlu_otba(WLU_DESC_DATA_MEMS, app, cur_dd, app->sc_data[cur_scd].sic);
+  check_err(err, app, wc, NULL)
+
+  /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
+  VkDescriptorSetLayoutBinding bindings[2];
+  bindings[0] = wlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  bindings[1] = wlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
+
+  VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_layout_info(0, 2, bindings);
+
+  /* Using mutiple layouts for all VkDescriptorSetLayout objects */
+  err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
+  check_err(err, app, wc, NULL)
+
+  for (uint32_t x = 0; x < app->desc_data[cur_dd].dlsc; x++)
+    wlu_log_me(WLU_INFO, "VkDescriptorLayout: %p - %p", &app->desc_data[cur_dd].layouts[x], app->desc_data[cur_dd].layouts[x]);  
+
+  err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
+  check_err(err, app, wc, NULL)
+
+  exit(0);
+
   wlu_log_me(WLU_INFO, "Start of shader creation");
   wlu_log_me(WLU_WARNING, "Compiling the fragment shader code to spirv bytes");
-  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT, shader_frag_src, "frag.spv", "main");
+  wlu_shader_info shi_frag = wlu_compile_to_spirv(VK_SHADER_STAGE_FRAGMENT_BIT, text_map_frag_src, "frag.spv", "main");
   check_err(!shi_frag.bytes, app, wc, NULL)
 
   wlu_log_me(WLU_WARNING, "Compiling the vertex shader code into spirv bytes");
-  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT, shader_vert_src, "vert.spv", "main");
+  wlu_shader_info shi_vert = wlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT, text_map_vert_src, "vert.spv", "main");
   check_err(!shi_vert.bytes, app, wc, NULL)
 
   VkShaderModule frag_shader_module = wlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
@@ -305,14 +342,8 @@ START_TEST(test_vulkan_client_create) {
     frag_shader_module, "main", VK_SHADER_STAGE_FRAGMENT_BIT, NULL
   );
 
-  VkPipelineShaderStageCreateInfo shader_stages[] = {
-    vert_shader_stage_info, frag_shader_stage_info
-  };
-
-  VkDynamicState dynamic_states[2] = {
-    VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_LINE_WIDTH
-  };
+  VkPipelineShaderStageCreateInfo shader_stages[2] = { vert_shader_stage_info, frag_shader_stage_info };
+  VkDynamicState dynamic_states[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
 
@@ -358,8 +389,152 @@ START_TEST(test_vulkan_client_create) {
   wlu_log_me(WLU_SUCCESS, "graphics pipeline creation successfull");
   wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
   wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
-
   /* Ending setup for graphics pipeline */
+
+  /* Start of staging buffer for vertex */
+  vertex_text_2D vertices[4] = {
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+  };
+
+  VkDeviceSize vsize = sizeof(vertices);
+  const uint32_t vertex_count = vsize / sizeof(vertex_2D);
+
+  for (uint32_t i = 0; i < vertex_count; i++) {
+    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
+    wlu_print_vector(WLU_VEC3, &vertices[i].color);
+  }
+
+  err = wlu_create_vk_buffer(
+    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+  /* End of staging buffer for vertex */
+
+  /* Start of vertex buffer */
+
+  /**
+  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+  * should be mapped so that the CPU (host) can access it.
+  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+  * writes to the memory by the host are visible to the device
+  * (and vice-versa) without the need to flush memory caches.
+  */
+  err = wlu_create_vk_buffer(
+    app, cur_bd, vsize, 0,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  );
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_buff_mem_map(app, cur_bd, NULL);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+
+  err = wlu_exec_copy_buffer(app, cur_pool, 0, 1, 0, 0, vsize);
+  check_err(err, app, wc, NULL)
+  /* End of vertex buffer */
+
+  /* Destroy staging buffer as it is no longer needed */
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
+
+  /* Start of staging buffer for index */
+  VkDeviceSize isize = sizeof(indices);
+  const uint32_t index_count = isize / sizeof(uint16_t); /* 2 bytes */
+  err = wlu_create_vk_buffer(
+    app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_buff_mem_map(app, cur_bd, indices);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+  /* End of staging buffer for index */
+
+  /* Start of index buffer */
+  err = wlu_create_vk_buffer(
+    app, cur_bd, isize, 0,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i',
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  );
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_buff_mem_map(app, cur_bd, NULL);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+
+  err = wlu_exec_copy_buffer(app, cur_pool, 2, 3, 0, 0, isize);
+  check_err(err, app, wc, NULL)
+  /* End of index buffer */
+
+  /* Destroy staging buffer as it is no longer needed */
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
+
+  /**
+  * Now Creating uniform buffers
+  * Passing u character here so that wlu_freeup_sc() function can
+  * destroy uniform buffers allowing for easier swap chain recreation
+  */
+  for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
+    err = wlu_create_vk_buffer(app, i, sizeof(struct uniform_block_data), 0,
+      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+    check_err(err, app, wc, NULL)
+    wlu_log_me(WLU_SUCCESS, "Just Allocated!!!");
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
+  }
+  /* Done creating uniform buffers */
+
+  VkDescriptorPoolSize pool_sizes[2];
+  pool_sizes[0] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
+  pool_sizes[1] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app->sc_data[cur_scd].sic);
+
+  err = wlu_create_desc_pool(app, cur_dd, 0, 2, pool_sizes);
+  check_err(err, app, wc, NULL)
+
+  err = wlu_create_desc_set(app, cur_dd);
+  check_err(err, app, wc, NULL)
+
+  /* set uniform buffer VKBufferInfos */
+  VkDescriptorBufferInfo buff_info;
+  VkWriteDescriptorSet writes[2];
+
+  VkDescriptorImageInfo desc_img_info = {};
+  desc_img_info.sampler = app->text_data[cur_tex].sampler;
+  desc_img_info.imageView = app->text_data[cur_tex].view;
+  desc_img_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    buff_info = wlu_set_desc_buff_info(app->buff_data[i+cur_bd].buff, 0, VK_WHOLE_SIZE);
+    writes[0] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 0, 0, 1,
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+    writes[1] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1,
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
+    wlu_update_desc_sets(app, 2, writes, 0, NULL);
+  }
+
+  wlu_log_me(WLU_SUCCESS, "ALL ALLOCATED BUFFERS");
+  for (uint32_t i = 0; i < app->bdc; i++) {
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
+    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
+  }
 
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -371,37 +546,80 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Drawing will start when you begin a render pass */
-  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent.width,
-                             extent.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  wlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
+  wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent.width, extent.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
-  wlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-
-  for (uint32_t i = 0; i < app->bdc; i++) {
-    wlu_log_me(WLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
-    wlu_log_me(WLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
+  const VkDeviceSize offsets[1] = {0}; /* Bind and draw in all available command buffers */
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
+    wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
+    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
+    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+    wlu_bind_desc_sets(app, cur_pool, i, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[i], 0, NULL);
+    wlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }
 
   wlu_exec_stop_render_pass(app, cur_pool, cur_scd);
   err = wlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
   check_err(err, app, wc, NULL)
 
-  VkPipelineStageFlags pipe_stage_flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  VkSemaphore acquire_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.image};
-  VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
-  VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
+  uint64_t time = 0, start = wlu_hrnst();
+  uint32_t cur_frame = 0, img_index;
 
-  /* set fence to unsignal state */
-  err = wlu_vk_sync(WLU_VK_RESET_RENDER_FENCE, app, cur_scd, 0);
-  check_err(err, app, wc, NULL)
+  struct uniform_block_data ubd;
+  float convert = 1000000000.0f;
+  float fovy = wlu_set_radian(45.0f), angle = wlu_set_radian(90.f);
+  float hw = (float) extent.width / (float) extent.height;
+  if (extent.width > extent.height) fovy *= hw;
+  wlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
+  wlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
+  ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
 
-  err = wlu_queue_graphics_queue(app, cur_scd, 0, 1, cmd_buffs, 1, acquire_sems, pipe_stage_flags, 1, render_sems);
-  check_err(err, app, wc, NULL)
+  VkCommandBuffer cmd_buffs[app->sc_data[cur_scd].sic];
+  VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
+  VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-  err = wlu_queue_present_queue(app, 1, render_sems, 1, &app->sc_data[cur_scd].swap_chain, &cur_buff, NULL);
-  check_err(err, app, wc, NULL)
+  for (uint32_t c = 0; c < 3000; c++) {
+    /* set fence to signal state */
+    err = wlu_vk_sync(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
+    check_err(err, app, wc, NULL)
 
-  sleep(1);
+    err = wlu_acquire_sc_image_index(app, cur_scd, cur_frame, &img_index);
+    check_err(err, app, wc, NULL)
+
+    cmd_buffs[img_index] = app->cmd_data[cur_cmdd].cmd_buffs[img_index];
+    acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
+    render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
+
+    time = wlu_hrnst() - start;
+    wlu_set_matrix(WLU_MAT4_IDENTITY, ubd.model, NULL);
+    wlu_set_rotate(WLU_AXIS_Z, ubd.model, ((float) time / convert) * angle, spin_up);
+    // wlu_print_matrix(WLU_MAT4, ubd.model);
+
+    err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
+    check_err(err, app, wc, NULL)
+
+    /* Check if a previous frame is using image */
+    if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
+      err = wlu_vk_sync(WLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
+      check_err(err, app, wc, NULL)
+    }
+
+    /* Mark the image as being in use by current frame */
+    app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
+
+    /* set fence to unsignal state */
+    err = wlu_vk_sync(WLU_VK_RESET_RENDER_FENCE, app, cur_scd, cur_frame);
+    check_err(err, app, wc, NULL)
+
+    err = wlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, &cmd_buffs[img_index], 1, &acquire_sems[cur_frame], &wait_stage, 1, &render_sems[cur_frame]);
+    check_err(err, app, wc, NULL)
+
+    err = wlu_queue_present_queue(app, 1, &render_sems[cur_frame], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);
+    check_err(err, app, wc, NULL)
+
+    cur_frame = (cur_frame + 1) % MAX_FRAMES;
+  }
+
   FREEME(app, wc)
 } END_TEST;
 

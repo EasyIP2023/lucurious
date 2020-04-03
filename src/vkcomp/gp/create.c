@@ -165,9 +165,10 @@ VkResult wlu_create_pipeline_layout(
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
+  /* Function may be called multiple times and descriptor data struct array members may not be needed */
   if (app->desc_data) {
     create_info.setLayoutCount = app->desc_data[cur_dd].dlsc;
-    create_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
+    create_info.pSetLayouts = app->desc_data[cur_dd].layouts;
   } else {
     create_info.setLayoutCount = 0;
     create_info.pSetLayouts = NULL;
@@ -182,14 +183,14 @@ VkResult wlu_create_pipeline_layout(
 VkResult wlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
-  VkDescriptorSetLayoutCreateInfo *desc_set_info /* Using same layout for all obects for now */
+  VkDescriptorSetLayoutCreateInfo *desc_set_info
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_DESC_DATA_MEMS"); return res; }
+  if (!app->desc_data[cur_dd].layouts) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_DESC_DATA_MEMS"); return res; }
 
   for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
-    res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, &app->desc_data[cur_dd].desc_layouts[i]);
+    res = vkCreateDescriptorSetLayout(app->device, desc_set_info, NULL, &app->desc_data[cur_dd].layouts[i]);
     if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout"); return res; }
   }
 
@@ -228,7 +229,7 @@ VkResult wlu_create_desc_set(
 
   if (!app->desc_data[cur_dd].desc_pool) { PERR(WLU_VKCOMP_DESC_POOL, 0, NULL); return res; }
   /* Leaving this error check here for now */
-  if (!app->desc_data[cur_dd].desc_layouts) { PERR(WLU_VKCOMP_DESC_LAYOUT, 0, NULL); return res; }
+  if (!app->desc_data[cur_dd].layouts) { PERR(WLU_VKCOMP_DESC_LAYOUT, 0, NULL); return res; }
   if (!app->desc_data[cur_dd].desc_set) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_DESC_DATA_MEMS"); return res; }
 
   VkDescriptorSetAllocateInfo alloc_info;
@@ -236,7 +237,7 @@ VkResult wlu_create_desc_set(
   alloc_info.pNext = NULL;
   alloc_info.descriptorPool = app->desc_data[cur_dd].desc_pool;
   alloc_info.descriptorSetCount = app->desc_data[cur_dd].dlsc;
-  alloc_info.pSetLayouts = app->desc_data[cur_dd].desc_layouts;
+  alloc_info.pSetLayouts = app->desc_data[cur_dd].layouts;
 
   res = vkAllocateDescriptorSets(app->device, &alloc_info, app->desc_data[cur_dd].desc_set);
   if (res) PERR(WLU_VK_FUNC_ERR, res, "vkAllocateDescriptorSets")

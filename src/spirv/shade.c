@@ -74,13 +74,13 @@ wlu_shader_info wlu_preprocess_shader(
   result = shaderc_compile_into_preprocessed_text(compiler, source, strlen(source), shader_map_table[kind],
                                                   input_file_name, entry_point_name, options);
   if (!result) {
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_preprocessed_text: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
   if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
-    wlu_log_me(WLU_DANGER, "[x] shaderc_result_get_compilation_status: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, result, options);
     return shinfo;
   }
@@ -117,13 +117,13 @@ wlu_shader_info wlu_compile_to_assembly(
   result = shaderc_compile_into_spv_assembly(compiler, source, strlen(source), shader_map_table[kind],
                                              input_file_name, entry_point_name, options);
   if (!result) {
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv_assembly: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
   if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
-    wlu_log_me(WLU_DANGER, "[x] shaderc_result_get_compilation_status: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, result, options);
     return shinfo;
   }
@@ -160,13 +160,13 @@ wlu_shader_info wlu_compile_to_spirv(
   result = shaderc_compile_into_spv(compiler, source, strlen(source), shader_map_table[kind],
                                     input_file_name, entry_point_name, options);
   if (!result) {
-    wlu_log_me(WLU_DANGER, "[x] shaderc_compile_into_spv: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, NULL, options);
     return shinfo;
   }
 
   if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
-    wlu_log_me(WLU_DANGER, "shaderc_result_get_compilation_status: %s", shaderc_result_get_error_message(result));
+    wlu_log_me(WLU_DANGER, "[x] %s", shaderc_result_get_error_message(result));
     wlu_shaderc_release(compiler, result, options);
     return shinfo;
   }

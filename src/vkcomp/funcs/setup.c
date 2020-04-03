@@ -65,10 +65,10 @@ void wlu_freeup_sc(void *data) {
         vkFreeCommandBuffers(app->device, app->cmd_data[i].cmd_pool, app->sc_data[i].sic, app->cmd_data[i].cmd_buffs);
   }
 
-  if (app->pipeline_cache)  /* leave like this for now */
+  if (app->pipeline_cache)
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
 
-  if (app->gp_data) { /* leave like this for now */
+  if (app->gp_data) {
     for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout)
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
@@ -113,7 +113,7 @@ void wlu_freeup_vk(void *data) {
     }
   }
 
-  if (app->pipeline_cache)  /* leave like this for now */
+  if (app->pipeline_cache)
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
  
   if (app->text_data) {
@@ -129,7 +129,7 @@ void wlu_freeup_vk(void *data) {
     }
   }
 
-  if (app->gp_data) { /* leave like this for now */
+  if (app->gp_data) {
     for (uint32_t i = 0; i < app->gdc; i++) {
       if (app->gp_data[i].pipeline_layout)
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
@@ -142,10 +142,10 @@ void wlu_freeup_vk(void *data) {
 
   if (app->desc_data) {
     for (uint32_t i = 0; i < app->ddc; i++) {
-      if (app->desc_data[i].desc_layouts) {
+      if (app->desc_data[i].layouts) {
         for (uint32_t j = 0; j < app->desc_data[i].dlsc; j++) {
-          if (app->desc_data[i].desc_layouts[j])
-            vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].desc_layouts[j], NULL);
+          if (app->desc_data[i].layouts[j])
+            vkDestroyDescriptorSetLayout(app->device, app->desc_data[i].layouts[j], NULL);
         }
       }
       if (app->desc_data[i].desc_pool)

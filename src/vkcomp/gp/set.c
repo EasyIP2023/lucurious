@@ -506,3 +506,17 @@ VkClearValue wlu_set_clear_value(
 
   return clear_value;
 }
+
+VkDescriptorImageInfo wlu_set_desc_img_info(
+  VkSampler sampler,
+  VkImageView imageView,
+  VkImageLayout imageLayout
+) {
+
+  VkDescriptorImageInfo create_info = {};
+  create_info.sampler = sampler;
+  create_info.imageView = imageView;
+  create_info.imageLayout = imageLayout;
+
+  return create_info;
+}

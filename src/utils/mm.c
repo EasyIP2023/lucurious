@@ -352,8 +352,8 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
     case WLU_DESC_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->desc_data[index].desc_layouts = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
-        if (!app->desc_data[index].desc_layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->desc_data[index].layouts = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
+        if (!app->desc_data[index].layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
 
         app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
         if (!app->desc_data[index].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }

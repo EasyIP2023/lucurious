@@ -25,6 +25,9 @@
 #ifndef LUCURIOUS_H
 #define LUCURIOUS_H
 
+/* Contains linear algebra types used throughout apps */
+#include <cglm/types.h>
+
 #include "utils/types.h"
 #include "utils/all.h"
 

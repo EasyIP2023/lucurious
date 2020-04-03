@@ -25,8 +25,6 @@
 #ifndef WLU_VKCOMP_MATH_TYPES_H
 #define WLU_VKCOMP_MATH_TYPES_H
 
-#include <cglm/types.h>
-
 typedef enum _wlu_rotate_type {
   WLU_X = 0x0000,
   WLU_Y = 0x0001,
@@ -46,15 +44,5 @@ typedef enum _wlu_matrix_type {
   WLU_MAT3_IDENTITY = 0x0002,
   WLU_MAT4_IDENTITY = 0x0003
 } wlu_matrix_type;
-
-typedef struct _vertex_2D {
-  vec2 pos;
-  vec3 color;
-} vertex_2D;
-
-typedef struct _vertex_3D {
-  vec4 pos;
-  vec4 color;
-} vertex_3D;
 
 #endif
