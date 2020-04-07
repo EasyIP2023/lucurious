@@ -58,7 +58,7 @@ struct uniform_block_data {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 1);
+  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 10);
   if (err) return err;
 
   err = wlu_otba(WLU_SC_DATA, app, INDEX_IGNORE, 1);
@@ -79,7 +79,7 @@ static bool init_buffs(vkcomp *app) {
   return err;
 }
 
-START_TEST(test_vulkan_client_create) {
+START_TEST(test_vulkan_image_texture) {
   VkResult err;
 
   if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
@@ -307,13 +307,8 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
   check_err(err, app, wc, NULL)
 
-  for (uint32_t x = 0; x < app->desc_data[cur_dd].dlsc; x++)
-    wlu_log_me(WLU_INFO, "VkDescriptorLayout: %p - %p", &app->desc_data[cur_dd].layouts[x], app->desc_data[cur_dd].layouts[x]);  
-
   err = wlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
-
-  exit(0);
 
   wlu_log_me(WLU_INFO, "Start of shader creation");
   wlu_log_me(WLU_WARNING, "Compiling the fragment shader code to spirv bytes");
@@ -441,7 +436,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, 0, 1, 0, 0, vsize);
+  err = wlu_exec_copy_buffer(app, cur_pool, 1, 2, 0, 0, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer */
 
@@ -477,7 +472,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, 2, 3, 0, 0, isize);
+  err = wlu_exec_copy_buffer(app, cur_pool, 3, 4, 0, 0, isize);
   check_err(err, app, wc, NULL)
   /* End of index buffer */
 
@@ -552,8 +547,8 @@ START_TEST(test_vulkan_client_create) {
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
-    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[2].buff, offsets);
+    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[4].buff, offsets[0], VK_INDEX_TYPE_UINT16);
     wlu_bind_desc_sets(app, cur_pool, i, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[i], 0, NULL);
     wlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }
@@ -632,7 +627,7 @@ Suite *main_suite(void) {
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, test_vulkan_client_create);
+  tcase_add_test(tc_core, test_vulkan_image_texture);
   suite_add_tcase(s, tc_core);
 
   return s;

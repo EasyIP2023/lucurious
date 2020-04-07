@@ -61,7 +61,7 @@ static bool init_buffs(vkcomp *app) {
   return err;
 }
 
-START_TEST(test_vulkan_client_create) {
+START_TEST(test_vulkan_rect) {
   VkResult err;
 
   if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
@@ -418,7 +418,7 @@ Suite *main_suite(void) {
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, test_vulkan_client_create);
+  tcase_add_test(tc_core, test_vulkan_rect);
   suite_add_tcase(s, tc_core);
 
   return s;

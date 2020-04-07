@@ -157,8 +157,7 @@ VkResult wlu_exec_copy_buff_to_image(
   VkCommandBuffer cmd_buff = exec_begin_single_time_cmd_buff(app, cur_pool);
   if (!cmd_buff) return res;
 
-  vkCmdCopyBufferToImage(cmd_buff, app->buff_data[cur_bd].buff,
-                        app->text_data[cur_tex].image,
+  vkCmdCopyBufferToImage(cmd_buff, app->buff_data[cur_bd].buff, app->text_data[cur_tex].image,
                         dstImageLayout, regionCount, pRegions);
 
   res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);

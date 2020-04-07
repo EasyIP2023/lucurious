@@ -172,14 +172,16 @@ void wlu_freeup_vk(void *data) {
         vkFreeMemory(app->device, app->sc_data[i].depth.mem, NULL);
       if (app->sc_data[i].sc_buffs && app->sc_data[i].syncs) {
         for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
-          if (app->sc_data[i].syncs[j].sem.image && app->sc_data[i].syncs[j].sem.render &&
-              app->sc_data[i].syncs[j].fence.render) {
+          if (app->sc_data[i].syncs[j].sem.image)
             vkDestroySemaphore(app->device, app->sc_data[i].syncs[j].sem.image, NULL);
+          if (app->sc_data[i].syncs[j].sem.render)
             vkDestroySemaphore(app->device, app->sc_data[i].syncs[j].sem.render, NULL);
+          if (app->sc_data[i].syncs[j].fence.render)
             vkDestroyFence(app->device, app->sc_data[i].syncs[j].fence.render, NULL);
-          }
-          vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
-          vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
+          if (app->sc_data[i].sc_buffs[j].fb)
+            vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
+          if (app->sc_data[i].sc_buffs[j].view)
+            vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
         }
       }
       if (app->sc_data[i].swap_chain)

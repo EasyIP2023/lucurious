@@ -75,7 +75,7 @@ static bool init_buffs(vkcomp *app) {
   return err;
 }
 
-START_TEST(test_vulkan_client_create) {
+START_TEST(test_vulkan_rotate_rect) {
   VkResult err;
 
   if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
@@ -465,7 +465,7 @@ START_TEST(test_vulkan_client_create) {
   VkSemaphore acquire_sems[MAX_FRAMES], render_sems[MAX_FRAMES];
   VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-  for (uint32_t c = 0; c < 3000; c++) {
+  for (uint32_t c = 0; c < 3500; c++) {
     /* set fence to signal state */
     err = wlu_vk_sync(WLU_VK_WAIT_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
@@ -518,7 +518,7 @@ Suite *main_suite(void) {
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, test_vulkan_client_create);
+  tcase_add_test(tc_core, test_vulkan_rotate_rect);
   suite_add_tcase(s, tc_core);
 
   return s;
