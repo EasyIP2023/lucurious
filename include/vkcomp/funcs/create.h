@@ -89,9 +89,11 @@ VkResult wlu_create_swap_chain(
   uint32_t cur_scd,
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR pres_mode,
+  VkPresentModeKHR presentMode,
   uint32_t width,
-  uint32_t height
+  uint32_t height,
+  uint32_t imageArrayLayers,
+  VkImageUsageFlags imageUsage
 );
 
 /**

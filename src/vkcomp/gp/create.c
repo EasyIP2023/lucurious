@@ -259,6 +259,13 @@ VkResult wlu_create_texture_image(
   res = vkCreateImage(app->device, img_info, NULL, &app->text_data[cur_tex].image);
   if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); }
 
+  /**
+  * Although you know the width, height, and the size of a buffer element,
+  * there is no way to determine exactly how much memory is needed to allocate.
+  * This is because alignment constraints that may be placed by the GPU hardware.
+  * This function allows you to find out everything you need to allocate the
+  * memory for an image.
+  */
   VkMemoryRequirements mem_reqs;
   vkGetImageMemoryRequirements(app->device, app->text_data[cur_tex].image, &mem_reqs);
 

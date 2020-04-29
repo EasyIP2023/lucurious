@@ -257,9 +257,11 @@ VkResult wlu_create_swap_chain(
   uint32_t cur_scd,
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR pres_mode,
+  VkPresentModeKHR presentMode,
   uint32_t width,
-  uint32_t height
+  uint32_t height,
+  uint32_t imageArrayLayers,
+  VkImageUsageFlags imageUsage
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -267,23 +269,6 @@ VkResult wlu_create_swap_chain(
   if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return res; }
   if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
   if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
-
-  VkSurfaceTransformFlagBitsKHR pre_transform;
-  pre_transform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
-      VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
-
-  VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  VkCompositeAlphaFlagBitsKHR composite_alpha_flags[4] = {
-    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
-    VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
-  };
-
-  for (uint32_t i = 0; i < sizeof(composite_alpha_flags) / sizeof(composite_alpha_flags[0]); i++) {
-    if (capabilities.supportedCompositeAlpha & composite_alpha_flags[i]) {
-      composite_alpha = composite_alpha_flags[i];
-      break;
-    }
-  }
 
   VkSwapchainCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -295,14 +280,16 @@ VkResult wlu_create_swap_chain(
   create_info.imageColorSpace = surface_fmt.colorSpace;
   create_info.imageExtent.width = width;
   create_info.imageExtent.height = height;
-  create_info.imageArrayLayers = 1;
-  create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  create_info.imageArrayLayers = imageArrayLayers;
+  create_info.imageUsage = imageUsage;
   /* current transform should be applied to images in the swap chain */
-  create_info.preTransform = pre_transform;
-  /* specify that I currently do not want any transformation */
-  create_info.compositeAlpha = composite_alpha;
-  create_info.presentMode = pres_mode;
-  create_info.clipped = VK_TRUE;
+  create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
+     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
+  create_info.compositeAlpha = capabilities.supportedCompositeAlpha;
+  create_info.presentMode = presentMode;
+
+  /* Leave this way I want "presentable images associated with the swapchain will own all of the pixels they contain" */
+  create_info.clipped = VK_FALSE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
   /* specify how to handle swap chain images that will be used across multiple queue families */
@@ -529,17 +516,17 @@ VkResult wlu_create_framebuffers(
   if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
   if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return res; }
 
+  VkFramebufferCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+  create_info.renderPass = app->gp_data[cur_gpd].render_pass;
+  create_info.attachmentCount = attachmentCount;
+  create_info.width = width;
+  create_info.height = height;
+  create_info.layers = layers;
+
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     pAttachments[0] = app->sc_data[cur_scd].sc_buffs[i].view;
-
-    VkFramebufferCreateInfo create_info = {};
-    create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    create_info.renderPass = app->gp_data[cur_gpd].render_pass;
-    create_info.attachmentCount = attachmentCount;
     create_info.pAttachments = pAttachments;
-    create_info.width = width;
-    create_info.height = height;
-    create_info.layers = layers;
 
     res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].fb);
     if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateFramebuffer"); return res; }
