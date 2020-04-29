@@ -235,4 +235,23 @@ VkDescriptorImageInfo wlu_set_desc_img_info(
   VkImageLayout imageLayout
 );
 
+VkSamplerCreateInfo wlu_set_sampler_info(
+  VkSamplerCreateFlags flags,
+  VkFilter magFilter,
+  VkFilter minFilter,
+  float mipLodBias,
+  VkSamplerMipmapMode mipmapMode,
+  VkSamplerAddressMode addressModeU,
+  VkSamplerAddressMode addressModeV,
+  VkSamplerAddressMode addressModeW,
+  float maxAnisotropy,
+  VkBool32 anisotropyEnable,
+  VkBool32 compareEnable,
+  VkCompareOp compareOp,
+  float minLod,
+  float maxLod,
+  VkBorderColor borderColor,
+  VkBool32 unnormalizedCoordinates
+);
+
 #endif

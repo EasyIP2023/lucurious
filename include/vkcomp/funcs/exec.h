@@ -70,7 +70,7 @@ VkResult wlu_exec_copy_buff_to_image(
 * Image memory barrier is used to synchronize access to image resources.
 * Example: writing to a buffer completely before reading from it
 */
-VkResult wlu_exec_transition_image_layout(
+VkResult wlu_exec_pipeline_barrier(
   vkcomp *app, 
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

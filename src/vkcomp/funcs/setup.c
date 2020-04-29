@@ -42,10 +42,14 @@ void wlu_freeup_sc(void *data) {
   if (app->buff_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
       if (app->buff_data[i].name == 'u') {
-        vkDestroyBuffer(app->device, app->buff_data[i].buff, NULL);
-        vkFreeMemory(app->device, app->buff_data[i].mem, NULL);
-        app->buff_data[i].buff = VK_NULL_HANDLE;
-        app->buff_data[i].mem = VK_NULL_HANDLE;
+        if (app->buff_data[i].buff) {
+          vkDestroyBuffer(app->device, app->buff_data[i].buff, NULL);
+          app->buff_data[i].buff = VK_NULL_HANDLE;
+        }
+        if (app->buff_data[i].mem) {
+          vkFreeMemory(app->device, app->buff_data[i].mem, NULL);
+          app->buff_data[i].mem = VK_NULL_HANDLE;
+        }
       }
     }
   }
@@ -65,17 +69,27 @@ void wlu_freeup_sc(void *data) {
         vkFreeCommandBuffers(app->device, app->cmd_data[i].cmd_pool, app->sc_data[i].sic, app->cmd_data[i].cmd_buffs);
   }
 
-  if (app->pipeline_cache)
+  if (app->pipeline_cache) {
     vkDestroyPipelineCache(app->device, app->pipeline_cache, NULL);
+    app->pipeline_cache = VK_NULL_HANDLE;
+  }
 
   if (app->gp_data) {
     for (uint32_t i = 0; i < app->gdc; i++) {
-      if (app->gp_data[i].pipeline_layout)
+      if (app->gp_data[i].pipeline_layout) {
         vkDestroyPipelineLayout(app->device, app->gp_data[i].pipeline_layout, NULL);
-      if (app->gp_data[i].render_pass)
+        app->gp_data[i].pipeline_layout = VK_NULL_HANDLE;
+      }
+      if (app->gp_data[i].render_pass) {
         vkDestroyRenderPass(app->device, app->gp_data[i].render_pass, NULL);
-      for (uint32_t j = 0; j < app->gp_data[i].gpc; j++)
-        vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
+        app->gp_data[i].render_pass = VK_NULL_HANDLE;
+      }
+      for (uint32_t j = 0; j < app->gp_data[i].gpc; j++) {
+        if (app->gp_data[i].graphics_pipelines[j]) {
+          vkDestroyPipeline(app->device, app->gp_data[i].graphics_pipelines[j], NULL);
+          app->gp_data[i].graphics_pipelines[j] = VK_NULL_HANDLE;
+        }
+      }
     }
   }
 
@@ -83,15 +97,25 @@ void wlu_freeup_sc(void *data) {
     for (uint32_t i = 0; i < app->sdc; i++) {
       if (app->sc_data[i].sc_buffs) {
         for (uint32_t j = 0; j < app->sc_data[i].sic; j++) {
-          vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
-          vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
-          app->sc_data[i].sc_buffs[j].image = VK_NULL_HANDLE;
-          app->sc_data[i].sc_buffs[j].view = VK_NULL_HANDLE;
-          app->sc_data[i].sc_buffs[j].fb = VK_NULL_HANDLE;
+          if (app->sc_data[i].sc_buffs[j].fb) {
+            vkDestroyFramebuffer(app->device, app->sc_data[i].sc_buffs[j].fb, NULL);
+            app->sc_data[i].sc_buffs[j].fb = VK_NULL_HANDLE;
+          }
+          if (app->sc_data[i].sc_buffs[j].view) {
+            vkDestroyImageView(app->device, app->sc_data[i].sc_buffs[j].view, NULL);
+            app->sc_data[i].sc_buffs[j].view = VK_NULL_HANDLE;
+          }
+          if (app->sc_data[i].sc_buffs[j].image) {
+            vkDestroyImage(app->device, app->sc_data[i].sc_buffs[j].image, NULL);
+            app->sc_data[i].sc_buffs[j].image = VK_NULL_HANDLE;
+          }
         }
       }
-      if (app->sc_data[i].swap_chain)
+
+      if (app->sc_data[i].swap_chain) {
         vkDestroySwapchainKHR(app->device, app->sc_data[i].swap_chain, NULL);
+        app->sc_data[i].swap_chain = VK_NULL_HANDLE;
+      }
     }
   }
 }

@@ -520,3 +520,45 @@ VkDescriptorImageInfo wlu_set_desc_img_info(
 
   return create_info;
 }
+
+VkSamplerCreateInfo wlu_set_sampler_info(
+  VkSamplerCreateFlags flags,
+  VkFilter magFilter,
+  VkFilter minFilter,
+  float mipLodBias,
+  VkSamplerMipmapMode mipmapMode,
+  VkSamplerAddressMode addressModeU,
+  VkSamplerAddressMode addressModeV,
+  VkSamplerAddressMode addressModeW,
+  float maxAnisotropy,
+  VkBool32 anisotropyEnable,
+  VkBool32 compareEnable,
+  VkCompareOp compareOp,
+  float minLod,
+  float maxLod,
+  VkBorderColor borderColor,
+  VkBool32 unnormalizedCoordinates
+) {
+
+  VkSamplerCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.magFilter = magFilter;
+  create_info.minFilter = minFilter;
+  create_info.mipmapMode = mipmapMode;
+  create_info.addressModeU = addressModeU;
+  create_info.addressModeV = addressModeV;
+  create_info.addressModeW = addressModeW;
+  create_info.mipLodBias = mipLodBias;
+  create_info.anisotropyEnable = anisotropyEnable;
+  create_info.maxAnisotropy = maxAnisotropy;
+  create_info.compareEnable = compareEnable;
+  create_info.compareOp = compareOp;
+  create_info.minLod = minLod;
+  create_info.maxLod = maxLod;
+  create_info.borderColor = borderColor;
+  create_info.unnormalizedCoordinates = unnormalizedCoordinates;
+
+  return create_info;
+}

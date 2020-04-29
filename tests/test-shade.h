@@ -109,10 +109,11 @@ const char spin_square_vert_src[] =
 const char text_map_frag_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
-  "layout(location = 0) in vec3 v_Color;\n"
-  "layout(location = 1) in vec2 v_TexCoord;\n"
+  "layout(location = 0) in vec3 f_Color;\n"
+  "layout(location = 1) in vec2 f_TexCoord;\n"
   "layout(location = 0) out vec4 o_Color;\n"
-  "void main() { o_Color = vec4(v_TexCoord, 0.0, 1.0); }";
+  "layout(binding = 1) uniform sampler2D texSampler;\n"
+  "void main() { o_Color = texture(texSampler, f_TexCoord); }";
 
 const char text_map_vert_src[] =
   "#version 450\n"
@@ -126,12 +127,13 @@ const char text_map_vert_src[] =
   "layout(location = 0) in vec2 i_Position;\n"
   "layout(location = 1) in vec3 i_Color;\n"
   "layout(location = 2) in vec2 i_TexCoord;\n"
-  "layout(location = 0) out vec3 v_Color;\n"
-  "layout(location = 1) out vec2 v_TexCoord;\n"
+
+  "layout(location = 0) out vec3 f_Color;\n"
+  "layout(location = 1) out vec2 f_TexCoord;\n"
   "void main() {\n"
   "   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(i_Position, 0.0, 1.0);\n"
-  "   v_Color = i_Color;\n"
-  "   v_TexCoord = i_TexCoord;\n"
+  "   f_Color = i_Color;\n"
+  "   f_TexCoord = i_TexCoord;\n"
   "}";
 /* Used in test-image-texture.c */
 

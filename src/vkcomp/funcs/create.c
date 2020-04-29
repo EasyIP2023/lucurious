@@ -336,11 +336,11 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
       {
         VkImage *imgs = NULL;
 
+        if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
         if (!app->sc_data[cur_index].swap_chain) { PERR(WLU_VKCOMP_SC, 0, NULL); return res; }
 
         /**
-        * It's okay to reuse app->sc_data[cur_scd].sic,
-        * It'll give same result as minImageCount + 1.
+        * It's okay to reuse app->sc_data[cur_scd].sic. It'll give same result as minImageCount + 1.
         * Removal of function will result in validation layer errors
         */
         res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, NULL);
@@ -360,8 +360,10 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
 
       break;
     case WLU_TEXT_IMAGE_VIEWS:
+      if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+
       /**
-      * Can set the image inside the VkImageViewCreateInfo struct,
+      * Could set the image inside the VkImageViewCreateInfo struct,
       * but for reduncy and to ensure the image is correct assigning it here.
       */
       img_view_info->image = app->text_data[cur_index].image;
@@ -506,19 +508,6 @@ VkResult wlu_create_buff_mem_map(
   if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
   if (data) memmove(p_data, data, app->buff_data[cur_bd].size);
 
-  VkMappedMemoryRange flush_range;
-  flush_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  flush_range.pNext = NULL;
-  flush_range.memory = app->buff_data[cur_bd].mem;
-  /* the region that was modified will be flushed */
-  flush_range.offset = 0;
-  flush_range.size = app->buff_data[cur_bd].size;
-  /* from offset 0 to size of buffer */
-
-  /* refresh the cache */
-  res = vkFlushMappedMemoryRanges(app->device, 1, &flush_range);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkFlushMappedMemoryRanges"); return res; }
-
   vkUnmapMemory(app->device, app->buff_data[cur_bd].mem);
 
   return res;
@@ -642,50 +631,3 @@ VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
 
   return res;
 }
-
-VkResult wlu_create_texture_image(
-  vkcomp *app,
-  uint32_t cur_tex,
-  VkImageCreateInfo *img_info,
-  VkFlags requirements_mask
-) {
-
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
-
-  res = vkCreateImage(app->device, img_info, NULL, &app->text_data[cur_tex].image);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); }
-
-  VkMemoryRequirements mem_reqs;
-  vkGetImageMemoryRequirements(app->device, app->text_data[cur_tex].image, &mem_reqs);
-
-  VkMemoryAllocateInfo alloc_info = {};
-  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  alloc_info.pNext = NULL;
-  alloc_info.allocationSize = mem_reqs.size;
-  alloc_info.memoryTypeIndex = 0;
-  
-  /* find a suitable memory type for image */
-  res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
-  if (!res) { PERR(WLU_MEM_TYPE_ERR, 0, NULL); return res; }
-
-  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->text_data[cur_tex].mem);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
-
-  vkBindImageMemory(app->device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
-
-  return res;
-}
-
-VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info) {
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
-
-  res = vkCreateSampler(app->device, sample_info, NULL, &app->text_data[cur_tex].sampler);
-  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateSampler")
-
-  return res;
-}
-

@@ -193,6 +193,14 @@ START_TEST(test_vulkan_client_create) {
     wlu_print_vector(WLU_VEC3, &vertices[i].color);
   }
 
+  /**
+  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+  * should be mapped so that the CPU (host) can access it.
+  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+  * writes to the memory by the host are visible to the device
+  * (and vice-versa) without the need to flush memory caches.
+  */
   err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -205,15 +213,6 @@ START_TEST(test_vulkan_client_create) {
   /* End of staging buffer for vertex */
 
   /* Start of vertex buffer */
-
-  /**
-  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
-  * should be mapped so that the CPU (host) can access it.
-  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
-  * writes to the memory by the host are visible to the device
-  * (and vice-versa) without the need to flush memory caches.
-  */
   err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -224,7 +223,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, 0, 1, 0, 0, vsize);
+  err = wlu_exec_copy_buffer(app, cur_pool, cur_bd-2, cur_bd-1, 0, 0, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer */
 

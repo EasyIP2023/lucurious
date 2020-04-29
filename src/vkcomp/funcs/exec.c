@@ -166,7 +166,7 @@ VkResult wlu_exec_copy_buff_to_image(
   return res;
 }
 
-VkResult wlu_exec_transition_image_layout(
+VkResult wlu_exec_pipeline_barrier(
   vkcomp *app,
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

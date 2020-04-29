@@ -206,12 +206,8 @@ START_TEST(test_vulkan_image_texture) {
   img_size = img_extent.width * img_extent.height * 4;
 
   /**
-  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
-  * should be mapped so that the CPU (host) can access it.
-  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
-  * writes to the memory by the host are visible to the device
-  * (and vice-versa) without the need to flush memory caches.
+  * The buffer is a staging host visible memory buffer. That can be map.
+  * It's usable as a transfer source so that we can copy it to an image later on
   */
   err = wlu_create_vk_buffer(app, cur_bd, img_size, 0, 
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
@@ -224,9 +220,9 @@ START_TEST(test_vulkan_image_texture) {
   cur_bd++;
 
   /* Now that the image has been moved into CPU visible momory the original pixels are no longer needed */
-  wlu_freeup_pixels(pixels);
+  wlu_freeup_pixels(pixels); pixels = NULL;
 
-  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
@@ -241,7 +237,7 @@ START_TEST(test_vulkan_image_texture) {
   );
 
   /* Using image memory barrier to perform layout transitions */
-  err = wlu_exec_transition_image_layout(app, cur_pool, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+  err = wlu_exec_pipeline_barrier(app, cur_pool, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
     VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
   );
   check_err(err, app, wc, NULL)
@@ -249,32 +245,36 @@ START_TEST(test_vulkan_image_texture) {
   VkOffset3D offset3D = {0, 0, 0};
   VkImageSubresourceLayers img_sub_rl = wlu_set_image_sub_resource_layers(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
 
-  /* Allows for multiple different copies of from one buffer to the image in one operation */
+  /* Specify what part of the buffer is copied to which part of the image */
   VkBufferImageCopy region = wlu_set_buff_image_copy(0, 0, 0, img_sub_rl, offset3D, img_extent);
 
-  /* cur_bd: must be a VkBuffer that contains your image pixels */
+  /* cur_bd: must be a valid VkBuffer that contains your image pixels */
   err = wlu_exec_copy_buff_to_image(app, cur_pool, cur_bd-1, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
   check_err(err, app, wc, NULL)
 
   /**
   * Allows for in shader sampling of a texture image,
-  * There is one last transition to run to prepare for shader access
+  * This is the last transition to run, to prepare for shader access
   */
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
   barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  err = wlu_exec_transition_image_layout(app, cur_pool, VK_PIPELINE_STAGE_TRANSFER_BIT,
+  err = wlu_exec_pipeline_barrier(app, cur_pool, VK_PIPELINE_STAGE_TRANSFER_BIT,
     VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
   );
   check_err(err, app, wc, NULL)
 
+  /* Destroy staging buffer as it is no longer needed */
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-1].buff); app->buff_data[cur_bd-1].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-1].mem); app->buff_data[cur_bd-1].mem = VK_NULL_HANDLE;
+
   /* Create Image View for texture image. So that application can access a VkImage resource */
-  img_view_info.format = VK_FORMAT_R8G8B8A8_SRGB;
-  img_view_info.components = wlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
+  img_view_info.format = VK_FORMAT_R8G8B8A8_UNORM; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
+  img_view_info.components = wlu_set_component_mapping(0, 0, 0, 0);
 
   err = wlu_create_image_views(WLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
   check_err(err, app, wc, NULL)
 
-  VkSamplerCreateInfo sampler = wlu_set_sampler(0, VK_FILTER_LINEAR, VK_FILTER_LINEAR, 0.0f, VK_SAMPLER_MIPMAP_MODE_LINEAR,
+  VkSamplerCreateInfo sampler = wlu_set_sampler_info(0, VK_FILTER_LINEAR, VK_FILTER_LINEAR, 0.0f, VK_SAMPLER_MIPMAP_MODE_LINEAR,
     VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, 16.0f, VK_TRUE, VK_FALSE,
     VK_COMPARE_OP_ALWAYS, 0.0f, 0.0f, VK_BORDER_COLOR_INT_OPAQUE_BLACK, VK_FALSE
   );
@@ -296,7 +296,6 @@ START_TEST(test_vulkan_image_texture) {
   err = wlu_otba(WLU_DESC_DATA_MEMS, app, cur_dd, app->sc_data[cur_scd].sic);
   check_err(err, app, wc, NULL)
 
-  /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
   VkDescriptorSetLayoutBinding bindings[2];
   bindings[0] = wlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
   bindings[1] = wlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
@@ -402,6 +401,14 @@ START_TEST(test_vulkan_image_texture) {
     wlu_print_vector(WLU_VEC3, &vertices[i].color);
   }
 
+  /**
+  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+  * should be mapped so that the CPU (host) can access it.
+  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+  * writes to the memory by the host are visible to the device
+  * (and vice-versa) without the need to flush memory caches.
+  */
   err = wlu_create_vk_buffer(
     app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
@@ -415,15 +422,6 @@ START_TEST(test_vulkan_image_texture) {
   /* End of staging buffer for vertex */
 
   /* Start of vertex buffer */
-
-  /**
-  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
-  * should be mapped so that the CPU (host) can access it.
-  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
-  * writes to the memory by the host are visible to the device
-  * (and vice-versa) without the need to flush memory caches.
-  */
   err = wlu_create_vk_buffer(
     app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -436,7 +434,8 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, 1, 2, 0, 0, vsize);
+  /* Used to show functionality */
+  err = wlu_exec_copy_buffer(app, cur_pool, cur_bd-2, cur_bd-1, 0, 0, vsize);
   check_err(err, app, wc, NULL)
   /* End of vertex buffer */
 
@@ -472,7 +471,8 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
   cur_bd++;
 
-  err = wlu_exec_copy_buffer(app, cur_pool, 3, 4, 0, 0, isize);
+  /* Used to show functionality */
+  err = wlu_exec_copy_buffer(app, cur_pool, cur_bd-2, cur_bd-1, 0, 0, isize);
   check_err(err, app, wc, NULL)
   /* End of index buffer */
 
@@ -588,7 +588,6 @@ START_TEST(test_vulkan_image_texture) {
     time = wlu_hrnst() - start;
     wlu_set_matrix(WLU_MAT4_IDENTITY, ubd.model, NULL);
     wlu_set_rotate(WLU_AXIS_Z, ubd.model, ((float) time / convert) * angle, spin_up);
-    // wlu_print_matrix(WLU_MAT4, ubd.model);
 
     err = wlu_create_buff_mem_map(app, cur_bd+img_index, &ubd);
     check_err(err, app, wc, NULL)

@@ -244,3 +244,49 @@ VkResult wlu_create_desc_set(
 
   return res;
 }
+
+VkResult wlu_create_texture_image(
+  vkcomp *app,
+  uint32_t cur_tex,
+  VkImageCreateInfo *img_info,
+  VkFlags requirements_mask
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+
+  res = vkCreateImage(app->device, img_info, NULL, &app->text_data[cur_tex].image);
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); }
+
+  VkMemoryRequirements mem_reqs;
+  vkGetImageMemoryRequirements(app->device, app->text_data[cur_tex].image, &mem_reqs);
+
+  VkMemoryAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  alloc_info.pNext = NULL;
+  alloc_info.allocationSize = mem_reqs.size;
+  alloc_info.memoryTypeIndex = 0;
+
+  /* find a suitable memory type for image */
+  res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
+  if (!res) { PERR(WLU_MEM_TYPE_ERR, 0, NULL); return res; }
+
+  res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->text_data[cur_tex].mem);
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
+
+  vkBindImageMemory(app->device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
+
+  return res;
+}
+
+VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info) {
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+
+  res = vkCreateSampler(app->device, sample_info, NULL, &app->text_data[cur_tex].sampler);
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateSampler")
+
+  return res;
+}

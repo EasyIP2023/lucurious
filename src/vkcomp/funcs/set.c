@@ -114,7 +114,9 @@ VkImageCreateInfo wlu_set_image_info(
   create_info.flags = flags;
   create_info.imageType = imageType;
   create_info.format = format;
-  create_info.extent = extent;
+  create_info.extent.width = extent.width;
+  create_info.extent.height = extent.height;
+  create_info.extent.depth = extent.depth;
   create_info.mipLevels = mipLevels;
   create_info.arrayLayers = arrayLayers;
   create_info.samples = samples;
@@ -176,8 +178,12 @@ VkBufferImageCopy wlu_set_buff_image_copy(
   create_info.bufferRowLength = bufferRowLength;
   create_info.bufferImageHeight = bufferImageHeight;
   create_info.imageSubresource = imageSubresource;
-  create_info.imageOffset = imageOffset;
-  create_info.imageExtent = imageExtent;
+  create_info.imageOffset.x = imageOffset.x;
+  create_info.imageOffset.y = imageOffset.y;
+  create_info.imageOffset.z = imageOffset.z;
+  create_info.imageExtent.width = imageExtent.width;
+  create_info.imageExtent.height = imageExtent.height;
+  create_info.imageExtent.depth = imageExtent.depth;
 
   return create_info;
 }
@@ -215,48 +221,6 @@ VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth) {
 VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z) {
 
   VkOffset3D create_info = { .x = x, .y = y, .z = z };
-
-  return create_info;
-}
-
-VkSamplerCreateInfo wlu_set_sampler(
-  VkSamplerCreateFlags flags,
-  VkFilter magFilter,
-  VkFilter minFilter,
-  float mipLodBias,
-  VkSamplerMipmapMode mipmapMode,
-  VkSamplerAddressMode addressModeU,
-  VkSamplerAddressMode addressModeV,
-  VkSamplerAddressMode addressModeW,
-  float maxAnisotropy,
-  VkBool32 anisotropyEnable,
-  VkBool32 compareEnable,
-  VkCompareOp compareOp,
-  float minLod,
-  float maxLod,
-  VkBorderColor borderColor,
-  VkBool32 unnormalizedCoordinates
-) {
-
-  VkSamplerCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  create_info.pNext = NULL;
-  create_info.flags = flags;
-  create_info.magFilter = magFilter;
-  create_info.minFilter = minFilter;
-  create_info.mipmapMode = mipmapMode;
-  create_info.addressModeU = addressModeU;
-  create_info.addressModeV = addressModeV;
-  create_info.addressModeW = addressModeW;
-  create_info.mipLodBias = mipLodBias;
-  create_info.anisotropyEnable = anisotropyEnable;
-  create_info.maxAnisotropy = maxAnisotropy;
-  create_info.compareEnable = compareEnable;
-  create_info.compareOp = compareOp;
-  create_info.minLod = minLod;
-  create_info.maxLod = maxLod;
-  create_info.borderColor = borderColor;
-  create_info.unnormalizedCoordinates = unnormalizedCoordinates;
 
   return create_info;
 }

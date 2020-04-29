@@ -190,23 +190,4 @@ VkResult wlu_create_cmd_buffs(
 */
 VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd);
 
-/**
-* Takes a VkImage object in memory and converts it to a texture
-*/
-VkResult wlu_create_texture_image(
-  vkcomp *app,
-  uint32_t cur_tex,
-  VkImageCreateInfo *img_info,
-  VkFlags requirements_mask
-);
-
-/**
-* Concept of Sampling: https://www.tutorialspoint.com/dip/concept_of_sampling.htm
-* Generally textures are accessed through samplers.
-* Function creates samplers which apply filtering and transformations
-* to compute the final color that is retrieved. The sampler is used in
-* the shader to read colors from the texture.
-*/
-VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info);
-
 #endif
