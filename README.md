@@ -4,9 +4,9 @@
 
 **Note: This is one mans attempt at something that could be cool. This is by no means official industry level software. This is just something I'm doing on the side for fun. IT WILL NOT BE DOCUMENTED!!! The only documentation you will find is from comments in the code. Also the API function calls parameters will be constantly changing as I continue to expand the functionality of the vulkan renderer. Yes, I am still learning all of these APIs**
 
-Inspired by the t.v series expanse and other syfy t.v shows/movies.
+Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, like for example [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) and the Wayland protocol to assist in building optimal, memory efficient, easy to use graphically amazing two/three dimensional desktop environments.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, that look similar to [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) as its primary renderer and does operations over the Wayland display server protocol to assist in building optimal, memory efficient, easy to use desktop environments that may appear to be straight from science fiction.
 
 ## Dependencies
 * wayland-client

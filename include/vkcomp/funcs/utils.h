@@ -25,12 +25,6 @@
 #ifndef WLU_VKCOMP_UTILS_H
 #define WLU_VKCOMP_UTILS_H
 
-/* Free up stbi pixel data (freeup image that is loaded) */
-void wlu_freeup_pixels(void *pixels);
-
-/* Function loads an image into memory to later be copied into a buffer */
-VkResult wlu_load_texture_image(VkExtent3D *extent, void **pixels, const char *image_path);
-
 #ifdef INAPI_CALLS
 /**
 * Can find in vulkan SDK API-Samples/utils/util.cpp

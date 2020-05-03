@@ -39,5 +39,5 @@ lib_vkcomp = static_library(
   'lvkcomp',
   files(funcs_files, gp_files),
   include_directories: lucur_inc,
-  dependencies: [vulkan,math]
+  dependencies: [vulkan]
 )

@@ -86,7 +86,7 @@ lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
 it_files = ['test-image-texture.c', 'helpers.c']
 lucur_img_texture_test = executable('lucur-img-texture-test',
   it_files, include_directories: lucur_inc,
-  dependencies: [check], link_with: lib_lucur,
+  dependencies: [check, math], link_with: lib_lucur,
   c_args: '-DDEV_ENV --std=gnu18',
   install: false
 )

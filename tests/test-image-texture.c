@@ -36,6 +36,9 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define WIDTH 800
 #define HEIGHT 600
 #define MAX_FRAMES 2
@@ -192,11 +195,17 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Start of image loader */
-  void *pixels = NULL; VkDeviceSize img_size; VkExtent3D img_extent;
+  VkDeviceSize img_size; VkExtent3D img_extent;
   char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg");
- 
-  err = wlu_load_texture_image(&img_extent, &pixels, picture); 
-  check_err(err, app, wc, NULL)
+
+  int pw = 0, ph = 0, pchannels = 0;
+
+  /* First load the image */
+  stbi_uc *pixels = stbi_load(picture, &pw, &ph, &pchannels, STBI_rgb_alpha);
+  check_err(!pixels, app, wc, NULL)
+
+  img_extent.width = pw;
+  img_extent.height = ph;
   img_extent.depth = 1;
 
   wlu_log_me(WLU_SUCCESS, "textures/water_train.jpg successfully loaded", picture);
@@ -219,7 +228,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Now that the image has been moved into CPU visible momory the original pixels are no longer needed */
-  wlu_freeup_pixels(pixels); pixels = NULL;
+  stbi_image_free(pixels); pixels = NULL;
 
   VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
