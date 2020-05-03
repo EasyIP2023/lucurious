@@ -179,18 +179,18 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   /* Start of staging buffer for vertex */
-  vertex_2D vertices[3] = {
+  vertex_2D tri_verts[3] = {
     {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},
     {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
   };
   /* Let the compiler get the size of your array for you. Don't hard code */
-  VkDeviceSize vsize = sizeof(vertices);
+  VkDeviceSize vsize = sizeof(tri_verts);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
-    wlu_print_vector(WLU_VEC3, &vertices[i].color);
+    wlu_print_vector(WLU_VEC2, &tri_verts[i].pos);
+    wlu_print_vector(WLU_VEC3, &tri_verts[i].color);
   }
 
   /**
@@ -207,7 +207,7 @@ START_TEST(test_vulkan_client_create) {
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  err = wlu_create_buff_mem_map(app, cur_bd, tri_verts);
   check_err(err, app, wc, NULL)
   cur_bd++;
   /* End of staging buffer for vertex */

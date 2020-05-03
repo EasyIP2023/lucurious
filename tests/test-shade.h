@@ -109,32 +109,32 @@ const char spin_square_vert_src[] =
 const char text_map_frag_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
-  "layout(location = 0) in vec3 f_Color;\n"
-  "layout(location = 1) in vec2 f_TexCoord;\n"
-  "layout(location = 0) out vec4 o_Color;\n"
   "layout(binding = 1) uniform sampler2D texSampler;\n"
-  "void main() { o_Color = texture(texSampler, f_TexCoord); }";
+  "layout(location = 0) in vec3 fragColor;\n"
+  "layout(location = 1) in vec2 fragTexCoord;\n"
+  "layout(location = 0) out vec4 outColor;\n"
+  "void main() { outColor = texture(texSampler, fragTexCoord); }";
 
 const char text_map_vert_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
-  "#extension GL_ARB_shading_language_420pack : enable\n"
-  "layout(set = 0, binding = 0) uniform UniformBufferObject {\n"
+  "layout(binding = 0) uniform UniformBufferObject {\n"
   "   mat4 model;\n"
   "   mat4 view;\n"
   "   mat4 proj;\n"
   "} ubo;\n"
-  "layout(location = 0) in vec2 i_Position;\n"
-  "layout(location = 1) in vec3 i_Color;\n"
-  "layout(location = 2) in vec2 i_TexCoord;\n"
-
-  "layout(location = 0) out vec3 f_Color;\n"
-  "layout(location = 1) out vec2 f_TexCoord;\n"
+  "layout(location = 0) in vec2 inPosition;\n"
+  "layout(location = 1) in vec3 inColor;\n"
+  "layout(location = 2) in vec2 inTexCoord;\n"
+  "layout(location = 0) out vec3 fragColor;\n"
+  "layout(location = 1) out vec2 fragTexCoord;\n"
   "void main() {\n"
-  "   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(i_Position, 0.0, 1.0);\n"
-  "   f_Color = i_Color;\n"
-  "   f_TexCoord = i_TexCoord;\n"
+  "   gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 0.0, 1.0);\n"
+  "   fragColor = inColor;\n"
+  "   fragTexCoord = inTexCoord;\n"
   "}";
+
+
 /* Used in test-image-texture.c */
 
 #endif

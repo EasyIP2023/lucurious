@@ -292,17 +292,17 @@ START_TEST(test_vulkan_rotate_rect) {
   /* Ending setup for graphics pipeline */
 
   /* Start of staging buffer for vertex */
-  vertex_2D vertices[4] = {
+  vertex_2D rr_vertices[4] = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
   };
 
-  VkDeviceSize vsize = sizeof(vertices);
+  VkDeviceSize vsize = sizeof(rr_vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
-    wlu_print_vector(WLU_VEC3, &vertices[i].color);
+    wlu_print_vector(WLU_VEC2, &rr_vertices[i].pos);
+    wlu_print_vector(WLU_VEC3, &rr_vertices[i].color);
   }
 
   /**
@@ -313,24 +313,21 @@ START_TEST(test_vulkan_rotate_rect) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  err = wlu_create_buff_mem_map(app, cur_bd, rr_vertices);
   check_err(err, app, wc, NULL)
   cur_bd++;
   /* End of staging buffer for vertex */
 
   /* Start of vertex buffer */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0,
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 

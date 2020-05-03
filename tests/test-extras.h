@@ -132,15 +132,15 @@ vertex_3D vertices[36] = {
 };
 /* used in test-cube */
 
-/* used in test-square and test-rotate-rect.c */
+/* used in test-square/test-rotate-rect.c/test-image-texture.c */
 uint16_t indices[6] = {0, 1, 2, 2, 3, 0};
-/* used in test-square and test-rotate-rect.c */
+/* used in test-square/test-rotate-rect.c/test-image-texture.c */
 
-/* used in test-spin-square.c */
+/* used in test-rotate-rect.c and test-image-texture.c */
 vec3 spin_eye = {2.0f, 2.0f, 2.0f};
 vec3 spin_center = {0.0f, 0.0f, 0.0f};
 vec3 spin_up = {0.0f, 0.0f, 1.0f};
-/* used in test-spin-square.c */
+/* used in test-rotate-rect.c and test-image-texture.c */
 #endif
 
 #endif

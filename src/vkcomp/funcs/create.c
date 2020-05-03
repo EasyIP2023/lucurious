@@ -25,8 +25,6 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-#include "stb_image.h"
-
 /**
 * alloca()'s usage here is meant for stack space efficiency
 * Fixed size arrays tend to over allocate, while alloca will
@@ -270,6 +268,11 @@ VkResult wlu_create_swap_chain(
   if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
   if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
 
+  VkCompositeAlphaFlagBitsKHR ca_flags[4] = {
+    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+    VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
+  };
+
   VkSwapchainCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   create_info.pNext = NULL;
@@ -282,15 +285,22 @@ VkResult wlu_create_swap_chain(
   create_info.imageExtent.height = height;
   create_info.imageArrayLayers = imageArrayLayers;
   create_info.imageUsage = imageUsage;
-  /* current transform should be applied to images in the swap chain */
-  create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
-     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
-  create_info.compositeAlpha = capabilities.supportedCompositeAlpha;
   create_info.presentMode = presentMode;
 
   /* Leave this way I want "presentable images associated with the swapchain will own all of the pixels they contain" */
   create_info.clipped = VK_FALSE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
+
+  /* current transform should be applied to images in the swap chain */
+  create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
+     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
+
+  for (uint8_t i = 0; i < sizeof(ca_flags) / sizeof(ca_flags[0]); i++) {
+    if (capabilities.supportedCompositeAlpha & ca_flags[i]) {
+      create_info.compositeAlpha = ca_flags[i];
+      break;
+    }
+  }
 
   /* specify how to handle swap chain images that will be used across multiple queue families */
   if (app->indices.graphics_family != app->indices.present_family) {

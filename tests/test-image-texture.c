@@ -58,7 +58,7 @@ struct uniform_block_data {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 10);
+  err = wlu_otba(WLU_BUFF_DATA, app, INDEX_IGNORE, 9);
   if (err) return err;
 
   err = wlu_otba(WLU_SC_DATA, app, INDEX_IGNORE, 1);
@@ -193,7 +193,7 @@ START_TEST(test_vulkan_image_texture) {
 
   /* Start of image loader */
   void *pixels = NULL; VkDeviceSize img_size; VkExtent3D img_extent;
-  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg"); 
+  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg");
  
   err = wlu_load_texture_image(&img_extent, &pixels, picture); 
   check_err(err, app, wc, NULL)
@@ -217,12 +217,11 @@ START_TEST(test_vulkan_image_texture) {
 
   err = wlu_create_buff_mem_map(app, cur_bd, pixels);
   check_err(err, app, wc, NULL)
-  cur_bd++;
 
   /* Now that the image has been moved into CPU visible momory the original pixels are no longer needed */
   wlu_freeup_pixels(pixels); pixels = NULL;
 
-  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, img_extent, 1, 1,
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
@@ -249,7 +248,7 @@ START_TEST(test_vulkan_image_texture) {
   VkBufferImageCopy region = wlu_set_buff_image_copy(0, 0, 0, img_sub_rl, offset3D, img_extent);
 
   /* cur_bd: must be a valid VkBuffer that contains your image pixels */
-  err = wlu_exec_copy_buff_to_image(app, cur_pool, cur_bd-1, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+  err = wlu_exec_copy_buff_to_image(app, cur_pool, cur_bd, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
   check_err(err, app, wc, NULL)
 
   /**
@@ -264,11 +263,11 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Destroy staging buffer as it is no longer needed */
-  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-1].buff); app->buff_data[cur_bd-1].buff = VK_NULL_HANDLE;
-  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-1].mem); app->buff_data[cur_bd-1].mem = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
+  wlu_vk_destroy(WLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
 
   /* Create Image View for texture image. So that application can access a VkImage resource */
-  img_view_info.format = VK_FORMAT_R8G8B8A8_UNORM; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
+  img_view_info.format = VK_FORMAT_R8G8B8A8_SRGB; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
   img_view_info.components = wlu_set_component_mapping(0, 0, 0, 0);
 
   err = wlu_create_image_views(WLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
@@ -386,19 +385,20 @@ START_TEST(test_vulkan_image_texture) {
   /* Ending setup for graphics pipeline */
 
   /* Start of staging buffer for vertex */
-  vertex_text_2D vertices[4] = {
+  vertex_text_2D tvertices[4] = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
   };
 
-  VkDeviceSize vsize = sizeof(vertices);
-  const uint32_t vertex_count = vsize / sizeof(vertex_2D);
+  VkDeviceSize vsize = sizeof(tvertices);
+  const uint32_t vertex_count = vsize / sizeof(vertex_text_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
-    wlu_print_vector(WLU_VEC3, &vertices[i].color);
+    wlu_log_me(WLU_INFO, "Position Coordinates"); wlu_print_vector(WLU_VEC2, &tvertices[i].pos);
+    wlu_log_me(WLU_INFO, "Color Coordinates"); wlu_print_vector(WLU_VEC3, &tvertices[i].color);
+    wlu_log_me(WLU_INFO, "Text Coordinates"); wlu_print_vector(WLU_VEC2, &tvertices[i].tex_coord);
   }
 
   /**
@@ -409,24 +409,21 @@ START_TEST(test_vulkan_image_texture) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  err = wlu_create_buff_mem_map(app, cur_bd, tvertices);
   check_err(err, app, wc, NULL)
   cur_bd++;
   /* End of staging buffer for vertex */
 
   /* Start of vertex buffer */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, vsize, 0,
+  err = wlu_create_vk_buffer(app, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -446,9 +443,8 @@ START_TEST(test_vulkan_image_texture) {
   /* Start of staging buffer for index */
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = isize / sizeof(uint16_t); /* 2 bytes */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, isize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
+  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
@@ -547,8 +543,8 @@ START_TEST(test_vulkan_image_texture) {
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[2].buff, offsets);
-    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[4].buff, offsets[0], VK_INDEX_TYPE_UINT16);
+    wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
+    wlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[3].buff, offsets[0], VK_INDEX_TYPE_UINT16);
     wlu_bind_desc_sets(app, cur_pool, i, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[i], 0, NULL);
     wlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }

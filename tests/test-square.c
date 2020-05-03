@@ -272,18 +272,18 @@ START_TEST(test_vulkan_rect) {
   /* Ending setup for graphics pipeline */
 
   /* Start of staging buffer */
-  vertex_2D vertices[4] = {
+  vertex_2D s_vertices[4] = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
   };
-  VkDeviceSize vsize = sizeof(vertices);
+  VkDeviceSize vsize = sizeof(s_vertices);
   const uint32_t vertex_count = vsize / sizeof(vertex_2D);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    wlu_print_vector(WLU_VEC2, &vertices[i].pos);
-    wlu_print_vector(WLU_VEC3, &vertices[i].color);
+    wlu_print_vector(WLU_VEC2, &s_vertices[i].pos);
+    wlu_print_vector(WLU_VEC3, &s_vertices[i].color);
   }
 
   /**
@@ -301,7 +301,7 @@ START_TEST(test_vulkan_rect) {
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, vertices);
+  err = wlu_create_buff_mem_map(app, cur_bd, s_vertices);
   check_err(err, app, wc, NULL)
   cur_bd++;
   /* End of staging buffer */
