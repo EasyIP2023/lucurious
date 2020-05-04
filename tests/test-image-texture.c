@@ -227,10 +227,10 @@ START_TEST(test_vulkan_image_texture) {
   err = wlu_create_buff_mem_map(app, cur_bd, pixels);
   check_err(err, app, wc, NULL)
 
-  /* Now that the image has been moved into CPU visible momory the original pixels are no longer needed */
+  /* Now that the image has been moved into CPU visible memory the original pixels are no longer needed */
   stbi_image_free(pixels); pixels = NULL;
 
-  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_B8G8R8A8_UNORM, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );

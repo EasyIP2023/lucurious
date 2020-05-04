@@ -6,7 +6,18 @@
 
 Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, that look similar to [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) as its primary renderer and does operations over the Wayland display server protocol to assist in building optimal, memory efficient, easy to use desktop environments that may appear to be straight from science fiction.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! It\'s currently a library for building and styling 2D/3D Vulkan Wayland Compositors, that look similar to [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire). It'll later be transformed into a Desktop Engine. It uses [Vulkan](https://www.khronos.org/vulkan/) as its primary renderer with Wayland as its display server protocol to assist in building optimal, memory efficient, easy to use desktop environments that appear to be straight from science fiction.
+
+## Purpose
+I'm designing lucurious to be more focused on content. I do not want to be focused on optimizing my desktop environments or consistently working with the lower level APIs. Yes, my API will be restrictive in nature not in the sense of content creation.
+
+**Current Goal:** Finishing the content creator [This is what I am calling it]
+
+**Bellow are my creation steps:**
+1. Finish the content creator [Vulkan Renderer that gives developers control over the framebuffers they wish to create]
+2. Get wayland compositor to composite user defined content
+3. Implement desktop specific features
+4. Transform to a desktop engine
 
 ## Dependencies
 * wayland-client
@@ -16,8 +27,6 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * vulkan (Install your graphics card driver)
 * vulkan-icd-loader
 * vulkan-headers
-* vulkan-sdk
-* libinput
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * [libshaderc](https://github.com/google/shaderc)
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang and libshaderc)
@@ -29,6 +38,8 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 
 ## Useful Sites
 * [Writing an efficient Vulkan renderer](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)
+* [swvkc](https://github.com/st3r4g/swvkc/)
+* [vkwayland](https://bitbucket.org/cheako/vkwayland/src/master/)
 * [Wayland freedesktop](https://wayland.freedesktop.org/)
 * [An introduction to Wayland](https://drewdevault.com/2017/06/10/Introduction-to-Wayland.html)
 * [Weston](https://github.com/wayland-project/weston)
