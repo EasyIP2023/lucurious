@@ -26,7 +26,8 @@
 #include <lucom.h>
 
 VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size) {
-  VkResult err;
+
+  VkResult err = VK_RESULT_MAX_ENUM;
   VkShaderModule shader_module = VK_NULL_HANDLE;
 
   if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return shader_module; }
@@ -57,6 +58,7 @@ VkResult wlu_create_render_pass(
   uint32_t dependencyCount,
   const VkSubpassDependency *pDependencies
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
@@ -131,12 +133,13 @@ VkResult wlu_create_graphics_pipelines(
 }
 
 VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   VkPipelineCacheCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-  create_info.flags = 0;
   create_info.pNext = NULL;
+  create_info.flags = 0;
   create_info.initialDataSize = initialDataSize;
   create_info.pInitialData = pInitialData;
 
@@ -204,6 +207,7 @@ VkResult wlu_create_desc_pool(
   uint32_t psize,
   VkDescriptorPoolSize *pool_sizes
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   VkDescriptorPoolCreateInfo create_info = {};

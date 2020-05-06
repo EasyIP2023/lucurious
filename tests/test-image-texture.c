@@ -130,7 +130,7 @@ START_TEST(test_vulkan_image_texture) {
   * SRGB if used for colorSpace if available, because it
   * results in more accurate perceived colors
   */
-  VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+  VkSurfaceFormatKHR surface_fmt = wlu_choose_swap_surface_format(app, VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   check_err(surface_fmt.format == VK_FORMAT_UNDEFINED, app, wc, NULL)
 
   VkPresentModeKHR pres_mode = wlu_choose_swap_present_mode(app);
@@ -196,7 +196,8 @@ START_TEST(test_vulkan_image_texture) {
 
   /* Start of image loader */
   VkDeviceSize img_size; VkExtent3D img_extent;
-  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/water_train.jpg");
+  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/texture.jpg");
+  check_err(!picture, app, wc, NULL)
 
   int pw = 0, ph = 0, pchannels = 0;
 
@@ -208,7 +209,7 @@ START_TEST(test_vulkan_image_texture) {
   img_extent.height = ph;
   img_extent.depth = 1;
 
-  wlu_log_me(WLU_SUCCESS, "textures/water_train.jpg successfully loaded", picture);
+  wlu_log_me(WLU_SUCCESS, "textures/texture.jpg successfully loaded", picture);
   free(picture); picture = NULL;
   /* End of image loader */
 
@@ -230,7 +231,7 @@ START_TEST(test_vulkan_image_texture) {
   /* Now that the image has been moved into CPU visible memory the original pixels are no longer needed */
   stbi_image_free(pixels); pixels = NULL;
 
-  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_B8G8R8A8_UNORM, img_extent, 1, 1,
+  VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
@@ -309,8 +310,6 @@ START_TEST(test_vulkan_image_texture) {
   bindings[1] = wlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
 
   VkDescriptorSetLayoutCreateInfo desc_set_info = wlu_set_desc_set_layout_info(0, 2, bindings);
-
-  /* Using mutiple layouts for all VkDescriptorSetLayout objects */
   err = wlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
   check_err(err, app, wc, NULL)
 
@@ -349,9 +348,7 @@ START_TEST(test_vulkan_image_texture) {
 
   VkPipelineDynamicStateCreateInfo dynamic_state = wlu_set_dynamic_state_info(2, dynamic_states);
 
-  VkPipelineInputAssemblyStateCreateInfo input_assembly = wlu_set_input_assembly_state_info(
-    VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
-  );
+  VkPipelineInputAssemblyStateCreateInfo input_assembly = wlu_set_input_assembly_state_info(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
   VkViewport viewport = wlu_set_view_port(0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f);
   VkRect2D scissor = wlu_set_rect2D(0, 0, extent.width, extent.height);
@@ -464,11 +461,9 @@ START_TEST(test_vulkan_image_texture) {
   /* End of staging buffer for index */
 
   /* Start of index buffer */
-  err = wlu_create_vk_buffer(
-    app, cur_bd, isize, 0,
+  err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i',
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -506,29 +501,11 @@ START_TEST(test_vulkan_image_texture) {
   pool_sizes[0] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
   pool_sizes[1] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app->sc_data[cur_scd].sic);
 
-  err = wlu_create_desc_pool(app, cur_dd, 0, 2, pool_sizes);
+  err = wlu_create_desc_pool(app, cur_dd, 0, sizeof(pool_sizes) / sizeof(VkDescriptorPoolSize), pool_sizes);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_desc_set(app, cur_dd);
   check_err(err, app, wc, NULL)
-
-  /* set uniform buffer VKBufferInfos */
-  VkDescriptorBufferInfo buff_info;
-  VkWriteDescriptorSet writes[2];
-
-  VkDescriptorImageInfo desc_img_info = {};
-  desc_img_info.sampler = app->text_data[cur_tex].sampler;
-  desc_img_info.imageView = app->text_data[cur_tex].view;
-  desc_img_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    buff_info = wlu_set_desc_buff_info(app->buff_data[i+cur_bd].buff, 0, VK_WHOLE_SIZE);
-    writes[0] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 0, 0, 1,
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
-    writes[1] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1,
-                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
-    wlu_update_desc_sets(app, 2, writes, 0, NULL);
-  }
 
   wlu_log_me(WLU_SUCCESS, "ALL ALLOCATED BUFFERS");
   for (uint32_t i = 0; i < app->bdc; i++) {
@@ -548,8 +525,22 @@ START_TEST(test_vulkan_image_texture) {
   /* Drawing will start when you begin a render pass */
   wlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent.width, extent.height, 2, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
+  /* set uniform buffer VKBufferInfos */
+  VkWriteDescriptorSet writes[2];
+  VkDescriptorBufferInfo buff_info;
+
+  VkDescriptorImageInfo desc_img_info = wlu_set_desc_img_info(app->text_data[cur_tex].sampler,
+    app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+  );
+
   const VkDeviceSize offsets[1] = {0}; /* Bind and draw in all available command buffers */
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    buff_info = wlu_set_desc_buff_info(app->buff_data[i+cur_bd].buff, 0, VK_WHOLE_SIZE);
+    writes[0] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 0, 0, 1,
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+    writes[1] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1,
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
+    wlu_update_desc_sets(app, sizeof(writes) / sizeof(VkWriteDescriptorSet), writes, 0, NULL);
     wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
     wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);

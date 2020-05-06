@@ -22,21 +22,9 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_WAYLAND_ALL_H
-#define WLU_WAYLAND_ALL_H
+#ifndef WLU_WAYLAND_UTILS_DRM_INFO_H
+#define WLU_WAYLAND_UTILS_DRM_INFO_H
 
-#ifdef LUCUR_DRM_EXEC_API
-#include "utils/drm_info.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_CLIENT_API
-#include "wclient/create.h"
-#include "wclient/setup.h"
-#endif
-
-#ifdef INAPI_CALLS
-#include "utils/shm.h"
-#include "backend/globals.h"
-#endif
+int wlu_print_dconf_info(const char *gpu);
 
 #endif

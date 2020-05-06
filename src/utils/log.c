@@ -60,6 +60,15 @@ void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...) {
 	fprintf(stream, "%s\n", term_colors[WLU_RESET]);
 }
 
+void _wlu_print_me(wlu_log_type type, const char *msg, ...) {
+  va_list args;
+  fprintf(stdout, "%s", term_colors[type]);
+  va_start(args, msg);
+  vfprintf(stdout, msg, args);
+  va_end(args);
+  fprintf(stdout, "%s", term_colors[WLU_RESET]);
+}
+
 /* Modified version of what's in wlroots */
 const char *_wlu_strip_path(const char *filepath) {
 	if (*filepath == '.')

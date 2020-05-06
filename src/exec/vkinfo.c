@@ -31,40 +31,7 @@ static const char *instance_extensions[] = {
   VK_KHR_DISPLAY_EXTENSION_NAME
 };
 
-static const char *colors[] = {
-	[WLU_NONE]    = "",
-	[WLU_SUCCESS] = "\x1B[32;1m",
-	[WLU_DANGER]  = "\x1B[31;1m",
-	[WLU_INFO]    = "\x1B[30;1m",
-	[WLU_WARNING] = "\x1B[33;1m",
-	[WLU_RESET]   = "\x1b[0m",
-};
-
-void help_message() {
-  fprintf(stdout, "Usage: lucur [options]\n");
-  fprintf(stdout, "Example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
-
-  fprintf(stdout, "Options:\n");
-  fprintf(stdout, "\t-l, --pgvl\t\t\t Print global validation layers\n");
-  fprintf(stdout, "\t-i, --pie\t\t\t Print instance extenstion list\n");
-  fprintf(stdout, "\t-d, --pde <VkPhysicalDeviceType> Print device extenstion list\n");
-  fprintf(stdout, "\t-v, --version\t\t\t Print lucurious library version\n");
-  fprintf(stdout, "\t-h, --help\t\t\t Show this message\n");
-}
-
-void version_num() {
-  fprintf(stdout, "%s", colors[WLU_SUCCESS]);
-  fprintf(stdout, "lucurious %s\n", LUCUR_VERSION);
-  fprintf(stdout, "%s", colors[WLU_RESET]);
-}
-
-void lower_to_upper(char *s) {
-  while (*s != '\0') {
-    if (*s >= 'a' && *s <= 'z')
-      *s = ('A' + *s - 'a');
-    s++;
-  }
-}
+void lower_to_upper(char *s);
 
 void print_gvalidation_layers() {
   VkResult err;
@@ -76,25 +43,19 @@ void print_gvalidation_layers() {
   err = wlu_set_global_layers(&vk_props, &lcount);
   if (err) {
     wlu_freeup_vk(app);
-    fprintf(stdout, "%s", colors[WLU_DANGER]);
-    fprintf(stdout, "[x] Vulkan SDK must not be installed\n");
-    fprintf(stdout, "[x] wlu_set_global_layers failed\n");
-    fprintf(stdout, "%s", colors[WLU_RESET]);
+    wlu_print_msg(WLU_DANGER, "[x] Vulkan SDK must not be installed\n");
+    wlu_print_msg(WLU_DANGER, "[x] wlu_set_global_layers failed\n");
     return;
   }
 
-  fprintf(stdout, "%s", colors[WLU_SUCCESS]);
-  fprintf(stdout, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
-  fprintf(stdout, "%s", colors[WLU_INFO]);
-  
+  wlu_print_msg(WLU_SUCCESS, "\n\t\t\t\tValidation Layers List\n\t\tLayer Name\t\t\t\tDescription\n\n");
+
   for (uint32_t i = 0; i < lcount; i++) {
-    fprintf(stdout, "\t%s", vk_props[i].layerName);
-    fprintf(stdout, "\t\t%s\n", vk_props[i].description);
+    wlu_print_msg(WLU_INFO, "\t%s", vk_props[i].layerName);
+    wlu_print_msg(WLU_INFO, "\t\t%s\n", vk_props[i].description);
   }
 
-  fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n\tValidation Layer Count: %d\n", lcount);
-  fprintf(stdout, "%s\n", colors[WLU_RESET]);
+  wlu_print_msg(WLU_WARNING, "\n\tValidation Layer Count: %d\n", lcount);
 
   wlu_freeup_vk(app);
 }
@@ -106,9 +67,7 @@ void print_instance_extensions() {
   err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
   if (err) { wlu_freeup_vk(app); return; }
 
-  fprintf(stdout, "%s", colors[WLU_SUCCESS]);
-  fprintf(stdout, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
-  fprintf(stdout, "%s", colors[WLU_INFO]);
+  wlu_print_msg(WLU_SUCCESS, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
 
   /* set available instance extensions */
   VkExtensionProperties *ie_props = VK_NULL_HANDLE;
@@ -119,12 +78,10 @@ void print_instance_extensions() {
 
   for (uint32_t i = 0; i < eip_count; i++) {
     lower_to_upper(ie_props[i].extensionName);
-    fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n", ie_props[i].specVersion, ie_props[i].extensionName);
+    wlu_print_msg(WLU_INFO, "\t%d\t %s_EXTENSION_NAME\n", ie_props[i].specVersion, ie_props[i].extensionName);
   }
 
-  fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n  Instance Extension Count: %d\n", eip_count);
-  fprintf(stdout, "%s\n", colors[WLU_RESET]);
+  wlu_print_msg(WLU_WARNING, "\n  Instance Extension Count: %d\n", eip_count);
 
   wlu_freeup_vk(app);
 }
@@ -142,9 +99,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   err = wlu_create_physical_device(app, dt, &device_props, &device_feats);
   if (err) { wlu_freeup_vk(app); return; }
 
-  fprintf(stdout, "%s", colors[WLU_SUCCESS]);
-  fprintf(stdout, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
-  fprintf(stdout, "%s", colors[WLU_INFO]);
+  wlu_print_msg(WLU_SUCCESS, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
 
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
   uint32_t de_count = 0;
@@ -154,12 +109,10 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
 
   for (uint32_t i = 0; i < de_count; i++) {
     lower_to_upper(de_props[i].extensionName);
-    fprintf(stdout, "\t%d\t %s_EXTENSION_NAME\n", de_props[i].specVersion, de_props[i].extensionName);
+    wlu_print_msg(WLU_INFO, "\t%d\t %s_EXTENSION_NAME\n", de_props[i].specVersion, de_props[i].extensionName);
   }
 
-  fprintf(stdout, "%s", colors[WLU_WARNING]);
-  fprintf(stdout, "\n  Device Extension Count: %d\n", de_count);
-  fprintf(stdout, "%s\n", colors[WLU_RESET]);
+  wlu_print_msg(WLU_WARNING, "\n  Device Extension Count: %d\n", de_count);
 
   wlu_freeup_vk(app);
 }

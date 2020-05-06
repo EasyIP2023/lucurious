@@ -137,6 +137,7 @@ VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
 VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 ) {
+
   VkPipelineInputAssemblyStateCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   create_info.pNext = NULL;
@@ -225,6 +226,7 @@ VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
 }
 
 VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+
   VkRect2D scissor = {};
   scissor.offset.x = x;
   scissor.offset.y = y;

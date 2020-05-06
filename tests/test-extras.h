@@ -38,7 +38,7 @@ typedef struct _vertex_3D {
 
 typedef struct _vertex_tex_2D {
   vec2 pos;
-  vec3 color;
+  vec3 color; /* I want the color to be all to blend with the texture so keep */
   vec2 tex_coord;
 } vertex_text_2D;
 

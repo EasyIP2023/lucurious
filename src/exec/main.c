@@ -25,6 +25,8 @@
 #include <getopt.h>
 
 #define LUCUR_VKCOMP_API
+#define LUCUR_WAYLAND_API
+#define LUCUR_DRM_EXEC_API
 #include <lucom.h>
 
 VkQueueFlagBits ret_qfambit(char *str);
@@ -46,17 +48,16 @@ int main(int argc, char **argv) {
     int option_index = 0;
 
     static struct option long_options[] = {
-      {"version", no_argument,       0,  0  },
-      {"help",    no_argument,       0,  0  },
-      {"pgvl",    no_argument,       0,  0  },
-      {"pie",     no_argument,       0,  0  },
-      {"pde",     required_argument, 0,  0  },
-      {0,         0,                 0,  0  }
+      {"version",      no_argument,       0,  0  },
+      {"help",         no_argument,       0,  0  },
+      {"pgvl",         no_argument,       0,  0  },
+      {"pie",          no_argument,       0,  0  },
+      {"pde",          required_argument, 0,  0  },
+      {"display-info", required_argument, 0,  0  },
+      {0,              0,                 0,  0  }
     };
 
-    c = getopt_long(argc, argv, "vhlid:",
-        long_options, &option_index);
-
+    c = getopt_long(argc, argv, "vhlid:", long_options, &option_index);
     if (c == NEG_ONE) { goto exit_loop; }
     track++;
 
@@ -70,7 +71,16 @@ int main(int argc, char **argv) {
           if (optarg) {
             print_device_extensions(ret_dtype(optarg));
           } else {
-            fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
+            wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+            goto exit_loop;
+          }
+        }
+        if (!strcmp(long_options[option_index].name, "display-info")) {
+          if (optarg) {
+            if (wlu_print_dconf_info(optarg)) {
+              wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --display-info /dev/dri/card0\n");
+              goto exit_loop;
+            }
           }
         }
         break;
@@ -83,20 +93,13 @@ int main(int argc, char **argv) {
         if (optarg) {
           print_device_extensions(ret_dtype(optarg));
         } else {
-          fprintf(stdout, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
+          wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+          goto exit_loop;
         }
         break;
       case '?': break;
-      default: fprintf(stdout, "[x] getopt returned character code 0%o ??\n", c); break;
+      default: break;
     }
-  }
-
-  if (optind < argc) {
-    printf("[x] non-option ARGV-elements: ");
-    while (optind < argc)
-      printf("[x] %s ", argv[optind++]);
-    printf("\n");
-    printf("[x] Type lucur --help for help\n");
   }
 
 exit_loop:

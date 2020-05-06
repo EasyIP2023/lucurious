@@ -22,21 +22,5 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_WAYLAND_ALL_H
-#define WLU_WAYLAND_ALL_H
-
-#ifdef LUCUR_DRM_EXEC_API
-#include "utils/drm_info.h"
-#endif
-
-#ifdef LUCUR_WAYLAND_CLIENT_API
-#include "wclient/create.h"
-#include "wclient/setup.h"
-#endif
-
-#ifdef INAPI_CALLS
-#include "utils/shm.h"
-#include "backend/globals.h"
-#endif
-
-#endif
+#define LUCUR_WAYLAND_API
+#include <lucom.h>

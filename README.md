@@ -30,6 +30,7 @@ I'm designing lucurious to be more focused on content. I do not want to be focus
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * [libshaderc](https://github.com/google/shaderc)
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang and libshaderc)
+* libdrm
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)

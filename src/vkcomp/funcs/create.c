@@ -48,9 +48,9 @@ VkResult wlu_create_instance(
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pNext = NULL;
   app_info.pApplicationName = app_name;
-  app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
+  app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   app_info.pEngineName = engine_name;
-  app_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+  app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   app_info.apiVersion = VK_API_VERSION_1_0;
 
   /**
