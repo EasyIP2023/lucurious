@@ -22,6 +22,8 @@
 # THE SOFTWARE.
 #
 
+drm = dependency('libdrm')
+
 wayland_scanner_back = generator(
   wayland_scanner,
   output: '@BASENAME@-protocol.h',
@@ -38,6 +40,7 @@ endforeach
 lib_wbackend = static_library(
   'lwbackend',
   wayland_scanner_back_cglue,
-  files('globals.c', 'screen.c'),
-  include_directories: lucur_inc
+  files('globals.c', 'screen.c', 'drm_info.c'),
+  include_directories: lucur_inc,
+  dependencies: [drm]
 )

@@ -23,11 +23,10 @@
 #
 
 lib_rt = cc.find_library('rt', required : true)
-drm = dependency('libdrm')
 
 lib_wutils = static_library(
   'lwutils',
-  files('shm.c', 'drm_info.c'),
+  files('shm.c'),
   include_directories: lucur_inc,
-  dependencies: [lib_rt, drm]
+  dependencies: [lib_rt]
 )

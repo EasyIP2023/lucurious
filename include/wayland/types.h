@@ -59,14 +59,13 @@ typedef struct _wlu_way_core wclient;
 typedef struct _wlu_way_core wserver;
 #endif
 
-
-typedef struct _drm_core {
-  struct _framebuffer {
-    uint32_t drmid;
-    uint32_t width;
-    uint32_t height;
-    uint32_t stride;
-  } framebuffer;
-
+#ifdef LUCUR_DRM_API
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+typedef struct _wlu_drm_core {
+  uint32_t drmfd;
+  drmModeRes *dms;
 } wlu_drm_core;
+#endif
+
 #endif

@@ -25,4 +25,6 @@
 #ifndef WLU_WAYLAND_BACKEND_SCREEN_H
 #define WLU_WAYLAND_BACKEND_SCREEN_H
 
+int wlu_modeset_open(wlu_drm_core *core, const char *gpu);
+
 #endif

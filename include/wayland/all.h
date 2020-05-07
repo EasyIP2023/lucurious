@@ -25,8 +25,9 @@
 #ifndef WLU_WAYLAND_ALL_H
 #define WLU_WAYLAND_ALL_H
 
-#ifdef LUCUR_DRM_EXEC_API
-#include "utils/drm_info.h"
+#ifdef LUCUR_DRM_API
+#include "backend/drm_info.h"
+#include "backend/screen.h"
 #endif
 
 #ifdef LUCUR_WAYLAND_CLIENT_API

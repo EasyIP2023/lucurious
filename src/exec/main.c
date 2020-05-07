@@ -26,7 +26,7 @@
 
 #define LUCUR_VKCOMP_API
 #define LUCUR_WAYLAND_API
-#define LUCUR_DRM_EXEC_API
+#define LUCUR_DRM_API
 #include <lucom.h>
 
 VkQueueFlagBits ret_qfambit(char *str);

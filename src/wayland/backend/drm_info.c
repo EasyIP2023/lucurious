@@ -23,11 +23,10 @@
 */
 
 #define LUCUR_WAYLAND_API
-#define LUCUR_DRM_EXEC_API
+#define LUCUR_DRM_API
 #include <lucom.h>
 
 #include <fcntl.h>
-#include <xf86drmMode.h>
 
 /* Can find here https://code.woboq.org/linux/linux/include/uapi/drm/drm_mode.h.html */
 static const char *ouput_devices(uint32_t type) {
@@ -54,32 +53,26 @@ static const char *ouput_devices(uint32_t type) {
 }
 
 int wlu_print_dconf_info(const char *gpu) {
-  int fd = open(gpu, O_RDONLY);
-  if (fd == NEG_ONE) {
-    wlu_print_msg(WLU_DANGER, "[x] open: %s\n", strerror(errno));
-    return NEG_ONE;  
-  }
+  wlu_drm_core core;
+  if (wlu_modeset_open(&core, gpu)) return NEG_ONE;
 
-  wlu_print_msg(WLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
-  drmModeRes *dms = drmModeGetResources(fd);
-
-  if (dms->count_crtcs)
+  if (core.dms->count_crtcs)
     wlu_print_msg(WLU_SUCCESS, "\t\tAvailable CRTCs\n");
-  for (int i=0; i < dms->count_crtcs; i++)
-    wlu_print_msg(WLU_INFO, "\t\t\t%d\n", dms->crtcs[i]);
+  for (int i=0; i < core.dms->count_crtcs; i++)
+    wlu_print_msg(WLU_INFO, "\t\t\t%d\n", core.dms->crtcs[i]);
 
-  if (dms->count_fbs)
+  if (core.dms->count_fbs)
     wlu_print_msg(WLU_SUCCESS, "\n\t\tAloocated Framebuffers\n");
-  for (int i=0; i < dms->count_fbs; i++)
-    wlu_print_msg(WLU_INFO, "\t\t\t%d\n", dms->fbs[i]);
+  for (int i=0; i < core.dms->count_fbs; i++)
+    wlu_print_msg(WLU_INFO, "\t\t\t%d\n", core.dms->fbs[i]);
 
   wlu_print_msg(WLU_SUCCESS, "\n\tConnector ID\tConnector Name\tCTRC ID\t  Framebuffer\n");
-  for (int i=0; i < dms->count_connectors; i++) {
-    drmModeConnector *c = drmModeGetConnector(fd, dms->connectors[i]);
+  for (int i=0; i < core.dms->count_connectors; i++) {
+    drmModeConnector *c = drmModeGetConnector(core.drmfd, core.dms->connectors[i]);
     wlu_print_msg(WLU_INFO,  "\t     %d      \t    %s", c->connector_id, ouput_devices(c->connector_type));
     if (c->encoder_id) {
-      drmModeEncoder *e = drmModeGetEncoder(fd, c->encoder_id);
-      drmModeCrtc *crtc = drmModeGetCrtc(fd, e->crtc_id);
+      drmModeEncoder *e = drmModeGetEncoder(core.drmfd, c->encoder_id);
+      drmModeCrtc *crtc = drmModeGetCrtc(core.drmfd, e->crtc_id);
       wlu_print_msg(WLU_INFO,"\t\t  %d", e->crtc_id);
       wlu_print_msg(WLU_INFO,"\t      %d\n", crtc->buffer_id);
       drmModeFreeCrtc(crtc);
@@ -88,8 +81,8 @@ int wlu_print_dconf_info(const char *gpu) {
     drmModeFreeConnector(c);
   }
 
-  puts("");
-  drmModeFreeResources(dms);
-  close(fd);
+  fprintf(stdout, "\n");
+  drmModeFreeResources(core.dms);
+  close(core.drmfd);
   return 0;
 }

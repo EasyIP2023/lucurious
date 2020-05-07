@@ -23,4 +23,20 @@
 */
 
 #define LUCUR_WAYLAND_API
+#define LUCUR_DRM_API
 #include <lucom.h>
+
+#include <fcntl.h>
+
+int wlu_modeset_open(wlu_drm_core *core, const char *gpu) {
+
+  core->drmfd = open(gpu, O_RDONLY);
+  if (core->drmfd == UINT32_MAX) {
+    wlu_print_msg(WLU_DANGER, "[x] open: %s\n", strerror(errno));
+    return NEG_ONE;  
+  }
+
+  wlu_print_msg(WLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
+  core->dms = drmModeGetResources(core->drmfd);
+  return 0;
+} 

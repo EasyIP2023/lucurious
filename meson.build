@@ -47,7 +47,7 @@ add_project_arguments(
   language : 'c'
 )
 
-lucur_inc = include_directories('.', 'include')
+lucur_inc = include_directories('.', 'include', '/usr/include/libdrm')
 
 subdir('include')
 subdir('src')
