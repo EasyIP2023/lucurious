@@ -43,7 +43,6 @@ void print_gvalidation_layers() {
   err = wlu_set_global_layers(&vk_props, &lcount);
   if (err) {
     wlu_freeup_vk(app);
-    wlu_print_msg(WLU_DANGER, "[x] Vulkan SDK must not be installed\n");
     wlu_print_msg(WLU_DANGER, "[x] wlu_set_global_layers failed\n");
     return;
   }

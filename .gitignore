@@ -28,3 +28,4 @@ peda*
 
 xdg-shell-protocol.h
 
+tests/textures/texture.h

@@ -36,8 +36,7 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "textures/texture.h"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -194,26 +193,8 @@ START_TEST(test_vulkan_image_texture) {
   err = wlu_create_pipeline_cache(app, 0, NULL);
   check_err(err, app, wc, NULL)
 
-  /* Start of image loader */
-  VkDeviceSize img_size; VkExtent3D img_extent;
-  char *picture = concat("%s/tests/%s", WLU_DIR_SRC, "textures/texture.jpg");
-  check_err(!picture, app, wc, NULL)
-
-  int pw = 0, ph = 0, pchannels = 0;
-
-  /* First load the image */
-  stbi_uc *pixels = stbi_load(picture, &pw, &ph, &pchannels, STBI_rgb_alpha);
-  check_err(!pixels, app, wc, NULL)
-
-  img_extent.width = pw;
-  img_extent.height = ph;
-  img_extent.depth = 1;
-
-  wlu_log_me(WLU_SUCCESS, "textures/texture.jpg successfully loaded", picture);
-  free(picture); picture = NULL;
-  /* End of image loader */
-
-  img_size = img_extent.width * img_extent.height * 4;
+  VkExtent3D img_extent = { 512, 512, 1};
+  VkDeviceSize img_size = img_extent.width * img_extent.height * 4;
 
   /**
   * The buffer is a staging host visible memory buffer. That can be map.
@@ -225,11 +206,8 @@ START_TEST(test_vulkan_image_texture) {
   );
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_buff_mem_map(app, cur_bd, pixels);
+  err = wlu_create_buff_mem_map(app, cur_bd, (void *) MagickImage);
   check_err(err, app, wc, NULL)
-
-  /* Now that the image has been moved into CPU visible memory the original pixels are no longer needed */
-  stbi_image_free(pixels); pixels = NULL;
 
   VkImageCreateInfo img_info = wlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,

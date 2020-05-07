@@ -23,6 +23,8 @@
 #
 
 check = dependency('check')
+convert = find_program('convert', required: false)
+
 
 lucur_alloc_test = executable('lucur-alloc-test',
   'test-alloc.c', include_directories: lucur_inc,
@@ -83,14 +85,6 @@ lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
   install: false
 )
 
-it_files = ['test-image-texture.c', 'helpers.c']
-lucur_img_texture_test = executable('lucur-img-texture-test',
-  it_files, include_directories: lucur_inc,
-  dependencies: [check, math], link_with: lib_lucur,
-  c_args: '-DDEV_ENV --std=gnu18',
-  install: false
-)
-
 test('lucur-alloc-test', lucur_alloc_test, suite: ['alloc'])
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-wclient-test', lucur_wclient_test, suite: ['all'])
@@ -99,4 +93,18 @@ test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
 test('lucur-square-test', lucur_square_test, suite: ['images'])
 test('lucur-cube-test', lucur_cube_test, suite: ['images'])
 test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['images'])
-test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
+
+if convert.found()
+  run_command('convert', 'textures/texture.jpg', '-define', 'h:format=bgra', '-depth', '8', 'textures/texture.h')
+
+  it_files = ['test-image-texture.c', 'helpers.c']
+  lucur_img_texture_test = executable('lucur-img-texture-test',
+    it_files, include_directories: lucur_inc,
+    dependencies: [check, math], link_with: lib_lucur,
+    c_args: '-DDEV_ENV --std=gnu18',
+    install: false
+  )
+
+  test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
+endif
+
