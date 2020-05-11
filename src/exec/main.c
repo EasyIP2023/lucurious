@@ -36,6 +36,7 @@ void version_num();
 void print_gvalidation_layers();
 void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
+void print_display_extensions(VkPhysicalDeviceType dt);
 
 int main(int argc, char **argv) {
   int c = 0;
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
       {"pgvl",         no_argument,       0,  0  },
       {"pie",          no_argument,       0,  0  },
       {"pde",          required_argument, 0,  0  },
+      {"pdp",          required_argument, 0,  0  },
       {"display-info", required_argument, 0,  0  },
       {0,              0,                 0,  0  }
     };
@@ -72,6 +74,14 @@ int main(int argc, char **argv) {
             print_device_extensions(ret_dtype(optarg));
           } else {
             wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+            goto exit_loop;
+          }
+        }
+        if (!strcmp(long_options[option_index].name, "pdp")) {
+          if (optarg) {
+            print_display_extensions(ret_dtype(optarg));
+          } else {
+            wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pdp VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
             goto exit_loop;
           }
         }

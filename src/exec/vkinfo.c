@@ -25,12 +25,6 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-static const char *instance_extensions[] = {
-  VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
-  VK_KHR_SURFACE_EXTENSION_NAME,
-  VK_KHR_DISPLAY_EXTENSION_NAME
-};
-
 void lower_to_upper(char *s);
 
 void print_gvalidation_layers() {
@@ -63,7 +57,7 @@ void print_instance_extensions() {
   VkResult err;
   vkcomp *app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
+  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 0, NULL);
   if (err) { wlu_freeup_vk(app); return; }
 
   wlu_print_msg(WLU_SUCCESS, "\n\t Instance Extension List\n  SpecVersion\t\tExtension Name\n\n");
@@ -72,7 +66,7 @@ void print_instance_extensions() {
   VkExtensionProperties *ie_props = VK_NULL_HANDLE;
   uint32_t eip_count = 0;
 
-  err = get_extension_properties(app, NULL, &ie_props, &eip_count);
+  err = get_extension_properties(app, NULL, &eip_count, &ie_props);
   if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < eip_count; i++) {
@@ -89,7 +83,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   VkResult err;
   vkcomp *app = wlu_init_vk();
 
-  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 3, instance_extensions);
+  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 0, NULL);
   if (err) { wlu_freeup_vk(app); return; }
 
   /* This will get the physical device, it's properties, and features */
@@ -103,7 +97,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
   uint32_t de_count = 0;
 
-  err = get_extension_properties(app, NULL, &de_props, &de_count);
+  err = get_extension_properties(app, NULL, &de_count, &de_props);
   if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < de_count; i++) {
@@ -112,6 +106,28 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   }
 
   wlu_print_msg(WLU_WARNING, "\n  Device Extension Count: %d\n", de_count);
+
+  wlu_freeup_vk(app);
+}
+
+void print_display_extensions(VkPhysicalDeviceType dt) {
+  VkResult err;
+  vkcomp *app = wlu_init_vk();
+
+  err = wlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 0, NULL);
+  if (err) { wlu_freeup_vk(app); return; }
+
+  /* This will get the physical device, it's properties, and features */
+  VkPhysicalDeviceProperties device_props; VkPhysicalDeviceFeatures device_feats;
+  err = wlu_create_physical_device(app, dt, &device_props, &device_feats);
+  if (err) { wlu_freeup_vk(app); return; }
+
+  err = wlu_get_physical_device_display_propertiesKHR(app);
+  if (err) { wlu_freeup_vk(app); return; }
+
+  for (uint32_t i = 0; i < app->dpc; i++) {
+    wlu_print_msg(WLU_SUCCESS, "%s\n", app->dis_data[i].props.displayName);
+  }
 
   wlu_freeup_vk(app);
 }

@@ -50,9 +50,10 @@ typedef enum _wlu_data_type {
   WLU_BUFF_DATA = 0x0003,
   WLU_DESC_DATA = 0x0004,
   WLU_TEXT_DATA = 0x0005,
-  WLU_SC_DATA_MEMS = 0x0006,
-  WLU_DESC_DATA_MEMS = 0x0007,
-  WLU_GP_DATA_MEMS = 0x0008
+  WLU_DIS_DATA = 0x0006,
+  WLU_SC_DATA_MEMS = 0x0007,
+  WLU_DESC_DATA_MEMS = 0x0008,
+  WLU_GP_DATA_MEMS = 0x0009
 } wlu_data_type;
 
 typedef enum _wlu_err_msg_type {
@@ -99,6 +100,7 @@ typedef struct _wlu_otma_mems {
   uint32_t bd_cnt;    /* buffer data count */
   uint32_t dd_cnt;    /* descriptor data count */
   uint32_t td_cnt;    /* texture data count */
+  uint32_t dis_cnt;   /* displat data count */
 } wlu_otma_mems;
 
 #endif

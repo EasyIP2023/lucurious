@@ -1,15 +1,15 @@
-`# Lucurious
+# Lucurious
 ![Example 1](https://66.media.tumblr.com/76896cad1a8b07abc2ddd331dcc7403b/tumblr_oun56jf9mK1u2y46bo4_1280.jpg)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This is one mans attempt at something that could be cool. This is by no means official industry level software. This is just something I'm doing on the side for fun. IT WILL NOT BE DOCUMENTED!!! The only documentation you will find is from comments in the code. Also the API function calls parameters will be constantly changing as I continue to expand the functionality of the vulkan renderer. Yes, I am still learning all of these APIs**
+**Note: This is one mans attempt at something that could be cool. This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
 
 Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
 
 Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be a library (maybe a desktop engine later) for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers (Vulkan Wayland Compositors) that are optimal, memory efficient, and easy to use. These renderers allow for easy creation of desktop environments that appear to be straight from science fiction.
 
 ## Purpose
-I'm designing lucurious to be more focused on content. I do not want to be focused on optimizing my desktop environments or consistently working with the lower level APIs. Yes, my API will be restrictive in nature not in the sense of content creation.
+I'm designing lucurious to be more focused on content. I do not want to be focused on optimizing windowing systems or consistently working with the lower level APIs.
 
 **Current Goal:** Finishing the content creator [This is what I am calling it]
 

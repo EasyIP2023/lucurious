@@ -172,6 +172,7 @@ VkResult wlu_queue_graphics_queue(
   uint32_t signalSemaphoreCount,
   const VkSemaphore *pSignalSemaphores
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   VkSubmitInfo submit_info = {};
@@ -204,6 +205,7 @@ VkResult wlu_queue_present_queue(
   const uint32_t *pImageIndices,
   VkResult *pResults
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   VkPresentInfoKHR present;
@@ -218,6 +220,33 @@ VkResult wlu_queue_present_queue(
 
   res = vkQueuePresentKHR(app->present_queue, &present);
   if (res) PERR(WLU_VK_FUNC_ERR, res, "vkQueuePresentKHR")
+
+  return res;
+}
+
+VkResult wlu_get_physical_device_display_propertiesKHR(vkcomp *app) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+  VkDisplayPropertiesKHR *pProperties = NULL;
+
+  if (app->dis_data) { wlu_log_me(WLU_DANGER, "[x] wlu_get_physical_device_display_propertiesKHR: can only run once"); return res; }
+
+  res = vkGetPhysicalDeviceDisplayPropertiesKHR(app->physical_device, &app->dpc, NULL);
+  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetPhysicalDeviceDisplayPropertiesKHR"); return res; }
+
+  if (!app->dpc) { PERR(WLU_VK_FUNC_ERR, 0, "vkGetPhysicalDeviceDisplayPropertiesKHR: pPropertyCount = 0") return res; }
+
+  pProperties = alloca(app->dpc * sizeof(VkDisplayPropertiesKHR));
+
+  res = vkGetPhysicalDeviceDisplayPropertiesKHR(app->physical_device, &app->dpc, pProperties);
+  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkGetPhysicalDeviceDisplayPropertiesKHR");
+
+  /* Allocate and Assign */
+  res = wlu_otba(WLU_DIS_DATA, app, INDEX_IGNORE, app->dpc);
+  if (res) { PERR(WLU_ALLOC_FAILED, 0, NULL); return res; }
+
+  for (uint32_t i = 0; i < app->dpc; i++)
+    app->dis_data[i].props = pProperties[i];
 
   return res;
 }

@@ -78,12 +78,12 @@ typedef struct _vkcomp {
   VkSurfaceKHR surface;
 
   VkPhysicalDevice physical_device;
-  struct queue_family_indices {
+  VkDevice device; /* logical device */
+  struct _queue_family_indices {
     uint32_t graphics_family;
     uint32_t present_family;
   } indices;
 
-  VkDevice device; /* logical device */
   VkQueue graphics_queue;
   VkQueue present_queue;
 
@@ -160,6 +160,11 @@ typedef struct _vkcomp {
     VkDeviceMemory mem;
     VkSampler sampler;
   } *text_data;
+
+  uint32_t dpc; /* Display Data Count = VkDisplayProps Count */
+  struct _dis_data {
+    VkDisplayPropertiesKHR props;
+  } *dis_data;
 } vkcomp;
 
 #endif

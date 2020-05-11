@@ -275,6 +275,7 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.dd_cnt * sizeof(struct _desc_data));
 
   size += (ma.td_cnt * sizeof(struct _text_data));
+  size += (ma.dis_cnt * sizeof(struct _dis_data));
 
   if (!wlu_alloc(type, size)) return false;
 
@@ -324,6 +325,13 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         app->text_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
         if (!app->text_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
         app->tdc = arr_size; return false;
+      }
+    case WLU_DIS_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->dis_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
+        if (!app->dis_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->dpc = arr_size; return false;
       }
     case WLU_SC_DATA_MEMS:
       {

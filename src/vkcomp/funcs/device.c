@@ -48,22 +48,21 @@ VkBool32 is_device_suitable(
 VkResult get_extension_properties(
   vkcomp *app,
   VkPhysicalDevice device,
-  VkExtensionProperties **eprops,
-  uint32_t *size
+  uint32_t *count,
+  VkExtensionProperties **eprops
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, size, NULL);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, count, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, count, NULL);
   if (res) { PERR(WLU_VK_FUNC_ERR, res, (app) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
-  /* Rare but may happen for instances. If so continue on with the app */
-  if (*size == 0) return VK_RESULT_MAX_ENUM;
+  if (*count == 0) return VK_RESULT_MAX_ENUM;
 
-  /* set available instance extensions */
-  *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkExtensionProperties));
+  /* Allocate space for extensions then set the available instance extensions */
+  *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *count * sizeof(VkExtensionProperties));
   if (!(*eprops)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, size, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, size, *eprops);
+  res = (app) ? vkEnumerateInstanceExtensionProperties(NULL, count, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, count, *eprops);
   if (res) { PERR(WLU_VK_FUNC_ERR, res, (app) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   return res;

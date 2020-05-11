@@ -60,6 +60,7 @@ void help_message() {
   wlu_print_msg(WLU_INFO, "\t-l, --pgvl\t\t\t Print global validation layers\n");
   wlu_print_msg(WLU_INFO, "\t-i, --pie\t\t\t Print instance extenstion list\n");
   wlu_print_msg(WLU_INFO, "\t-d, --pde <VkPhysicalDeviceType> Print device extenstion list\n");
+  wlu_print_msg(WLU_INFO, "\t    --pdp <VkPhysicalDeviceType> Print display devices list\n");
   wlu_print_msg(WLU_INFO, "\t    --display-info <gpu> \t Display GPU info and capabilities\n");
   wlu_print_msg(WLU_INFO, "\t-v, --version\t\t\t Print lucurious library version\n");
   wlu_print_msg(WLU_INFO, "\t-h, --help\t\t\t Show this message\n");

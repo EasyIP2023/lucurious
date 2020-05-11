@@ -90,4 +90,10 @@ VkResult wlu_queue_present_queue(
   VkResult *pResults
 );
 
+/**
+* Query display properities for a choosen physical device to allow for
+* implementation of a rendering/presentation backend of a windowing system
+*/
+VkResult wlu_get_physical_device_display_propertiesKHR(vkcomp *app);
+
 #endif

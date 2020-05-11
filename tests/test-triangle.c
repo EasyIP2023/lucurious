@@ -75,7 +75,8 @@ START_TEST(test_vulkan_client_create) {
   err = init_buffs(app);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
+  err = wlu_create_instance(app, "Hello Triangle", "No Engine", sizeof(enabled_validation_layers) / sizeof(const char*),
+                            enabled_validation_layers, sizeof(instance_extensions) / sizeof(const char*), instance_extensions);
   check_err(err, app, wc, NULL)
 
   err = wlu_set_debug_message(app);
@@ -96,7 +97,8 @@ START_TEST(test_vulkan_client_create) {
   err = wlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, sizeof(enabled_validation_layers) / sizeof(const char*), enabled_validation_layers,
+                                  sizeof(device_extensions) / sizeof(const char*), device_extensions);
   check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_get_physical_device_surface_capabilities(app);

@@ -190,7 +190,7 @@ VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
 VkResult wlu_create_logical_device(
   vkcomp *app,
-  VkPhysicalDeviceFeatures *device_feats,
+  VkPhysicalDeviceFeatures *pEnabledFeatures,
   uint32_t queue_count,
   uint32_t enabledLayerCount,
   const char *const *ppEnabledLayerNames,
@@ -230,7 +230,7 @@ VkResult wlu_create_logical_device(
   create_info.ppEnabledLayerNames = ppEnabledLayerNames;
   create_info.enabledExtensionCount = enabledExtensionCount;
   create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
-  create_info.pEnabledFeatures = device_feats;
+  create_info.pEnabledFeatures = pEnabledFeatures;
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
