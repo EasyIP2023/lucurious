@@ -66,7 +66,7 @@ void print_instance_extensions() {
   VkExtensionProperties *ie_props = VK_NULL_HANDLE;
   uint32_t eip_count = 0;
 
-  err = get_extension_properties(app, NULL, &eip_count, &ie_props);
+  err = get_extension_properties(NULL, &eip_count, &ie_props);
   if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < eip_count; i++) {
@@ -97,7 +97,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
   uint32_t de_count = 0;
 
-  err = get_extension_properties(app, NULL, &de_count, &de_props);
+  err = get_extension_properties(app->physical_device, &de_count, &de_props);
   if (err) { wlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < de_count; i++) {

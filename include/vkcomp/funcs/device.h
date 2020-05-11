@@ -33,7 +33,6 @@ VkBool32 is_device_suitable(
 );
 
 VkResult get_extension_properties(
-  vkcomp *app,
   VkPhysicalDevice device,
   uint32_t *count,
   VkExtensionProperties **eprops
