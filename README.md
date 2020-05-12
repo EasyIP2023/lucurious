@@ -1,15 +1,12 @@
 # Lucurious
-![Example 1](https://66.media.tumblr.com/76896cad1a8b07abc2ddd331dcc7403b/tumblr_oun56jf9mK1u2y46bo4_1280.jpg)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This is one mans attempt at something that could be cool. This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
-
-Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
+**Note: This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
 
 Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be a library (maybe a desktop engine later) for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers (Vulkan Wayland Compositors) that are optimal, memory efficient, and easy to use. These renderers allow for easy creation of desktop environments that appear to be straight from science fiction.
 
 ## Purpose
-I'm designing lucurious to be more focused on content. I do not want to be focused on optimizing windowing systems or consistently working with the lower level APIs.
+I'm designing lucurious to be more focused on ease of use and content. I do not want to be focused on optimizing windowing systems or consistently working with the lower level APIs.
 
 **Current Goal:** Finishing the content creator [This is what I am calling it]
 
@@ -17,7 +14,6 @@ I'm designing lucurious to be more focused on content. I do not want to be focus
 1. Finish the content creator [Vulkan DRM Renderer that gives developers control over the framebuffers they wish to create]
 2. Get Vulkan DRM Renderer to display user defined content
 3. Implement desktop specific features
-4. Transform to a desktop engine
 
 ## Dependencies
 * wayland-client
@@ -35,7 +31,6 @@ I'm designing lucurious to be more focused on content. I do not want to be focus
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
-### [Benchmarks](https://github.com/EasyIP2023/lucurious-benchmarks)
 
 ## Useful Sites
 * [Writing an efficient Vulkan renderer](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)

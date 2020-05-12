@@ -26,7 +26,7 @@
 #include <lucom.h>
 
 /* Taken From: https://www.roxlu.com/2014/047/high-resolution-timer-function-in-c-c-- */
-uint64_t wlu_hrnst() {
+uint64_t wlu_hrnst(void) {
   static uint64_t is_init = 0;
   static struct timespec linux_rate;
 

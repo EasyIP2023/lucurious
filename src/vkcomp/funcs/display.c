@@ -234,7 +234,7 @@ VkResult wlu_get_physical_device_display_propertiesKHR(vkcomp *app) {
   res = vkGetPhysicalDeviceDisplayPropertiesKHR(app->physical_device, &app->dpc, NULL);
   if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetPhysicalDeviceDisplayPropertiesKHR"); return res; }
 
-  if (!app->dpc) { PERR(WLU_VK_FUNC_ERR, 0, "vkGetPhysicalDeviceDisplayPropertiesKHR: pPropertyCount = 0") return res; }
+  if (!app->dpc) { wlu_log_me(WLU_DANGER, "[x] vkGetPhysicalDeviceDisplayPropertiesKHR: pPropertyCount = 0"); return res; }
 
   pProperties = alloca(app->dpc * sizeof(VkDisplayPropertiesKHR));
 

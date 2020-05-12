@@ -35,7 +35,7 @@
 #endif
 
 /* Returns the current time in nanoseconds */
-uint64_t wlu_hrnst();
+uint64_t wlu_hrnst(void);
 
 /**
 * Gratuitous function that works similarly to memcpy instead

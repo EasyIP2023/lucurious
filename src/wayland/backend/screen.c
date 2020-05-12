@@ -36,7 +36,8 @@ int wlu_modeset_open(wlu_drm_core *core, const char *gpu) {
     return NEG_ONE;  
   }
 
-  wlu_print_msg(WLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
   core->dms = drmModeGetResources(core->drmfd);
+  if (!core->dms) { wlu_log_me(WLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno)); return -errno; }
+
   return 0;
 } 
