@@ -25,9 +25,10 @@
 #ifndef WLU_WAYLAND_TYPES_H
 #define WLU_WAYLAND_TYPES_H
 
-#include <linux/input-event-codes.h>
+#include <wayland-client.h>
+#include <wayland-client-protocol.h>
 
-struct _wlu_way_core {
+typedef struct _wclient {
   struct wl_display *display;
   struct wl_compositor *compositor;
   struct wl_registry *registry;
@@ -37,35 +38,6 @@ struct _wlu_way_core {
 
   struct xdg_wm_base *shell;
   struct xdg_toplevel *xdg_toplevel;
-
-  void *shm_data;
-  struct wl_shm *shm;
-  struct wl_buffer *buffer;
-
-  uint32_t version;
-  int running;
-};
-
-#ifdef LUCUR_WAYLAND_CLIENT_API
-#include <wayland-client.h>
-#include <wayland-client-protocol.h>
-typedef struct _wlu_way_core wclient;
-#endif
-
-/* For now */
-#ifdef LUCUR_WAYLAND_SERVER_API
-#include <wayland-server.h>
-#include <wayland-server-protocol.h>
-typedef struct _wlu_way_core wserver;
-#endif
-
-#ifdef LUCUR_DRM_API
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-typedef struct _wlu_drm_core {
-  uint32_t drmfd;
-  drmModeRes *dms;
-} wlu_drm_core;
-#endif
+} wclient;
 
 #endif

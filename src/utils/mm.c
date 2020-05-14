@@ -30,6 +30,7 @@
 #include <lucom.h>
 #include "../../include/vkcomp/types.h"
 #include "../../include/wayland/types.h"
+#include "../../include/drm/types.h"
 
 /**
 * Struct that stores block metadata
@@ -252,7 +253,7 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.fla_cnt * sizeof(float));
   size += (ma.dba_cnt * sizeof(double));
 
-  size += (ma.wclient_cnt * sizeof(struct _wlu_way_core));
+  size += (ma.wclient_cnt * sizeof(struct _wclient));
 
   size += (ma.vkcomp_cnt * sizeof(vkcomp));
   size += (ma.vkext_props_cnt * sizeof(VkExtensionProperties));

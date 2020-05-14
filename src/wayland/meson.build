@@ -22,13 +22,39 @@
 # THE SOFTWARE.
 #
 
-subdir('protocols')
-subdir('utils')
-subdir('wserver')
-subdir('wclient')
-subdir('backend')
+wayland_protos = dependency('wayland-protocols', required : false)
+wayland_scanner = find_program('wayland-scanner', required : false)
+wayland_client = dependency('wayland-client', required : false)
+wayland_protos_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 
-lib_lwayland = [
-  lib_wprotos, lib_wutils, lib_wclient,
-  lib_wserver, lib_wbackend
+wayland_protos = [
+  [wayland_protos_dir, 'stable/xdg-shell/xdg-shell.xml'],
 ]
+
+wayland_scanner_code = generator(
+  wayland_scanner,
+  output: '@BASENAME@-protocol.c',
+  arguments: ['private-code', '@INPUT@', '@OUTPUT@'],
+)
+
+wayland_scanner_client = generator(
+  wayland_scanner,
+  output: '@BASENAME@-client-protocol.h',
+  arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
+)
+
+# Create corresponding C glue code from wayland xml protocls extension files
+wayland_cglue = []
+foreach p : wayland_protos
+  xml = join_paths(p)
+  wayland_cglue += wayland_scanner_client.process(xml)
+  wayland_cglue += wayland_scanner_code.process(xml)
+endforeach
+
+lib_lwayland = static_library(
+  'lwayland',
+  wayland_cglue,
+  files('create.c', 'setup.c'),
+  include_directories: lucur_inc,
+  dependencies: [wayland_client]
+)

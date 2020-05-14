@@ -36,6 +36,11 @@
 #include "spirv/all.h"
 #endif
 
+#ifdef LUCUR_DRM_API
+#include "drm/types.h"
+#include "drm/all.h"
+#endif
+
 #ifdef LUCUR_MATH_API
 #include "math/types.h"
 #include "math/all.h"
@@ -46,7 +51,7 @@
 #include "vkcomp/all.h"
 #endif
 
-#ifdef LUCUR_WAYLAND_API
+#ifdef LUCUR_WAYLAND_CLIENT_API
 #include "wayland/types.h"
 #include "wayland/all.h"
 #endif

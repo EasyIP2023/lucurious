@@ -26,7 +26,6 @@
 
 #define LUCUR_VKCOMP_API
 #define LUCUR_MATH_API
-#define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
 #include <lucom.h>

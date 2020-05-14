@@ -25,7 +25,6 @@
 #include <getopt.h>
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_WAYLAND_API
 #define LUCUR_DRM_API
 #include <lucom.h>
 

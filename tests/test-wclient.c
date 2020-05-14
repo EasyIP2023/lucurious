@@ -24,7 +24,6 @@
 
 #include <check.h>
 
-#define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 

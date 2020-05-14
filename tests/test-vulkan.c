@@ -26,7 +26,6 @@
 
 #define LUCUR_VKCOMP_API
 /* Need for the definition of wlu_freeup_wc */
-#define LUCUR_WAYLAND_API
 #define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 

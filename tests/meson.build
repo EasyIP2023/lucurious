@@ -22,9 +22,8 @@
 # THE SOFTWARE.
 #
 
-check = dependency('check')
+check = dependency('check', required : false)
 convert = find_program('convert', required: false)
-
 
 lucur_alloc_test = executable('lucur-alloc-test',
   'test-alloc.c', include_directories: lucur_inc,
@@ -98,12 +97,8 @@ if convert.found()
   run_command('convert', 'textures/texture.jpg', '-define', 'h:format=bgra', '-depth', '8', 'textures/texture.h')
 
   it_files = ['test-image-texture.c', 'helpers.c']
-  lucur_img_texture_test = executable('lucur-img-texture-test',
-    it_files, include_directories: lucur_inc,
-    dependencies: [check, math], link_with: lib_lucur,
-    c_args: '-DDEV_ENV --std=gnu18',
-    install: false
-  )
+  lucur_img_texture_test = executable('lucur-img-texture-test', it_files, include_directories: lucur_inc,
+    dependencies: [check, math], link_with: lib_lucur, c_args: '-DDEV_ENV --std=gnu18', install: false)
 
   test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
 endif

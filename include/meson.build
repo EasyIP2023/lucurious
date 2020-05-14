@@ -25,6 +25,13 @@
 i_dir = '/usr/include/wlu/'
 install_headers('lucurious.h', install_dir: i_dir)
 
+
+##########################
+# Installing DRM headers #
+##########################
+drm_hs = ['drm/all.h', 'drm/types.h', 'drm/screen.h', 'drm/info.h']
+install_headers(drm_hs, install_dir: i_dir + 'drm')
+
 ############################
 # Installing utils headers #
 ############################
@@ -72,12 +79,8 @@ install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
 ##############################
 # Installing wayland headers #
 ##############################
-wayland_i_dir = i_dir + 'wayland/'
-wayland_main_hs = ['wayland/all.h', 'wayland/types.h']
-install_headers(wayland_main_hs, install_dir: wayland_i_dir)
 
-#####################################
-# Installing wayland client headers #
-#####################################
-wayland_client_hs = ['wayland/wclient/setup.h', 'wayland/wclient/create.h']
-install_headers(wayland_client_hs, install_dir: wayland_i_dir + 'wclient')
+# I am leaving them like this until I can make a decision on whether to not install them at all
+wayland_i_dir = i_dir + 'wayland/'
+wayland_main_hs = ['wayland/all.h', 'wayland/types.h', 'wayland/setup.h', 'wayland/create.h']
+install_headers(wayland_main_hs, install_dir: wayland_i_dir)

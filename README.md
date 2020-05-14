@@ -1,25 +1,15 @@
 # Lucurious
+[//]: <> (GIF taken from https://gmunk.com/OBLIVION-GFX)
+<p align="center"><img src="https://github.com/EasyIP2023/readme_testing/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
 **Note: This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be a library (maybe a desktop engine later) for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers (Vulkan Wayland Compositors) that are optimal, memory efficient, and easy to use. These renderers allow for easy creation of desktop environments that appear to be straight from science fiction.
+Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
 
-## Purpose
-I'm designing lucurious to be more focused on ease of use and content. I do not want to be focused on optimizing windowing systems or consistently working with the lower level APIs.
-
-**Current Goal:** Finishing the content creator [This is what I am calling it]
-
-**Bellow are my creation steps:**
-1. Finish the content creator [Vulkan DRM Renderer that gives developers control over the framebuffers they wish to create]
-2. Get Vulkan DRM Renderer to display user defined content
-3. Implement desktop specific features
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable science fiction environments.
 
 ## Dependencies
-* wayland-client
-* wayland-server
-* wayland-protocols
-* wayland-scanner
 * vulkan (Install your graphics card driver)
 * vulkan-icd-loader
 * vulkan-headers
@@ -32,14 +22,10 @@ I'm designing lucurious to be more focused on ease of use and content. I do not 
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
 
-## Useful Sites
+## Useful Links
+* [kms-quads](https://gitlab.freedesktop.org/daniels/kms-quads)
 * [Writing an efficient Vulkan renderer](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)
-* [swvkc](https://github.com/st3r4g/swvkc/)
-* [vkwayland](https://bitbucket.org/cheako/vkwayland/src/master/)
-* [wayfire](https://wayfire.org/)/[wayfire github](https://github.com/WayfireWM/wayfire)
-* [Wayland freedesktop](https://wayland.freedesktop.org/)
 * [An introduction to Wayland](https://drewdevault.com/2017/06/10/Introduction-to-Wayland.html)
-* [Weston](https://github.com/wayland-project/weston)
 * [Programming Wayland Clients](https://jan.newmarch.name/Wayland/index.html)
 * [Emersion Hello Wayland](https://github.com/emersion/hello-wayland)
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
