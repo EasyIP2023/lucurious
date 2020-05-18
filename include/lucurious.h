@@ -25,6 +25,8 @@
 #ifndef LUCURIOUS_H
 #define LUCURIOUS_H
 
+#define ARR_LEN(var) (sizeof(var) / sizeof((var)[0]))
+
 /* Contains linear algebra types used throughout apps */
 #include <cglm/types.h>
 

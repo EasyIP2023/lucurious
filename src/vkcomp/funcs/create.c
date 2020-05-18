@@ -295,7 +295,7 @@ VkResult wlu_create_swap_chain(
   create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
      VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
 
-  for (uint8_t i = 0; i < sizeof(ca_flags) / sizeof(ca_flags[0]); i++) {
+  for (uint8_t i = 0; i < ARR_LEN(ca_flags); i++) {
     if (capabilities.supportedCompositeAlpha & ca_flags[i]) {
       create_info.compositeAlpha = ca_flags[i];
       break;

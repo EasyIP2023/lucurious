@@ -95,8 +95,7 @@ START_TEST(test_vulkan_image_texture) {
   err = init_buffs(app);
   check_err(err, app, wc, NULL)
 
-  err = wlu_create_instance(app, "Image Texture", "No Engine", sizeof(enabled_validation_layers) / sizeof(const char*),
-                            enabled_validation_layers, sizeof(instance_extensions) / sizeof(const char*), instance_extensions);
+  err = wlu_create_instance(app, "Image Texture", "No Engine", ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(instance_extensions), instance_extensions);
   check_err(err, app, wc, NULL)
 
   err = wlu_set_debug_message(app);
@@ -118,8 +117,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   device_feats.samplerAnisotropy = VK_TRUE;
-  err = wlu_create_logical_device(app, &device_feats, 1, sizeof(enabled_validation_layers) / sizeof(const char*), enabled_validation_layers,
-                                  sizeof(device_extensions) / sizeof(const char*), device_extensions);
+  err = wlu_create_logical_device(app, &device_feats, 1, ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = wlu_get_physical_device_surface_capabilities(app);
@@ -379,7 +377,7 @@ START_TEST(test_vulkan_image_texture) {
   };
 
   VkDeviceSize vsize = sizeof(tvertices);
-  const uint32_t vertex_count = vsize / sizeof(vertex_text_2D);
+  const uint32_t vertex_count = ARR_LEN(tvertices);
 
   for (uint32_t i = 0; i < vertex_count; i++) {
     wlu_log_me(WLU_INFO, "Position Coordinates"); wlu_print_vector(WLU_VEC2, &tvertices[i].pos);
@@ -428,7 +426,7 @@ START_TEST(test_vulkan_image_texture) {
 
   /* Start of staging buffer for index */
   VkDeviceSize isize = sizeof(indices);
-  const uint32_t index_count = isize / sizeof(uint16_t); /* 2 bytes */
+  const uint32_t index_count = ARR_LEN(indices);
   err = wlu_create_vk_buffer(app, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -481,7 +479,7 @@ START_TEST(test_vulkan_image_texture) {
   pool_sizes[0] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
   pool_sizes[1] = wlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app->sc_data[cur_scd].sic);
 
-  err = wlu_create_desc_pool(app, cur_dd, 0, sizeof(pool_sizes) / sizeof(VkDescriptorPoolSize), pool_sizes);
+  err = wlu_create_desc_pool(app, cur_dd, 0, ARR_LEN(pool_sizes), pool_sizes);
   check_err(err, app, wc, NULL)
 
   err = wlu_create_desc_set(app, cur_dd);
@@ -520,7 +518,7 @@ START_TEST(test_vulkan_image_texture) {
                 VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
     writes[1] = wlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1,
                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
-    wlu_update_desc_sets(app, sizeof(writes) / sizeof(VkWriteDescriptorSet), writes, 0, NULL);
+    wlu_update_desc_sets(app, ARR_LEN(writes), writes, 0, NULL);
     wlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     wlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
     wlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
