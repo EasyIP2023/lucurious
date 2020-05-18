@@ -26,16 +26,16 @@
 #include <lucom.h>
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
-  VkDebugReportFlagsEXT flags,
-  VkDebugReportObjectTypeEXT objectType,
-  uint64_t object,
-  size_t  location,
-  int32_t messageCode,
-  const char *pLayerPrefix,
+  VkDebugReportFlagsEXT flags UNUSED,
+  VkDebugReportObjectTypeEXT objectType UNUSED,
+  uint64_t object UNUSED,
+  size_t  location UNUSED,
+  int32_t messageCode UNUSED,
+  const char *pLayerPrefix UNUSED,
   const char *pMessage,
-  void *pUserData
+  void *pUserData UNUSED
 ) {
-  ALL_UNUSED(flags, objectType, object, messageCode, location, pLayerPrefix, pUserData);
+
   wlu_log_me(WLU_DANGER, "%s", pMessage);
   return VK_FALSE;
 }

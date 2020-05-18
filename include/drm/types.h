@@ -26,8 +26,20 @@
 #ifndef WLU_DRM_TYPES_H
 #define WLU_DRM_TYPES_H
 
+/* These headers allow for the use of ioctl calls directly */
+#include <drm.h>
+#include <drm_fourcc.h>
+#include <drm_mode.h>
+
+/**
+* These headers are DRM API user space headers. Mainly used
+* for device and resource enumeration
+*/
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+
+/* GBM allocates buffers that are used with use KMS */
+#include <gbm.h>
 
 typedef struct _wlu_drm_core {
   uint32_t drmfd;

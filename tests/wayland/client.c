@@ -31,8 +31,7 @@ static void noop() {
   // This space intentionally left blank
 }
 
-static void xdg_surface_handle_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
-  ALL_UNUSED(data);
+static void xdg_surface_handle_configure(void *data UNUSED, struct xdg_surface *xdg_surface, uint32_t serial) {
   xdg_surface_ack_configure(xdg_surface, serial);
 }
 
@@ -40,8 +39,7 @@ static const struct xdg_surface_listener xdg_surface_listener = {
   .configure = xdg_surface_handle_configure,
 };
 
-static void xdg_toplevel_handle_close(void *data, struct xdg_toplevel *xdg_toplevel) {
-  ALL_UNUSED(data, xdg_toplevel);
+static void xdg_toplevel_handle_close(void *data UNUSED, struct xdg_toplevel *xdg_toplevel UNUSED) {
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
@@ -49,19 +47,16 @@ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
   .close = xdg_toplevel_handle_close,
 };
 
-static void global_registry_remover(void *data, struct wl_registry *registry, uint32_t name) {
-  ALL_UNUSED(data, registry, name);
+static void global_registry_remover(void *data UNUSED, struct wl_registry *registry UNUSED, uint32_t name UNUSED) {
 }
 
 static void global_registry_handler(
-  void *data, struct wl_registry *registry,
+  void *data UNUSED, struct wl_registry *registry,
   uint32_t name, const char *interface,
-  uint32_t version
+  uint32_t version UNUSED
 ) {
-  ALL_UNUSED(data, version);
-  struct _wclient *wc = (struct _wclient *) data;
 
-  wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
+  struct _wclient *wc = (struct _wclient *) data;
   if (!strcmp(interface, wl_compositor_interface.name)) {
     wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
   } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {

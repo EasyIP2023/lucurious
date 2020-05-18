@@ -23,6 +23,7 @@
 #
 
 drm = dependency('libdrm')
+gbm = dependency('gbm')
 
 lib_ldrm = static_library(
   'ldrm',
