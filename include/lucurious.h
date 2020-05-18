@@ -51,9 +51,4 @@
 #include "vkcomp/all.h"
 #endif
 
-#ifdef LUCUR_WAYLAND_CLIENT_API
-#include "wayland/types.h"
-#include "wayland/all.h"
-#endif
-
 #endif

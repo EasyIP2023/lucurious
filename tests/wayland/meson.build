@@ -24,7 +24,6 @@
 
 wayland_protos = dependency('wayland-protocols', required : false)
 wayland_scanner = find_program('wayland-scanner', required : false)
-wayland_client = dependency('wayland-client', required : false)
 wayland_protos_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 
 wayland_protos = [
@@ -54,7 +53,7 @@ endforeach
 lib_lwayland = static_library(
   'lwayland',
   wayland_cglue,
-  files('create.c', 'setup.c'),
+  files('client.c'),
   include_directories: lucur_inc,
   dependencies: [wayland_client]
 )

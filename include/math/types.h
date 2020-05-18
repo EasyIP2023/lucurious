@@ -25,6 +25,8 @@
 #ifndef WLU_VKCOMP_MATH_TYPES_H
 #define WLU_VKCOMP_MATH_TYPES_H
 
+#include <cglm/types.h>
+
 typedef enum _wlu_rotate_type {
   WLU_X = 0x0000,
   WLU_Y = 0x0001,

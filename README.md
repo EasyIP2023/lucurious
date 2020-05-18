@@ -5,9 +5,9 @@
 
 **Note: This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
 
-Inspired by the t.v series The Expanse and other syfy t.v shows/movies.
+Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable science fiction environments.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable single application compositors that appear to be straight out of science fiction.
 
 ## Dependencies
 * vulkan (Install your graphics card driver)
@@ -25,9 +25,6 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 ## Useful Links
 * [kms-quads](https://gitlab.freedesktop.org/daniels/kms-quads)
 * [Writing an efficient Vulkan renderer](https://zeux.io/2020/02/27/writing-an-efficient-vulkan-renderer/)
-* [An introduction to Wayland](https://drewdevault.com/2017/06/10/Introduction-to-Wayland.html)
-* [Programming Wayland Clients](https://jan.newmarch.name/Wayland/index.html)
-* [Emersion Hello Wayland](https://github.com/emersion/hello-wayland)
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
 * [Vulkan](https://vulkan.lunarg.com)
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)

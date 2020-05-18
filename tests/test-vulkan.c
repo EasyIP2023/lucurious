@@ -25,10 +25,9 @@
 #include <check.h>
 
 #define LUCUR_VKCOMP_API
-/* Need for the definition of wlu_freeup_wc */
-#define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 
+#include "wayland/client.h" /* Leave for now */
 #include "test-extras.h"
 
 START_TEST(test_init_vulkan) {

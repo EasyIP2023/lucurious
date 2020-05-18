@@ -75,12 +75,3 @@ vkcomp_gp_hs = [
   'vkcomp/gp/exec.h', 'vkcomp/gp/set.h', 'vkcomp/gp/update.h'
 ]
 install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
-
-##############################
-# Installing wayland headers #
-##############################
-
-# I am leaving them like this until I can make a decision on whether to not install them at all
-wayland_i_dir = i_dir + 'wayland/'
-wayland_main_hs = ['wayland/all.h', 'wayland/types.h', 'wayland/setup.h', 'wayland/create.h']
-install_headers(wayland_main_hs, install_dir: wayland_i_dir)

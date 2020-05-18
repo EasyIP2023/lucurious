@@ -22,16 +22,10 @@
 * THE SOFTWARE.
 */
 
-#define LUCUR_WAYLAND_CLIENT_API
 #include <lucom.h>
 
+#include "client.h"
 #include "xdg-shell-client-protocol.h"
-
-/**
-* alloca()'s usage here is meant for stack space efficiency
-* Fixed size arrays tend to over allocate, while alloca will
-* allocate the exact amount of bytes that you want
-*/
 
 static void noop() {
   // This space intentionally left blank
@@ -67,7 +61,7 @@ static void global_registry_handler(
   ALL_UNUSED(data, version);
   struct _wclient *wc = (struct _wclient *) data;
 
-  // wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
+  wlu_log_me(WLU_INFO, "Got a registry event for %s id %d", interface, name);
   if (!strcmp(interface, wl_compositor_interface.name)) {
     wc->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
   } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
@@ -80,6 +74,30 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_handler,
   global_registry_remover
 };
+
+wclient *wlu_init_wc() {
+  wclient *wc = calloc(1, sizeof(wclient));
+  if (!wc) { wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno)); return wc; }
+  return wc;
+}
+
+void wlu_freeup_wc(wclient *wc) {
+  if (wc->xdg_surface)
+    xdg_surface_destroy(wc->xdg_surface);
+  if (wc->surface)
+    wl_surface_destroy(wc->surface);
+  if (wc->shell)
+    xdg_wm_base_destroy(wc->shell);
+  if (wc->xdg_toplevel)
+    xdg_toplevel_destroy(wc->xdg_toplevel);
+  if (wc->registry)
+    wl_registry_destroy(wc->registry);
+  if (wc->compositor)
+    wl_compositor_destroy(wc->compositor);
+  if (wc->display)
+    wl_display_disconnect(wc->display);
+  free(wc);
+}
 
 bool wlu_create_client(wclient *wc) {
   int err = 0;
@@ -97,9 +115,6 @@ bool wlu_create_client(wclient *wc) {
 
   err = wl_registry_add_listener(wc->registry, &registry_listener, wc);
   if (err) return false;
-
-  err = wl_display_dispatch(wc->display);
-  if (!err) return false;
 
   /* synchronously wait for the server respondes */
   err = wl_display_roundtrip(wc->display);
@@ -140,8 +155,6 @@ bool wlu_create_client(wclient *wc) {
 
   err = wl_display_roundtrip(wc->display);
   if (!err) return false;
-
-  wl_surface_commit(wc->surface);
 
   return true;
 }

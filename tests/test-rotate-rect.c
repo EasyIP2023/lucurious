@@ -27,12 +27,12 @@
 
 #define LUCUR_VKCOMP_API
 #define LUCUR_MATH_API
-#define LUCUR_WAYLAND_CLIENT_API
 #define LUCUR_SPIRV_API
 #define LUCUR_CLOCK_API
 #define CLOCK_MONOTONIC
 #include <lucom.h>
 
+#include "wayland/client.h"
 #include "test-extras.h"
 #include "test-shade.h"
 
@@ -41,8 +41,8 @@
 #define MAX_FRAMES 2
 
 static wlu_otma_mems ma = {
-  .vkcomp_cnt = 10, .wclient_cnt = 10, .desc_cnt = 10,
-  .gp_cnt = 10, .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
+  .vkcomp_cnt = 10, .desc_cnt = 10, .gp_cnt = 10,
+  .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
   .cmdd_cnt = 10, .bd_cnt = 10, .dd_cnt = 10
 };
 

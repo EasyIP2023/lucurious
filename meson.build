@@ -49,18 +49,14 @@ add_project_arguments(
 
 lucur_inc = include_directories('include', '/usr/include/libdrm')
 
-subdir('src')
 subdir('include')
+subdir('src')
 
 lucur_parts = [
   lib_utils, lib_shade,
   lib_math, lib_vkcomp,
   lib_ldrm
 ]
-
-if wayland_client.found()
-  lucur_parts += lib_lwayland
-endif
 
 lib_lucur = shared_library(
   meson.project_name(),
@@ -70,11 +66,6 @@ lib_lucur = shared_library(
   install_dir: '/usr/lib',
   install: true
 )
-
-if wayland_client.found()
-  # Test API calls
-  subdir('tests')
-endif
 
 lucur = declare_dependency(
   link_with: lib_lucur,
@@ -99,3 +90,9 @@ pkg_mod.generate(
   install_dir: '/usr/lib/pkgconfig',
   description: 'Library for building advanced DRM Vulkan Renderers'
 )
+
+# Test Vulkan render examples
+wayland_client = dependency('wayland-client', required : false)
+if wayland_client.found()
+  subdir('tests')
+endif
