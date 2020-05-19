@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_SET_FUNCS_H
-#define WLU_VKCOMP_SET_FUNCS_H
+#ifndef DLU_VKCOMP_SET_FUNCS_H
+#define DLU_VKCOMP_SET_FUNCS_H
 
 /**
 * Usage of functions in set.h files is optional
@@ -31,7 +31,7 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
-VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
+VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   VkRenderPass renderPass,
   uint32_t subpass,
   VkFramebuffer framebuffer,
@@ -40,7 +40,7 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
   VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
-VkImageSubresourceRange wlu_set_image_sub_resource_range(
+VkImageSubresourceRange dlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,
   uint32_t baseMipLevel,
   uint32_t levelCount,
@@ -49,7 +49,7 @@ VkImageSubresourceRange wlu_set_image_sub_resource_range(
 );
 
 /* set info for resource synchronization access */
-VkImageMemoryBarrier wlu_set_image_mem_barrier(
+VkImageMemoryBarrier dlu_set_image_mem_barrier(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
   VkImageLayout oldLayout,
@@ -60,7 +60,7 @@ VkImageMemoryBarrier wlu_set_image_mem_barrier(
   VkImageSubresourceRange subresourceRange
 );
 
-VkImageCreateInfo wlu_set_image_info(
+VkImageCreateInfo dlu_set_image_info(
   VkImageCreateFlags flags,
   VkImageType imageType,
   VkFormat format,
@@ -76,7 +76,7 @@ VkImageCreateInfo wlu_set_image_info(
   VkImageLayout initialLayout
 );
 
-VkImageViewCreateInfo wlu_set_image_view_info(
+VkImageViewCreateInfo dlu_set_image_view_info(
   VkImageViewCreateFlags flags,
   VkImage image,
   VkImageViewType viewType,
@@ -85,7 +85,7 @@ VkImageViewCreateInfo wlu_set_image_view_info(
   VkImageSubresourceRange subresourceRange
 );
 
-VkComponentMapping wlu_set_component_mapping(
+VkComponentMapping dlu_set_component_mapping(
   VkComponentSwizzle r,
   VkComponentSwizzle g,
   VkComponentSwizzle b,
@@ -93,7 +93,7 @@ VkComponentMapping wlu_set_component_mapping(
 );
 
 /* Allows for multiple different copies of from one buffer to the image in one operation */
-VkBufferImageCopy wlu_set_buff_image_copy(
+VkBufferImageCopy dlu_set_buff_image_copy(
   VkDeviceSize bufferOffset,
   uint32_t bufferRowLength,
   uint32_t bufferImageHeight,
@@ -102,17 +102,17 @@ VkBufferImageCopy wlu_set_buff_image_copy(
   VkExtent3D imageExtent
 );
 
-VkImageSubresourceLayers wlu_set_image_sub_resource_layers(
+VkImageSubresourceLayers dlu_set_image_sub_resource_layers(
   VkImageAspectFlags aspectMask,
   uint32_t mipLevel,
   uint32_t baseArrayLayer,
   uint32_t layerCount
 );
 
-VkExtent2D wlu_set_extent2D(uint32_t width, uint32_t height);
+VkExtent2D dlu_set_extent2D(uint32_t width, uint32_t height);
 
-VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth);
+VkExtent3D dlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth);
 
-VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z);
+VkOffset3D dlu_set_offset3D(int32_t x, int32_t y, int32_t z);
 
 #endif

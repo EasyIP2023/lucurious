@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_MATH_SET_H
-#define WLU_MATH_SET_H
+#ifndef DLU_MATH_SET_H
+#define DLU_MATH_SET_H
 
 /**
 * Usage of functions in set.h files is optional
@@ -31,18 +31,18 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
-float wlu_set_radian(float fovy);
+float dlu_set_radian(float fovy);
 
-void wlu_set_perspective(mat4 proj, float fovy, float aspect, float nearVal, float farVal);
+void dlu_set_perspective(mat4 proj, float fovy, float aspect, float nearVal, float farVal);
 
-void wlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up);
+void dlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up);
 
-void wlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model);
+void dlu_set_mvp_matrix(mat4 mvp, mat4 *clip, mat4 *proj, mat4 *view, mat4 *model);
 
-void wlu_set_matrix(wlu_matrix_type type, void *dest, void *src);
+void dlu_set_matrix(dlu_matrix_type type, void *dest, void *src);
 
-void wlu_set_vector(wlu_vec_type type, void *dest, void *src);
+void dlu_set_vector(dlu_vec_type type, void *dest, void *src);
 
-void wlu_set_rotate(wlu_rotate_type type, void *dest, float rad, void *sr);
+void dlu_set_rotate(dlu_rotate_type type, void *dest, float rad, void *sr);
 
 #endif

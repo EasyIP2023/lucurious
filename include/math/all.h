@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_MATH_ALL_H
-#define WLU_MATH_ALL_H
+#ifndef DLU_MATH_ALL_H
+#define DLU_MATH_ALL_H
 
 #include "print.h"
 #include "set.h"

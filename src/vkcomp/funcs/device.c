@@ -53,16 +53,16 @@ VkResult get_extension_properties(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   res = (!device) ? vkEnumerateInstanceExtensionProperties(NULL, count, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, count, NULL);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, (!device) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, (!device) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   if (*count == 0) return VK_RESULT_MAX_ENUM;
 
   /* Allocate space for extensions then set the available instance extensions */
-  *eprops = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *count * sizeof(VkExtensionProperties));
-  if (!(*eprops)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+  *eprops = dlu_alloc(DLU_SMALL_BLOCK_PRIV, *count * sizeof(VkExtensionProperties));
+  if (!(*eprops)) { PERR(DLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
   res = (!device) ? vkEnumerateInstanceExtensionProperties(NULL, count, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, count, *eprops);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, (!device) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, (!device) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   return res;
 }

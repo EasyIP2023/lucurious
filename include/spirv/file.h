@@ -22,10 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_SPIRV_FILE_H
-#define WLU_SPIRV_FILE_H
+#ifndef DLU_SPIRV_FILE_H
+#define DLU_SPIRV_FILE_H
 
 /* A way to load SPIR-V byte code */
-wlu_file_info wlu_read_file(const char *filename);
+dlu_file_info dlu_read_file(const char *filename);
 
 #endif

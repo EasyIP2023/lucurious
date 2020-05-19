@@ -22,10 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_EXEC_FUNCS_H
-#define WLU_VKCOMP_EXEC_FUNCS_H
+#ifndef DLU_VKCOMP_EXEC_FUNCS_H
+#define DLU_VKCOMP_EXEC_FUNCS_H
 
-VkResult wlu_exec_begin_cmd_buffs(
+VkResult dlu_exec_begin_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -33,14 +33,14 @@ VkResult wlu_exec_begin_cmd_buffs(
   const VkCommandBufferInheritanceInfo *pInheritanceInfo
 );
 
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
+VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
 
 /**
 * cur_pool: Function uses one time command buffer allocate/submit
 * src_bd: must be a valid VkBuffer
 * dst_bd: must be a valid VkBuffer
 */
-VkResult wlu_exec_copy_buffer(
+VkResult dlu_exec_copy_buffer(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t src_bd,
@@ -54,7 +54,7 @@ VkResult wlu_exec_copy_buffer(
 * cur_pool: Function uses one time command buffer allocate/submit
 * cur_bd: must be a valid VkBuffer that contains your image pixels
 */
-VkResult wlu_exec_copy_buff_to_image(
+VkResult dlu_exec_copy_buff_to_image(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_bd,
@@ -70,7 +70,7 @@ VkResult wlu_exec_copy_buff_to_image(
 * Image memory barrier is used to synchronize access to image resources.
 * Example: writing to a buffer completely before reading from it
 */
-VkResult wlu_exec_pipeline_barrier(
+VkResult dlu_exec_pipeline_barrier(
   vkcomp *app, 
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

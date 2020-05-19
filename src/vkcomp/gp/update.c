@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-VkWriteDescriptorSet wlu_write_desc_set(
+VkWriteDescriptorSet dlu_write_desc_set(
   VkDescriptorSet dstSet,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
@@ -51,7 +51,7 @@ VkWriteDescriptorSet wlu_write_desc_set(
   return write;
 }
 
-void wlu_update_desc_sets(
+void dlu_update_desc_sets(
   vkcomp *app,
   uint32_t descriptorWriteCount,
   const VkWriteDescriptorSet *pDescriptorWrites,

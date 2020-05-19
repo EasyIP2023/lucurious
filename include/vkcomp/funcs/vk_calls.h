@@ -22,13 +22,13 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_VK_CALLS_FUNCS_H
-#define WLU_VKCOMP_VK_CALLS_FUNCS_H
+#ifndef DLU_VKCOMP_VK_CALLS_FUNCS_H
+#define DLU_VKCOMP_VK_CALLS_FUNCS_H
 
 /* Allows for vulkan synchronization function calling within lucurious */
-VkResult wlu_vk_sync(wlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
+VkResult dlu_vk_sync(dlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
 
 /* Allows for more developer vulkan object destruction control */
-void wlu_vk_destroy(wlu_destroy_type type, vkcomp *app, void *data);
+void dlu_vk_destroy(dlu_destroy_type type, vkcomp *app, void *data);
 
 #endif

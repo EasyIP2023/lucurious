@@ -23,8 +23,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_DRM_TYPES_H
-#define WLU_DRM_TYPES_H
+#ifndef DLU_DRM_TYPES_H
+#define DLU_DRM_TYPES_H
 
 /* These headers allow for the use of ioctl calls directly */
 #include <drm.h>
@@ -41,9 +41,15 @@
 /* GBM allocates buffers that are used with use KMS */
 #include <gbm.h>
 
-typedef struct _wlu_drm_core {
+typedef enum _dlu_drm_plane_type {
+  DLU_DRM_PLANE_TYPE_PRIMARY = 0x0000, /* Store background image or graphics content */
+  DLU_DRM_PLANE_TYPE_CURSOR = 0x0001,  /* Used to display a cursor plane (mouse) */
+  DLU_DRM_PLANE_TYPE_OVERLAY = 0x0002  /* Used to display any image over a background */
+} dlu_drm_plane_type;
+
+typedef struct _dlu_drm_core {
   uint32_t drmfd;
   drmModeRes *dms;
-} wlu_drm_core;
+} dlu_drm_core;
 
 #endif

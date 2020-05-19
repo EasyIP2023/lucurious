@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-VkAttachmentDescription wlu_set_attachment_desc(
+VkAttachmentDescription dlu_set_attachment_desc(
   VkFormat format,
   VkSampleCountFlagBits samples,
   VkAttachmentLoadOp loadOp,
@@ -49,7 +49,7 @@ VkAttachmentDescription wlu_set_attachment_desc(
   return color_attachment;
 }
 
-VkAttachmentReference wlu_set_attachment_ref(
+VkAttachmentReference dlu_set_attachment_ref(
   uint32_t attachment, VkImageLayout layout
 ) {
 
@@ -60,7 +60,7 @@ VkAttachmentReference wlu_set_attachment_ref(
   return color_attachment_ref;
 }
 
-VkSubpassDescription wlu_set_subpass_desc(
+VkSubpassDescription dlu_set_subpass_desc(
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t inputAttachmentCount,
   const VkAttachmentReference *pInputAttachments,
@@ -88,7 +88,7 @@ VkSubpassDescription wlu_set_subpass_desc(
   return subpass;
 }
 
-VkSubpassDependency wlu_set_subpass_dep(
+VkSubpassDependency dlu_set_subpass_dep(
   uint32_t srcSubpass,
   uint32_t dstSubpass,
   VkPipelineStageFlags srcStageMask,
@@ -111,7 +111,7 @@ VkSubpassDependency wlu_set_subpass_dep(
 }
 
 /* Allows for actual use of the shaders we created */
-VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
+VkPipelineShaderStageCreateInfo dlu_set_shader_stage_info(
   VkShaderModule mod,
   const char *pName,
   VkShaderStageFlagBits stage,
@@ -134,7 +134,7 @@ VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
 * Defines what kind of geometry will be drawn from the vertices and
 * if primitive restart should be enable
 */
-VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
+VkPipelineInputAssemblyStateCreateInfo dlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 ) {
 
@@ -148,7 +148,7 @@ VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
   return create_info;
 }
 
-VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
+VkVertexInputBindingDescription dlu_set_vertex_input_binding_desc(
   uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
 ) {
 
@@ -160,7 +160,7 @@ VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
   return binding_desc;
 }
 
-VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
+VkVertexInputAttributeDescription dlu_set_vertex_input_attrib_desc(
   uint32_t location, uint32_t binding, VkFormat format, uint32_t offset
 ) {
 
@@ -173,7 +173,7 @@ VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
   return attrib_desc;
 }
 
-VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
+VkPipelineVertexInputStateCreateInfo dlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,
   uint32_t vertexAttributeDescriptionCount,
@@ -193,7 +193,7 @@ VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
 }
 
 /* Decribe the region of the framebuffer that the output is rendered to */
-VkViewport wlu_set_view_port(float x, float y, float width, float height, float minDepth, float maxDepth) {
+VkViewport dlu_set_view_port(float x, float y, float width, float height, float minDepth, float maxDepth) {
 
   VkViewport viewport = {};
   viewport.x = x;
@@ -206,7 +206,7 @@ VkViewport wlu_set_view_port(float x, float y, float width, float height, float 
   return viewport;
 }
 
-VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
+VkPipelineViewportStateCreateInfo dlu_set_view_port_state_info(
   uint32_t viewportCount,
   VkViewport *viewport,
   uint32_t scissorCount,
@@ -225,7 +225,7 @@ VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
   return create_info;
 }
 
-VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+VkRect2D dlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 
   VkRect2D scissor = {};
   scissor.offset.x = x;
@@ -236,7 +236,7 @@ VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
   return scissor;
 }
 
-VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
+VkPipelineRasterizationStateCreateInfo dlu_set_rasterization_state_info(
   VkBool32 depthClampEnable,
   VkBool32 rasterizerDiscardEnable,
   VkPolygonMode polygonMode,
@@ -277,7 +277,7 @@ VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
 }
 
 /* One of the best possible ways to perform anti-aliasing */
-VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
+VkPipelineMultisampleStateCreateInfo dlu_set_multisample_state_info(
   VkSampleCountFlagBits rasterizationSamples,
   VkBool32 sampleShadingEnable,
   float minSampleShading,
@@ -300,7 +300,7 @@ VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
   return create_info;
 }
 
-VkStencilOpState wlu_set_stencil_op_state(
+VkStencilOpState dlu_set_stencil_op_state(
   VkStencilOp failOp,
   VkStencilOp passOp,
   VkStencilOp depthFailOp,
@@ -322,7 +322,7 @@ VkStencilOpState wlu_set_stencil_op_state(
   return stencil_state;
 }
 
-VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
+VkPipelineDepthStencilStateCreateInfo dlu_set_depth_stencil_state(
   VkBool32 depthTestEnable,
   VkBool32 depthWriteEnable,
   VkCompareOp depthCompareOp,
@@ -359,7 +359,7 @@ VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
 * Mixing the old and new values to produce a final color
 * Combining the old and new values using a bitwise operation
 */
-VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
+VkPipelineColorBlendAttachmentState dlu_set_color_blend_attachment_state(
   VkBool32 blendEnable,
   VkBlendFactor srcColorBlendFactor,
   VkBlendFactor dstColorBlendFactor,
@@ -383,7 +383,7 @@ VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
   return color_blend_attachment;
 }
 
-VkPipelineColorBlendStateCreateInfo wlu_set_color_blend_attachment_state_info(
+VkPipelineColorBlendStateCreateInfo dlu_set_color_blend_attachment_state_info(
   VkBool32 logicOpEnable,
   VkLogicOp logicOp,
   uint32_t attachmentCount,
@@ -407,7 +407,7 @@ VkPipelineColorBlendStateCreateInfo wlu_set_color_blend_attachment_state_info(
   return create_info;
 }
 
-VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
+VkPipelineDynamicStateCreateInfo dlu_set_dynamic_state_info(
   uint32_t dynamicStateCount,
   const VkDynamicState *pDynamicStates
 ) {
@@ -422,7 +422,7 @@ VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
   return create_info;
 }
 
-VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
+VkDescriptorSetLayoutBinding dlu_set_desc_set_layout_binding(
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
@@ -440,7 +440,7 @@ VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
   return create_info;
 }
 
-VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_layout_info(
+VkDescriptorSetLayoutCreateInfo dlu_set_desc_set_layout_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding *pBindings
@@ -456,7 +456,7 @@ VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_layout_info(
   return create_info;
 }
 
-VkDescriptorPoolSize wlu_set_desc_pool_size(
+VkDescriptorPoolSize dlu_set_desc_pool_size(
   VkDescriptorType type,
   uint32_t descriptorCount
 ) {
@@ -468,7 +468,7 @@ VkDescriptorPoolSize wlu_set_desc_pool_size(
   return pool_size;
 }
 
-VkDescriptorBufferInfo wlu_set_desc_buff_info(
+VkDescriptorBufferInfo dlu_set_desc_buff_info(
   VkBuffer buffer,
   VkDeviceSize offset,
   VkDeviceSize range
@@ -482,7 +482,7 @@ VkDescriptorBufferInfo wlu_set_desc_buff_info(
   return create_info;
 }
 
-VkClearValue wlu_set_clear_value(
+VkClearValue dlu_set_clear_value(
   float float32[4],
   int32_t int32[4],
   uint32_t uint32[4],
@@ -509,7 +509,7 @@ VkClearValue wlu_set_clear_value(
   return clear_value;
 }
 
-VkDescriptorImageInfo wlu_set_desc_img_info(
+VkDescriptorImageInfo dlu_set_desc_img_info(
   VkSampler sampler,
   VkImageView imageView,
   VkImageLayout imageLayout
@@ -523,7 +523,7 @@ VkDescriptorImageInfo wlu_set_desc_img_info(
   return create_info;
 }
 
-VkSamplerCreateInfo wlu_set_sampler_info(
+VkSamplerCreateInfo dlu_set_sampler_info(
   VkSamplerCreateFlags flags,
   VkFilter magFilter,
   VkFilter minFilter,

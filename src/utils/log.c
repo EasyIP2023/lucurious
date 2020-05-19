@@ -27,15 +27,15 @@
 
 /* ANSI Escape Codes */
 static const char *term_colors[] = {
-	[WLU_NONE]   	= "",
-	[WLU_SUCCESS] = "\x1B[32;1m",
-	[WLU_DANGER] 	= "\x1B[31;1m",
-	[WLU_INFO] 		= "\x1B[30;1m",
-	[WLU_WARNING] = "\x1B[33;1m",
-	[WLU_RESET]   = "\x1b[0m",
+	[DLU_NONE]   	= "",
+	[DLU_SUCCESS] = "\x1B[32;1m",
+	[DLU_DANGER] 	= "\x1B[31;1m",
+	[DLU_INFO] 		= "\x1B[30;1m",
+	[DLU_WARNING] = "\x1B[33;1m",
+	[DLU_RESET]   = "\x1b[0m",
 };
 
-void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...) {
+void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
 	char buffer[26];
 	va_list args; /* type that holds variable arguments */
 
@@ -48,7 +48,7 @@ void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...) {
 	strftime(buffer, sizeof(buffer), "%F %T - ", tm_info);
 	fprintf(stream, "%s", buffer);
 
-	unsigned c = (type < WLU_MAX_LOG_ENUM) ? type : WLU_MAX_LOG_ENUM - 1;
+	unsigned c = (type < DLU_MAX_LOG_ENUM) ? type : DLU_MAX_LOG_ENUM - 1;
 
 	fprintf(stream, "%s", term_colors[c]);
 
@@ -57,20 +57,20 @@ void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...) {
 	va_end(args);
 
 	/* Reset terminal color */
-	fprintf(stream, "%s\n", term_colors[WLU_RESET]);
+	fprintf(stream, "%s\n", term_colors[DLU_RESET]);
 }
 
-void _wlu_print_me(wlu_log_type type, const char *msg, ...) {
+void _dlu_print_me(dlu_log_type type, const char *msg, ...) {
   va_list args;
   fprintf(stdout, "%s", term_colors[type]);
   va_start(args, msg);
   vfprintf(stdout, msg, args);
   va_end(args);
-  fprintf(stdout, "%s", term_colors[WLU_RESET]);
+  fprintf(stdout, "%s", term_colors[DLU_RESET]);
 }
 
 /* Modified version of what's in wlroots */
-const char *_wlu_strip_path(const char *filepath) {
+const char *_dlu_strip_path(const char *filepath) {
 	if (*filepath == '.')
 		while (*filepath == '.' || *filepath == '/')
 			filepath++;

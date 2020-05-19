@@ -31,7 +31,7 @@
 * allocate the exact amount of bytes that you want
 */
 
-VkResult wlu_create_instance(
+VkResult dlu_create_instance(
   vkcomp *app,
   char *app_name,
   char *engine_name,
@@ -69,15 +69,15 @@ VkResult wlu_create_instance(
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateInstance"); }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateInstance"); }
 
   return res;
 }
 
-VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
+VkResult dlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
+  if (!app->instance) { PERR(DLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
   VkWaylandSurfaceCreateInfoKHR create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
@@ -87,12 +87,12 @@ VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl
   create_info.surface = (struct wl_surface *) wl_surface;
 
   res = vkCreateWaylandSurfaceKHR(app->instance, &create_info, NULL, &app->surface);
-  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateWaylandSurfaceKHR")
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateWaylandSurfaceKHR")
 
   return res;
 }
 
-VkResult wlu_create_physical_device(
+VkResult dlu_create_physical_device(
   vkcomp *app,
   VkPhysicalDeviceType vkpdtype,
   VkPhysicalDeviceProperties *device_props,
@@ -102,20 +102,20 @@ VkResult wlu_create_physical_device(
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
 
-  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
+  if (!app->instance) { PERR(DLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, NULL);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
 
   if (device_count == 0) {
-    wlu_log_me(WLU_DANGER, "[x] failed to find GPU with Vulkan support!!!");
+    dlu_log_me(DLU_DANGER, "[x] failed to find GPU with Vulkan support!!!");
     return VK_RESULT_MAX_ENUM;
   }
 
   devices = (VkPhysicalDevice *) alloca(device_count * sizeof(VkPhysicalDevice));
 
   res = vkEnumeratePhysicalDevices(app->instance, &device_count, devices);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEnumeratePhysicalDevices"); return res; }
 
   /**
   * get a physical device that is suitable
@@ -124,26 +124,26 @@ VkResult wlu_create_physical_device(
   for (uint32_t i = 0; i < device_count; i++) {
     if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
       memmove(&app->physical_device, &devices[i], sizeof(devices[i]));
-      wlu_log_me(WLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
+      dlu_log_me(DLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
     }
   }
 
   if (app->physical_device == VK_NULL_HANDLE) {
-    wlu_log_me(WLU_DANGER, "[x] failed to find a suitable GPU!!!");
+    dlu_log_me(DLU_DANGER, "[x] failed to find a suitable GPU!!!");
     return VK_RESULT_MAX_ENUM;
   }
 
   return res;
 }
 
-VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
+VkBool32 dlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
   VkBool32 ret = VK_TRUE;
   VkBool32 *present_support = NULL;
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
 
-  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL); return ret; }
+  if (!app->physical_device) { PERR(DLU_VKCOMP_PHYS_DEV, 0, NULL); return ret; }
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->physical_device, &qfc, NULL);
 
@@ -162,14 +162,14 @@ VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
       if (app->indices.graphics_family == UINT32_MAX) {
         /* Retrieve Graphics Family Queue index */
         app->indices.graphics_family = i; ret = VK_FALSE;
-        wlu_log_me(WLU_SUCCESS, "Physical Device has support for provided Queue Family");
+        dlu_log_me(DLU_SUCCESS, "Physical Device has support for provided Queue Family");
       }
 
       /* Check to see if a device can present images onto a surface */
       if (app->surface && present_support[i]) {
         /* Retrieve Present Family Queue index */
         app->indices.present_family = i; ret = VK_FALSE;
-        wlu_log_me(WLU_SUCCESS, "Physical Device Surface has presentation support");
+        dlu_log_me(DLU_SUCCESS, "Physical Device Surface has presentation support");
         break;
       }
     }
@@ -188,7 +188,7 @@ VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
 }
 
 
-VkResult wlu_create_logical_device(
+VkResult dlu_create_logical_device(
   vkcomp *app,
   VkPhysicalDeviceFeatures *pEnabledFeatures,
   uint32_t queue_count,
@@ -202,8 +202,8 @@ VkResult wlu_create_logical_device(
   VkDeviceQueueCreateInfo *pQueueCreateInfos = NULL;
   float queue_priorities[1] = {1.0};
 
-  if (!app->physical_device) { PERR(WLU_VKCOMP_PHYS_DEV, 0, NULL); return res; }
-  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) { PERR(WLU_VKCOMP_INDICES, 0, NULL); return res; }
+  if (!app->physical_device) { PERR(DLU_VKCOMP_PHYS_DEV, 0, NULL); return res; }
+  if (app->indices.graphics_family == UINT32_MAX || app->indices.present_family == UINT32_MAX) { PERR(DLU_VKCOMP_INDICES, 0, NULL); return res; }
 
   /* Will need to change this later but for now, These two hardware queues should currently always be the same */
   uint32_t queue_fam_indices[2] = {app->indices.graphics_family, app->indices.present_family};
@@ -234,7 +234,7 @@ VkResult wlu_create_logical_device(
 
   /* Create logic device */
   res = vkCreateDevice(app->physical_device, &create_info, NULL, &app->device);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateDevice"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateDevice"); return res; }
 
   /**
   * Queues are automatically created with
@@ -250,7 +250,7 @@ VkResult wlu_create_logical_device(
   return res;
 }
 
-VkResult wlu_create_swap_chain(
+VkResult dlu_create_swap_chain(
   vkcomp *app,
   uint32_t cur_scd,
   VkSurfaceCapabilitiesKHR capabilities,
@@ -264,9 +264,9 @@ VkResult wlu_create_swap_chain(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->surface) { PERR(WLU_VKCOMP_SURFACE, 0, NULL); return res; }
-  if (!app->device) { PERR(WLU_VKCOMP_DEVICE, 0, NULL); return res; }
-  if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
+  if (!app->surface) { PERR(DLU_VKCOMP_SURFACE, 0, NULL); return res; }
+  if (!app->device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return res; }
+  if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
 
   VkCompositeAlphaFlagBitsKHR ca_flags[4] = {
     VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -320,44 +320,44 @@ VkResult wlu_create_swap_chain(
   }
 
   res = vkCreateSwapchainKHR(app->device, &create_info, NULL, &app->sc_data[cur_scd].swap_chain);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }
 
   return res;
 }
 
-VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info) {
+VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   switch (type) {
-    case WLU_SC_IMAGE_VIEWS:
+    case DLU_SC_IMAGE_VIEWS:
       {
         VkImage *imgs = NULL;
 
-        if (!app->sc_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA"); return res; }
-        if (!app->sc_data[cur_index].swap_chain) { PERR(WLU_VKCOMP_SC, 0, NULL); return res; }
+        if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
+        if (!app->sc_data[cur_index].swap_chain) { PERR(DLU_VKCOMP_SC, 0, NULL); return res; }
 
         /**
         * It's okay to reuse app->sc_data[cur_scd].sic. It'll give same result as minImageCount + 1.
         * Removal of function will result in validation layer errors
         */
         res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, NULL);
-        if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
+        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
 
         imgs = (VkImage *) alloca(app->sc_data[cur_index].sic * sizeof(VkImage));
 
         res = vkGetSwapchainImagesKHR(app->device, app->sc_data[cur_index].swap_chain, &app->sc_data[cur_index].sic, imgs);
-        if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
+        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
 
         for (uint32_t i = 0; i < app->sc_data[cur_index].sic; i++) {
           img_view_info->image = app->sc_data[cur_index].sc_buffs[i].image = imgs[i];
           res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_index].sc_buffs[i].view);
-          if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
+          if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
         }
       }
 
       break;
-    case WLU_TEXT_IMAGE_VIEWS:
-      if (!app->text_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_TEXT_DATA"); return res; }
+    case DLU_TEXT_IMAGE_VIEWS:
+      if (!app->text_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_TEXT_DATA"); return res; }
 
       /**
       * Could set the image inside the VkImageViewCreateInfo struct,
@@ -365,7 +365,7 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
       */
       img_view_info->image = app->text_data[cur_index].image;
       res = vkCreateImageView(app->device, img_view_info, NULL, &app->text_data[cur_index].view);
-      if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
+      if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
 
       break;
     default: break;
@@ -374,7 +374,7 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
   return res;
 }
 
-VkResult wlu_create_depth_buff(
+VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
@@ -389,7 +389,7 @@ VkResult wlu_create_depth_buff(
 
   /* Create image object */
   res = vkCreateImage(app->device, img_info, NULL, &app->sc_data[cur_scd].depth.image);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateImage"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImage"); return res; }
 
   /**
   * Although you know the width, height, and the size of a buffer element,
@@ -410,27 +410,27 @@ VkResult wlu_create_depth_buff(
   VkBool32 pass; /* find a suitable memory type for depth bufffer */
   pass = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &mem_alloc.memoryTypeIndex);
   if (!pass) {
-    wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
+    dlu_log_me(DLU_DANGER, "[x] memory_type_from_properties failed");
     return pass;
   }
 
   /* Allocate memory */
   res = vkAllocateMemory(app->device, &mem_alloc, NULL, &app->sc_data[cur_scd].depth.mem);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   /* Associate memory with image object by binding */
   res = vkBindImageMemory(app->device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
 
   /* Create an image view object for depth buffer */
   img_view_info->image = app->sc_data[cur_scd].depth.image;
   res = vkCreateImageView(app->device, img_view_info, NULL, &app->sc_data[cur_scd].depth.view);
-  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkCreateImageView")
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
 
   return res;
 }
 
-VkResult wlu_create_vk_buffer(
+VkResult dlu_create_vk_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,
@@ -445,7 +445,7 @@ VkResult wlu_create_vk_buffer(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->buff_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_buff_data"); return res; }
+  if (!app->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_buff_data"); return res; }
 
   VkBufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -459,7 +459,7 @@ VkResult wlu_create_vk_buffer(
 
   app->buff_data[cur_bd].name = buff_name;
   res = vkCreateBuffer(app->device, &create_info, NULL, &app->buff_data[cur_bd].buff);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateBuffer"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateBuffer"); return res; }
 
   VkMemoryRequirements mem_reqs;
   vkGetBufferMemoryRequirements(app->device, app->buff_data[cur_bd].buff, &mem_reqs);
@@ -472,19 +472,19 @@ VkResult wlu_create_vk_buffer(
 
   /* find a suitable memory type for VkBuffer */
   res = memory_type_from_properties(app, mem_reqs.memoryTypeBits, requirements_mask, &alloc_info.memoryTypeIndex);
-  if (!res) { PERR(WLU_MEM_TYPE_ERR, 0, NULL) return res; }
+  if (!res) { PERR(DLU_MEM_TYPE_ERR, 0, NULL) return res; }
 
   res = vkAllocateMemory(app->device, &alloc_info, NULL, &app->buff_data[cur_bd].mem);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   /* associate the memory allocated with the buffer object */
   res = vkBindBufferMemory(app->device, app->buff_data[cur_bd].buff, app->buff_data[cur_bd].mem, 0);
-  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkBindBufferMemory")
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindBufferMemory")
 
   return res;
 }
 
-VkResult wlu_create_buff_mem_map(
+VkResult dlu_create_vk_buff_mem_map(
   vkcomp *app,
   uint32_t cur_bd,
   void *data
@@ -492,7 +492,7 @@ VkResult wlu_create_buff_mem_map(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->buff_data[cur_bd].mem) { PERR(WLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
+  if (!app->buff_data[cur_bd].mem) { PERR(DLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
 
   /**
   * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
@@ -502,7 +502,7 @@ VkResult wlu_create_buff_mem_map(
   */
   void *p_data = NULL;
   res = vkMapMemory(app->device, app->buff_data[cur_bd].mem, 0, app->buff_data[cur_bd].size, 0, &p_data);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
   if (data) memmove(p_data, data, app->buff_data[cur_bd].size);
 
   vkUnmapMemory(app->device, app->buff_data[cur_bd].mem);
@@ -510,7 +510,7 @@ VkResult wlu_create_buff_mem_map(
   return res;
 }
 
-VkResult wlu_create_framebuffers(
+VkResult dlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_gpd,
@@ -523,8 +523,8 @@ VkResult wlu_create_framebuffers(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->gp_data[cur_gpd].render_pass) { PERR(WLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
-  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return res; }
+  if (!app->gp_data[cur_gpd].render_pass) { PERR(DLU_VKCOMP_RENDER_PASS, 0, NULL); return res; }
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA_MEMS"); return res; }
 
   VkFramebufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -539,13 +539,13 @@ VkResult wlu_create_framebuffers(
     create_info.pAttachments = pAttachments;
 
     res = vkCreateFramebuffer(app->device, &create_info, NULL, &app->sc_data[cur_scd].sc_buffs[i].fb);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateFramebuffer"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateFramebuffer"); return res; }
   }
 
   return res;
 }
 
-VkResult wlu_create_cmd_pool(
+VkResult dlu_create_cmd_pool(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_cmdd,
@@ -554,8 +554,8 @@ VkResult wlu_create_cmd_pool(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (app->sc_data[cur_scd].sic == 0) { PERR(WLU_VKCOMP_SC_IC, 0, NULL); return res; }
-  if (!app->cmd_data) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_CMD_DATA"); return res; }
+  if (app->sc_data[cur_scd].sic == 0) { PERR(DLU_VKCOMP_SC_IC, 0, NULL); return res; }
+  if (!app->cmd_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_CMD_DATA"); return res; }
 
   VkCommandPoolCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -564,12 +564,12 @@ VkResult wlu_create_cmd_pool(
   create_info.queueFamilyIndex = queueFamilyIndex;
 
   res = vkCreateCommandPool(app->device, &create_info, NULL, &app->cmd_data[cur_cmdd].cmd_pool);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateCommandPool"); return res; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateCommandPool"); return res; }
 
   return res;
 }
 
-VkResult wlu_create_cmd_buffs(
+VkResult dlu_create_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -577,8 +577,8 @@ VkResult wlu_create_cmd_buffs(
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (app->sc_data[cur_scd].sic == 0) { PERR(WLU_VKCOMP_SC_IC, 0, NULL); return res; }
-  if (!app->cmd_data[cur_pool].cmd_pool) { PERR(WLU_VKCOMP_CMD_POOL, 0, NULL); return res; }
+  if (app->sc_data[cur_scd].sic == 0) { PERR(DLU_VKCOMP_SC_IC, 0, NULL); return res; }
+  if (!app->cmd_data[cur_pool].cmd_pool) { PERR(DLU_VKCOMP_CMD_POOL, 0, NULL); return res; }
 
   VkCommandBufferAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -588,7 +588,7 @@ VkResult wlu_create_cmd_buffs(
   alloc_info.commandBufferCount = app->sc_data[cur_scd].sic;
 
   res = vkAllocateCommandBuffers(app->device, &alloc_info, app->cmd_data[cur_pool].cmd_buffs);
-  if (res) PERR(WLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers")
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers")
 
   return res;
 }
@@ -601,7 +601,7 @@ VkResult wlu_create_cmd_buffs(
 * Use fence to synchronize application with rendering operation
 * has finished and presentation can happen.
 */
-VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
+VkResult dlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   VkSemaphoreCreateInfo sem_info = {};
@@ -617,13 +617,13 @@ VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd) {
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.image);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
 
     res = vkCreateSemaphore(app->device, &sem_info, NULL, &app->sc_data[cur_scd].syncs[i].sem.render);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSemaphore"); return res; }
 
     res = vkCreateFence(app->device, &fence_info, NULL, &app->sc_data[cur_scd].syncs[i].fence.render);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateFence"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateFence"); return res; }
   }
 
   return res;

@@ -37,7 +37,7 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
 
   VkCommandBuffer cmd_buff;
   res = vkAllocateCommandBuffers(app->device, &alloc_info, &cmd_buff);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers"); return VK_NULL_HANDLE; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers"); return VK_NULL_HANDLE; }
 
   VkCommandBufferBeginInfo begin_info = {};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -46,7 +46,7 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
   res = vkBeginCommandBuffer(cmd_buff, &begin_info);
   if (res) {
     vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
-    PERR(WLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer");
+    PERR(DLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer");
     return VK_NULL_HANDLE;
   }
 
@@ -57,7 +57,7 @@ static VkResult exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, Vk
   VkResult res = VK_RESULT_MAX_ENUM;
 
   res = vkEndCommandBuffer(*cmd_buff);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEndCommandBuffer"); goto finish_estcb; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEndCommandBuffer"); goto finish_estcb; }
 
   VkSubmitInfo submit_info = {};
   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -65,10 +65,10 @@ static VkResult exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, Vk
   submit_info.pCommandBuffers = cmd_buff;
 
   res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkQueueSubmit"); goto finish_estcb; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkQueueSubmit"); goto finish_estcb; }
 
   res = vkQueueWaitIdle(app->graphics_queue);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkQueueWaitIdle"); goto finish_estcb; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkQueueWaitIdle"); goto finish_estcb; }
 
 finish_estcb:
   vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
@@ -76,7 +76,7 @@ finish_estcb:
   return res;
 }
 
-VkResult wlu_exec_begin_cmd_buffs(
+VkResult dlu_exec_begin_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -86,7 +86,7 @@ VkResult wlu_exec_begin_cmd_buffs(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(WLU_VKCOMP_CMD_BUFFS, 0, NULL); return res; }
+  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(DLU_VKCOMP_CMD_BUFFS, 0, NULL); return res; }
 
   VkCommandBufferBeginInfo begin_info = {};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -96,26 +96,26 @@ VkResult wlu_exec_begin_cmd_buffs(
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     res = vkBeginCommandBuffer(app->cmd_data[cur_pool].cmd_buffs[i], &begin_info);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer"); return res; }
   }
 
   return res;
 }
 
-VkResult wlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
+VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(WLU_VKCOMP_CMD_BUFFS, 0, NULL); return res; }
+  if (!app->cmd_data[cur_pool].cmd_buffs) { PERR(DLU_VKCOMP_CMD_BUFFS, 0, NULL); return res; }
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
     res = vkEndCommandBuffer(app->cmd_data[cur_pool].cmd_buffs[i]);
-    if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEndCommandBuffer"); return res; }
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEndCommandBuffer"); return res; }
   }
 
   return res;
 }
 
-VkResult wlu_exec_copy_buffer(
+VkResult dlu_exec_copy_buffer(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t src_bd,
@@ -142,7 +142,7 @@ VkResult wlu_exec_copy_buffer(
   return res;
 }
 
-VkResult wlu_exec_copy_buff_to_image(
+VkResult dlu_exec_copy_buff_to_image(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_bd,
@@ -166,7 +166,7 @@ VkResult wlu_exec_copy_buff_to_image(
   return res;
 }
 
-VkResult wlu_exec_pipeline_barrier(
+VkResult dlu_exec_pipeline_barrier(
   vkcomp *app,
   uint32_t cur_pool,
   VkPipelineStageFlags srcStageMask,

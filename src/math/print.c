@@ -30,7 +30,7 @@
 void mat3_print(mat3 mat) {
   uint32_t mat_num = 3;
 
-  wlu_log_me(WLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
+  dlu_log_me(DLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
 
   for (uint32_t i = 0; i < mat_num; i++) {
     for (uint32_t j = 0; j < mat_num; j++)
@@ -44,7 +44,7 @@ void mat3_print(mat3 mat) {
 void mat4_print(mat4 mat) {
   uint32_t mat_num = 4;
 
-  wlu_log_me(WLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
+  dlu_log_me(DLU_WARNING, "%dx%d matrix:\n", mat_num, mat_num);
 
   for (uint32_t i = 0; i < mat_num; i++) {
     for (uint32_t j = 0; j < mat_num; j++)
@@ -55,10 +55,10 @@ void mat4_print(mat4 mat) {
   fprintf(stdout, "\x1b[0m" "\n");
 }
 
-void vec_print(vec2 vec, wlu_vec_type type) {
+void vec_print(vec2 vec, dlu_vec_type type) {
   int vec_num = type + 2;
 
-  wlu_log_me(WLU_WARNING, "%dD vector:\n", vec_num);
+  dlu_log_me(DLU_WARNING, "%dD vector:\n", vec_num);
 
   for (int i = 0; i < vec_num; i++)
     fprintf(stdout, "\x1B[30;1m" "|\t%0.3f\t", vec[i]);
@@ -67,19 +67,19 @@ void vec_print(vec2 vec, wlu_vec_type type) {
   fprintf(stdout, "\x1b[0m" "\n");
 }
 
-void wlu_print_vector(wlu_vec_type type, void *vector) {
+void dlu_print_vector(dlu_vec_type type, void *vector) {
   switch (type) {
-    case WLU_VEC2: vec_print(*((vec2*) vector), type); break;
-    case WLU_VEC3: vec_print(*((vec3*) vector), type); break;
-    case WLU_VEC4: vec_print(*((vec4*) vector), type); break;
+    case DLU_VEC2: vec_print(*((vec2*) vector), type); break;
+    case DLU_VEC3: vec_print(*((vec3*) vector), type); break;
+    case DLU_VEC4: vec_print(*((vec4*) vector), type); break;
     default: break;
   }
 }
 
-void wlu_print_matrix(wlu_matrix_type type, void *matrix) {
+void dlu_print_matrix(dlu_matrix_type type, void *matrix) {
   switch (type) {
-    case WLU_MAT3: mat3_print(*((mat3*) matrix)); break;
-    case WLU_MAT4: mat4_print(*((mat4*) matrix)); break;
+    case DLU_MAT3: mat3_print(*((mat3*) matrix)); break;
+    case DLU_MAT4: mat4_print(*((mat4*) matrix)); break;
     default: break;
   }
 }

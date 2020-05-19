@@ -22,10 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_GP_BIND_H
-#define WLU_VKCOMP_GP_BIND_H
+#ifndef DLU_VKCOMP_GP_BIND_H
+#define DLU_VKCOMP_GP_BIND_H
 
-void wlu_bind_pipeline(
+void dlu_bind_pipeline(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -33,7 +33,7 @@ void wlu_bind_pipeline(
   VkPipeline pipeline
 );
 
-void wlu_bind_desc_sets(
+void dlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -46,7 +46,7 @@ void wlu_bind_desc_sets(
   const uint32_t *pDynamicOffsets
 );
 
-void wlu_bind_vertex_buffs_to_cmd_buff(
+void dlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -56,7 +56,7 @@ void wlu_bind_vertex_buffs_to_cmd_buff(
   const VkDeviceSize *offsets
 );
 
-void wlu_bind_index_buff_to_cmd_buff(
+void dlu_bind_index_buff_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,

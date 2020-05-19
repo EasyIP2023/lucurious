@@ -70,13 +70,13 @@ static const struct wl_registry_listener registry_listener = {
   global_registry_remover
 };
 
-wclient *wlu_init_wc() {
+wclient *dlu_init_wc() {
   wclient *wc = calloc(1, sizeof(wclient));
-  if (!wc) { wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno)); return wc; }
+  if (!wc) { dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno)); return wc; }
   return wc;
 }
 
-void wlu_freeup_wc(wclient *wc) {
+void dlu_freeup_wc(wclient *wc) {
   if (wc->xdg_surface)
     xdg_surface_destroy(wc->xdg_surface);
   if (wc->surface)
@@ -94,13 +94,13 @@ void wlu_freeup_wc(wclient *wc) {
   free(wc);
 }
 
-bool wlu_create_client(wclient *wc) {
+bool dlu_create_client(wclient *wc) {
   int err = 0;
 
   /* establish connection to wayland server */
   wc->display = wl_display_connect(NULL);
   if (!wc->display) {
-    wlu_log_me(WLU_DANGER, "[x] wl_diplay_connect: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] wl_diplay_connect: %s", strerror(errno));
     return false;
   }
 
@@ -116,12 +116,12 @@ bool wlu_create_client(wclient *wc) {
   if (!err) return false;
 
   if (!wc->compositor) {
-    wlu_log_me(WLU_DANGER, "[x] Can't find compositor");
+    dlu_log_me(DLU_DANGER, "[x] Can't find compositor");
     return false;
   }
 
   if (!wc->shell) {
-    wlu_log_me(WLU_DANGER, "[x] No xdg base support");
+    dlu_log_me(DLU_DANGER, "[x] No xdg base support");
     return EXIT_FAILURE;
   }
 
@@ -130,13 +130,13 @@ bool wlu_create_client(wclient *wc) {
 
   wc->xdg_surface = xdg_wm_base_get_xdg_surface(wc->shell, wc->surface);
   if (!wc->xdg_surface) {
-    wlu_log_me(WLU_DANGER, "[x] Can't create xdg_wm_base_get_xdg_surface");
+    dlu_log_me(DLU_DANGER, "[x] Can't create xdg_wm_base_get_xdg_surface");
     return false;
   }
 
   wc->xdg_toplevel = xdg_surface_get_toplevel(wc->xdg_surface);
   if (!wc->xdg_toplevel) {
-    wlu_log_me(WLU_DANGER, "[x] Can't create xdg_surface_get_toplevel");
+    dlu_log_me(DLU_DANGER, "[x] Can't create xdg_surface_get_toplevel");
     return false;
   }
 

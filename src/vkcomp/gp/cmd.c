@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-void wlu_cmd_draw(
+void dlu_cmd_draw(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -38,7 +38,7 @@ void wlu_cmd_draw(
             instanceCount, firstVertex, firstInstance);
 }
 
-void wlu_cmd_draw_indexed(
+void dlu_cmd_draw_indexed(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -53,7 +53,7 @@ void wlu_cmd_draw_indexed(
                    vertexOffset, firstInstance);
 }
 
-void wlu_cmd_set_viewport(
+void dlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport *viewport,
   uint32_t cur_pool,
@@ -65,7 +65,7 @@ void wlu_cmd_set_viewport(
                    firstViewport, viewportCount, viewport);
 }
 
-void wlu_cmd_set_scissor(
+void dlu_cmd_set_scissor(
   vkcomp *app,
   VkRect2D *scissor,
   uint32_t cur_pool,

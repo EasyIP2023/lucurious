@@ -22,12 +22,12 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_GP_CREATE_H
-#define WLU_GP_CREATE_H
+#ifndef DLU_GP_CREATE_H
+#define DLU_GP_CREATE_H
 
-VkShaderModule wlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
+VkShaderModule dlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
 
-VkResult wlu_create_render_pass(
+VkResult dlu_create_render_pass(
   vkcomp *app,
   uint32_t cur_gpd,
   uint32_t attachmentCount,
@@ -38,7 +38,7 @@ VkResult wlu_create_render_pass(
   const VkSubpassDependency *pDependencies
 );
 
-VkResult wlu_create_graphics_pipelines(
+VkResult dlu_create_graphics_pipelines(
   vkcomp *app,
   uint32_t cur_gpd,
   uint32_t stageCount,
@@ -57,9 +57,9 @@ VkResult wlu_create_graphics_pipelines(
   uint32_t basePipelineIndex
 );
 
-VkResult wlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
+VkResult dlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
 
-VkResult wlu_create_pipeline_layout(
+VkResult dlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t cur_gpd,
   uint32_t cur_dd,
@@ -71,14 +71,14 @@ VkResult wlu_create_pipeline_layout(
 * Create the layouts that specify which resource (VkBuffer, VkImage)
 * the shaders in the graphics pipeline will access
 */
-VkResult wlu_create_desc_set_layouts(
+VkResult dlu_create_desc_set_layouts(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 );
 
 /* Inorder to allocate descriptor sets you must create a descriptor pool */
-VkResult wlu_create_desc_pool(
+VkResult dlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
@@ -92,7 +92,7 @@ VkResult wlu_create_desc_pool(
 * Specifies actual resource (VkBuffer,VkImage) that will be
 * bounded to the descriptors
 */
-VkResult wlu_create_desc_set(
+VkResult dlu_create_desc_set(
   vkcomp *app,
   uint32_t cur_dd
 );
@@ -100,7 +100,7 @@ VkResult wlu_create_desc_set(
 /**
 * Takes a VkImage object in memory and converts it to a texture
 */
-VkResult wlu_create_texture_image(
+VkResult dlu_create_texture_image(
   vkcomp *app,
   uint32_t cur_tex,
   VkImageCreateInfo *img_info,
@@ -114,7 +114,7 @@ VkResult wlu_create_texture_image(
 * to compute the final color that is retrieved. The sampler is used in
 * the shader to read colors from the texture.
 */
-VkResult wlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info);
+VkResult dlu_create_texture_sampler(vkcomp *app, uint32_t cur_tex, VkSamplerCreateInfo *sample_info);
 
 
 #endif

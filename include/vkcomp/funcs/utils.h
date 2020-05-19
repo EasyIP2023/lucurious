@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_UTILS_H
-#define WLU_VKCOMP_UTILS_H
+#ifndef DLU_VKCOMP_UTILS_H
+#define DLU_VKCOMP_UTILS_H
 
 #ifdef INAPI_CALLS
 /**

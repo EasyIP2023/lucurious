@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_ALL_H
-#define WLU_VKCOMP_ALL_H
+#ifndef DLU_VKCOMP_ALL_H
+#define DLU_VKCOMP_ALL_H
 
 #include "funcs/create.h"
 #include "funcs/display.h"
@@ -44,17 +44,17 @@
 #ifdef INAPI_CALLS
 #include "funcs/device.h"
 /* Dynamically retrieve a VkInstance function */
-#define WLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
+#define DLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
   do { \
     var = (PFN_vk##func) vkGetInstanceProcAddr(inst, "vk" #func); \
-    if (!var) PERR(WLU_DR_INSTANCE_PROC_ADDR_ERR, 0, #func); \
+    if (!var) PERR(DLU_DR_INSTANCE_PROC_ADDR_ERR, 0, #func); \
   } while(0);
 
 /* Dynamically retrieve a VkDevice (logical device) function */
-#define WLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
+#define DLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
   do { \
     var = (PFN_vk##func) vkGetDeviceProcAddr(dev, "vk" #func); \
-    if (!var) PERR(WLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \
+    if (!var) PERR(DLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \
   } while(0);
 #endif
 

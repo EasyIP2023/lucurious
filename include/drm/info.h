@@ -22,9 +22,9 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_WAYLAND_BACKEND_DRM_INFO_H
-#define WLU_WAYLAND_BACKEND_DRM_INFO_H
+#ifndef DLU_WAYLAND_BACKEND_DRM_INFO_H
+#define DLU_WAYLAND_BACKEND_DRM_INFO_H
 
-int wlu_print_dconf_info(const char *gpu);
+int dlu_print_dconf_info(const char *gpu);
 
 #endif

@@ -22,10 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_GP_EXEC_H
-#define WLU_VKCOMP_GP_EXEC_H
+#ifndef DLU_VKCOMP_GP_EXEC_H
+#define DLU_VKCOMP_GP_EXEC_H
 
-void wlu_exec_begin_render_pass(
+void dlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -39,7 +39,7 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 );
 
-void wlu_exec_stop_render_pass(
+void dlu_exec_stop_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd

@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_DEVICE_FUNCS_H
-#define WLU_VKCOMP_DEVICE_FUNCS_H
+#ifndef DLU_VKCOMP_DEVICE_FUNCS_H
+#define DLU_VKCOMP_DEVICE_FUNCS_H
 
 VkBool32 is_device_suitable(
   VkPhysicalDevice device,

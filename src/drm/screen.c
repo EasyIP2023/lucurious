@@ -27,16 +27,16 @@
 
 #include <fcntl.h>
 
-int wlu_modeset_open(wlu_drm_core *core, const char *gpu) {
+int dlu_modeset_open(dlu_drm_core *core, const char *gpu) {
 
   core->drmfd = open(gpu, O_RDONLY);
   if (core->drmfd == UINT32_MAX) {
-    wlu_print_msg(WLU_DANGER, "[x] open: %s\n", strerror(errno));
+    dlu_print_msg(DLU_DANGER, "[x] open: %s\n", strerror(errno));
     return NEG_ONE;  
   }
 
   core->dms = drmModeGetResources(core->drmfd);
-  if (!core->dms) { wlu_log_me(WLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno)); return -errno; }
+  if (!core->dms) { dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno)); return -errno; }
 
   return 0;
 } 

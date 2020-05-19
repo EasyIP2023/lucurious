@@ -36,15 +36,15 @@ START_TEST(shade_multi_error) {
     "void main() { int x = MY_DEFINE; }"
   };
 
-  wlu_log_me(WLU_WARNING, "The first example has a compilation problem. The second does not.");
+  dlu_log_me(DLU_WARNING, "The first example has a compilation problem. The second does not.");
 
   for (int i = 0; i < 2; ++i) {
-    wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", source[i]);
-    wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000000, source[i], "vert.spv", "main");
+    dlu_log_me(DLU_INFO, "Source is:\n---\n%s\n---\n", source[i]);
+    dlu_shader_info shinfo = dlu_compile_to_spirv(0x00000000, source[i], "vert.spv", "main");
     if (!shinfo.bytes)
-      wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    wlu_log_me(WLU_INFO, "Bytes for file %ld - %ld", shinfo.bytes, shinfo.byte_size);
-    wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shinfo.result);
+      dlu_log_me(DLU_DANGER, "[x] dlu_compile_to_spirv failed");
+    dlu_log_me(DLU_INFO, "Bytes for file %ld - %ld", shinfo.bytes, shinfo.byte_size);
+    dlu_freeup_spriv_bytes(DLU_LIB_SHADERC_SPRIV, shinfo.result);
   }
 } END_TEST;
 
@@ -53,31 +53,31 @@ START_TEST(shade_error) {
     "#version 310 es\n"
     "int main() { int main_should_be_void; }\n";
 
-  wlu_log_me(WLU_WARNING, "Compiling a bad shader:");
-  wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", bad_shader_src);
+  dlu_log_me(DLU_WARNING, "Compiling a bad shader:");
+  dlu_log_me(DLU_INFO, "Source is:\n---\n%s\n---\n", bad_shader_src);
 
-  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000000, bad_shader_src, "vert.spv", "main");
+  dlu_shader_info shinfo = dlu_compile_to_spirv(0x00000000, bad_shader_src, "vert.spv", "main");
   if (!shinfo.bytes) {
-    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    wlu_log_me(WLU_INFO, "Bytes for file shoulde be 0 - 0");
-    wlu_log_me(WLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
+    dlu_log_me(DLU_DANGER, "[x] dlu_compile_to_spirv failed");
+    dlu_log_me(DLU_INFO, "Bytes for file shoulde be 0 - 0");
+    dlu_log_me(DLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
   }
-  wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shinfo.result);
+  dlu_freeup_spriv_bytes(DLU_LIB_SHADERC_SPRIV, shinfo.result);
 } END_TEST;
 
 START_TEST(shade_frag) {
-  wlu_log_me(WLU_WARNING, "Compiling a fragmentation shader");
-  wlu_shader_info shinfo = wlu_compile_to_spirv(0x00000010,
+  dlu_log_me(DLU_WARNING, "Compiling a fragmentation shader");
+  dlu_shader_info shinfo = dlu_compile_to_spirv(0x00000010,
                            shader_frag_src, "frag.spv", "main");
-  wlu_log_me(WLU_INFO, "Source is:\n---\n%s\n---\n", shader_frag_src);
+  dlu_log_me(DLU_INFO, "Source is:\n---\n%s\n---\n", shader_frag_src);
   if (!shinfo.bytes) {
-    wlu_log_me(WLU_DANGER, "[x] wlu_compile_to_spirv failed");
-    wlu_log_me(WLU_INFO, "Bytes for file shoulde be 0 - 0");
-    wlu_log_me(WLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
+    dlu_log_me(DLU_DANGER, "[x] dlu_compile_to_spirv failed");
+    dlu_log_me(DLU_INFO, "Bytes for file shoulde be 0 - 0");
+    dlu_log_me(DLU_INFO, "%ld - %ld", shinfo.bytes, shinfo.byte_size);
     ck_abort_msg(NULL);
   }
-  wlu_log_me(WLU_SUCCESS, "Successful Compilation of fragement shader");
-  wlu_freeup_spriv_bytes(WLU_LIB_SHADERC_SPRIV, shinfo.result);
+  dlu_log_me(DLU_SUCCESS, "Successful Compilation of fragement shader");
+  dlu_freeup_spriv_bytes(DLU_LIB_SHADERC_SPRIV, shinfo.result);
 } END_TEST;
 
 Suite *shade_suite(void) {

@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-void wlu_exec_begin_render_pass(
+void dlu_exec_begin_render_pass(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -39,7 +39,7 @@ void wlu_exec_begin_render_pass(
   VkSubpassContents contents
 ) {
 
-  if (!app->sc_data[cur_scd].sc_buffs) { PERR(WLU_BUFF_NOT_ALLOC, 0, "WLU_SC_DATA_MEMS"); return; }
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA_MEMS"); return; }
 
   VkRenderPassBeginInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -59,7 +59,7 @@ void wlu_exec_begin_render_pass(
   }
 }
 
-void wlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
+void dlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++)
     vkCmdEndRenderPass(app->cmd_data[cur_pool].cmd_buffs[i]);
 }

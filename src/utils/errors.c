@@ -120,90 +120,90 @@ static const char *vkres_msg(int err) {
   return "An unknown error has occurred. Either the application has provided invalid input, or an implementation failure has occurred";
 }
 
-void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg) {
-  switch (wlu_err) {
-    case WLU_DR_INSTANCE_PROC_ADDR_ERR:
-      wlu_log_me(WLU_DANGER, "[x] GetInstanceProcAddr: Unable to find %s function", wlu_msg);
+void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
+  switch (dlu_err) {
+    case DLU_DR_INSTANCE_PROC_ADDR_ERR:
+      dlu_log_me(DLU_DANGER, "[x] GetInstanceProcAddr: Unable to find %s function", dlu_msg);
       break;
-    case WLU_DR_DEVICE_PROC_ADDR_ERR:
-      wlu_log_me(WLU_DANGER, "[x] vkGetDeviceProcAddr: Unable to find %s function", wlu_msg);
+    case DLU_DR_DEVICE_PROC_ADDR_ERR:
+      dlu_log_me(DLU_DANGER, "[x] vkGetDeviceProcAddr: Unable to find %s function", dlu_msg);
       break;
-    case WLU_VK_FUNC_ERR:
-      wlu_log_me(WLU_DANGER, "[x] %s:", wlu_msg, vkres_msg(vkerr));
+    case DLU_VK_FUNC_ERR:
+      dlu_log_me(DLU_DANGER, "[x] %s:", dlu_msg, vkres_msg(vkerr));
       break;
-    case WLU_MEM_TYPE_ERR:
-      wlu_log_me(WLU_DANGER, "[x] memory_type_from_properties failed");
+    case DLU_MEM_TYPE_ERR:
+      dlu_log_me(DLU_DANGER, "[x] memory_type_from_properties failed");
       break;
-    case WLU_VKCOMP_INSTANCE:
-      wlu_log_me(WLU_DANGER, "[x] A Vulkan Instance must be created");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_instance()");
+    case DLU_VKCOMP_INSTANCE:
+      dlu_log_me(DLU_DANGER, "[x] A Vulkan Instance must be created");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_instance()");
       break;
-    case WLU_VKCOMP_DEVICE:
-      wlu_log_me(WLU_DANGER, "[x] A logical device must be initialize");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_logical_device()");
+    case DLU_VKCOMP_DEVICE:
+      dlu_log_me(DLU_DANGER, "[x] A logical device must be initialize");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_logical_device()");
       break;
-    case WLU_VKCOMP_RENDER_PASS:
-      wlu_log_me(WLU_DANGER, "[x] render pass not setup");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_render_pass()");
+    case DLU_VKCOMP_RENDER_PASS:
+      dlu_log_me(DLU_DANGER, "[x] render pass not setup");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_render_pass()");
       break;
-    case WLU_VKCOMP_PIPELINE_LAYOUT:
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_pipeline_layout()");
+    case DLU_VKCOMP_PIPELINE_LAYOUT:
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_pipeline_layout()");
       break;
-    case WLU_VKCOMP_DESC_POOL:
-      wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must have a descriptor pool");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_pool()");
+    case DLU_VKCOMP_DESC_POOL:
+      dlu_log_me(DLU_DANGER, "[x] In order to allocate descriptor sets one must have a descriptor pool");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_pool()");
       break;
-    case WLU_VKCOMP_DESC_LAYOUT:
-      wlu_log_me(WLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_desc_set_layouts()");
+    case DLU_VKCOMP_DESC_LAYOUT:
+      dlu_log_me(DLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_set_layouts()");
       break;
-    case WLU_VKCOMP_PHYS_DEV:
-      wlu_log_me(WLU_DANGER, "[x] A VkPhysical device must be set");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_physical_device()");
+    case DLU_VKCOMP_PHYS_DEV:
+      dlu_log_me(DLU_DANGER, "[x] A VkPhysical device must be set");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_physical_device()");
       break;
-    case WLU_VKCOMP_INDICES:
-      wlu_log_me(WLU_DANGER, "[x] At least one queue family should be set");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_queue_families()");
+    case DLU_VKCOMP_INDICES:
+      dlu_log_me(DLU_DANGER, "[x] At least one queue family should be set");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_queue_families()");
       break;
-    case WLU_VKCOMP_SURFACE:
-      wlu_log_me(WLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_vkwayland_surfaceKHR()");
+    case DLU_VKCOMP_SURFACE:
+      dlu_log_me(DLU_DANGER, "[x] A VkSurfaceKHR must be initialize");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_vkwayland_surfaceKHR()");
       break;
-    case WLU_VKCOMP_SC:
-      wlu_log_me(WLU_DANGER, "[x] Swap Chain doesn't exists");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
+    case DLU_VKCOMP_SC:
+      dlu_log_me(DLU_DANGER, "[x] Swap Chain doesn't exists");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_swap_chain()");
       break;
-    case WLU_VKCOMP_SC_IC:
-      wlu_log_me(WLU_DANGER, "[x] Swapchain image count not set");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_swap_chain()");
+    case DLU_VKCOMP_SC_IC:
+      dlu_log_me(DLU_DANGER, "[x] Swapchain image count not set");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_swap_chain()");
       break;
-    case WLU_VKCOMP_SC_SYNCS:
-      wlu_log_me(WLU_DANGER, "[x] Swapchain sychronizers must be initialize before use");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_syncs()");
+    case DLU_VKCOMP_SC_SYNCS:
+      dlu_log_me(DLU_DANGER, "[x] Swapchain sychronizers must be initialize before use");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_syncs()");
       break;
-    case WLU_VKCOMP_BUFF_MEM:
-      wlu_log_me(WLU_DANGER, "[x] VkDeviceMemory not created");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_vk_buffer()");
+    case DLU_VKCOMP_BUFF_MEM:
+      dlu_log_me(DLU_DANGER, "[x] VkDeviceMemory not created");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_vk_buffer()");
       break;
-    case WLU_VKCOMP_CMD_POOL:
-      wlu_log_me(WLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_pool()");
+    case DLU_VKCOMP_CMD_POOL:
+      dlu_log_me(DLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_cmd_pool()");
       break;
-    case WLU_VKCOMP_CMD_BUFFS:
-      wlu_log_me(WLU_DANGER, "[x] VkCommandBuffer buffers must be initialize");
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_create_cmd_buffs()");
+    case DLU_VKCOMP_CMD_BUFFS:
+      dlu_log_me(DLU_DANGER, "[x] VkCommandBuffer buffers must be initialize");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_cmd_buffs()");
       break;
-    case WLU_BUFF_NOT_ALLOC:
-      wlu_log_me(WLU_DANGER, "[x] Must make a call to wlu_otba(): %s", wlu_msg);
+    case DLU_BUFF_NOT_ALLOC:
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_otba(): %s", dlu_msg);
       break;
-    case WLU_OP_NOT_PERMITED:
-      wlu_log_me(WLU_DANGER, "[x] Failure the current operation you are trying to do is wrong");
+    case DLU_OP_NOT_PERMITED:
+      dlu_log_me(DLU_DANGER, "[x] Failure the current operation you are trying to do is wrong");
       break;
-    case WLU_ALLOC_FAILED:
-      wlu_log_me(WLU_DANGER, "[x] Ugh something went wrong!! :( If you didn't forget to call wlu_otma(), please create an issue with information");
+    case DLU_ALLOC_FAILED:
+      dlu_log_me(DLU_DANGER, "[x] Ugh something went wrong!! :( If you didn't forget to call dlu_otma(), please create an issue with information");
       break;
-    case WLU_ALREADY_ALLOC:
-      wlu_log_me(WLU_DANGER, "[x] Buffer already allocated, Don't try again >>[]:");
+    case DLU_ALREADY_ALLOC:
+      dlu_log_me(DLU_DANGER, "[x] Buffer already allocated, Don't try again >>[]:");
       break;
     default: break;
   }

@@ -22,9 +22,9 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_DRM_SCREEN_H
-#define WLU_DRM_SCREEN_H
+#ifndef DLU_DRM_SCREEN_H
+#define DLU_DRM_SCREEN_H
 
-int wlu_modeset_open(wlu_drm_core *core, const char *gpu);
+int dlu_modeset_open(dlu_drm_core *core, const char *gpu);
 
 #endif

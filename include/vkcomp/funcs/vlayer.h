@@ -22,13 +22,13 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_VLAYER_FUNCS_H
-#define WLU_VKCOMP_VLAYER_FUNCS_H
+#ifndef DLU_VKCOMP_VLAYER_FUNCS_H
+#define DLU_VKCOMP_VLAYER_FUNCS_H
 
-VkResult wlu_set_debug_message(vkcomp *app);
+VkResult dlu_set_debug_message(vkcomp *app);
 
 #ifdef INAPI_CALLS
-VkResult wlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size);
+VkResult dlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size);
 #endif
 
 #endif

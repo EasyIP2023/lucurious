@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_GP_SET_H
-#define WLU_VKCOMP_GP_SET_H
+#ifndef DLU_VKCOMP_GP_SET_H
+#define DLU_VKCOMP_GP_SET_H
 
 /**
 * Usage of functions in set.h files is optional
@@ -31,7 +31,7 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
-VkAttachmentDescription wlu_set_attachment_desc(
+VkAttachmentDescription dlu_set_attachment_desc(
   VkFormat format,
   VkSampleCountFlagBits samples,
   VkAttachmentLoadOp loadOp,
@@ -42,11 +42,11 @@ VkAttachmentDescription wlu_set_attachment_desc(
   VkImageLayout finalLayout
 );
 
-VkAttachmentReference wlu_set_attachment_ref(
+VkAttachmentReference dlu_set_attachment_ref(
   uint32_t attachment, VkImageLayout layout
 );
 
-VkSubpassDescription wlu_set_subpass_desc(
+VkSubpassDescription dlu_set_subpass_desc(
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t inputAttachmentCount,
   const VkAttachmentReference *pInputAttachments,
@@ -58,7 +58,7 @@ VkSubpassDescription wlu_set_subpass_desc(
   const uint32_t *pPreserveAttachments
 );
 
-VkSubpassDependency wlu_set_subpass_dep(
+VkSubpassDependency dlu_set_subpass_dep(
   uint32_t srcSubpass,
   uint32_t dstSubpass,
   VkPipelineStageFlags srcStageMask,
@@ -68,23 +68,23 @@ VkSubpassDependency wlu_set_subpass_dep(
   VkDependencyFlags dependencyFlags
 );
 
-VkPipelineShaderStageCreateInfo wlu_set_shader_stage_info(
+VkPipelineShaderStageCreateInfo dlu_set_shader_stage_info(
   VkShaderModule mod,
   const char *pName,
   VkShaderStageFlagBits stage,
   const VkSpecializationInfo *pSpecializationInfo
 );
 
-VkPipelineInputAssemblyStateCreateInfo wlu_set_input_assembly_state_info(
+VkPipelineInputAssemblyStateCreateInfo dlu_set_input_assembly_state_info(
   VkPrimitiveTopology topology, VkBool32 pre
 );
 
 /* Describe at which rate to load data from memory throughout the vertices */
-VkVertexInputBindingDescription wlu_set_vertex_input_binding_desc(
+VkVertexInputBindingDescription dlu_set_vertex_input_binding_desc(
   uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
 );
 
-VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
+VkVertexInputAttributeDescription dlu_set_vertex_input_attrib_desc(
   uint32_t location, uint32_t binding, VkFormat format, uint32_t offset
 );
 
@@ -95,7 +95,7 @@ VkVertexInputAttributeDescription wlu_set_vertex_input_attrib_desc(
 * Attribute descriptions: type of the attributes passed to the vertex shader,
 * which binding to load them from and at which offset
 */
-VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
+VkPipelineVertexInputStateCreateInfo dlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,
   uint32_t vertexAttributeDescriptionCount,
@@ -103,19 +103,19 @@ VkPipelineVertexInputStateCreateInfo wlu_set_vertex_input_state_info(
 );
 
 /* specify which region of a framebuffer to an output should render to */
-VkViewport wlu_set_view_port(
+VkViewport dlu_set_view_port(
   float x, float y, float width, float height,
   float minDepth, float maxDepth
 );
 
-VkPipelineViewportStateCreateInfo wlu_set_view_port_state_info(
+VkPipelineViewportStateCreateInfo dlu_set_view_port_state_info(
   uint32_t viewportCount,
   VkViewport *viewport,
   uint32_t scissorCount,
   VkRect2D *scissor
 );
 
-VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+VkRect2D dlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
 /**
 * Rasterizer takes the geometry shaped by the vertices from the vertex shader
@@ -123,7 +123,7 @@ VkRect2D wlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 * It also performs depth testing, face culling and the scissor test.
 * Can be configured to output fragments that fill entire polygons
 */
-VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
+VkPipelineRasterizationStateCreateInfo dlu_set_rasterization_state_info(
   VkBool32 depthClampEnable,
   VkBool32 rasterizerDiscardEnable,
   VkPolygonMode polygonMode,
@@ -137,7 +137,7 @@ VkPipelineRasterizationStateCreateInfo wlu_set_rasterization_state_info(
 );
 
 /* Used for anti-aliasing */
-VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
+VkPipelineMultisampleStateCreateInfo dlu_set_multisample_state_info(
   VkSampleCountFlagBits rasterizationSamples,
   VkBool32 sampleShadingEnable,
   float minSampleShading,
@@ -146,7 +146,7 @@ VkPipelineMultisampleStateCreateInfo wlu_set_multisample_state_info(
   VkBool32 alphaToOneEnable
 );
 
-VkStencilOpState wlu_set_stencil_op_state(
+VkStencilOpState dlu_set_stencil_op_state(
   VkStencilOp failOp,
   VkStencilOp passOp,
   VkStencilOp depthFailOp,
@@ -156,7 +156,7 @@ VkStencilOpState wlu_set_stencil_op_state(
   uint32_t reference
 );
 
-VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
+VkPipelineDepthStencilStateCreateInfo dlu_set_depth_stencil_state(
   VkBool32 depthTestEnable,
   VkBool32 depthWriteEnable,
   VkCompareOp depthCompareOp,
@@ -172,7 +172,7 @@ VkPipelineDepthStencilStateCreateInfo wlu_set_depth_stencil_state(
 * After fragment shader returns color one needs to combine it
 * with a color that is already in the framebuffer
 */
-VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
+VkPipelineColorBlendAttachmentState dlu_set_color_blend_attachment_state(
   VkBool32 blendEnable,
   VkBlendFactor srcColorBlendFactor,
   VkBlendFactor dstColorBlendFactor,
@@ -183,7 +183,7 @@ VkPipelineColorBlendAttachmentState wlu_set_color_blend_attachment_state(
   VkColorComponentFlags colorWriteMask
 );
 
-VkPipelineColorBlendStateCreateInfo wlu_set_color_blend_attachment_state_info(
+VkPipelineColorBlendStateCreateInfo dlu_set_color_blend_attachment_state_info(
   VkBool32 logicOpEnable,
   VkLogicOp logicOp,
   uint32_t attachmentCount,
@@ -191,12 +191,12 @@ VkPipelineColorBlendStateCreateInfo wlu_set_color_blend_attachment_state_info(
   float blendConstants[4]
 );
 
-VkPipelineDynamicStateCreateInfo wlu_set_dynamic_state_info(
+VkPipelineDynamicStateCreateInfo dlu_set_dynamic_state_info(
   uint32_t dynamicStateCount,
   const VkDynamicState *pDynamicStates
 );
 
-VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
+VkDescriptorSetLayoutBinding dlu_set_desc_set_layout_binding(
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
@@ -204,24 +204,24 @@ VkDescriptorSetLayoutBinding wlu_set_desc_set_layout_binding(
   const VkSampler *pImmutableSamplers
 );
 
-VkDescriptorSetLayoutCreateInfo wlu_set_desc_set_layout_info(
+VkDescriptorSetLayoutCreateInfo dlu_set_desc_set_layout_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding *pBindings
 );
 
-VkDescriptorPoolSize wlu_set_desc_pool_size(
+VkDescriptorPoolSize dlu_set_desc_pool_size(
   VkDescriptorType type,
   uint32_t descriptorCount
 );
 
-VkDescriptorBufferInfo wlu_set_desc_buff_info(
+VkDescriptorBufferInfo dlu_set_desc_buff_info(
   VkBuffer buffer,
   VkDeviceSize offset,
   VkDeviceSize range
 );
 
-VkClearValue wlu_set_clear_value(
+VkClearValue dlu_set_clear_value(
   float float32[4],
   int32_t int32[4],
   uint32_t uint32[4],
@@ -229,13 +229,13 @@ VkClearValue wlu_set_clear_value(
   uint32_t stencil
 );
 
-VkDescriptorImageInfo wlu_set_desc_img_info(
+VkDescriptorImageInfo dlu_set_desc_img_info(
   VkSampler sampler,
   VkImageView imageView,
   VkImageLayout imageLayout
 );
 
-VkSamplerCreateInfo wlu_set_sampler_info(
+VkSamplerCreateInfo dlu_set_sampler_info(
   VkSamplerCreateFlags flags,
   VkFilter magFilter,
   VkFilter minFilter,

@@ -48,9 +48,9 @@ typedef struct mblock {
   void *addr;
   void *saddr;
   void *prv_addr;
-} wlu_mem_block_t;
+} dlu_mem_block_t;
 
-#define BLOCK_SIZE sizeof(wlu_mem_block_t)
+#define BLOCK_SIZE sizeof(dlu_mem_block_t)
 
 /**
 * Globals used to keep track of memory blocks
@@ -62,20 +62,20 @@ typedef struct mblock {
 * small_block_shared: linked list for smaller allocated shared blocks
 */
 static void *sstart_addr_priv = NULL;
-static wlu_mem_block_t *large_block_priv = NULL;
-static wlu_mem_block_t *small_block_priv = NULL;
+static dlu_mem_block_t *large_block_priv = NULL;
+static dlu_mem_block_t *small_block_priv = NULL;
 
 static void *sstart_addr_shared = NULL;
-static wlu_mem_block_t *large_block_shared = NULL;
-static wlu_mem_block_t *small_block_shared = NULL;
+static dlu_mem_block_t *large_block_shared = NULL;
+static dlu_mem_block_t *small_block_shared = NULL;
 
 /**
 * Helps in ensuring one does not waste cycles in context switching
 * First check if sub-block was allocated and is currently free
 * If block not free, sub allocate more from larger memory block
 */
-static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
-  wlu_mem_block_t *current = NULL;
+static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
+  dlu_mem_block_t *current = NULL;
   size_t abytes = 0;
 
   /**
@@ -84,11 +84,11 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
   * else set current to next block (which would be the block waiting to be allocated)
   */
   switch(type) {
-    case WLU_SMALL_BLOCK_PRIV:
+    case DLU_SMALL_BLOCK_PRIV:
       abytes = large_block_priv->abytes;
       current = (!small_block_priv->next) ? sstart_addr_priv : small_block_priv->next;
       break;
-    case WLU_SMALL_BLOCK_SHARED:
+    case DLU_SMALL_BLOCK_SHARED:
       abytes = large_block_shared->abytes;
       current = (!small_block_shared->next) ? sstart_addr_shared : small_block_shared->next;
       break;
@@ -97,7 +97,7 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
 
   if (abytes >= bytes) {
     /* current block thats about to be allocated set few metadata */
-    wlu_mem_block_t *block = current->addr;
+    dlu_mem_block_t *block = current->addr;
     block->size = bytes;
     /* Put saddr at an address that doesn't contain metadata */
     block->saddr = BLOCK_SIZE + current->addr;
@@ -118,8 +118,8 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
 
     /* Decrement larger block available memory */
     switch(type) {
-      case WLU_SMALL_BLOCK_SHARED: large_block_shared->abytes -= (BLOCK_SIZE + bytes); break;
-      case WLU_SMALL_BLOCK_PRIV: large_block_priv->abytes -= (BLOCK_SIZE + bytes); break;
+      case DLU_SMALL_BLOCK_SHARED: large_block_shared->abytes -= (BLOCK_SIZE + bytes); break;
+      case DLU_SMALL_BLOCK_PRIV: large_block_priv->abytes -= (BLOCK_SIZE + bytes); break;
       default: break;
     }
 
@@ -129,20 +129,20 @@ static wlu_mem_block_t *get_free_block(wlu_block_type type, size_t bytes) {
   return NULL;
 }
 
-static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
-  wlu_mem_block_t *block = NULL;
+static dlu_mem_block_t *alloc_mem_block(dlu_block_type type, size_t bytes) {
+  dlu_mem_block_t *block = NULL;
 
   /* Allows for zeros to be written into values of bytes allocated */
   int fd = open("/dev/zero", O_RDWR);
   if (fd == NEG_ONE) {
-    wlu_log_me(WLU_DANGER, "[x] open: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] open: %s", strerror(errno));
     goto finish_alloc_mem_block;
   }
 
-  int flags = (type == WLU_LARGE_BLOCK_SHARED) ? MAP_SHARED : MAP_PRIVATE;
+  int flags = (type == DLU_LARGE_BLOCK_SHARED) ? MAP_SHARED : MAP_PRIVATE;
   block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags | MAP_ANONYMOUS, fd, 0);
   if (block == MAP_FAILED) {
-    wlu_log_me(WLU_DANGER, "[x] mmap: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] mmap: %s", strerror(errno));
     goto finish_alloc_mem_block;
   }
 
@@ -154,13 +154,13 @@ static wlu_mem_block_t *alloc_mem_block(wlu_block_type type, size_t bytes) {
   block->saddr = BLOCK_SIZE + block;
 finish_alloc_mem_block:
   if (close(fd) == NEG_ONE)
-    wlu_log_me(WLU_DANGER, "[x] close: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] close: %s", strerror(errno));
   return block;
 }
 
 /* Function is reserve for one time use. Only used when allocating space for struct members */
-void *wlu_alloc(wlu_block_type type, size_t bytes) {
-  wlu_mem_block_t *nblock = NULL;
+void *dlu_alloc(dlu_block_type type, size_t bytes) {
+  dlu_mem_block_t *nblock = NULL;
 
   /**
   * This will create large block of memory
@@ -172,9 +172,9 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
 
   /* TODO: Possible rewrite of switch statement */
   switch (type) {
-    case WLU_LARGE_BLOCK_PRIV:
+    case DLU_LARGE_BLOCK_PRIV:
       /* If large block allocated don't allocate another one */
-      if (large_block_priv) { PERR(WLU_ALREADY_ALLOC, 0, NULL); return NULL; }
+      if (large_block_priv) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return NULL; }
 
       nblock = alloc_mem_block(type, bytes);
       if (!nblock) return NULL;
@@ -187,7 +187,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       small_block_priv = sstart_addr_priv = nblock->saddr;
       small_block_priv->addr = small_block_priv;
       break;
-    case WLU_SMALL_BLOCK_PRIV:
+    case DLU_SMALL_BLOCK_PRIV:
       /* If large block not allocated return NULL until allocated */
       if (!large_block_priv) return NULL;
 
@@ -201,9 +201,9 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       /* Move back to previous block (for return status) */
       nblock = small_block_priv;
       break;
-    case WLU_LARGE_BLOCK_SHARED:
+    case DLU_LARGE_BLOCK_SHARED:
       /* If large block allocated don't allocate another one */
-      if (large_block_shared) { PERR(WLU_ALREADY_ALLOC, 0, NULL); return NULL; }
+      if (large_block_shared) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return NULL; }
 
       nblock = alloc_mem_block(type, bytes);
       if (!nblock) return NULL;
@@ -216,7 +216,7 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
       small_block_shared = sstart_addr_shared = nblock->saddr;
       small_block_shared->addr = small_block_shared;
       break;
-    case WLU_SMALL_BLOCK_SHARED:
+    case DLU_SMALL_BLOCK_SHARED:
       /* If large block not allocated return NULL until allocated */
       if (!large_block_shared) return NULL;
 
@@ -236,16 +236,16 @@ void *wlu_alloc(wlu_block_type type, size_t bytes) {
   return nblock->saddr;
 }
 
-bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
+bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size_t size = 0;
 
-  if (type == WLU_SMALL_BLOCK_PRIV || type == WLU_SMALL_BLOCK_SHARED) {
-    PERR(WLU_OP_NOT_PERMITED, 0, NULL);
+  if (type == DLU_SMALL_BLOCK_PRIV || type == DLU_SMALL_BLOCK_SHARED) {
+    PERR(DLU_OP_NOT_PERMITED, 0, NULL);
     return false;
   }
 
-  if (large_block_priv) { PERR(WLU_ALREADY_ALLOC, 0, NULL); return false; }
-  if (large_block_shared) { PERR(WLU_ALREADY_ALLOC, 0, NULL); return false; }
+  if (large_block_priv) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
+  if (large_block_shared) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
 
   size += (ma.inta_cnt * sizeof(int));
   size += (ma.cha_cnt * sizeof(char)); /* sizeof(char) is for formality */
@@ -275,63 +275,63 @@ bool wlu_otma(wlu_block_type type, wlu_otma_mems ma) {
   size += (ma.td_cnt * sizeof(struct _text_data));
   size += (ma.dis_cnt * sizeof(struct _dis_data));
 
-  if (!wlu_alloc(type, size)) return false;
+  if (!dlu_alloc(type, size)) return false;
 
   return true;
 }
 
-bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size) {
+bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size) {
   switch (type) {
-    case WLU_SC_DATA:
+    case DLU_SC_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->sc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data));
-        if (!app->sc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data));
+        if (!app->sc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->sdc = arr_size; return false;
       }
-    case WLU_GP_DATA:
+    case DLU_GP_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->gp_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data));
-        if (!app->gp_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->gp_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data));
+        if (!app->gp_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->gdc = arr_size; return false;
       }
-    case WLU_CMD_DATA:
+    case DLU_CMD_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->cmd_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data));
-        if (!app->cmd_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->cmd_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data));
+        if (!app->cmd_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->cdc = arr_size; return false;
       }
-    case WLU_BUFF_DATA:
+    case DLU_BUFF_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->buff_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buff_data));
-        if (!app->buff_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buff_data));
+        if (!app->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->bdc = arr_size; return false;
       }
-    case WLU_DESC_DATA:
+    case DLU_DESC_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->desc_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
-        if (!app->desc_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->desc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
+        if (!app->desc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->ddc = arr_size; return false;
       }
-    case WLU_TEXT_DATA:
+    case DLU_TEXT_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->text_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
-        if (!app->text_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->text_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
+        if (!app->text_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->tdc = arr_size; return false;
       }
-    case WLU_DIS_DATA:
+    case DLU_DIS_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->dis_data = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
-        if (!app->dis_data) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->dis_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
+        if (!app->dis_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->dpc = arr_size; return false;
       }
-    case WLU_SC_DATA_MEMS:
+    case DLU_SC_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
         /**
@@ -342,33 +342,33 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         arr_size += 1;
 
         /* Allocate SwapChain Buffers (VkImage, VkImageView, VkFramebuffer) */
-        app->sc_data[index].sc_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers));
-        if (!app->sc_data[index].sc_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sc_data[index].sc_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers));
+        if (!app->sc_data[index].sc_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
 
         /* Allocate CommandBuffers, This is okay */
-        app->cmd_data[index].cmd_buffs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer));
-        if (!app->cmd_data[index].cmd_buffs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->cmd_data[index].cmd_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer));
+        if (!app->cmd_data[index].cmd_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
 
         /* Allocate Semaphores */
-        app->sc_data[index].syncs = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
-        if (!app->sc_data[index].syncs) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->sc_data[index].syncs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
+        if (!app->sc_data[index].syncs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->sc_data[index].sic = arr_size; return false;
       }
-    case WLU_DESC_DATA_MEMS:
+    case DLU_DESC_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->desc_data[index].layouts = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
-        if (!app->desc_data[index].layouts) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->desc_data[index].layouts = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
+        if (!app->desc_data[index].layouts) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
 
-        app->desc_data[index].desc_set = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
-        if (!app->desc_data[index].desc_set) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->desc_data[index].desc_set = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
+        if (!app->desc_data[index].desc_set) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->desc_data[index].dlsc = arr_size; return false;
       }
-    case WLU_GP_DATA_MEMS:
+    case DLU_GP_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
-        app->gp_data[index].graphics_pipelines = wlu_alloc(WLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline));
-        if (!app->gp_data[index].graphics_pipelines) { PERR(WLU_ALLOC_FAILED, 0, NULL); return true; }
+        app->gp_data[index].graphics_pipelines = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline));
+        if (!app->gp_data[index].graphics_pipelines) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->gp_data[index].gpc = arr_size; return false;
       }
     default: break;
@@ -381,10 +381,10 @@ bool wlu_otba(wlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
 * Releasing memory in this case means to
 * unmap all virtual pages (remove page tables)
 */
-void wlu_release_blocks() {
+void dlu_release_blocks() {
   if (large_block_priv) {
     if (munmap(large_block_priv, BLOCK_SIZE + large_block_priv->size) == NEG_ONE) {
-      wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
+      dlu_log_me(DLU_DANGER, "[x] munmap: %s", strerror(errno));
       return;
     }
     large_block_priv = NULL;
@@ -392,17 +392,17 @@ void wlu_release_blocks() {
 
   if (large_block_shared) {
     if (munmap(large_block_shared, BLOCK_SIZE + large_block_shared->size) == NEG_ONE) {
-      wlu_log_me(WLU_DANGER, "[x] munmap: %s", strerror(errno));
+      dlu_log_me(DLU_DANGER, "[x] munmap: %s", strerror(errno));
       return;
     }
     large_block_shared = NULL;
   }
 }
 
-void wlu_print_mb(wlu_block_type type) {
-  wlu_mem_block_t *current = (type == WLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
+void dlu_print_mb(dlu_block_type type) {
+  dlu_mem_block_t *current = (type == DLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
   while (current->next) {
-    wlu_log_me(WLU_INFO, "current block = %p, next block = %p, block size = %d, saddr = %p",
+    dlu_log_me(DLU_INFO, "current block = %p, next block = %p, block size = %d, saddr = %p",
                           current, current->next, current->size, current->saddr);
     current = current->next;
   }

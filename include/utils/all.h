@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_ALL_H
-#define WLU_UTILS_ALL_H
+#ifndef DLU_UTILS_ALL_H
+#define DLU_UTILS_ALL_H
 
 #include "log.h"
 #include "mm.h"

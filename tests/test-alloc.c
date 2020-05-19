@@ -26,58 +26,58 @@
 #include <check.h>
 
 START_TEST(basic_priv_alloc) {
-  wlu_otma_mems ma = {
+  dlu_otma_mems ma = {
     .inta_cnt = 1, .cha_cnt = 2,
     .fla_cnt = 1, .dba_cnt = 1,
   };
-  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
-  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(int));
-  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_PRIV, 2 * sizeof(b));
-  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float));
-  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(float));
+  int *bytes = (int *) dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(int));
+  char **b = (char **) dlu_alloc(DLU_SMALL_BLOCK_PRIV, 2 * sizeof(b));
+  float *f = (float *) dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(float));
+  float *q = (float *) dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(float));
 
   *bytes = 30;
   b[0] = "abcdegf";
   b[1] = "hijklmn";
   *f = *q = 45.78f;
-  wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
-  wlu_log_me(WLU_INFO, "b[0]: %s", b[0]);
-  wlu_log_me(WLU_INFO, "b[1]: %s", b[1]);
-  wlu_log_me(WLU_INFO, "f: %0.2f", *f);
-  wlu_log_me(WLU_INFO, "q: %0.2f", *q);
+  dlu_log_me(DLU_INFO, "bytes: %d", *bytes);
+  dlu_log_me(DLU_INFO, "b[0]: %s", b[0]);
+  dlu_log_me(DLU_INFO, "b[1]: %s", b[1]);
+  dlu_log_me(DLU_INFO, "f: %0.2f", *f);
+  dlu_log_me(DLU_INFO, "q: %0.2f", *q);
 
-  wlu_print_mb(WLU_SMALL_BLOCK_PRIV);
+  dlu_print_mb(DLU_SMALL_BLOCK_PRIV);
 
-  wlu_release_blocks();
+  dlu_release_blocks();
   bytes=NULL; q=NULL;
 } END_TEST;
 
 START_TEST(basic_shared_alloc) {
-  wlu_otma_mems ma = {
+  dlu_otma_mems ma = {
     .inta_cnt = 1, .cha_cnt = 2,
     .fla_cnt = 1, .dba_cnt = 1,
   };
-  if (!wlu_otma(WLU_LARGE_BLOCK_SHARED, ma)) ck_abort_msg(NULL);
+  if (!dlu_otma(DLU_LARGE_BLOCK_SHARED, ma)) ck_abort_msg(NULL);
 
-  int *bytes = (int *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(int));
-  char **b = (char **) wlu_alloc(WLU_SMALL_BLOCK_SHARED, 2 * sizeof(b));
-  float *f = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float));
-  float *q = (float *) wlu_alloc(WLU_SMALL_BLOCK_SHARED, sizeof(float));
+  int *bytes = (int *) dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(int));
+  char **b = (char **) dlu_alloc(DLU_SMALL_BLOCK_SHARED, 2 * sizeof(b));
+  float *f = (float *) dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(float));
+  float *q = (float *) dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(float));
 
   *bytes = 30;
   b[0] = "abcdegf";
   b[1] = "hijklmn";
   *f = *q = 45.78f;
-  wlu_log_me(WLU_INFO, "bytes: %d", *bytes);
-  wlu_log_me(WLU_INFO, "b[0]: %s", b[0]);
-  wlu_log_me(WLU_INFO, "b[1]: %s", b[1]);
-  wlu_log_me(WLU_INFO, "f: %0.2f", *f);
-  wlu_log_me(WLU_INFO, "q: %0.2f", *q);
+  dlu_log_me(DLU_INFO, "bytes: %d", *bytes);
+  dlu_log_me(DLU_INFO, "b[0]: %s", b[0]);
+  dlu_log_me(DLU_INFO, "b[1]: %s", b[1]);
+  dlu_log_me(DLU_INFO, "f: %0.2f", *f);
+  dlu_log_me(DLU_INFO, "q: %0.2f", *q);
 
-  wlu_print_mb(WLU_SMALL_BLOCK_SHARED);
+  dlu_print_mb(DLU_SMALL_BLOCK_SHARED);
 
-  wlu_release_blocks();
+  dlu_release_blocks();
   bytes=NULL; q=NULL;
 } END_TEST;
 

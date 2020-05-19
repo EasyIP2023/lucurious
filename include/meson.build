@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 
-i_dir = '/usr/include/wlu/'
+i_dir = '/usr/include/dluc/'
 install_headers('lucurious.h', install_dir: i_dir)
 
 

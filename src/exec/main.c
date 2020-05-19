@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
   int c = 0;
   int8_t track = 0;
 
-  wlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 200, .vkext_props_cnt = 200 };
-  if (!wlu_otma(WLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
+  dlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 200, .vkext_props_cnt = 200 };
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
 
   while (1) {
     int option_index = 0;
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
           if (optarg) {
             print_device_extensions(ret_dtype(optarg));
           } else {
-            wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+            dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
             goto exit_loop;
           }
         }
@@ -80,15 +80,15 @@ int main(int argc, char **argv) {
           if (optarg) {
             print_display_extensions(ret_dtype(optarg));
           } else {
-            wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pdp VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+            dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pdp VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
             goto exit_loop;
           }
         }
         if (!strcmp(long_options[option_index].name, "display-info")) {
           if (optarg) {
-            wlu_print_msg(WLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
-            if (wlu_print_dconf_info(optarg)) {
-              wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --display-info /dev/dri/card0\n");
+            dlu_print_msg(DLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
+            if (dlu_print_dconf_info(optarg)) {
+              dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --display-info /dev/dri/card0\n");
               goto exit_loop;
             }
           }
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
         if (optarg) {
           print_device_extensions(ret_dtype(optarg));
         } else {
-          wlu_print_msg(WLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
+          dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
           goto exit_loop;
         }
         break;
@@ -114,6 +114,6 @@ int main(int argc, char **argv) {
 
 exit_loop:
   if (c == NEG_ONE && track == 0) help_message();
-  wlu_release_blocks();
+  dlu_release_blocks();
   return EXIT_SUCCESS;
 }

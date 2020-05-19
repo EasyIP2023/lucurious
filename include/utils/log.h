@@ -22,21 +22,21 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_LOG_H
-#define WLU_UTILS_LOG_H
+#ifndef DLU_UTILS_LOG_H
+#define DLU_UTILS_LOG_H
 
-void _wlu_log_me(wlu_log_type type, FILE *stream, const char *fmt, ...);
-void _wlu_print_me(wlu_log_type type, const char *fmt, ...);
-const char *_wlu_strip_path(const char *filepath);
+void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...);
+void _dlu_print_me(dlu_log_type type, const char *fmt, ...);
+const char *_dlu_strip_path(const char *filepath);
 
 /* Macros defined to help better structure the message */
-#define wlu_log_me(log_type, fmt, ...) \
-  _wlu_log_me(log_type, stdout, "[%s:%d] " fmt, _wlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
+#define dlu_log_me(log_type, fmt, ...) \
+  _dlu_log_me(log_type, stdout, "[%s:%d] " fmt, _dlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
 
-#define wlu_log_err(log_type, fmt, ...) \
-  _wlu_log_me(log_type, stderr, "[%s:%d] " fmt, _wlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
+#define dlu_log_err(log_type, fmt, ...) \
+  _dlu_log_me(log_type, stderr, "[%s:%d] " fmt, _dlu_strip_path(__FILE__), __LINE__, ##__VA_ARGS__)
 
-#define wlu_print_msg(log_type, msg, ...) \
-  _wlu_print_me(log_type, msg, ##__VA_ARGS__)
+#define dlu_print_msg(log_type, msg, ...) \
+  _dlu_print_me(log_type, msg, ##__VA_ARGS__)
 
 #endif

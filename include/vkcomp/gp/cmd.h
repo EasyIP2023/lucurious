@@ -22,10 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_GP_CMD_H
-#define WLU_VKCOMP_GP_CMD_H
+#ifndef DLU_VKCOMP_GP_CMD_H
+#define DLU_VKCOMP_GP_CMD_H
 
-void wlu_cmd_draw(
+void dlu_cmd_draw(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -35,7 +35,7 @@ void wlu_cmd_draw(
   uint32_t firstInstance
 );
 
-void wlu_cmd_draw_indexed(
+void dlu_cmd_draw_indexed(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -46,7 +46,7 @@ void wlu_cmd_draw_indexed(
   uint32_t firstInstance
 );
 
-void wlu_cmd_set_viewport(
+void dlu_cmd_set_viewport(
   vkcomp *app,
   VkViewport *viewport,
   uint32_t cur_pool,
@@ -55,7 +55,7 @@ void wlu_cmd_set_viewport(
   uint32_t viewportCount
 );
 
-void wlu_cmd_set_scissor(
+void dlu_cmd_set_scissor(
   vkcomp *app,
   VkRect2D *scissor,
   uint32_t cur_pool,

@@ -22,12 +22,12 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_ERRORS_H
-#define WLU_UTILS_ERRORS_H
+#ifndef DLU_UTILS_ERRORS_H
+#define DLU_UTILS_ERRORS_H
 
-void _show_err_msg(uint32_t wlu_err, int vkerr, const char *wlu_msg);
+void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg);
 
-#define PERR(wlu_err, vkerr, wlu_msg) \
-  _show_err_msg(wlu_err, vkerr, wlu_msg);
+#define PERR(dlu_err, vkerr, dlu_msg) \
+  _show_err_msg(dlu_err, vkerr, dlu_msg);
 
 #endif

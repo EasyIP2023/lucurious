@@ -26,7 +26,7 @@
 #include <lucom.h>
 
 /* Taken From: https://www.roxlu.com/2014/047/high-resolution-timer-function-in-c-c-- */
-uint64_t wlu_hrnst(void) {
+uint64_t dlu_hrnst(void) {
   static uint64_t is_init = 0;
   static struct timespec linux_rate;
 
@@ -59,7 +59,7 @@ uint64_t wlu_hrnst(void) {
 * 5) dest = 0010 1001 do  = 0010 0000 (after: dest_t | dest_orig)
 * Output = 41
 */
-void *wlu_bitcpy(void *dest, void *src, size_t bits) {
+void *dlu_bitcpy(void *dest, void *src, size_t bits) {
 
   if (!dest || !src || bits <= 0 || bits > 64) return NULL;
 

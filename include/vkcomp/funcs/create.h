@@ -22,11 +22,11 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_CREATE_FUNCS_H
-#define WLU_VKCOMP_CREATE_FUNCS_H
+#ifndef DLU_VKCOMP_CREATE_FUNCS_H
+#define DLU_VKCOMP_CREATE_FUNCS_H
 
 /* Create connection between app and the vulkan api */
-VkResult wlu_create_instance(
+VkResult dlu_create_instance(
   vkcomp *app,
   char *app_name,
   char *engine_name,
@@ -42,13 +42,13 @@ VkResult wlu_create_instance(
 * This fuction exposes a VkSurfaceKHR object. This object
 * represents a surface to present rendered images to.
 */
-VkResult wlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
+VkResult dlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl_surface);
 
 /**
 * This function will select the physical device of
 * your choosing based off of VkPhysicalDeviceType
 */
-VkResult wlu_create_physical_device(
+VkResult dlu_create_physical_device(
   vkcomp *app,
   VkPhysicalDeviceType vkpdtype,
   VkPhysicalDeviceProperties *device_properties,
@@ -62,7 +62,7 @@ VkResult wlu_create_physical_device(
 * that are supported by the VkQueueFlagBits set and assign the
 * available graphics and present queues
 */
-VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
+VkBool32 dlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
 
 /**
 * After selecting a physical device to use.
@@ -70,7 +70,7 @@ VkBool32 wlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
 * This function is also used to set Vulkan Device Level Extensions
 * that entail what a device does
 */
-VkResult wlu_create_logical_device(
+VkResult dlu_create_logical_device(
   vkcomp *app,
   VkPhysicalDeviceFeatures *device_feats,
   uint32_t queue_count,
@@ -84,7 +84,7 @@ VkResult wlu_create_logical_device(
 * Create the actual swap chain used to present images to a surface.
 * Does not check if image count exceeds the max
 */
-VkResult wlu_create_swap_chain(
+VkResult dlu_create_swap_chain(
   vkcomp *app,
   uint32_t cur_scd,
   VkSurfaceCapabilitiesKHR capabilities,
@@ -102,7 +102,7 @@ VkResult wlu_create_swap_chain(
 * It creates VkImageView handles for any particular image
 * cur_index: Corresponds to the index of either vkcomp members text_data/sc_data
 */
-VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info);
+VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info);
 
 /**
 * Need to depth buffer to render 3D images (only need one)
@@ -110,7 +110,7 @@ VkResult wlu_create_image_views(wlu_image_view_type type, vkcomp *app, uint32_t 
 * Allocate memory and bind that memory to the VkImage Handle
 * Then create the corresponding image view
 */
-VkResult wlu_create_depth_buff(
+VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
@@ -123,7 +123,7 @@ VkResult wlu_create_depth_buff(
 * in a read-only fashion constant parameter data. Function also
 * creates buffers like a vertex buffer so that it's visible to the CPU
 */
-VkResult wlu_create_vk_buffer(
+VkResult dlu_create_vk_buffer(
   vkcomp *app,
   uint32_t cur_bd,
   VkDeviceSize size,
@@ -136,7 +136,7 @@ VkResult wlu_create_vk_buffer(
   VkFlags requirements_mask
 );
 
-VkResult wlu_create_buff_mem_map(
+VkResult dlu_create_vk_buff_mem_map(
   vkcomp *app,
   uint32_t cur_bd,
   void *data
@@ -148,7 +148,7 @@ VkResult wlu_create_buff_mem_map(
 * A framebuffer object references all VkImageView objects this
 * is represented by "attachments"
 */
-VkResult wlu_create_framebuffers(
+VkResult dlu_create_framebuffers(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_gpd,
@@ -163,7 +163,7 @@ VkResult wlu_create_framebuffers(
 * Allows for your app to create a command pool to store your
 * command buffers before being committed to main memory
 */
-VkResult wlu_create_cmd_pool(
+VkResult dlu_create_cmd_pool(
   vkcomp *app,
   uint32_t cur_scd,
   uint32_t cur_cmdd,
@@ -175,7 +175,7 @@ VkResult wlu_create_cmd_pool(
 * Allows for your app to put commands into a buffer to later
 * be submitted to one of the hardware queues
 */
-VkResult wlu_create_cmd_buffs(
+VkResult dlu_create_cmd_buffs(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_scd,
@@ -190,6 +190,6 @@ VkResult wlu_create_cmd_buffs(
 * operation until the image is actually available. This function
 * creates semaphores
 */
-VkResult wlu_create_syncs(vkcomp *app, uint32_t cur_scd);
+VkResult dlu_create_syncs(vkcomp *app, uint32_t cur_scd);
 
 #endif

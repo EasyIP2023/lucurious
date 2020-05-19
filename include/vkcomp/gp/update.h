@@ -22,11 +22,11 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_GP_UPDATE_H
-#define WLU_VKCOMP_GP_UPDATE_H
+#ifndef DLU_VKCOMP_GP_UPDATE_H
+#define DLU_VKCOMP_GP_UPDATE_H
 
 /* descriptorCount: Specify the amount of descriptors to update */
-VkWriteDescriptorSet wlu_write_desc_set(
+VkWriteDescriptorSet dlu_write_desc_set(
   VkDescriptorSet dstSet,
   uint32_t dstBinding,
   uint32_t dstArrayElement,
@@ -38,7 +38,7 @@ VkWriteDescriptorSet wlu_write_desc_set(
 );
 
 /* Update the configurations of descriptors */
-void wlu_update_desc_sets(
+void dlu_update_desc_sets(
   vkcomp *app,
   uint32_t descriptorWriteCount,
   const VkWriteDescriptorSet *pDescriptorWrites,

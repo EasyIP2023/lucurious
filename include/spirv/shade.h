@@ -22,17 +22,17 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_SPIRV_SHADE_H
-#define WLU_SPIRV_SHADE_H
+#ifndef DLU_SPIRV_SHADE_H
+#define DLU_SPIRV_SHADE_H
 
-wlu_shader_info wlu_preprocess_shader(
+dlu_shader_info dlu_preprocess_shader(
   unsigned int kind,
   const char *source,
   const char *input_file_name,
   const char *entry_point_name
 );
 
-wlu_shader_info wlu_compile_to_assembly(
+dlu_shader_info dlu_compile_to_assembly(
   unsigned int kind,
   const char *source,
   const char *input_file_name,
@@ -40,7 +40,7 @@ wlu_shader_info wlu_compile_to_assembly(
 );
 
 /* Compile GLSL/HLSL into spirv byte code */
-wlu_shader_info wlu_compile_to_spirv(
+dlu_shader_info dlu_compile_to_spirv(
   unsigned int kind,
   const char *source,
   const char *input_file_name,

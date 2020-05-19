@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_WAYLAND_CLIENT_H
-#define WLU_WAYLAND_CLIENT_H
+#ifndef DLU_WAYLAND_CLIENT_H
+#define DLU_WAYLAND_CLIENT_H
 
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
@@ -40,8 +40,8 @@ typedef struct _wclient {
   struct xdg_toplevel *xdg_toplevel;
 } wclient;
 
-wclient *wlu_init_wc();
-void wlu_freeup_wc(wclient *wc);
-bool wlu_create_client(wclient *wc);
+wclient *dlu_init_wc();
+void dlu_freeup_wc(wclient *wc);
+bool dlu_create_client(wclient *wc);
 
 #endif

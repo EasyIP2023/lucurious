@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_TYPES_H
-#define WLU_VKCOMP_TYPES_H
+#ifndef DLU_VKCOMP_TYPES_H
+#define DLU_VKCOMP_TYPES_H
 
 #define VK_USE_PLATFORM_WAYLAND_KHR
 #include <vulkan/vulkan.h>
@@ -35,40 +35,40 @@
 #define GENERAL_TIMEOUT 100000000
 #define INDEX_IGNORE -1
 
-typedef enum _wlu_sync_type {
-  WLU_VK_WAIT_RENDER_FENCE   = 0x0000,  /* Set render fence to signal state */
-  WLU_VK_WAIT_IMAGE_FENCE    = 0x0001,  /* Set image fence to signal state */
-  WLU_VK_WAIT_PRESENT_QUEUE  = 0x0002,  /* Synchronously wait on the present queue */
-  WLU_VK_WAIT_GRAPHICS_QUEUE = 0x0003,  /* Synchronously wait on the present queue */
-  WLU_VK_RESET_RENDER_FENCE  = 0x0004,  /* Set Render Fence in unsignaled state */
-  WLU_VK_GET_RENDER_FENCE    = 0x0005   /* Get the state of the fence */
-} wlu_sync_type;
+typedef enum _dlu_sync_type {
+  DLU_VK_WAIT_RENDER_FENCE   = 0x0000,  /* Set render fence to signal state */
+  DLU_VK_WAIT_IMAGE_FENCE    = 0x0001,  /* Set image fence to signal state */
+  DLU_VK_WAIT_PRESENT_QUEUE  = 0x0002,  /* Synchronously wait on the present queue */
+  DLU_VK_WAIT_GRAPHICS_QUEUE = 0x0003,  /* Synchronously wait on the present queue */
+  DLU_VK_RESET_RENDER_FENCE  = 0x0004,  /* Set Render Fence in unsignaled state */
+  DLU_VK_GET_RENDER_FENCE    = 0x0005   /* Get the state of the fence */
+} dlu_sync_type;
 
-typedef enum _wlu_destroy_type {
-  WLU_DESTROY_VK_SHADER           = 0x0000,  /* Destroy VkShaderModule Objects */
-  WLU_DESTROY_VK_BUFFER           = 0x0001,  /* Destroy VkBuffer Objects */
-  WLU_DESTROY_VK_MEMORY           = 0x0002,  /* Destroy VkMemory Objects */
-  WLU_DESTROY_VK_CMD_POOL         = 0x0003,  /* Destroy VkCommandPool Objects */
-  WLU_DESTROY_VK_DESC_POOL        = 0x0004,  /* Destroy VkDescriptorPool Objects */
-  WLU_DESTROY_VK_DESC_SET_LAYOUT  = 0x0005,  /* Destroy VkDescriptorSetLayout Objects */
-  WLU_DESTROY_PIPELINE_CACHE      = 0x0006,  /* Destroy VkPipelineCache Objects */
-  WLU_DESTROY_VK_FRAME_BUFFER     = 0x0007,  /* Destroy VkFrameBuffer Objects */
-  WLU_DESTROY_VK_RENDER_PASS      = 0x0008,  /* Destroy VkRenderPass Objects */
-  WLU_DESTROY_VK_PIPE_LAYOUT      = 0x0009,  /* Destroy VkPipelineLayout Objects */
-  WLU_DESTROY_PIPELINE            = 0x000A,  /* Destroy VkPipeline Objects */
-  WLU_DESTROY_VK_SAMPLER          = 0x000B,  /* Destroy VkSampler Objects */
-  WLU_DESTROY_VK_IMAGE            = 0x000C,  /* Destroy VkImage Objects */
-  WLU_DESTROY_VK_IMAGE_VIEW       = 0x000D,  /* Destroy VkImageView Objects */
-  WLU_DESTROY_VK_SWAPCHAIN        = 0x000E,  /* Destroy VkSwapchainKHR Objects */
-  WLU_DESTROY_VK_SEMAPHORE        = 0x000F,  /* Destroy VkSemaphore Objects */
-  WLU_DESTROY_VK_FENCE            = 0x0010,  /* Destroy VkFence Objects */
-  WLU_DESTROY_VK_LOGIC_DEVICE     = 0x0011   /* Destroy VkDevice Objects */
-} wlu_destroy_type;
+typedef enum _dlu_destroy_type {
+  DLU_DESTROY_VK_SHADER           = 0x0000,  /* Destroy VkShaderModule Objects */
+  DLU_DESTROY_VK_BUFFER           = 0x0001,  /* Destroy VkBuffer Objects */
+  DLU_DESTROY_VK_MEMORY           = 0x0002,  /* Destroy VkMemory Objects */
+  DLU_DESTROY_VK_CMD_POOL         = 0x0003,  /* Destroy VkCommandPool Objects */
+  DLU_DESTROY_VK_DESC_POOL        = 0x0004,  /* Destroy VkDescriptorPool Objects */
+  DLU_DESTROY_VK_DESC_SET_LAYOUT  = 0x0005,  /* Destroy VkDescriptorSetLayout Objects */
+  DLU_DESTROY_PIPELINE_CACHE      = 0x0006,  /* Destroy VkPipelineCache Objects */
+  DLU_DESTROY_VK_FRAME_BUFFER     = 0x0007,  /* Destroy VkFrameBuffer Objects */
+  DLU_DESTROY_VK_RENDER_PASS      = 0x0008,  /* Destroy VkRenderPass Objects */
+  DLU_DESTROY_VK_PIPE_LAYOUT      = 0x0009,  /* Destroy VkPipelineLayout Objects */
+  DLU_DESTROY_PIPELINE            = 0x000A,  /* Destroy VkPipeline Objects */
+  DLU_DESTROY_VK_SAMPLER          = 0x000B,  /* Destroy VkSampler Objects */
+  DLU_DESTROY_VK_IMAGE            = 0x000C,  /* Destroy VkImage Objects */
+  DLU_DESTROY_VK_IMAGE_VIEW       = 0x000D,  /* Destroy VkImageView Objects */
+  DLU_DESTROY_VK_SWAPCHAIN        = 0x000E,  /* Destroy VkSwapchainKHR Objects */
+  DLU_DESTROY_VK_SEMAPHORE        = 0x000F,  /* Destroy VkSemaphore Objects */
+  DLU_DESTROY_VK_FENCE            = 0x0010,  /* Destroy VkFence Objects */
+  DLU_DESTROY_VK_LOGIC_DEVICE     = 0x0011   /* Destroy VkDevice Objects */
+} dlu_destroy_type;
 
-typedef enum _wlu_image_view_type {
-  WLU_SC_IMAGE_VIEWS   = 0x0000, /* Swapchain image views */
-  WLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
-} wlu_image_view_type;
+typedef enum _dlu_image_view_type {
+  DLU_SC_IMAGE_VIEWS   = 0x0000, /* Swapchain image views */
+  DLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
+} dlu_image_view_type;
 
 typedef struct _vkcomp {
   PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;

@@ -16,7 +16,7 @@ char *concat(char *fmt, ...) {
   size++; /* for '/0' sentinal character */
   result = calloc(sizeof(result), size);
   if (!result) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
     return NULL;
   }
 

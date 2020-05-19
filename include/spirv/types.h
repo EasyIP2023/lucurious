@@ -22,23 +22,23 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_SPIRV_TYPES_H
-#define WLU_SPIRV_TYPES_H
+#ifndef DLU_SPIRV_TYPES_H
+#define DLU_SPIRV_TYPES_H
 
-typedef enum _wlu_spirv_type {
-  WLU_UTILS_FILE_SPRIV = 0x0000, /* Define spirv bytes from file */
-  WLU_LIB_SHADERC_SPRIV = 0x0001
-} wlu_spirv_type;
+typedef enum _dlu_spirv_type {
+  DLU_UTILS_FILE_SPRIV = 0x0000, /* Define spirv bytes from file */
+  DLU_LIB_SHADERC_SPRIV = 0x0001
+} dlu_spirv_type;
 
-typedef struct _wlu_file_info {
+typedef struct _dlu_file_info {
   char *bytes;
   long byte_size;
-} wlu_file_info;
+} dlu_file_info;
 
-typedef struct _wlu_shader_info {
+typedef struct _dlu_shader_info {
   void *result;
   char *bytes;
   long byte_size;
-} wlu_shader_info;
+} dlu_shader_info;
 
 #endif

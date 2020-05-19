@@ -36,20 +36,20 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report_callbackFN(
   void *pUserData UNUSED
 ) {
 
-  wlu_log_me(WLU_DANGER, "%s", pMessage);
+  dlu_log_me(DLU_DANGER, "%s", pMessage);
   return VK_FALSE;
 }
 
-VkResult wlu_set_debug_message(vkcomp *app) {
+VkResult dlu_set_debug_message(vkcomp *app) {
   VkResult res = VK_RESULT_MAX_ENUM;
   PFN_vkCreateDebugReportCallbackEXT dbg_create_report_callback = VK_NULL_HANDLE;
 
-  if (!app->instance) { PERR(WLU_VKCOMP_INSTANCE, 0, NULL); return res; }
+  if (!app->instance) { PERR(DLU_VKCOMP_INSTANCE, 0, NULL); return res; }
 
-  WLU_DR_INSTANCE_PROC_ADDR(dbg_create_report_callback, app->instance, CreateDebugReportCallbackEXT);
+  DLU_DR_INSTANCE_PROC_ADDR(dbg_create_report_callback, app->instance, CreateDebugReportCallbackEXT);
   if (!dbg_create_report_callback) return VK_ERROR_INITIALIZATION_FAILED;
 
-  WLU_DR_INSTANCE_PROC_ADDR(app->dbg_destroy_report_callback, app->instance, DestroyDebugReportCallbackEXT);
+  DLU_DR_INSTANCE_PROC_ADDR(app->dbg_destroy_report_callback, app->instance, DestroyDebugReportCallbackEXT);
   if (!app->dbg_destroy_report_callback) return VK_ERROR_INITIALIZATION_FAILED;
 
   VkDebugReportCallbackCreateInfoEXT create_info = {};
@@ -60,7 +60,7 @@ VkResult wlu_set_debug_message(vkcomp *app) {
   create_info.pUserData = NULL;
 
   res = dbg_create_report_callback(app->instance, &create_info, NULL, &app->debug_report_callback);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkCreateDebugReportCallbackEXT"); }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateDebugReportCallbackEXT"); }
 
   return res;
 }
@@ -69,26 +69,26 @@ VkResult wlu_set_debug_message(vkcomp *app) {
 * Set vulkan validation layers properties.
 * To get more validation layers install vulkan sdk
 */
-VkResult wlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size) {
+VkResult dlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   /* Find the amount of validation layer */
   res = vkEnumerateInstanceLayerProperties(size, NULL);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties"); return VK_RESULT_MAX_ENUM; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties"); return VK_RESULT_MAX_ENUM; }
 
   /* layer count will only be zero if vulkan sdk not installed */
   if (*size == 0) {
-    wlu_log_me(WLU_WARNING, "[x] failed to find any Validation Layers!!");
+    dlu_log_me(DLU_WARNING, "[x] failed to find any Validation Layers!!");
     return VK_RESULT_MAX_ENUM;
   }
 
   /* allocate space */
-  *vk_props = wlu_alloc(WLU_SMALL_BLOCK_PRIV, *size * sizeof(VkLayerProperties));
-  if (!(*vk_props)) { PERR(WLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+  *vk_props = dlu_alloc(DLU_SMALL_BLOCK_PRIV, *size * sizeof(VkLayerProperties));
+  if (!(*vk_props)) { PERR(DLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
   /* set validation layers values */
   res = vkEnumerateInstanceLayerProperties(size, *vk_props);
-  if (res) { PERR(WLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties"); }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties"); }
 
   return res;
 }

@@ -22,12 +22,12 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_SPIRV_ALL_H
-#define WLU_SPIRV_ALL_H
+#ifndef DLU_SPIRV_ALL_H
+#define DLU_SPIRV_ALL_H
 
 #include "file.h"
 #include "shade.h"
 
-void wlu_freeup_spriv_bytes(wlu_spirv_type type, void *bytes);
+void dlu_freeup_spriv_bytes(dlu_spirv_type type, void *bytes);
 
 #endif

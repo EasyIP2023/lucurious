@@ -25,21 +25,21 @@
 #define LUCUR_SPIRV_API
 #include <lucom.h>
 
-wlu_file_info wlu_read_file(const char *filename) {
-  wlu_file_info fileinfo = {NULL, 0};
+dlu_file_info dlu_read_file(const char *filename) {
+  dlu_file_info fileinfo = {NULL, 0};
   FILE *stream = NULL;
 
   /* Open the file in binary mode */
   stream = fopen(filename, "rb");
   if (!stream) {
-    wlu_log_me(WLU_DANGER, "[x] fopen: %s", filename, strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] fopen: %s", filename, strerror(errno));
     return fileinfo;
   }
 
   /* Go to the end of the file */
   fileinfo.byte_size = fseek(stream, 0, SEEK_END);
   if (fileinfo.byte_size == NEG_ONE) {
-    wlu_log_me(WLU_DANGER, "[x] fseek: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] fseek: %s", strerror(errno));
     return fileinfo;
   }
 
@@ -50,7 +50,7 @@ wlu_file_info wlu_read_file(const char *filename) {
   */
   fileinfo.byte_size = ftell(stream);
   if (fileinfo.byte_size == NEG_ONE) {
-    wlu_log_me(WLU_DANGER, "[x] ftell: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ftell: %s", strerror(errno));
     return fileinfo;
   }
 
@@ -59,13 +59,13 @@ wlu_file_info wlu_read_file(const char *filename) {
 
   fileinfo.bytes = (char *) calloc(fileinfo.byte_size, sizeof(char));
   if (!fileinfo.bytes) {
-    wlu_log_me(WLU_DANGER, "[x] calloc: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
     return fileinfo;
   }
 
   /* Read in the entire file */
   if (fread(fileinfo.bytes, fileinfo.byte_size, 1, stream) == 0) {
-    wlu_log_me(WLU_DANGER, "[x] fread: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] fread: %s", strerror(errno));
     return fileinfo;
   }
 

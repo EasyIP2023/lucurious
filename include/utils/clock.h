@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_UTILS_CLOCK_H
-#define WLU_UTILS_CLOCK_H
+#ifndef DLU_UTILS_CLOCK_H
+#define DLU_UTILS_CLOCK_H
 
 /* Taken From: https://www.roxlu.com/2014/047/high-resolution-timer-function-in-c-c-- */
 #define HAVE_POSIX_TIMER
@@ -35,12 +35,12 @@
 #endif
 
 /* Returns the current time in nanoseconds */
-uint64_t wlu_hrnst(void);
+uint64_t dlu_hrnst(void);
 
 /**
 * Gratuitous function that works similarly to memcpy instead
 * it makes a bit by bit copy from source to dest
 */
-void *wlu_bitcpy(void *dest, void *src, size_t bits);
+void *dlu_bitcpy(void *dest, void *src, size_t bits);
 
 #endif

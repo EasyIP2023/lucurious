@@ -22,29 +22,29 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_MATH_TYPES_H
-#define WLU_VKCOMP_MATH_TYPES_H
+#ifndef DLU_VKCOMP_MATH_TYPES_H
+#define DLU_VKCOMP_MATH_TYPES_H
 
 #include <cglm/types.h>
 
-typedef enum _wlu_rotate_type {
-  WLU_X = 0x0000,
-  WLU_Y = 0x0001,
-  WLU_Z = 0x0002,
-  WLU_AXIS_Z = 0x0003
-} wlu_rotate_type;
+typedef enum _dlu_rotate_type {
+  DLU_X = 0x0000,
+  DLU_Y = 0x0001,
+  DLU_Z = 0x0002,
+  DLU_AXIS_Z = 0x0003
+} dlu_rotate_type;
 
-typedef enum _wlu_vec_type {
-  WLU_VEC2 = 0x0000,
-  WLU_VEC3 = 0x0001,
-  WLU_VEC4 = 0x0002
-} wlu_vec_type;
+typedef enum _dlu_vec_type {
+  DLU_VEC2 = 0x0000,
+  DLU_VEC3 = 0x0001,
+  DLU_VEC4 = 0x0002
+} dlu_vec_type;
 
-typedef enum _wlu_matrix_type {
-  WLU_MAT3 = 0x0000,
-  WLU_MAT4 = 0x0001,
-  WLU_MAT3_IDENTITY = 0x0002,
-  WLU_MAT4_IDENTITY = 0x0003
-} wlu_matrix_type;
+typedef enum _dlu_matrix_type {
+  DLU_MAT3 = 0x0000,
+  DLU_MAT4 = 0x0001,
+  DLU_MAT3_IDENTITY = 0x0002,
+  DLU_MAT4_IDENTITY = 0x0003
+} dlu_matrix_type;
 
 #endif

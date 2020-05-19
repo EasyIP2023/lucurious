@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
+VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   VkRenderPass renderPass,
   uint32_t subpass,
   VkFramebuffer framebuffer,
@@ -48,7 +48,7 @@ VkCommandBufferInheritanceInfo wlu_set_cmd_buff_inheritance_info(
 }
 
 
-VkImageSubresourceRange wlu_set_image_sub_resource_range(
+VkImageSubresourceRange dlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,
   uint32_t baseMipLevel,
   uint32_t levelCount,
@@ -66,7 +66,7 @@ VkImageSubresourceRange wlu_set_image_sub_resource_range(
   return create_info;
 }
 
-VkImageMemoryBarrier wlu_set_image_mem_barrier(
+VkImageMemoryBarrier dlu_set_image_mem_barrier(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
   VkImageLayout oldLayout,
@@ -92,7 +92,7 @@ VkImageMemoryBarrier wlu_set_image_mem_barrier(
   return create_info;
 }
 
-VkImageCreateInfo wlu_set_image_info(
+VkImageCreateInfo dlu_set_image_info(
   VkImageCreateFlags flags,
   VkImageType imageType,
   VkFormat format,
@@ -130,7 +130,7 @@ VkImageCreateInfo wlu_set_image_info(
   return create_info;
 }
 
-VkImageViewCreateInfo wlu_set_image_view_info(
+VkImageViewCreateInfo dlu_set_image_view_info(
   VkImageViewCreateFlags flags,
   VkImage image,
   VkImageViewType viewType,
@@ -152,7 +152,7 @@ VkImageViewCreateInfo wlu_set_image_view_info(
   return create_info;
 }
 
-VkComponentMapping wlu_set_component_mapping(
+VkComponentMapping dlu_set_component_mapping(
   VkComponentSwizzle r,
   VkComponentSwizzle g,
   VkComponentSwizzle b,
@@ -164,7 +164,7 @@ VkComponentMapping wlu_set_component_mapping(
   return create_info;
 }
 
-VkBufferImageCopy wlu_set_buff_image_copy(
+VkBufferImageCopy dlu_set_buff_image_copy(
   VkDeviceSize bufferOffset,
   uint32_t bufferRowLength,
   uint32_t bufferImageHeight,
@@ -188,7 +188,7 @@ VkBufferImageCopy wlu_set_buff_image_copy(
   return create_info;
 }
 
-VkImageSubresourceLayers wlu_set_image_sub_resource_layers(
+VkImageSubresourceLayers dlu_set_image_sub_resource_layers(
   VkImageAspectFlags aspectMask,
   uint32_t mipLevel,
   uint32_t baseArrayLayer,
@@ -204,21 +204,21 @@ VkImageSubresourceLayers wlu_set_image_sub_resource_layers(
   return create_info;
 }
 
-VkExtent2D wlu_set_extent2D(uint32_t width, uint32_t height) {
+VkExtent2D dlu_set_extent2D(uint32_t width, uint32_t height) {
 
   VkExtent2D create_info = { .width = width, .height = height };
 
   return create_info;
 }
 
-VkExtent3D wlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth) {
+VkExtent3D dlu_set_extent3D(uint32_t width, uint32_t height, uint32_t depth) {
 
   VkExtent3D create_info = { .width = width, .height = height, .depth = depth };
 
   return create_info;
 }
 
-VkOffset3D wlu_set_offset3D(int32_t x, int32_t y, int32_t z) {
+VkOffset3D dlu_set_offset3D(int32_t x, int32_t y, int32_t z) {
 
   VkOffset3D create_info = { .x = x, .y = y, .z = z };
 

@@ -25,9 +25,9 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-vkcomp *wlu_init_vk() {
-  vkcomp *app = wlu_alloc(WLU_SMALL_BLOCK_PRIV, sizeof(vkcomp));
-  if (!app) { PERR(WLU_ALLOC_FAILED, 0, NULL); return app; };
+vkcomp *dlu_init_vk() {
+  vkcomp *app = dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(vkcomp));
+  if (!app) { PERR(DLU_ALLOC_FAILED, 0, NULL); return app; };
 
   app->indices.graphics_family = UINT32_MAX;
   app->indices.present_family = UINT32_MAX;
@@ -35,7 +35,7 @@ vkcomp *wlu_init_vk() {
   return app;
 }
 
-void wlu_freeup_sc(void *data) {
+void dlu_freeup_sc(void *data) {
   vkcomp *app = (vkcomp *) data;
 
   /* destory all uniform buffers */
@@ -120,7 +120,7 @@ void wlu_freeup_sc(void *data) {
   }
 }
 
-void wlu_freeup_vk(void *data) {
+void dlu_freeup_vk(void *data) {
   vkcomp *app = (vkcomp *) data;
 
   /* Synchronous wait for present queue to empty. So that all objects can be properly destroyed */

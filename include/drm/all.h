@@ -23,8 +23,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_DRM_ALL_H
-#define WLU_DRM_ALL_H
+#ifndef DLU_DRM_ALL_H
+#define DLU_DRM_ALL_H
 
 #include "info.h"
 #include "screen.h"

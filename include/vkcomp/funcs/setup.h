@@ -22,16 +22,16 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_VKCOMP_SETUP_FUNCS_H
-#define WLU_VKCOMP_SETUP_FUNCS_H
+#ifndef DLU_VKCOMP_SETUP_FUNCS_H
+#define DLU_VKCOMP_SETUP_FUNCS_H
 
 /* Initailize vulkan struct */
-vkcomp *wlu_init_vk();
+vkcomp *dlu_init_vk();
 
 /* Free up all swapchain related memory, must reinitialize these objects */
-void wlu_freeup_sc(void *data);
+void dlu_freeup_sc(void *data);
 
 /* Free up all allocated vkcomp related memory */
-void wlu_freeup_vk(void *data);
+void dlu_freeup_vk(void *data);
 
 #endif

@@ -22,11 +22,11 @@
 * THE SOFTWARE.
 */
 
-#ifndef WLU_MATH_PRINT_H
-#define WLU_MATH_PRINT_H
+#ifndef DLU_MATH_PRINT_H
+#define DLU_MATH_PRINT_H
 
-void wlu_print_vector(wlu_vec_type type, void *vector);
+void dlu_print_vector(dlu_vec_type type, void *vector);
 
-void wlu_print_matrix(wlu_matrix_type type, void *matrix);
+void dlu_print_matrix(dlu_matrix_type type, void *matrix);
 
 #endif

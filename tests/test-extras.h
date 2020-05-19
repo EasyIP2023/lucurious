@@ -44,14 +44,14 @@ typedef struct _vertex_tex_2D {
 
 #define FREEME(app,wc) \
   do { \
-    if (app) wlu_freeup_vk(app); \
-    if (wc) wlu_freeup_wc(wc); \
-    wlu_release_blocks(); \
+    if (app) dlu_freeup_vk(app); \
+    if (wc) dlu_freeup_wc(wc); \
+    dlu_release_blocks(); \
   } while(0);
 
 #define check_err(err,app,wc,shader) \
   do { \
-    if (!shader && err) wlu_vk_destroy(WLU_DESTROY_VK_SHADER, app, shader); \
+    if (!shader && err) dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, shader); \
     if (err) { FREEME(app, wc); ck_abort_msg(NULL); } \
   } while(0);
 

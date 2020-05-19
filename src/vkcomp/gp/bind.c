@@ -25,7 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-void wlu_bind_pipeline(
+void dlu_bind_pipeline(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -36,7 +36,7 @@ void wlu_bind_pipeline(
                     pipelineBindPoint, pipeline);
 }
 
-void wlu_bind_desc_sets(
+void dlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -53,7 +53,7 @@ void wlu_bind_desc_sets(
                           pDescriptorSets, dynamicOffsetCount, pDynamicOffsets);
 }
 
-void wlu_bind_vertex_buffs_to_cmd_buff(
+void dlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
@@ -66,7 +66,7 @@ void wlu_bind_vertex_buffs_to_cmd_buff(
                         firstBinding, bindingCount, pBuffers, offsets);
 }
 
-void wlu_bind_index_buff_to_cmd_buff(
+void dlu_bind_index_buff_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
