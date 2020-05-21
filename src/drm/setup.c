@@ -31,12 +31,6 @@ dlu_drm_core *dlu_init_drm_core() {
   return core;
 }
 
-bool dlu_create_drmfd(dlu_drm_core *core, const char *gpu) {
-  if (dlu_modeset_open(core, gpu))
-    return true;
-  return true;  
-}
-
 void dlu_freeup_drm_core(dlu_drm_core *core) {  
   if (core->dms)
     drmModeFreeResources(core->dms);

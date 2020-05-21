@@ -25,6 +25,6 @@
 #ifndef DLU_DRM_SCREEN_H
 #define DLU_DRM_SCREEN_H
 
-int dlu_modeset_open(dlu_drm_core *core, const char *gpu);
+bool dlu_modeset_open(dlu_drm_core *core, const char *gpu);
 
 #endif

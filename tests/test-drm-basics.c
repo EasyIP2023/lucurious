@@ -33,7 +33,7 @@ START_TEST(init_create_drm_core_struct) {
     ck_abort_msg(NULL);
   
   dlu_drm_core *core = dlu_init_drm_core();
-  if (!dlu_create_drmfd(core, "/dev/dri/card0"))
+  if (!dlu_modeset_open(core, "/dev/dri/card0"))
     ck_abort_msg(NULL);
 
   dlu_freeup_drm_core(core);
