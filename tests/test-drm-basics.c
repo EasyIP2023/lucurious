@@ -22,11 +22,48 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_ALL_H
-#define DLU_DRM_ALL_H
+#define LUCUR_DRM_API
+#include <lucom.h>
+#include <check.h>
 
-#include "setup.h"
-#include "info.h"
-#include "screen.h"
+START_TEST(init_create_drm_core_struct) {
+  dlu_otma_mems ma = { .drmc_cnt = 1 };
 
-#endif
+  if (!dlu_otma(DLU_LARGE_BLOCK_SHARED, ma))
+    ck_abort_msg(NULL);
+  
+  dlu_drm_core *core = dlu_init_drm_core();
+  if (!dlu_create_drmfd(core, "/dev/dri/card0"))
+    ck_abort_msg(NULL);
+
+  dlu_freeup_drm_core(core);
+
+  dlu_release_blocks();
+} END_TEST;
+
+Suite *alloc_suite(void) {
+  Suite *s = NULL;
+  TCase *tc_core = NULL;
+
+  s = suite_create("DRMCoreBasics");
+
+  /* Core test case */
+  tc_core = tcase_create("Core");
+
+  tcase_add_test(tc_core, init_create_drm_core_struct);
+  suite_add_tcase(s, tc_core);
+
+  return s;
+}
+
+int main(void) {
+  int number_failed;
+
+  Suite *s = alloc_suite();
+  SRunner *sr = srunner_create(s);
+
+  srunner_run_all(sr, CK_NORMAL);
+  number_failed = srunner_ntests_failed(sr);
+  srunner_free(sr);
+  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+}

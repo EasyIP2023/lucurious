@@ -22,11 +22,24 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_ALL_H
-#define DLU_DRM_ALL_H
+#define LUCUR_DRM_API
+#include <lucom.h>
 
-#include "setup.h"
-#include "info.h"
-#include "screen.h"
+dlu_drm_core *dlu_init_drm_core() {
+  dlu_drm_core *core = dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(dlu_drm_core));
+  if (!core) { PERR(DLU_ALLOC_FAILED, 0, NULL); return core; };
+  return core;
+}
 
-#endif
+bool dlu_create_drmfd(dlu_drm_core *core, const char *gpu) {
+  if (dlu_modeset_open(core, gpu))
+    return true;
+  return true;  
+}
+
+void dlu_freeup_drm_core(dlu_drm_core *core) {  
+  if (core->dms)
+    drmModeFreeResources(core->dms);
+  close(core->drmfd);
+}
+

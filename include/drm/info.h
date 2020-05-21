@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_WAYLAND_BACKEND_DRM_INFO_H
-#define DLU_WAYLAND_BACKEND_DRM_INFO_H
+#ifndef DLU_DRM_INFO_H
+#define DLU_DRM_INFO_H
 
 int dlu_print_dconf_info(const char *gpu);
 

@@ -34,6 +34,13 @@ lucur_alloc_test = executable('lucur-alloc-test',
   install: false
 )
 
+lucur_drm_basic_test = executable('lucur-drm-basic-test',
+  'test-drm-basics.c', include_directories: lucur_inc,
+  dependencies: [check], link_with: [lib_lucur],
+  c_args: '-DDEV_ENV --std=gnu18',
+  install: false
+)
+
 # Testing vulkan suite
 lucur_vulkan_test = executable('lucur-vulkan-test',
   'test-vulkan.c', include_directories: lucur_inc,
@@ -78,13 +85,14 @@ lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
   install: false
 )
 
-test('lucur-alloc-test', lucur_alloc_test, suite: ['alloc'])
+test('lucur-alloc-test', lucur_alloc_test, suite: ['all', 'alloc'])
+test('lucur-drm-basic-test', lucur_drm_basic_test, suite: ['all'])
 test('lucur-vulkan-test', lucur_vulkan_test, suite: ['all'])
 test('lucur-shade-test', lucur_shade_test, suite: ['all'])
-test('lucur-triangle-test', lucur_triangle_test, suite: ['images'])
-test('lucur-square-test', lucur_square_test, suite: ['images'])
-test('lucur-cube-test', lucur_cube_test, suite: ['images'])
-test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['images'])
+test('lucur-triangle-test', lucur_triangle_test, suite: ['all', 'images'])
+test('lucur-square-test', lucur_square_test, suite: ['all', 'images'])
+test('lucur-cube-test', lucur_cube_test, suite: ['all', 'images'])
+test('lucur-rotate-rect-test', lucur_rotate_rect_test, suite: ['all', 'images'])
 
 if convert.found()
   run_command('convert', 'textures/texture.jpg', '-define', 'h:format=bgra', '-depth', '8', 'textures/texture.h')

@@ -72,8 +72,8 @@ int dlu_print_dconf_info(const char *gpu) {
     if (c->encoder_id) {
       drmModeEncoder *e = drmModeGetEncoder(core.drmfd, c->encoder_id);
       drmModeCrtc *crtc = drmModeGetCrtc(core.drmfd, e->crtc_id);
-      dlu_print_msg(DLU_INFO,"\t\t  %d", e->crtc_id);
-      dlu_print_msg(DLU_INFO,"\t      %d\n", crtc->buffer_id);
+      dlu_print_msg(DLU_INFO, "\t\t  %d", e->crtc_id);
+      dlu_print_msg(DLU_INFO, "\t      %d\n", crtc->buffer_id);
       drmModeFreeCrtc(crtc);
       drmModeFreeEncoder(e);
     }

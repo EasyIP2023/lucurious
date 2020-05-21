@@ -1,4 +1,3 @@
-
 /**
 * The MIT License (MIT)
 *
@@ -38,14 +37,26 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-/* GBM allocates buffers that are used with use KMS */
+/* GBM allocates buffers that are used with KMS */
 #include <gbm.h>
 
+/**
+* DLU_DRM_PLANE_TYPE_PRIMARY: Store background image or graphics content
+* DLU_DRM_PLANE_TYPE_CURSOR: Used to display a cursor plane (mouse)
+* DLU_DRM_PLANE_TYPE_OVERLAY: Used to display any image (window) over a background
+*/
 typedef enum _dlu_drm_plane_type {
-  DLU_DRM_PLANE_TYPE_PRIMARY = 0x0000, /* Store background image or graphics content */
-  DLU_DRM_PLANE_TYPE_CURSOR = 0x0001,  /* Used to display a cursor plane (mouse) */
-  DLU_DRM_PLANE_TYPE_OVERLAY = 0x0002  /* Used to display any image over a background */
+  DLU_DRM_PLANE_TYPE_PRIMARY = 0x0000,
+  DLU_DRM_PLANE_TYPE_CURSOR = 0x0001,
+  DLU_DRM_PLANE_TYPE_OVERLAY = 0x0002
 } dlu_drm_plane_type;
+
+typedef enum _dlu_drm_connector_props {
+  DLU_DRM_CONNECTOR_EDID = 0x0000,
+  DLU_DRM_CONNECTOR_DPMS = 0x0001,
+  DLU_DRM_CONNECTOR_CRTC_ID = 0x0002,
+  DLU_DRM_CONNECTOR_NON_DESKTOP = 0x0003
+} dlu_drm_connector_props;
 
 typedef struct _dlu_drm_core {
   uint32_t drmfd;

@@ -27,7 +27,7 @@ gbm = dependency('gbm')
 
 lib_ldrm = static_library(
   'ldrm',
-  files('info.c', 'screen.c'),
+  files('info.c', 'screen.c', 'setup.c'),
   include_directories: lucur_inc,
   dependencies: [drm]
 )

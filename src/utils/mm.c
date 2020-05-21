@@ -274,6 +274,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
 
   size += (ma.td_cnt * sizeof(struct _text_data));
   size += (ma.dis_cnt * sizeof(struct _dis_data));
+  size += (ma.drmc_cnt * sizeof(dlu_drm_core));
 
   if (!dlu_alloc(type, size)) return false;
 

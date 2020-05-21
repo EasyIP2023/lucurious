@@ -22,11 +22,11 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_ALL_H
-#define DLU_DRM_ALL_H
+#ifndef DLU_DRM_SETUP_H
+#define DLU_DRM_SETUP_H
 
-#include "setup.h"
-#include "info.h"
-#include "screen.h"
+dlu_drm_core *dlu_init_drm_core();
+bool dlu_create_drmfd(dlu_drm_core *core, const char *gpu);
+void dlu_freeup_drm_core(dlu_drm_core *core);
 
 #endif

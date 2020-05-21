@@ -83,23 +83,24 @@ typedef enum _dlu_err_msg_type {
 } dlu_err_msg_type;
 
 typedef struct _dlu_otma_mems {
-  uint32_t inta_cnt;  /* int array count */
-  uint32_t cha_cnt;   /* char array count */
-  uint32_t fla_cnt;    /* float array count */
-  uint32_t dba_cnt;   /* double array count */
-  uint32_t vkcomp_cnt;
+  uint32_t inta_cnt;    /* int array count */
+  uint32_t cha_cnt;     /* char array count */
+  uint32_t fla_cnt;      /* float array count */
+  uint32_t dba_cnt;     /* double array count */
+  uint32_t vkcomp_cnt;  /* Vkcomp struct count */
   uint32_t vkext_props_cnt;
   uint32_t vkval_layer_cnt;
-  uint32_t desc_cnt;  /* descriptor count */
-  uint32_t gp_cnt;    /* Graphics pipelines count */
-  uint32_t si_cnt;    /* swap chain image count */
-  uint32_t scd_cnt;   /* swap chain data count */
-  uint32_t gpd_cnt;   /* graphics pipeline data count */
-  uint32_t cmdd_cnt;  /* command data count */
-  uint32_t bd_cnt;    /* buffer data count */
-  uint32_t dd_cnt;    /* descriptor data count */
-  uint32_t td_cnt;    /* texture data count */
-  uint32_t dis_cnt;   /* displat data count */
+  uint32_t desc_cnt;    /* descriptor count */
+  uint32_t gp_cnt;      /* Graphics pipelines count */
+  uint32_t si_cnt;      /* swap chain image count */
+  uint32_t scd_cnt;     /* swap chain data count */
+  uint32_t gpd_cnt;     /* graphics pipeline data count */
+  uint32_t cmdd_cnt;    /* command data count */
+  uint32_t bd_cnt;      /* buffer data count */
+  uint32_t dd_cnt;      /* descriptor data count */
+  uint32_t td_cnt;      /* texture data count */
+  uint32_t dis_cnt;     /* display data count */
+  uint32_t drmc_cnt;    /* DLU Drm Core struct count */
 } dlu_otma_mems;
 
 #endif
