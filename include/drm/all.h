@@ -26,7 +26,9 @@
 #define DLU_DRM_ALL_H
 
 #include "setup.h"
-#include "info.h"
 #include "screen.h"
 
+#ifdef INAPI_CALLS
+#include "info.h"
+#endif
 #endif

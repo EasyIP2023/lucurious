@@ -58,9 +58,16 @@ typedef enum _dlu_drm_connector_props {
   DLU_DRM_CONNECTOR_NON_DESKTOP = 0x0003
 } dlu_drm_connector_props;
 
+typedef struct _dlu_device {
+  uint32_t vtfd; /* Virtual Terminal File Descriptor */
+  uint32_t bkbm; /* Backup Keyboard mode */
+  struct gbm_device *gbm; /* A GBM device is the actual buffer allocator */
+} dlu_device;
+
 typedef struct _dlu_drm_core {
   uint32_t drmfd;
   drmModeRes *dms;
+  dlu_device device;
 } dlu_drm_core;
 
 #endif

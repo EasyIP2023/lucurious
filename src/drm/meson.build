@@ -22,12 +22,15 @@
 # THE SOFTWARE.
 #
 
-drm = dependency('libdrm')
-gbm = dependency('gbm')
+libdrm = dependency('libdrm')
+libinput = dependency('libinput')
+libgbm = dependency('gbm')
+
+fs = ['info.c', 'screen.c', 'setup.c', 'create.c']
 
 lib_ldrm = static_library(
   'ldrm',
-  files('info.c', 'screen.c', 'setup.c'),
+  files(fs),
   include_directories: lucur_inc,
-  dependencies: [drm]
+  dependencies: [libdrm, libgbm, libinput]
 )

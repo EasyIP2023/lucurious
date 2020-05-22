@@ -25,15 +25,18 @@
 #define LUCUR_DRM_API
 #include <lucom.h>
 
-dlu_drm_core *dlu_init_drm_core() {
+dlu_drm_core *dlu_drm_init_core() {
   dlu_drm_core *core = dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(dlu_drm_core));
   if (!core) { PERR(DLU_ALLOC_FAILED, 0, NULL); return core; };
   return core;
 }
 
-void dlu_freeup_drm_core(dlu_drm_core *core) {  
+void dlu_drm_freeup_core(dlu_drm_core *core) {
+  if (!core->device.vtfd)
+    close(core->device.vtfd);
   if (core->dms)
     drmModeFreeResources(core->dms);
-  close(core->drmfd);
+  if (!core->drmfd)
+    close(core->drmfd);
 }
 

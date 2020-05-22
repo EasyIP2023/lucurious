@@ -29,7 +29,7 @@ install_headers('lucurious.h', install_dir: i_dir)
 ##########################
 # Installing DRM headers #
 ##########################
-drm_hs = ['drm/all.h', 'drm/types.h', 'drm/screen.h', 'drm/info.h']
+drm_hs = ['drm/all.h', 'drm/types.h', 'drm/screen.h', 'drm/setup.h', 'drm/create.h']
 install_headers(drm_hs, install_dir: i_dir + 'drm')
 
 ############################

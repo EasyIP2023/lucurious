@@ -22,21 +22,10 @@
 * THE SOFTWARE.
 */
 
-#define LUCUR_DRM_API
-#include <lucom.h>
+#ifndef DLU_DRM_CREATE_H
+#define DLU_DRM_CREATE_H
 
-#include <fcntl.h>
+bool dlu_drm_reset_vt(dlu_drm_core *core);
+bool dlu_drm_create_vt(dlu_drm_core *core);
 
-bool dlu_drm_modeset_open(dlu_drm_core *core, const char *gpu) {
-
-  core->drmfd = open(gpu, O_RDONLY);
-  if (core->drmfd == UINT32_MAX) {
-    dlu_print_msg(DLU_DANGER, "[x] open: %s\n", strerror(errno));
-    return false;
-  }
-
-  core->dms = drmModeGetResources(core->drmfd);
-  if (!core->dms) { dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno)); return false; }
-
-  return true;
-}
+#endif

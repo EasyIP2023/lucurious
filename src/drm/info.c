@@ -53,7 +53,7 @@ static const char *ouput_devices(uint32_t type) {
 
 int dlu_print_dconf_info(const char *gpu) {
   dlu_drm_core core;
-  if (dlu_modeset_open(&core, gpu)) return NEG_ONE;
+  if (dlu_drm_modeset_open(&core, gpu)) return NEG_ONE;
 
   if (core.dms->count_crtcs)
     dlu_print_msg(DLU_SUCCESS, "\t\tAvailable CRTCs\n");

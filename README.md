@@ -18,6 +18,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang and libshaderc)
 * libdrm
 * libgbm
+* libinput
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)

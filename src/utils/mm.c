@@ -108,7 +108,7 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     * to be the address of the next block not the current one.
     * Basically offset the memory address. Thus, allocating space.
     */
-    block = current->addr + BLOCK_SIZE + bytes; /* sbrk() */
+    block = current->addr + BLOCK_SIZE + bytes;
     block->prv_addr = current->addr;
 
     block->addr = block;
@@ -158,7 +158,11 @@ finish_alloc_mem_block:
   return block;
 }
 
-/* Function is reserve for one time use. Only used when allocating space for struct members */
+/**
+* This function is reserve for one time use. Only used when allocating space for struct members
+* It works similiar to how sbrk works. Basically it creates a new block of memory, but it returns
+* the ending address of the previous block.
+*/
 void *dlu_alloc(dlu_block_type type, size_t bytes) {
   dlu_mem_block_t *nblock = NULL;
 

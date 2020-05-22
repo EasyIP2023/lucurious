@@ -25,7 +25,7 @@
 #ifndef DLU_DRM_SETUP_H
 #define DLU_DRM_SETUP_H
 
-dlu_drm_core *dlu_init_drm_core();
-void dlu_freeup_drm_core(dlu_drm_core *core);
+dlu_drm_core *dlu_drm_init_core();
+void dlu_drm_freeup_core(dlu_drm_core *core);
 
 #endif

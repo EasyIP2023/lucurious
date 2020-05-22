@@ -32,11 +32,11 @@ START_TEST(init_create_drm_core_struct) {
   if (!dlu_otma(DLU_LARGE_BLOCK_SHARED, ma))
     ck_abort_msg(NULL);
   
-  dlu_drm_core *core = dlu_init_drm_core();
-  if (!dlu_modeset_open(core, "/dev/dri/card0"))
+  dlu_drm_core *core = dlu_drm_init_core();
+  if (!dlu_drm_modeset_open(core, "/dev/dri/card0"))
     ck_abort_msg(NULL);
 
-  dlu_freeup_drm_core(core);
+  dlu_drm_freeup_core(core);
 
   dlu_release_blocks();
 } END_TEST;
