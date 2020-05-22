@@ -24,7 +24,6 @@
 
 subdir('wayland')
 
-check = dependency('check', required : false)
 convert = find_program('convert', required: false)
 
 lucur_alloc_test = executable('lucur-alloc-test',

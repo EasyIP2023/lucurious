@@ -92,7 +92,8 @@ pkg_mod.generate(
 )
 
 # Test Vulkan render examples
+check = dependency('check', required : false)
 wayland_client = dependency('wayland-client', required : false)
-if wayland_client.found()
+if wayland_client.found() and check.found()
   subdir('tests')
 endif
