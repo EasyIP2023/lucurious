@@ -22,6 +22,8 @@
 * THE SOFTWARE.
 */
 
+/* Alot of what's in this file came from https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/device.c */
+
 #define LUCUR_DRM_API
 #include <lucom.h>
 
@@ -31,7 +33,7 @@
 #include <linux/vt.h>
 
 bool dlu_drm_reset_vt(dlu_drm_core *core) {
-	if (ioctl(core->device.vtfd, KDSKBMODE, core->device.bkbm) == NEG_ONE) {
+  if (ioctl(core->device.vtfd, KDSKBMODE, core->device.bkbm) == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
     return false;
   }
@@ -45,13 +47,12 @@ bool dlu_drm_reset_vt(dlu_drm_core *core) {
 }
 
 /**
-* Can find something similar here: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/device.c
 * Setting up VT/TTY so program runs in graphical mode.
 * This also lets a process handle it own input
 */
 bool dlu_drm_create_vt(dlu_drm_core *core) {
   int tty_num = 0, tty = 0;
-  char tty_dev[11]; /* stores location, chars are /dev/tty#N */
+  char tty_dev[10]; /* stores location, chars are /dev/tty#N */
 
   /* looking for a free virtual terminal (VT) that can be used */
   tty = open("/dev/tty0", O_WRONLY);
@@ -68,11 +69,11 @@ bool dlu_drm_create_vt(dlu_drm_core *core) {
   close(tty);
   snprintf(tty_dev, sizeof(tty_dev), "/dev/tty%d", tty_num);
 
-	core->device.vtfd = open(tty_dev, O_RDWR | O_NOCTTY);
-	if (core->device.vtfd == UINT32_MAX) {
+  core->device.vtfd = open(tty_dev, O_RDWR | O_NOCTTY);
+  if (core->device.vtfd == UINT32_MAX) {
     dlu_log_me(DLU_DANGER, "open: %s", strerror(errno));
-		return false;
-	}
+    return false;
+  }
 
   dlu_log_me(DLU_SUCCESS, "VT %d is in use", tty_num);
   

@@ -1,5 +1,7 @@
 # Testing
 
+NOTE: The wayland client code is a modified version of what [Simon Ser did here](https://github.com/emersion/hello-wayland/).
+
 **Running test**
 ```bash
 meson build/

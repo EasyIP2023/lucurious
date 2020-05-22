@@ -35,6 +35,7 @@ static const char *term_colors[] = {
 	[DLU_RESET]   = "\x1b[0m",
 };
 
+/* Modified version of what's in wlroots */
 void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
 	char buffer[26];
 	va_list args; /* type that holds variable arguments */

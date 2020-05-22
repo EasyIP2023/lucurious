@@ -59,8 +59,12 @@ typedef enum _dlu_drm_connector_props {
 } dlu_drm_connector_props;
 
 typedef struct _dlu_device {
+  /* KMS API Device node */
+  uint32_t kmsfd;
+
   uint32_t vtfd; /* Virtual Terminal File Descriptor */
   uint32_t bkbm; /* Backup Keyboard mode */
+
   struct gbm_device *gbm; /* A GBM device is the actual buffer allocator */
 } dlu_device;
 
