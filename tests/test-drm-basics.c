@@ -26,6 +26,12 @@
 #include <lucom.h>
 #include <check.h>
 
+
+static void free_core(dlu_drm_core *core) {
+  dlu_drm_freeup_core(core);
+  dlu_release_blocks();
+}
+
 START_TEST(init_create_drm_core_struct) {
   dlu_otma_mems ma = { .drmc_cnt = 1 };
 
@@ -33,12 +39,21 @@ START_TEST(init_create_drm_core_struct) {
     ck_abort_msg(NULL);
   
   dlu_drm_core *core = dlu_drm_init_core();
-  if (!dlu_drm_modeset_open(core, "/dev/dri/card0"))
+
+/*
+  if (!dlu_drm_create_session(core)) {
+    free_core(core);
     ck_abort_msg(NULL);
+  }
 
-  dlu_drm_freeup_core(core);
+  if (!dlu_drm_create_kms_node(core)) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+*/
 
-  dlu_release_blocks();
+  dlu_drm_create_session(core);
+  free_core(core);
 } END_TEST;
 
 Suite *alloc_suite(void) {

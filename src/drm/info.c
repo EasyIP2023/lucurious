@@ -52,26 +52,39 @@ static const char *ouput_devices(uint32_t type) {
 }
 
 bool dlu_print_dconf_info(const char *gpu) {
-  dlu_drm_core core;
-  if (!dlu_drm_modeset_open(&core, gpu)) return false;
+  uint32_t drmfd = UINT32_MAX;
+  drmModeRes *dmr = NULL;
+  bool ret = true;
 
-  if (core.dms->count_crtcs)
+  drmfd = open(gpu, O_RDONLY);
+  if (drmfd == UINT32_MAX) {
+    dlu_print_msg(DLU_DANGER, "[x] open: %s\n", strerror(errno));
+    ret = false; goto exit_info;
+  }
+
+  dmr = drmModeGetResources(drmfd);
+  if (!dmr) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno));
+    ret = false; goto exit_info;
+  }
+
+  if (dmr->count_crtcs)
     dlu_print_msg(DLU_SUCCESS, "\t\tAvailable CRTCs\n");
-  for (int i=0; i < core.dms->count_crtcs; i++)
-    dlu_print_msg(DLU_INFO, "\t\t\t%d\n", core.dms->crtcs[i]);
+  for (int i=0; i < dmr->count_crtcs; i++)
+    dlu_print_msg(DLU_INFO, "\t\t\t%d\n", dmr->crtcs[i]);
 
-  if (core.dms->count_fbs)
+  if (dmr->count_fbs)
     dlu_print_msg(DLU_SUCCESS, "\n\t\tAloocated Framebuffers\n");
-  for (int i=0; i < core.dms->count_fbs; i++)
-    dlu_print_msg(DLU_INFO, "\t\t\t%d\n", core.dms->fbs[i]);
+  for (int i=0; i < dmr->count_fbs; i++)
+    dlu_print_msg(DLU_INFO, "\t\t\t%d\n", dmr->fbs[i]);
 
   dlu_print_msg(DLU_SUCCESS, "\n\tConnector ID\tConnector Name\tCTRC ID\t  Framebuffer\n");
-  for (int i=0; i < core.dms->count_connectors; i++) {
-    drmModeConnector *c = drmModeGetConnector(core.drmfd, core.dms->connectors[i]);
+  for (int i=0; i < dmr->count_connectors; i++) {
+    drmModeConnector *c = drmModeGetConnector(drmfd, dmr->connectors[i]);
     dlu_print_msg(DLU_INFO,  "\t     %d      \t    %s", c->connector_id, ouput_devices(c->connector_type));
     if (c->encoder_id) {
-      drmModeEncoder *e = drmModeGetEncoder(core.drmfd, c->encoder_id);
-      drmModeCrtc *crtc = drmModeGetCrtc(core.drmfd, e->crtc_id);
+      drmModeEncoder *e = drmModeGetEncoder(drmfd, c->encoder_id);
+      drmModeCrtc *crtc = drmModeGetCrtc(drmfd, e->crtc_id);
       dlu_print_msg(DLU_INFO, "\t\t  %d", e->crtc_id);
       dlu_print_msg(DLU_INFO, "\t      %d\n", crtc->buffer_id);
       drmModeFreeCrtc(crtc);
@@ -81,7 +94,8 @@ bool dlu_print_dconf_info(const char *gpu) {
   }
 
   fprintf(stdout, "\n");
-  drmModeFreeResources(core.dms);
-  close(core.drmfd);
-  return true;
+exit_info:
+  if (dmr) drmModeFreeResources(dmr);
+  close(drmfd);
+  return ret;
 }

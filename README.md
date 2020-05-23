@@ -19,6 +19,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * libdrm
 * libgbm
 * libinput
+* libsystemd
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)

@@ -28,15 +28,19 @@
 dlu_drm_core *dlu_drm_init_core() {
   dlu_drm_core *core = dlu_alloc(DLU_SMALL_BLOCK_SHARED, sizeof(dlu_drm_core));
   if (!core) { PERR(DLU_ALLOC_FAILED, 0, NULL); return core; };
+  core->device.vtfd = core->device.kmsfd = UINT32_MAX;
   return core;
 }
 
 void dlu_drm_freeup_core(dlu_drm_core *core) {
-  if (!core->device.vtfd)
-    close(core->device.vtfd);
-  if (core->dms)
-    drmModeFreeResources(core->dms);
-  if (!core->drmfd)
-    close(core->drmfd);
+  release_session_control(core);
+  if (core->device.vtfd != UINT32_MAX) dlu_drm_reset_vt(core);
+  if (core->session.bus) sd_bus_unref(core->session.bus);
+  free(core->session.path);
+  free(core->session.id);
+  if (core->device.gbm_device) gbm_device_destroy(core->device.gbm_device);
+  if (core->device.kmsfd != UINT32_MAX) close(core->device.kmsfd);
+  if (core->device.vtfd != UINT32_MAX) close(core->device.vtfd);
+  if (core->device.dmr) drmModeFreeResources(core->device.dmr);
 }
 

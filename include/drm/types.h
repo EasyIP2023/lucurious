@@ -40,6 +40,9 @@
 /* GBM allocates buffers that are used with KMS */
 #include <gbm.h>
 
+#include <systemd/sd-bus.h>
+#include <systemd/sd-login.h>
+
 /**
 * DLU_DRM_PLANE_TYPE_PRIMARY: Store background image or graphics content
 * DLU_DRM_PLANE_TYPE_CURSOR: Used to display a cursor plane (mouse)
@@ -58,20 +61,36 @@ typedef enum _dlu_drm_connector_props {
   DLU_DRM_CONNECTOR_NON_DESKTOP = 0x0003
 } dlu_drm_connector_props;
 
-typedef struct _dlu_device {
+struct _dlu_logind {
+  /* For open D-Bus connection */
+  sd_bus *bus;
+
+  /* Session id and path */
+  char *id, *path;
+
+  bool has_drm;
+};
+
+struct _dlu_device {
   /* KMS API Device node */
   uint32_t kmsfd;
 
   uint32_t vtfd; /* Virtual Terminal File Descriptor */
   uint32_t bkbm; /* Backup Keyboard mode */
 
-  struct gbm_device *gbm; /* A GBM device is the actual buffer allocator */
-} dlu_device;
+  /* A GBM device is used to create gbm_bo (it's a buffer allocator) */
+  struct gbm_device *gbm_device;
+
+  /* create logind session */
+  struct _dlu_logind *session;
+
+  drmModeRes *dmr;
+} device;
+
 
 typedef struct _dlu_drm_core {
-  uint32_t drmfd;
-  drmModeRes *dms;
-  dlu_device device;
+  struct _dlu_device device;
+  struct _dlu_logind session;
 } dlu_drm_core;
 
 #endif

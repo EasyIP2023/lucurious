@@ -35,7 +35,6 @@ static const char *term_colors[] = {
 	[DLU_RESET]   = "\x1b[0m",
 };
 
-/* Modified version of what's in wlroots */
 void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
 	char buffer[26];
 	va_list args; /* type that holds variable arguments */
@@ -49,9 +48,7 @@ void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
 	strftime(buffer, sizeof(buffer), "%F %T - ", tm_info);
 	fprintf(stream, "%s", buffer);
 
-	unsigned c = (type < DLU_MAX_LOG_ENUM) ? type : DLU_MAX_LOG_ENUM - 1;
-
-	fprintf(stream, "%s", term_colors[c]);
+	fprintf(stream, "%s", term_colors[type]);
 
 	va_start(args, fmt);
 	vfprintf(stream, fmt, args);
@@ -70,7 +67,7 @@ void _dlu_print_me(dlu_log_type type, const char *msg, ...) {
   fprintf(stdout, "%s", term_colors[DLU_RESET]);
 }
 
-/* Modified version of what's in wlroots */
+/* Modified version of what was in wlroots/util/log.c */
 const char *_dlu_strip_path(const char *filepath) {
 	if (*filepath == '.')
 		while (*filepath == '.' || *filepath == '/')

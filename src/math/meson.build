@@ -23,8 +23,8 @@
 #
 
 
-cglm = dependency('cglm')
-math = cc.find_library('m')
+cglm = dependency('cglm', required: true)
+math = cc.find_library('m', required: true)
 
 math_files = ['print.c', 'set.c']
 

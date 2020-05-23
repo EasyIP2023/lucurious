@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 
-shaderc = dependency('shaderc')
+shaderc = dependency('shaderc', required: true)
 
 lib_shade = static_library(
 	'lshade',

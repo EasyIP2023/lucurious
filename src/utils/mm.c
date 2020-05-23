@@ -105,7 +105,7 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     /**
     * Set next blocks metadata
     * This is written this way because one needs the return address
-    * to be the address of the next block not the current one.
+    * to be the starting address of the next block not the current one.
     * Basically offset the memory address. Thus, allocating space.
     */
     block = current->addr + BLOCK_SIZE + bytes;

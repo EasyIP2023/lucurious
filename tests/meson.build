@@ -100,6 +100,6 @@ if convert.found()
   lucur_img_texture_test = executable('lucur-img-texture-test', it_files, include_directories: lucur_inc,
     dependencies: [check], link_with: [lib_lucur, lib_lwayland], c_args: '-DDEV_ENV --std=gnu18', install: false)
 
-  test('lucur-img-texture-test', lucur_img_texture_test, suite: ['images'])
+  test('lucur-img-texture-test', lucur_img_texture_test, suite: ['all', 'images'])
 endif
 
