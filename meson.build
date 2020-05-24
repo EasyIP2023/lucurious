@@ -88,7 +88,7 @@ pkg_mod.generate(
   name: meson.project_name(),
   filebase:  meson.project_name(),
   install_dir: '/usr/lib/pkgconfig',
-  description: 'Library for building advanced DRM Vulkan Renderers'
+  description: 'Library for building advanced DRM Vulkan renderers that work directly with KMS'
 )
 
 # Test Vulkan render examples

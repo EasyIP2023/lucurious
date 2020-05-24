@@ -30,6 +30,6 @@ bool dlu_drm_create_session(dlu_drm_core *core);
 #ifdef INAPI_CALLS
 void release_session_control(dlu_drm_core *core);
 bool logind_take_device(dlu_drm_core *core, const char *path);
+void logind_release_device(dlu_drm_core *core);
 #endif
-
 #endif

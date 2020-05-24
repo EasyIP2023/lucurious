@@ -7,7 +7,7 @@
 
 Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable single application compositors that appear to be straight out of science fiction.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers that work directly with KMS. These renderers allow for easy creation of interactable single application compositors that appear to be straight out of science fiction.
 
 ## Dependencies
 * vulkan (Install your graphics card driver)

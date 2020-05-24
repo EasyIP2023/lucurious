@@ -12,7 +12,7 @@
 #include <linux/vt.h>
 
 /* Open a single KMS device. Check to see if the node is a good candidate for usage */
-static bool check_if_good_candidate(dlu_drm_core *core, const char *filename) {
+static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name) {
   drm_magic_t magic;
   uint64_t cap = 0;
   int err = 0;
@@ -21,7 +21,7 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *filename) {
   * Open the device and ensure we have support for universal planes and
   * atomic modesetting. This function updates the kmsfd struct member
   */
-  if (!logind_take_device(core, filename)) goto close_kms;
+  if (!logind_take_device(core, device_name)) goto close_kms;
 
   /**
   * In order to drive KMS, we need to be 'master'. This should already
@@ -32,36 +32,34 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *filename) {
   */
   if (drmGetMagic(core->device.kmsfd, &magic) != 0 ||
       drmAuthMagic(core->device.kmsfd, magic) != 0) {
-    dlu_log_me(DLU_WARNING, "[x] KMS device %s is not master", filename);
-    goto exit_failure;
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
+    goto close_kms;
   }
 
   err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
   err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
   if (err < 0) {
-    dlu_log_me(DLU_WARNING, "[x] no support for universal planes or atomic");
-		goto exit_failure;
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or atomic", device_name);
+    goto close_kms;
   }
 
   err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
-  if (err || cap == 0) {
-    dlu_log_me(DLU_WARNING, "[x] device doesn't support framebuffer modifiers");
-    goto exit_failure;
-  }
+  if (err || cap == 0)
+    dlu_log_me(DLU_WARNING, "KSM node '%s' doesn't support framebuffer modifiers", device_name);
+  else
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports framebuffer modifiers", device_name);
 
   cap = 0;
   err = drmGetCap(core->device.kmsfd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
-  if (err || cap == 0) {
-    dlu_log_me(DLU_WARNING, "[x] device doesn't support clock monotonic timestamps");
-    goto exit_failure;
-  }
+  if (err || cap == 0)
+    dlu_log_me(DLU_WARNING, "KMS node '%s' doesn't support clock monotonic timestamps", device_name);
+  else
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports monotonic clock", device_name);
 
   return true;
 
-exit_failure:
-  release_session_control(core);
 close_kms:
-  close(core->device.kmsfd);
+  logind_release_device(core);
   return false;
 }
 
@@ -80,7 +78,7 @@ void dlu_drm_reset_vt(dlu_drm_core *core) {
 
 /**
 * Setting up VT/TTY so program runs in graphical mode.
-* This also lets a process handle it own input
+* This also lets a process handle its own input
 */
 bool dlu_drm_create_vt(dlu_drm_core *core) {
   int vt_num = 0, tty = 0;
@@ -167,7 +165,7 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
 
   dlu_log_me(DLU_SUCCESS, "%d available KMS nodes", num_dev);
 
-  bool ret = false;
+  bool ret = false; char *kms_node = NULL;
   for (uint32_t i = 0; i < num_dev; i++) {
     /**
     * We need /dev/dri/cardN nodes for modesetting, not render
@@ -177,9 +175,10 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
     */
     if (!(devices[i]->available_nodes & (1 << DRM_NODE_PRIMARY))) continue;
 
-    ret = check_if_good_candidate(core, devices[i]->nodes[DRM_NODE_PRIMARY]);
+    kms_node = devices[i]->nodes[DRM_NODE_PRIMARY];
+    ret = check_if_good_candidate(core, kms_node);
     if (ret) {
-      dlu_log_me(DLU_SUCCESS, "Suitable KMS node found!!");
+      dlu_log_me(DLU_SUCCESS, "Suitable KMS node found!! '%s'", kms_node);
       break;
     }
   }

@@ -40,19 +40,21 @@ START_TEST(init_create_drm_core_struct) {
   
   dlu_drm_core *core = dlu_drm_init_core();
 
-/*
-  if (!dlu_drm_create_session(core)) {
-    free_core(core);
-    ck_abort_msg(NULL);
-  }
-
+  /** 
+  * RUN IN TTY:
+  * First creates a logind session. This allows for access to
+  * privileged devices without being root.
+  * Then find a suitable kms node = drm device = gpu
+  */
+  if (!dlu_drm_create_session(core))
+    goto exit_create_kms_node;
+ 
   if (!dlu_drm_create_kms_node(core)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
-*/
 
-  dlu_drm_create_session(core);
+exit_create_kms_node:
   free_core(core);
 } END_TEST;
 

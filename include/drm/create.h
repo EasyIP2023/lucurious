@@ -25,11 +25,12 @@
 #ifndef DLU_DRM_CREATE_H
 #define DLU_DRM_CREATE_H
 
+/* Only run this function if dlu_drm_create_kms_node somehow fails */
 bool dlu_drm_create_vt(dlu_drm_core *core);
+
 bool dlu_drm_create_kms_node(dlu_drm_core *core);
 
 #ifdef INAPI_CALLS
 void dlu_drm_reset_vt(dlu_drm_core *core);
 #endif
-
 #endif
