@@ -161,6 +161,7 @@ void release_session_control(dlu_drm_core *core) {
 bool logind_take_device(dlu_drm_core *core, const char *path) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
+  bool ret = true;
 
   struct stat st;
   if (stat(path, &st) < 0) {
@@ -175,13 +176,13 @@ bool logind_take_device(dlu_drm_core *core, const char *path) {
   if (sd_bus_call_method(core->session.bus, "org.freedesktop.login1", core->session.path, "org.freedesktop.login1.Session",
       "TakeDevice", &error, &msg, "uu", major(st.st_rdev), minor(st.st_rdev)) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to take device '%s': %s", path, error.message);
-    goto exit_logind_take_dev;
+    ret = false; goto exit_logind_take_dev;
   }
 
   int paused = 0, fd = 0;
   if (sd_bus_message_read(msg, "hb", &fd, &paused) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to parse D-Bus response for '%s': %s", path, strerror(-errno));
-    goto exit_logind_take_dev;
+    ret = false; goto exit_logind_take_dev;
   }
 
   // The original fd seems to be closed when the message is freed
@@ -189,17 +190,13 @@ bool logind_take_device(dlu_drm_core *core, const char *path) {
   core->device.kmsfd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
   if (core->device.kmsfd == UINT32_MAX) {
     dlu_log_me(DLU_DANGER, "[x] Failed to clone file descriptor for '%s': %s", path, strerror(errno));
-    goto exit_logind_take_dev;
+    ret = false; goto exit_logind_take_dev;
   }
-
-  sd_bus_error_free(&error);
-  sd_bus_message_unref(msg);
-  return true;
 
 exit_logind_take_dev:
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
-  return false;
+  return ret;
 }
 
 void logind_release_device(dlu_drm_core *core) {
