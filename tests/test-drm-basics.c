@@ -32,10 +32,10 @@ static void free_core(dlu_drm_core *core) {
   dlu_release_blocks();
 }
 
-START_TEST(init_create_drm_core_struct) {
+START_TEST(init_create_kms_node) {
   dlu_otma_mems ma = { .drmc_cnt = 1 };
 
-  if (!dlu_otma(DLU_LARGE_BLOCK_SHARED, ma))
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
   
   dlu_drm_core *core = dlu_drm_init_core();
@@ -67,7 +67,7 @@ Suite *alloc_suite(void) {
   /* Core test case */
   tc_core = tcase_create("Core");
 
-  tcase_add_test(tc_core, init_create_drm_core_struct);
+  tcase_add_test(tc_core, init_create_kms_node);
   suite_add_tcase(s, tc_core);
 
   return s;

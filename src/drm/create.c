@@ -7,9 +7,6 @@
 #include <lucom.h>
 
 #include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/kd.h>
-#include <linux/vt.h>
 
 /* Open a single KMS device. Check to see if the node is a good candidate for usage */
 static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name) {
@@ -61,87 +58,6 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
 close_kms:
   logind_release_device(core);
   return false;
-}
-
-void dlu_drm_reset_vt(dlu_drm_core *core) {
-  if (ioctl(core->device.vtfd, KDSKBMODE, core->device.bkbm) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return;
-  }
-
-  if (ioctl(core->device.vtfd, KDSETMODE, KD_TEXT) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return;
-  }
-
-}
-
-/**
-* Setting up VT/TTY so program runs in graphical mode.
-* This also lets a process handle its own input
-*/
-bool dlu_drm_create_vt(dlu_drm_core *core) {
-  int vt_num = 0, tty = 0;
-  char tty_dev[10]; /* stores location, chars are /dev/tty#N */
-
-  /* looking for a free virtual terminal (VT) that can be used */
-  tty = open("/dev/tty0", O_WRONLY);
-  if (tty == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] open: %s", strerror(errno));
-    return false;
-  }
-
-  if (ioctl(tty, VT_OPENQRY, &vt_num) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    close(tty); return false;
-  }
-
-  close(tty);
-
-  snprintf(tty_dev, sizeof(tty_dev), "/dev/tty%d", vt_num);
-
-  core->device.vtfd = open(tty_dev, O_RDWR | O_NOCTTY);
-  if (core->device.vtfd == UINT32_MAX) {
-    dlu_log_me(DLU_DANGER, "open: %s", strerror(errno));
-    return false;
-  }
-
-  /* Switching over to virtual terminal */
-  if (ioctl(core->device.vtfd, VT_ACTIVATE, vt_num) == NEG_ONE ||
-      ioctl(core->device.vtfd, VT_WAITACTIVE, vt_num) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    dlu_log_me(DLU_DANGER, "[x] failed to switch to VT %d", vt_num);
-    return false;
-  }
-
-  dlu_log_me(DLU_SUCCESS, "VT %d is in use", vt_num);
-
-  /**
-  * Disable kernel keyboard processing:
-  * 1. Back up the keybord mode for restoration purposes.
-  * 2. Then disable keyboard
-  */
-  if (ioctl(core->device.vtfd, KDGKBMODE, &core->device.bkbm) == NEG_ONE ||
-      ioctl(core->device.vtfd, KDSKBMODE, K_OFF) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    dlu_log_me(DLU_DANGER, "[x] Disabling TTY keyboard processing failed");
-    return false;
-  }
-
-  dlu_log_me(DLU_WARNING, "Changing VT %d to graphics mode", vt_num);
-
-  /**
-  * Now changing the VT into graphics mode.
-  * stoping the kernel from printing text
-  */
-  if (ioctl(core->device.vtfd, KDSETMODE, KD_GRAPHICS) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return false;
-  }
-
-  dlu_log_me(DLU_SUCCESS, "VT successfully setup");
-
-  return true;
 }
 
 bool dlu_drm_create_kms_node(dlu_drm_core *core) {

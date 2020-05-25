@@ -75,9 +75,6 @@ struct _dlu_device {
   /* KMS API Device node */
   uint32_t kmsfd;
 
-  uint32_t vtfd; /* Virtual Terminal File Descriptor */
-  uint32_t bkbm; /* Backup Keyboard mode */
-
   /* A GBM device is used to create gbm_bo (it's a buffer allocator) */
   struct gbm_device *gbm_device;
 

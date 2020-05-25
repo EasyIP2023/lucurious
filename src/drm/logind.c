@@ -217,4 +217,5 @@ void logind_release_device(dlu_drm_core *core) {
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
   close(core->device.kmsfd);
+  core->device.kmsfd = UINT32_MAX;
 }
