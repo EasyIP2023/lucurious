@@ -43,9 +43,9 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->session.bus)
     sd_bus_unref(core->session.bus);
-  if (core->device.planes) {
+  if (core->device.plane_data) {
     for (uint32_t i = 0; i < core->device.dpc; i++)
-      drmModeFreePlane(core->device.planes[i].plane);
+      drmModeFreePlane(core->device.plane_data[i].plane);
   }
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);

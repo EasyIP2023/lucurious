@@ -86,10 +86,10 @@ struct _dlu_device {
 
   drmModeRes *dmr;
   uint32_t dpc; /* Device plane count */
-  struct _device_planes {
+  struct _plane_data {
     drmModePlane *plane;
-  } *planes;
-} device;
+  } *plane_data;
+};
 
 
 typedef struct _dlu_drm_core {

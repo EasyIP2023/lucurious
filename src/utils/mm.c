@@ -377,11 +377,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         if (!app->gp_data[index].graphics_pipelines) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->gp_data[index].gpc = arr_size; return false;
       }
-    case DLU_KMS_PLANES_DATA:
+    case DLU_KMS_PLANE_DATA:
       {
         dlu_drm_core *core = (dlu_drm_core *) addr;
-        core->device.planes = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _device_planes));
-        if (!core->device.planes) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
+        core->device.plane_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _plane_data));
+        if (!core->device.plane_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         core->device.dpc = arr_size; return false;
       }
     default: break;

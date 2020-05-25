@@ -3,6 +3,30 @@
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/device.c
 */
 
+/**
+* The MIT License (MIT)
+*
+* Copyright (c) 2019-2020 Vincent Davis Jr.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 #define LUCUR_DRM_API
 #include <lucom.h>
 
@@ -188,35 +212,35 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
 }
 
 bool dlu_drm_create_kms_node_props(dlu_drm_core *core) {
-  bool ret = false;
+  bool ret = true;
 
   if (core->device.kmsfd == UINT32_MAX) {
     dlu_log_me(DLU_DANGER, "[x] There appears to be no available DRM device");
     dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_drm_create_kms_node()");
-    goto exit_node_props;
+    ret = false; goto exit_node_props;
   }
 
-  if (!core->device.planes) {
-    PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_KMS_PLANES_DATA");
-    goto exit_node_props;
+  if (!core->device.plane_data) {
+    PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_KMS_PLANE_DATA");
+    ret = false; goto exit_node_props;
   }
 
   core->device.dmr = drmModeGetResources(core->device.kmsfd);
   if (!core->device.dmr) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno));
-    goto exit_node_props;
+    ret = false; goto exit_node_props;
   }
 
   drmModePlaneRes *plane_res = drmModeGetPlaneResources(core->device.kmsfd);
   if (!plane_res) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetPlaneResources: %s", strerror(errno));
-    goto exit_node_props;
+    ret = false; goto exit_node_props;
   }
 
   if (core->device.dmr->count_crtcs <= 0 || core->device.dmr->count_connectors <= 0 ||
       core->device.dmr->count_encoders <= 0 || plane_res->count_planes <= 0) {
     dlu_log_me(DLU_DANGER, "[x] KMS node found cant do anything, :( sucks to suck");
-    goto free_plane_res;
+    ret = false; goto free_plane_res;
   }
 
 free_plane_res:

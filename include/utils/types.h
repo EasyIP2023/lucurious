@@ -54,7 +54,7 @@ typedef enum _dlu_data_type {
   DLU_SC_DATA_MEMS = 0x0007,
   DLU_DESC_DATA_MEMS = 0x0008,
   DLU_GP_DATA_MEMS = 0x0009,
-  DLU_KMS_PLANES_DATA = 0x000A
+  DLU_KMS_PLANE_DATA = 0x000A
 } dlu_data_type;
 
 typedef enum _dlu_err_msg_type {
