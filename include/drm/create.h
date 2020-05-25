@@ -25,9 +25,13 @@
 #ifndef DLU_DRM_CREATE_H
 #define DLU_DRM_CREATE_H
 
-/* Only run this function if dlu_drm_create_kms_node somehow fails */
+/**
+* This function must be executed
+* It sets up a VT/TTY so the process can in graphical mode.
+* It also sets a process up so that it can handle its own input.
+* If dlu_drm_create_kms_node somehow fails you can run just use this function, but sudo permission required.
+*/
 bool dlu_drm_create_vt(dlu_drm_core *core);
-
 bool dlu_drm_create_kms_node(dlu_drm_core *core);
 
 #ifdef INAPI_CALLS

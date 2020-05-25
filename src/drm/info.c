@@ -53,7 +53,6 @@ static const char *ouput_devices(uint32_t type) {
 
 bool dlu_print_dconf_info(const char *gpu) {
   uint32_t drmfd = UINT32_MAX;
-  drmModeRes *dmr = NULL;
   bool ret = true;
 
   drmfd = open(gpu, O_RDONLY);
@@ -62,10 +61,22 @@ bool dlu_print_dconf_info(const char *gpu) {
     ret = false; goto exit_info;
   }
 
-  dmr = drmModeGetResources(drmfd);
+  drmModeRes *dmr = drmModeGetResources(drmfd);
   if (!dmr) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno));
+    dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
     ret = false; goto exit_info;
+  }
+
+  drmModePlaneRes *pres = drmModeGetPlaneResources(drmfd);
+  if (!pres) {
+    dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
+    ret = false; goto free_drm_res;
+  }
+
+  if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 ||
+      dmr->count_encoders <= 0 || pres->count_planes <= 0) {
+    dlu_print_msg(DLU_DANGER, "device '%s' is not a KMS node\n", gpu);
+    ret = false; goto free_plane_res;
   }
 
   if (dmr->count_crtcs)
@@ -74,7 +85,7 @@ bool dlu_print_dconf_info(const char *gpu) {
     dlu_print_msg(DLU_INFO, "\t\t\t%d\n", dmr->crtcs[i]);
 
   if (dmr->count_fbs)
-    dlu_print_msg(DLU_SUCCESS, "\n\t\tAloocated Framebuffers\n");
+    dlu_print_msg(DLU_SUCCESS, "\n\t\tAllocated Framebuffers\n");
   for (int i=0; i < dmr->count_fbs; i++)
     dlu_print_msg(DLU_INFO, "\t\t\t%d\n", dmr->fbs[i]);
 
@@ -93,9 +104,31 @@ bool dlu_print_dconf_info(const char *gpu) {
     drmModeFreeConnector(c);
   }
 
+  /* Eventually want to print out plane information */
+  dlu_print_msg(DLU_SUCCESS, "\n\n\t\tPlane Info\n", pres->count_planes);
+  dlu_print_msg(DLU_WARNING, "      Total planes for '%s': %d\n", gpu, pres->count_planes);
+  dlu_print_msg(DLU_SUCCESS, "\n\tPlane Formats\tPlane ID   Gamma size\n");
+  drmModePlane **planes = alloca(pres->count_planes);
+  for (uint32_t i = 0; i < pres->count_planes; i++) {
+    planes[i] = drmModeGetPlane(drmfd, pres->planes[i]);
+    if (!planes[i]) { ret = false; goto free_plane_res; }
+
+    fprintf(stdout, "\t");
+    for (uint32_t j = 0; j < planes[i]->count_formats; j++)
+      dlu_print_msg(DLU_INFO, "%d ");
+    dlu_print_msg(DLU_INFO, "\t  %d", planes[i]->plane_id);
+    dlu_print_msg(DLU_INFO, "\t\t%d\n", planes[i]->gamma_size);
+  }
+
   fprintf(stdout, "\n");
-exit_info:
-  if (dmr) drmModeFreeResources(dmr);
+//free_planes:
+  for (uint32_t i = 0; i < pres->count_planes; i++)
+    drmModeFreePlane(planes[i]);
+free_plane_res:
+  drmModeFreePlaneResources(pres);
+free_drm_res:
+  drmModeFreeResources(dmr);
   close(drmfd);
+exit_info:
   return ret;
 }

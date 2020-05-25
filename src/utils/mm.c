@@ -279,6 +279,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.td_cnt * sizeof(struct _text_data));
   size += (ma.dis_cnt * sizeof(struct _dis_data));
   size += (ma.drmc_cnt * sizeof(dlu_drm_core));
+  size += (ma.kmsp_cnt * sizeof(dlu_drm_core));
 
   if (!dlu_alloc(type, size)) return false;
 
@@ -375,6 +376,13 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         app->gp_data[index].graphics_pipelines = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline));
         if (!app->gp_data[index].graphics_pipelines) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
         app->gp_data[index].gpc = arr_size; return false;
+      }
+    case DLU_KMS_PLANES_DATA:
+      {
+        dlu_drm_core *core = (dlu_drm_core *) addr;
+        core->device.planes = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _device_planes));
+        if (!core->device.planes) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
+        core->device.dpc = arr_size; return false;
       }
     default: break;
   }

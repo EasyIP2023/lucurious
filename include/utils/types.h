@@ -53,7 +53,8 @@ typedef enum _dlu_data_type {
   DLU_DIS_DATA = 0x0006,
   DLU_SC_DATA_MEMS = 0x0007,
   DLU_DESC_DATA_MEMS = 0x0008,
-  DLU_GP_DATA_MEMS = 0x0009
+  DLU_GP_DATA_MEMS = 0x0009,
+  DLU_KMS_PLANES_DATA = 0x000A
 } dlu_data_type;
 
 typedef enum _dlu_err_msg_type {
@@ -101,6 +102,7 @@ typedef struct _dlu_otma_mems {
   uint32_t td_cnt;      /* texture data count */
   uint32_t dis_cnt;     /* display data count */
   uint32_t drmc_cnt;    /* DLU Drm Core struct count */
+  uint32_t kmsp_cnt;    /* KMS plane count */
 } dlu_otma_mems;
 
 #endif

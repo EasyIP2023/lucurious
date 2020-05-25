@@ -47,7 +47,7 @@ START_TEST(init_create_kms_node) {
   * Then find a suitable kms node = drm device = gpu
   */
   if (!dlu_drm_create_session(core))
-    goto exit_create_kms_node;
+    goto exit_create_kms_node; // Exit if not in a tty
  
   if (!dlu_drm_create_kms_node(core)) {
     free_core(core);

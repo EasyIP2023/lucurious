@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
   int c = 0;
   int8_t track = 0;
 
+  /* Possible modification, Maybe remove and use general purpose allocator for command line interface */
   dlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 200, .vkext_props_cnt = 200 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
 
