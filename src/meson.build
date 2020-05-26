@@ -23,8 +23,8 @@
 #
 
 subdir('utils')
+subdir('vkcomp')
 subdir('spirv')
 subdir('drm')
 subdir('math')
-subdir('vkcomp')
 subdir('exec')

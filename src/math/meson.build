@@ -23,14 +23,13 @@
 #
 
 
-cglm = dependency('cglm', required: true)
-math = cc.find_library('m', required: true)
+libcglm = dependency('cglm', required: true)
+libmath = cc.find_library('m', required: true)
 
 math_files = ['print.c', 'set.c']
 
 lib_math = static_library(
-  'lmath',
-  files(math_files),
+  'lmath', files(math_files),
   include_directories: lucur_inc,
-  dependencies: [math, cglm]
+  dependencies: [libmath, libcglm]
 )

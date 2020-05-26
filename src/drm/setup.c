@@ -43,13 +43,19 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->session.bus)
     sd_bus_unref(core->session.bus);
-  if (core->device.plane_data) {
-    for (uint32_t i = 0; i < core->device.dpc; i++)
-      drmModeFreePlane(core->device.plane_data[i].plane);
+  if (core->device.output_data) {
+    for (uint32_t i = 0; i < core->device.dcc; i++) {
+      if (core->device.output_data[i].conn)
+        drmModeFreeConnector(core->device.output_data[i].conn);
+      if (core->device.output_data[i].enc)
+        drmModeFreeEncoder(core->device.output_data[i].enc);
+      if (core->device.output_data[i].crtc)
+        drmModeFreeCrtc(core->device.output_data[i].crtc);
+      if (core->device.output_data[i].plane)
+        drmModeFreePlane(core->device.output_data[i].plane);
+    }
   }
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);
-  if (core->device.dmr)
-    drmModeFreeResources(core->device.dmr);
 }
 

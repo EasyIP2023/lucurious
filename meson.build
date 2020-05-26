@@ -27,7 +27,7 @@ project(
   'c',
   version: '0.0.2',
   license: 'MIT',
-  meson_version: '>=0.53.0',
+  meson_version: '>=0.54.0',
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
@@ -67,18 +67,12 @@ lib_lucur = shared_library(
   install: true
 )
 
-lucur = declare_dependency(
+executable('lucur',
+  exec_files,
   link_with: lib_lucur,
   include_directories: lucur_inc,
-)
-
-executable(
-  'lucur',
-  lib_exec,
-  link_with: lib_lucur,
-  include_directories: lucur_inc,
-  install: true,
-  install_dir: '/usr/bin'
+  install_dir: '/usr/bin',
+  install: true
 )
 
 pkg_mod = import('pkgconfig')

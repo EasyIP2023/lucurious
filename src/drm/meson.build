@@ -27,11 +27,9 @@ libinput = dependency('libinput', required: true)
 libgbm = dependency('gbm', required: true)
 libsystemd = dependency('libsystemd', required: true)
 
-fs = ['info.c', 'setup.c', 'create.c', 'logind.c']
+fs = ['setup.c', 'create.c', 'logind.c', 'info.c']
 
 lib_ldrm = static_library(
-  'ldrm',
-  files(fs),
-  include_directories: lucur_inc,
+  'ldrm', files(fs), include_directories: lucur_inc,
   dependencies: [libdrm, libgbm, libinput, libsystemd]
 )

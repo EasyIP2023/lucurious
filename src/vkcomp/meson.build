@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 
-vulkan = dependency('vulkan', required: true)
+libvulkan = dependency('vulkan', required: true)
 
 funcs_files = [
   'funcs/create.c', 'funcs/device.c', 'funcs/display.c', 
@@ -39,5 +39,5 @@ lib_vkcomp = static_library(
   'lvkcomp',
   files(funcs_files, gp_files),
   include_directories: lucur_inc,
-  dependencies: [vulkan]
+  dependencies: [libvulkan]
 )

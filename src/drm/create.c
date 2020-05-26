@@ -58,6 +58,8 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
       drmAuthMagic(core->device.kmsfd, magic) != 0) {
     dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
     goto close_kms;
+  } else {
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
   }
 
   err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
@@ -211,40 +213,81 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
   return ret;
 }
 
-bool dlu_drm_create_kms_node_props(dlu_drm_core *core) {
+bool dlu_drm_create_kms_output_data(
+  dlu_drm_core *core,
+  uint32_t odb,
+  uint32_t conn_id_idx,
+  uint32_t enc_id_idx,
+  uint32_t crtc_id_idx,
+  uint32_t plane_id_idx,
+  uint64_t refresh
+) {
+
   bool ret = true;
 
   if (core->device.kmsfd == UINT32_MAX) {
     dlu_log_me(DLU_DANGER, "[x] There appears to be no available DRM device");
     dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_drm_create_kms_node()");
-    ret = false; goto exit_node_props;
+    goto exit_func;
   }
 
-  if (!core->device.plane_data) {
-    PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_KMS_PLANE_DATA");
-    ret = false; goto exit_node_props;
+  if (!core->device.output_data) {
+    PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_DATA");
+    goto exit_func;
   }
 
-  core->device.dmr = drmModeGetResources(core->device.kmsfd);
-  if (!core->device.dmr) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno));
-    ret = false; goto exit_node_props;
+  drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
+  if (!dmr) {
+    dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
+    ret = false; goto exit_func;
   }
 
-  drmModePlaneRes *plane_res = drmModeGetPlaneResources(core->device.kmsfd);
-  if (!plane_res) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetPlaneResources: %s", strerror(errno));
-    ret = false; goto exit_node_props;
+  drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
+  if (!pres) {
+    dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
+    ret = false; goto exit_free_drm_res;
   }
 
-  if (core->device.dmr->count_crtcs <= 0 || core->device.dmr->count_connectors <= 0 ||
-      core->device.dmr->count_encoders <= 0 || plane_res->count_planes <= 0) {
-    dlu_log_me(DLU_DANGER, "[x] KMS node found cant do anything, :( sucks to suck");
-    ret = false; goto free_plane_res;
+  if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
+    dlu_print_msg(DLU_DANGER, "[x] DRM device found is not a KMS node\n");
+    ret = false; goto exit_free_plane_res;
   }
 
-free_plane_res:
-  drmModeFreePlaneResources(plane_res);
-exit_node_props:
+  core->device.output_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_id_idx]);
+  if (!core->device.output_data[odb].conn) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetConnector: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
+
+  core->device.output_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_id_idx]);
+  if (!core->device.output_data[odb].enc) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetEncoder: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
+
+  core->device.output_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_id_idx]);
+  if (!core->device.output_data[odb].crtc) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetCrtc: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
+
+  core->device.output_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_id_idx]);
+  if (!core->device.output_data[odb].plane) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetPlane: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
+
+  /* This members are redundant and mainly for easy of access */
+  core->device.output_data[odb].conn_id = core->device.output_data[odb].conn->connector_id;
+  core->device.output_data[odb].enc_id  = core->device.output_data[odb].enc->encoder_id;
+  core->device.output_data[odb].crtc_id = core->device.output_data[odb].crtc->crtc_id;
+  core->device.output_data[odb].pp_id   = core->device.output_data[odb].plane->plane_id;
+  core->device.output_data[odb].refresh = refresh;
+
+exit_free_plane_res:
+  drmModeFreePlaneResources(pres);
+exit_free_drm_res:
+  drmModeFreeResources(dmr);
+exit_func:
   return ret;
 }

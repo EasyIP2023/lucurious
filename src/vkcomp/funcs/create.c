@@ -69,7 +69,7 @@ VkResult dlu_create_instance(
 
   /* Create the instance */
   res = vkCreateInstance(&create_info, NULL, &app->instance);
-  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateInstance"); }
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateInstance")
 
   return res;
 }
@@ -98,6 +98,7 @@ VkResult dlu_create_physical_device(
   VkPhysicalDeviceProperties *device_props,
   VkPhysicalDeviceFeatures *device_feats
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
   VkPhysicalDevice *devices = VK_NULL_HANDLE;
   uint32_t device_count = 0;
@@ -186,7 +187,6 @@ VkBool32 dlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits) {
 
   return ret;
 }
-
 
 VkResult dlu_create_logical_device(
   vkcomp *app,

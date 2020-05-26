@@ -1,4 +1,9 @@
 /**
+* Parts of this file contain functionality similar to what is in kms-quads kms-quads.h:
+* https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms-quads.h
+*/
+
+/**
 * The MIT License (MIT)
 *
 * Copyright (c) 2019-2020 Vincent Davis Jr.
@@ -44,6 +49,38 @@
 #include <systemd/sd-login.h>
 
 /**
+* Represents the values of an enum-type KMS property. These properties
+* have a certain range of values you can use, exposed as strings from
+* the kernel; userspace needs to look up the value that string
+* corresponds to and use it.
+*/
+struct drm_property_enum_info {
+  const char *name; /**< name as string (static, not freed) */
+  bool valid; /**< true if value is supported; ignore if false */
+  uint64_t value; /**< raw value */
+};
+
+/**
+* Holds information on a DRM property, including its ID and the enum
+* values it holds.
+*
+* DRM properties are allocated dynamically, and maintained as DRM objects
+* within the normal object ID space; they thus do not have a stable ID
+* to refer to. This includes enum values, which must be referred to by
+* integer values, but these are not stable.
+*
+* drm_property_info allows a cache to be maintained where we can use
+* enum values internally to refer to properties, with the mapping to DRM
+* ID values being maintained internally.
+*/
+struct drm_property_info {
+  const char *name; /**< name as string (static, not freed) */
+  uint32_t prop_id; /**< KMS property object ID */
+  unsigned int num_enum_values; /**< number of enum values */
+  struct drm_property_enum_info *enum_values; /**< array of enum values */
+};
+
+/**
 * DLU_DRM_PLANE_TYPE_PRIMARY: Store background image or graphics content
 * DLU_DRM_PLANE_TYPE_CURSOR: Used to display a cursor plane (mouse)
 * DLU_DRM_PLANE_TYPE_OVERLAY: Used to display any image (window) over a background
@@ -84,11 +121,27 @@ struct _dlu_device {
   /* create logind session */
   struct _dlu_logind *session;
 
-  drmModeRes *dmr;
-  uint32_t dpc; /* Device plane count */
-  struct _plane_data {
+  /**
+  * Output Data struct contains information of a given
+  * Plane, CRTC, Encoder, Connector pair
+  */
+  uint32_t dcc; /* Device connector count */
+  struct _output_data {
+    uint64_t refresh; /* Refresh rate for a pait */
+    uint32_t pp_id;   /* Primary Plane ID */
+    uint32_t crtc_id; /* CTRC ID */
+    uint32_t conn_id; /* Connector ID */
+    uint32_t enc_id;  /* Keeping encoder ID just because */
+
+    /**
+    * Encoders are deprecated and unused KMS objects
+    * The plane -> CRTC -> connector chain construct
+    */
     drmModePlane *plane;
-  } *plane_data;
+    drmModeCrtc *crtc;
+    drmModeEncoder *enc;
+    drmModeConnector *conn;
+  } *output_data;
 };
 
 

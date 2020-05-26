@@ -22,8 +22,8 @@
 # THE SOFTWARE.
 #
 
-lib_exec = [
-	'src/exec/vkinfo.c',
-	'src/exec/helpers.c',
-	'src/exec/main.c'
+exec_files = [
+  'src/exec/vk_info.c',
+  'src/exec/helpers.c',
+  'src/exec/main.c'
 ]

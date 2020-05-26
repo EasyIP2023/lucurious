@@ -3,6 +3,8 @@
 *
 * Parts of this file contain functionality similar to what is in wlroots logind session backend:
 * https://github.com/swaywm/wlroots/blob/master/backend/session/logind.c
+* and in Daniel Stone kms-quads:
+* https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/logind.c
 */
 
 /**

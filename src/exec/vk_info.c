@@ -25,6 +25,7 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+/* In helpers.c */
 void lower_to_upper(char *s);
 
 void print_gvalidation_layers() {
@@ -125,9 +126,8 @@ void print_display_extensions(VkPhysicalDeviceType dt) {
   err = dlu_get_physical_device_display_propertiesKHR(app);
   if (err) { dlu_freeup_vk(app); return; }
 
-  for (uint32_t i = 0; i < app->dpc; i++) {
+  for (uint32_t i = 0; i < app->dpc; i++)
     dlu_print_msg(DLU_SUCCESS, "%s\n", app->dis_data[i].props.displayName);
-  }
 
   dlu_freeup_vk(app);
 }

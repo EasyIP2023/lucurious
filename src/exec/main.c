@@ -25,17 +25,22 @@
 #include <getopt.h>
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_DRM_API
 #include <lucom.h>
 
+/* In helpers.c */
 VkQueueFlagBits ret_qfambit(char *str);
 VkPhysicalDeviceType ret_dtype(char *str);
 void help_message();
 void version_num();
+
+/* In vk_info.c */
 void print_gvalidation_layers();
 void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
 void print_display_extensions(VkPhysicalDeviceType dt);
+
+/* In drm_info.c */
+bool dlu_print_dconf_info(const char *gpu);
 
 int main(int argc, char **argv) {
   int c = 0;

@@ -61,7 +61,7 @@ void help_message() {
   dlu_print_msg(DLU_INFO, "\t-i, --pie\t\t\t Print instance extenstion list\n");
   dlu_print_msg(DLU_INFO, "\t-d, --pde <VkPhysicalDeviceType> Print device extenstion list\n");
   dlu_print_msg(DLU_INFO, "\t    --pdp <VkPhysicalDeviceType> Print display devices list\n");
-  dlu_print_msg(DLU_INFO, "\t    --display-info <gpu> \t Display GPU info and capabilities\n");
+  dlu_print_msg(DLU_INFO, "\t    --display-info <drm device> \t Display GPU info and capabilities\n");
   dlu_print_msg(DLU_INFO, "\t-v, --version\t\t\t Print lucurious library version\n");
   dlu_print_msg(DLU_INFO, "\t-h, --help\t\t\t Show this message\n");
 }
