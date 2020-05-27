@@ -31,5 +31,6 @@
 
 #ifdef INAPI_CALLS
 #include "info.h"
+#include "timespec-util.h"
 #endif
 #endif

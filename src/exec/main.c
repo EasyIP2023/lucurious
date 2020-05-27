@@ -92,7 +92,6 @@ int main(int argc, char **argv) {
         }
         if (!strcmp(long_options[option_index].name, "display-info")) {
           if (optarg) {
-            dlu_print_msg(DLU_WARNING, "For more info see inside drmModeGetResources(3)\n\n");
             if (!dlu_print_dconf_info(optarg)) {
               dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --display-info /dev/dri/card0\n");
               goto exit_loop;

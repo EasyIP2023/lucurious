@@ -135,7 +135,7 @@ bool dlu_print_dconf_info(const char *gpu) {
   for (int i = 0; i < dmr->count_connectors; i++) {
     conn = drmModeGetConnector(drmfd, dmr->connectors[i]);
     if (!conn) {
-      dlu_print_msg(DLU_DANGER, "[x] drmModeGetConnector: %s", strerror(errno));
+      dlu_print_msg(DLU_DANGER, "[x] drmModeGetConnector: %s\n", strerror(errno));
       ret = false; goto free_objs;
     }
 
@@ -147,7 +147,7 @@ bool dlu_print_dconf_info(const char *gpu) {
       if (dmr->encoders[e] == conn->encoder_id) {
         enc = drmModeGetEncoder(drmfd, dmr->encoders[e]);
         if (!enc) {
-          dlu_print_msg(DLU_DANGER, "[x] drmModeGetEncoder: %s", strerror(errno));
+          dlu_print_msg(DLU_DANGER, "[x] drmModeGetEncoder: %s\n", strerror(errno));
           free_drm_objs(&conn, NULL, NULL);
           ret = false; goto free_objs;
         }
@@ -162,7 +162,7 @@ bool dlu_print_dconf_info(const char *gpu) {
       if (dmr->crtcs[c] == enc->crtc_id) {
         crtc = drmModeGetCrtc(drmfd, dmr->crtcs[c]);
         if (!crtc) {
-          dlu_print_msg(DLU_DANGER, "[x] drmModeGetCrtc: %s", strerror(errno));
+          dlu_print_msg(DLU_DANGER, "[x] drmModeGetCrtc: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, NULL);
           ret = false; goto free_objs;
         }
@@ -176,7 +176,7 @@ bool dlu_print_dconf_info(const char *gpu) {
     for (; p < pres->count_planes; p++) {
       plane = drmModeGetPlane(drmfd, pres->planes[p]);
       if (!plane) {
-        dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlane: %s", strerror(errno));
+        dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlane: %s\n", strerror(errno));
         free_drm_objs(&conn, &enc, &crtc);
         ret = false; goto free_objs;
       }
@@ -187,6 +187,9 @@ bool dlu_print_dconf_info(const char *gpu) {
       drmModeFreePlane(plane); plane = NULL;
     }
 
+    if (plane)
+      if (plane->plane_id == 0) { free_drm_objs(&conn, &enc, &crtc); continue; }
+
     /**
     * DRM is supposed to provide a refresh interval, but often doesn't;
     * calculate our own in milliHz for higher precision anyway.
@@ -195,12 +198,44 @@ bool dlu_print_dconf_info(const char *gpu) {
     output_data[odb].conn = conn;   output_data[odb].conn_idx = i;
     output_data[odb].enc = enc;     output_data[odb].enc_idx = e;
     output_data[odb].crtc = crtc;   output_data[odb].crtc_idx = c;
-    output_data[odb].plane = plane; output_data[odb].plane_idx = p;
+
+    if (plane) { output_data[odb].plane = plane; output_data[odb].plane_idx = p; }
+    else { output_data[odb].plane = NULL; output_data[odb].plane_idx = UINT32_MAX; }
+
     odb++; e = c = p = 0;
-    dlu_print_msg(DLU_SUCCESS, "Found Plane -> CTRC -> Encoder -> Connector pair");
+  }
+
+  dlu_print_msg(DLU_WARNING, "\n\tPlane -> CRTC -> Connector Pairs: %u\n", odb);
+  for (uint32_t i = 0; i < odb; i++) {
+    dlu_print_msg(DLU_SUCCESS, "\n\t  Pair: %u\n\t  refresh: %u\n", (i+1), output_data[i].refresh);
+
+    if (output_data[i].plane) {
+      dlu_print_msg(DLU_DANGER, "\n\t\tPlane INFO\n");
+      dlu_print_msg(DLU_INFO, "\tPLANE ID : %u\tPlane Index : %u\n", output_data[i].plane->plane_id, output_data[i].plane_idx);
+      dlu_print_msg(DLU_INFO, "\tFB ID    : %u\tCRTC ID     : %u\n", output_data[i].plane->fb_id, output_data[i].plane->crtc_id);
+      dlu_print_msg(DLU_INFO, "\tgamma sz : %u\tformats     : [", output_data[i].plane->gamma_size);
+      for (uint32_t j = 0; j < output_data[i].plane->count_formats; j++)
+        dlu_print_msg(DLU_INFO, "%u ", output_data[i].plane->formats[j]);
+      dlu_print_msg(DLU_INFO, "]\n");
+    }
+
+    dlu_print_msg(DLU_DANGER, "\n\t\tCTRC INFO\n");
+    dlu_print_msg(DLU_INFO, "\tCRTC ID   : %u\t CTRC Index : %u\n", output_data[i].crtc->crtc_id, output_data[i].crtc_idx);
+    dlu_print_msg(DLU_INFO, "\tFB ID     : %u\t mode valid : %u\n", output_data[i].crtc->buffer_id, output_data[i].crtc->mode_valid);
+    dlu_print_msg(DLU_INFO, "\twidth     : %u height     : %u\n", output_data[i].crtc->width, output_data[i].crtc->height);
+    /* Current position on the framebuffer which should be zero but print anyway */
+    dlu_print_msg(DLU_INFO, "\tX         : %u\t Y          : %u\n", output_data[i].crtc->x, output_data[i].crtc->y);
+    dlu_print_msg(DLU_INFO, "\tgamma size: %u\n", output_data[i].crtc->gamma_size);
+    dlu_print_msg(DLU_DANGER, "\n\t\tConnector INFO\n");
+    dlu_print_msg(DLU_INFO, "\tConn ID   : %u\tCTRC Index : %u\n", output_data[i].conn->connector_id, output_data[i].conn_idx);
+    dlu_print_msg(DLU_INFO, "\tConn Type : %u\tConn TypeID: [", output_data[i].conn->connector_type, output_data[i].conn->connector_type_id);
+    for (int j = 0; j < output_data[i].conn->count_encoders; j++)
+      dlu_print_msg(DLU_INFO, "%u ", j);
+    dlu_print_msg(DLU_INFO, "]\n");
   }
 
   fprintf(stdout, "\n");
+
 free_objs:
   for (uint32_t i = 0; i < odb; i++) {
     if (output_data[i].conn)

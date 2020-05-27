@@ -277,12 +277,23 @@ bool dlu_drm_create_kms_output_data(
     ret = false; goto exit_free_plane_res;
   }
 
+  core->device.output_data[odb].refresh = millihz_to_nsec(refresh);
+
   /* This members are redundant and mainly for easy of access */
   core->device.output_data[odb].conn_id = core->device.output_data[odb].conn->connector_id;
   core->device.output_data[odb].enc_id  = core->device.output_data[odb].enc->encoder_id;
   core->device.output_data[odb].crtc_id = core->device.output_data[odb].crtc->crtc_id;
   core->device.output_data[odb].pp_id   = core->device.output_data[odb].plane->plane_id;
-  core->device.output_data[odb].refresh = refresh;
+  core->device.output_data[odb].mode    = core->device.output_data[odb].crtc->mode;
+
+  /**
+  * Now creating MODE_ID blob
+  * Go here for more information: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
+  */
+  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->device.output_data[odb].mode, sizeof(drmModeModeInfo), &core->device.output_data[odb].mode_blob_id) < 0) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeCreatePropertyBlob: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
 
 exit_free_plane_res:
   drmModeFreePlaneResources(pres);
