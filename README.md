@@ -3,7 +3,7 @@
 <p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This library is meant to be purely experimental and for educational purposes only. IT WILL NOT BE DOCUMENTED!!! Yes, I am still learning all of these APIs**
+**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs**
 
 Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
@@ -22,6 +22,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * libsystemd
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
+### [Documentation](https://easyip2023.github.io/lucurious-docs/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
 
