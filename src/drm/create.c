@@ -1,6 +1,8 @@
 /**
 * Parts of this file contain functionality similar to what is in kms-quads device.c:
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/device.c
+* and
+* https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
 */
 
 /**
@@ -213,6 +215,81 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
   return ret;
 }
 
+static bool drm_property_info_populate(
+  const struct drm_property_info *src,
+  struct drm_property_info *info,
+  unsigned int num_infos,
+  drmModeObjectProperties *props
+) {
+
+	drmModePropertyRes *prop;
+	unsigned i, j;
+
+	for (i = 0; i < num_infos; i++) {
+		unsigned int j;
+
+		info[i].name = src[i].name;
+		info[i].prop_id = 0;
+		info[i].num_enum_values = src[i].num_enum_values;
+
+		if (info[i].num_enum_values == 0)
+			continue;
+
+		info[i].enum_values = calloc(src[i].num_enum_values, sizeof(*info[i].enum_values));
+    if ()
+		for (j = 0; j < info[i].num_enum_values; j++) {
+			info[i].enum_values[j].name = src[i].enum_values[j].name;
+			info[i].enum_values[j].valid = false;
+		}
+	}
+
+	for (i = 0; i < props->count_props; i++) {
+		unsigned int k;
+
+		prop = drmModeGetProperty(device->kms_fd, props->props[i]);
+		if (!prop)
+			continue;
+
+		for (j = 0; j < num_infos; j++) {
+			if (!strcmp(prop->name, info[j].name))
+				break;
+		}
+
+		/* We don't know/care about this property. */
+		if (j == num_infos) {
+			drmModeFreeProperty(prop);
+			continue;
+		}
+
+		info[j].prop_id = props->props[i];
+
+		/* Make sure we don't get mixed up between enum and normal
+		 * properties. */
+		assert(!!(prop->flags & DRM_MODE_PROP_ENUM) ==
+		       !!info[j].num_enum_values);
+
+		for (k = 0; k < info[j].num_enum_values; k++) {
+			int l;
+
+			for (l = 0; l < prop->count_enums; l++) {
+				if (!strcmp(prop->enums[l].name,
+					    info[j].enum_values[k].name))
+					break;
+			}
+
+			if (l == prop->count_enums)
+				continue;
+
+			info[j].enum_values[k].valid = true;
+			info[j].enum_values[k].value = prop->enums[l].value;
+		}
+
+		drmModeFreeProperty(prop);
+	}
+	
+	return true;
+}
+
 bool dlu_drm_create_kms_output_data(
   dlu_drm_core *core,
   uint32_t odb,
@@ -283,7 +360,7 @@ bool dlu_drm_create_kms_output_data(
   core->device.output_data[odb].conn_id = core->device.output_data[odb].conn->connector_id;
   core->device.output_data[odb].enc_id  = core->device.output_data[odb].enc->encoder_id;
   core->device.output_data[odb].crtc_id = core->device.output_data[odb].crtc->crtc_id;
-  core->device.output_data[odb].pp_id   = core->device.output_data[odb].plane->plane_id;
+  core->device.output_data[odb].pp_id   = core->device.output_data[odb].crtc->buffer_id;
   core->device.output_data[odb].mode    = core->device.output_data[odb].crtc->mode;
 
   /**
@@ -295,10 +372,33 @@ bool dlu_drm_create_kms_output_data(
     ret = false; goto exit_free_plane_res;
   }
 
+  /**
+  * Objects are now line up can now get their property lists from
+  * KMS and use that to fill in the props structures so
+  * we can more easily query and set them.
+  */
+  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->device.output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
+  if (!props) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
+    ret = false; goto exit_free_plane_res;
+  }
+
+
+  drmModeFreeObjectProperties(props);
 exit_free_plane_res:
   drmModeFreePlaneResources(pres);
 exit_free_drm_res:
   drmModeFreeResources(dmr);
 exit_func:
   return ret;
+}
+
+bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
+  core->device.gbm_device = gbm_create_device(core->device.kmsfd);
+  if (core->device.gbm_device) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create a gbm device");
+    return false;
+  }
+
+  return true;
 }
