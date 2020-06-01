@@ -33,7 +33,6 @@
 * unit measured in nanoseconds
 */
 #define GENERAL_TIMEOUT 100000000
-#define INDEX_IGNORE -1
 
 typedef enum _dlu_sync_type {
   DLU_VK_WAIT_RENDER_FENCE   = 0x0000,  /* Set render fence to signal state */

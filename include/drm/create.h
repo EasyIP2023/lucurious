@@ -33,22 +33,6 @@
 */
 bool dlu_drm_create_vt(dlu_drm_core *core);
 bool dlu_drm_create_kms_node(dlu_drm_core *core);
-
-/**
-* Values can be computed by running the command lucur --display-info <drm device>
-* This function sets up the initial Plane -> CRTC -> Connector Pairs.
-* This pairs may change
-*/
-bool dlu_drm_create_kms_output_data(
-  dlu_drm_core *core,
-  uint32_t odb,
-  uint32_t conn_id_idx,
-  uint32_t enc_id_idx,
-  uint32_t crtc_id_idx,
-  uint32_t plane_id_idx,
-  uint64_t refresh
-);
-
 bool dlu_drm_create_gbm_device(dlu_drm_core *core);
 
 #ifdef INAPI_CALLS

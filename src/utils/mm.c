@@ -383,7 +383,7 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         dlu_drm_core *core = (dlu_drm_core *) addr;
         core->device.output_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_data));
         if (!core->device.output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        core->device.dcc = arr_size; return false;
+        core->device.odc = arr_size; return false;
       }
     default: break;
   }

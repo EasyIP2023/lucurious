@@ -58,6 +58,41 @@ exit_create_kms_node:
   free_core(core);
 } END_TEST;
 
+START_TEST(kms_node_enumeration) {
+  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 3 };
+
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
+    ck_abort_msg(NULL);
+
+  dlu_drm_core *core = dlu_drm_init_core();
+
+  if (dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1))
+    ck_abort_msg(NULL);
+
+  /**
+  * RUN IN TTY:
+  * First creates a logind session. This allows for access to
+  * privileged devices without being root.
+  * Then find a suitable kms node = drm device = gpu
+  */
+  if (!dlu_drm_create_session(core))
+    goto exit_create_kms_node; // Exit if not in a tty
+
+  if (!dlu_drm_create_kms_node(core)) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
+  /* Indexes for my particular system kms node */
+  if (!dlu_drm_kms_node_enum_ouput_dev(core, 0, 0, 0, 0, 0, 60000, "VGA")) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
+exit_create_kms_node:
+  free_core(core);
+} END_TEST;
+
 Suite *alloc_suite(void) {
   Suite *s = NULL;
   TCase *tc_core = NULL;
@@ -68,6 +103,7 @@ Suite *alloc_suite(void) {
   tc_core = tcase_create("Core");
 
   tcase_add_test(tc_core, init_create_kms_node);
+  tcase_add_test(tc_core, kms_node_enumeration);
   suite_add_tcase(s, tc_core);
 
   return s;

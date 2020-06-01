@@ -25,7 +25,7 @@
 #define LUCUR_MATH_API
 #include <lucom.h>
 
-#include <cglm/call.h>
+#include <cglm/cglm.h>
 
 float dlu_set_radian(float fovy) {
   return glm_rad(fovy);
@@ -38,7 +38,7 @@ void dlu_set_perspective(
   float nearPlane,
   float farPlane
 ) {
-  glmc_perspective(fovy, aspect, nearPlane, farPlane, proj);
+  glm_perspective(fovy, aspect, nearPlane, farPlane, proj);
 }
 
 void dlu_set_lookat(mat4 view, vec3 eye, vec3 center, vec3 up) {

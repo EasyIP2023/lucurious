@@ -64,11 +64,14 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
   }
 
+  /* Universal planes means exposing primary & cursor as proper plane objects */
   err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
   err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
   if (err < 0) {
-    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or atomic", device_name);
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or KMS atomic", device_name);
     goto close_kms;
+  } else {
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for universal planes and or KMS atomic", device_name);
   }
 
   err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
@@ -212,109 +215,6 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
 
   drmFreeDevices(devices, num_dev);
 
-  return ret;
-}
-
-bool dlu_drm_create_kms_output_data(
-  dlu_drm_core *core,
-  uint32_t odb,
-  uint32_t conn_id_idx,
-  uint32_t enc_id_idx,
-  uint32_t crtc_id_idx,
-  uint32_t plane_id_idx,
-  uint64_t refresh
-) {
-
-  bool ret = true;
-
-  if (core->device.kmsfd == UINT32_MAX) {
-    dlu_log_me(DLU_DANGER, "[x] There appears to be no available DRM device");
-    dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_drm_create_kms_node()");
-    goto exit_func;
-  }
-
-  if (!core->device.output_data) {
-    PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_DATA");
-    goto exit_func;
-  }
-
-  drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
-  if (!dmr) {
-    dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
-    ret = false; goto exit_func;
-  }
-
-  drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
-  if (!pres) {
-    dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
-    ret = false; goto exit_free_drm_res;
-  }
-
-  if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
-    dlu_print_msg(DLU_DANGER, "[x] DRM device found is not a KMS node\n");
-    ret = false; goto exit_free_plane_res;
-  }
-
-  core->device.output_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_id_idx]);
-  if (!core->device.output_data[odb].conn) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetConnector: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-  core->device.output_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_id_idx]);
-  if (!core->device.output_data[odb].enc) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetEncoder: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-  core->device.output_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_id_idx]);
-  if (!core->device.output_data[odb].crtc) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetCrtc: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-  core->device.output_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_id_idx]);
-  if (!core->device.output_data[odb].plane) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeGetPlane: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-  core->device.output_data[odb].refresh = millihz_to_nsec(refresh);
-
-  /* This members are redundant and mainly for easy of access */
-  core->device.output_data[odb].conn_id = core->device.output_data[odb].conn->connector_id;
-  core->device.output_data[odb].enc_id  = core->device.output_data[odb].enc->encoder_id;
-  core->device.output_data[odb].crtc_id = core->device.output_data[odb].crtc->crtc_id;
-  core->device.output_data[odb].pp_id   = core->device.output_data[odb].crtc->buffer_id;
-  core->device.output_data[odb].mode    = core->device.output_data[odb].crtc->mode;
-
-  /**
-  * Now creating MODE_ID blob
-  * Go here for more information: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
-  */
-  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->device.output_data[odb].mode, sizeof(drmModeModeInfo), &core->device.output_data[odb].mode_blob_id) < 0) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeCreatePropertyBlob: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-  /**
-  * Objects are now line up can now get their property lists from
-  * KMS and use that to fill in the props structures so
-  * we can more easily query and set them.
-  */
-  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->device.output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
-  if (!props) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
-    ret = false; goto exit_free_plane_res;
-  }
-
-
-  drmModeFreeObjectProperties(props);
-exit_free_plane_res:
-  drmModeFreePlaneResources(pres);
-exit_free_drm_res:
-  drmModeFreeResources(dmr);
-exit_func:
   return ret;
 }
 

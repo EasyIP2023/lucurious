@@ -28,6 +28,7 @@
 #include "setup.h"
 #include "create.h"
 #include "logind.h"
+#include "device.h"
 
 #ifdef INAPI_CALLS
 #include "info.h"

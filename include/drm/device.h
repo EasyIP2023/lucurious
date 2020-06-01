@@ -22,36 +22,26 @@
 * THE SOFTWARE.
 */
 
-#ifndef LUCURIOUS_H
-#define LUCURIOUS_H
+#ifndef DLU_DRM_DEVICE_H
+#define DLU_DRM_DEVICE_H
 
-#define ARR_LEN(var) (sizeof(var) / sizeof(var[0]))
-#define INDEX_IGNORE -1
+/**
+* Values can be computed by running the command lucur --display-info <drm device>
+* This function sets up the initial Plane -> CRTC -> Connector Pairs.
+* This pairs may change
+*/
+bool dlu_drm_kms_node_enum_ouput_dev(
+  dlu_drm_core *core,
+  uint32_t odb,
+  uint32_t conn_id_idx,
+  uint32_t enc_id_idx,
+  uint32_t crtc_id_idx,
+  uint32_t plane_id_idx,
+  uint64_t refresh,
+  const char *conn_name
+);
 
-/* Contains linear algebra types used throughout apps */
-#include <cglm/types.h>
-
-#include "utils/types.h"
-#include "utils/all.h"
-
-#ifdef LUCUR_SPIRV_API
-#include "spirv/types.h"
-#include "spirv/all.h"
+#ifdef INAPI_CALLS
+const char *ouput_devices(uint32_t type);
 #endif
-
-#ifdef LUCUR_DRM_API
-#include "drm/types.h"
-#include "drm/all.h"
-#endif
-
-#ifdef LUCUR_MATH_API
-#include "math/types.h"
-#include "math/all.h"
-#endif
-
-#ifdef LUCUR_VKCOMP_API
-#include "vkcomp/types.h"
-#include "vkcomp/all.h"
-#endif
-
 #endif

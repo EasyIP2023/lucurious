@@ -32,30 +32,6 @@
 
 #include <fcntl.h>
 
-/* Can find here https://code.woboq.org/linux/linux/include/uapi/drm/drm_mode.h.html */
-static const char *ouput_devices(uint32_t type) {
-  switch (type) {
-    case DRM_MODE_CONNECTOR_Unknown:     return "Unknown";
-    case DRM_MODE_CONNECTOR_VGA:         return "VGA";
-    case DRM_MODE_CONNECTOR_DVII:        return "DVI-I";
-    case DRM_MODE_CONNECTOR_DVID:        return "DVI-D";
-    case DRM_MODE_CONNECTOR_DVIA:        return "DVI-A";
-    case DRM_MODE_CONNECTOR_Composite:   return "Composite";
-    case DRM_MODE_CONNECTOR_SVIDEO:      return "SVIDEO";
-    case DRM_MODE_CONNECTOR_LVDS:        return "LVDS";
-    case DRM_MODE_CONNECTOR_Component:   return "Component";
-    case DRM_MODE_CONNECTOR_9PinDIN:     return "DIN";
-    case DRM_MODE_CONNECTOR_DisplayPort: return "DP";
-    case DRM_MODE_CONNECTOR_HDMIA:       return "HDMI-A";
-    case DRM_MODE_CONNECTOR_HDMIB:       return "HDMI-B";
-    case DRM_MODE_CONNECTOR_TV:          return "TV";
-    case DRM_MODE_CONNECTOR_eDP:         return "eDP";
-    case DRM_MODE_CONNECTOR_VIRTUAL:     return "Virtual";
-    case DRM_MODE_CONNECTOR_DSI:         return "DSI";
-    default:                             return "Unknown";
-  }
-}
-
 /* Intentionally did not add plane freeing into this function */
 static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmModeCrtc **crtc, drmModePlane **plane) {
   if (conn) { // Just an extra check
@@ -116,7 +92,9 @@ bool dlu_print_dconf_info(const char *gpu) {
 
   drmModeConnector *conn = NULL; drmModeEncoder *enc = NULL;
   drmModeCrtc *crtc = NULL; drmModePlane *plane = NULL;
-  uint32_t enc_crtc_id = 0, pairs = 0; uint64_t refresh = 0;
+  uint32_t enc_crtc_id = 0, crtc_id = 0;
+  uint32_t fb_id = 0, pairs = 0;
+  uint64_t refresh = 0;
 
   for (int i = 0; i < dmr->count_connectors; i++) {
     conn = drmModeGetConnector(drmfd, dmr->connectors[i]);
@@ -166,14 +144,15 @@ bool dlu_print_dconf_info(const char *gpu) {
         /* DRM is supposed to provide a refresh interval, but often doesn't;
         * calculate our own in milliHz for higher precision anyway. */
         refresh = ((crtc->mode.clock * 1000000LL / crtc->mode.htotal) + (crtc->mode.vtotal / 2)) / crtc->mode.vtotal;
-        drmModeFreeCrtc(crtc); enc_crtc_id = 0;
+        dlu_print_msg(DLU_DANGER, "\n\tscreen refresh: %u\n", refresh); refresh = UINT64_MAX;
+        crtc_id = crtc->crtc_id; fb_id = crtc->buffer_id;
+        drmModeFreeCrtc(crtc); enc_crtc_id = UINT32_MAX;
         break;
       }
     }
 
     /* Only search for planes if a given CRTC has an encoder connected to it and a connector connected to that encoder */
     if (crtc) {
-      crtc = NULL;
       for (uint32_t p = 0; p < pres->count_planes; p++) {
         plane = drmModeGetPlane(drmfd, pres->planes[p]);
         if (!plane) {
@@ -182,24 +161,31 @@ bool dlu_print_dconf_info(const char *gpu) {
           ret = false; goto free_plane_res;
         }
 
-        dlu_print_msg(DLU_SUCCESS, "\n\t\tPlane INFO\n");
-        dlu_print_msg(DLU_INFO, "\tPLANE ID : %u\tPlane Index : %u\n", plane->plane_id, p);
-        dlu_print_msg(DLU_INFO, "\tFB ID    : %u\tCRTC ID     : %u\n", plane->fb_id, plane->crtc_id);
-        dlu_print_msg(DLU_INFO, "\tgamma sz : %u\tformats     : [", plane->gamma_size);
-        for (uint32_t j = 0; j < plane->count_formats; j++)
-          dlu_print_msg(DLU_INFO, "%u ", plane->formats[j]);
-        dlu_print_msg(DLU_INFO, "]\n");
-        dlu_print_msg(DLU_DANGER, "\n\tscreen refresh: %u\n", refresh);
-        dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", i);
-        drmModeFreePlane(plane); plane = NULL; refresh = 0; pairs++;
+        /* Check find primary plane for chosen crtc */
+        if (plane->crtc_id == crtc_id && plane->fb_id == fb_id) {
+          dlu_print_msg(DLU_SUCCESS, "\n\t\tPlane INFO\n");
+          dlu_print_msg(DLU_INFO, "\tPLANE ID : %u\tPlane Index : %u\n", plane->plane_id, p);
+          dlu_print_msg(DLU_INFO, "\tFB ID    : %u\tCRTC ID     : %u\n", plane->fb_id, plane->crtc_id);
+          dlu_print_msg(DLU_INFO, "\tgamma sz : %u\tformats     : [", plane->gamma_size);
+          for (uint32_t j = 0; j < plane->count_formats; j++)
+            dlu_print_msg(DLU_INFO, "%u ", plane->formats[j]);
+          dlu_print_msg(DLU_INFO, "]\n");
+          dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", i);
+          pairs++;
+        }
+
+        drmModeFreePlane(plane); plane = NULL;
       }
+
+      /* Reset values */
+      crtc = NULL; crtc_id = fb_id = 0;
     }
 
     drmModeFreeConnector(conn); conn = NULL;
   }
 
   if (pairs == 0)
-    dlu_print_msg(DLU_WARNING, "No Plane -> CRTC -> Encoder -> Connector Pairs found for kms node '%s'", gpu);
+    dlu_print_msg(DLU_WARNING, "If no Plane -> CRTC -> Encoder -> Connector pair found for kms node '%s', then set plane_idx to 0", gpu);
   fprintf(stdout, "\n");
 free_plane_res:
   drmModeFreePlaneResources(pres);
