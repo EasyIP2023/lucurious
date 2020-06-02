@@ -7,10 +7,10 @@
  * more information, such as the mode.
  */
 struct edid_info {
-	char eisa_id[13];
-	char monitor_name[13];
-	char pnp_id[5];
-	char serial_number[13];
+  char eisa_id[13];
+  char monitor_name[13];
+  char pnp_id[5];
+  char serial_number[13];
 };
 
 struct edid_info *edid_parse(const uint8_t *data, size_t length);

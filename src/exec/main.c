@@ -25,6 +25,7 @@
 #include <getopt.h>
 
 #define LUCUR_VKCOMP_API
+#define LUCUR_DRM_API // for definition of dlu_print_dconf_info
 #include <lucom.h>
 
 /* In helpers.c */
@@ -38,9 +39,6 @@ void print_gvalidation_layers();
 void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
 void print_display_extensions(VkPhysicalDeviceType dt);
-
-/* In drm_info.c */
-bool dlu_print_dconf_info(const char *gpu);
 
 int main(int argc, char **argv) {
   int c = 0;
@@ -60,7 +58,7 @@ int main(int argc, char **argv) {
       {"pie",          no_argument,       0,  0  },
       {"pde",          required_argument, 0,  0  },
       {"pdp",          required_argument, 0,  0  },
-      {"display-info", required_argument, 0,  0  },
+      {"display-info", no_argument,       0,  0  },
       {0,              0,                 0,  0  }
     };
 
@@ -74,6 +72,7 @@ int main(int argc, char **argv) {
         if (!strcmp(long_options[option_index].name, "help")) { help_message(); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
         if (!strcmp(long_options[option_index].name, "pie"))  print_instance_extensions();
+        if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info();
         if (!strcmp(long_options[option_index].name, "pde")) {
           if (optarg) {
             print_device_extensions(ret_dtype(optarg));
@@ -88,14 +87,6 @@ int main(int argc, char **argv) {
           } else {
             dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pdp VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
             goto exit_loop;
-          }
-        }
-        if (!strcmp(long_options[option_index].name, "display-info")) {
-          if (optarg) {
-            if (!dlu_print_dconf_info(optarg)) {
-              dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --display-info /dev/dri/card0\n");
-              goto exit_loop;
-            }
           }
         }
         break;

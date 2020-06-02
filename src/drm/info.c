@@ -63,41 +63,42 @@ static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmMode
   }
 }
 
-bool dlu_print_dconf_info(const char *gpu) {
-  uint32_t drmfd = UINT32_MAX;
+bool dlu_print_dconf_info() {
   bool ret = true;
 
-  drmfd = open(gpu, O_RDONLY);
-  if (drmfd == UINT32_MAX) {
-    dlu_print_msg(DLU_DANGER, "[x] open: %s\n", strerror(errno));
-    ret = false; goto exit_info;
-  }
+  dlu_drm_core *core = dlu_drm_init_core();
 
-  drmModeRes *dmr = drmModeGetResources(drmfd);
+  if (dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1)) goto exit_info;
+
+  /* Exit if not in a tty */
+  if (!dlu_drm_create_session(core)) { dlu_print_msg(DLU_WARNING, "Please run command with in a TTY"); goto exit_info; }
+  if (!dlu_drm_create_kms_node(core)) { dlu_print_msg(DLU_WARNING, "Please run command with in a TTY"); goto exit_info; }
+
+  drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
   if (!dmr) {
     dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
     ret = false; goto exit_info;
   }
 
-  drmModePlaneRes *pres = drmModeGetPlaneResources(drmfd);
+  drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
   if (!pres) {
     dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
     ret = false; goto free_drm_res;
   }
 
   if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
-    dlu_print_msg(DLU_DANGER, "[x] Device '%s' is not a KMS node\n", gpu);
+    dlu_print_msg(DLU_DANGER, "[x] Not a proper KMS node\n");
     ret = false; goto free_plane_res;
   }
 
   drmModeConnector *conn = NULL; drmModeEncoder *enc = NULL;
   drmModeCrtc *crtc = NULL; drmModePlane *plane = NULL;
   uint32_t enc_crtc_id = 0, crtc_id = 0;
-  uint32_t fb_id = 0, pairs = 0;
+  uint32_t fb_id = 0;
   uint64_t refresh = 0;
 
   for (int i = 0; i < dmr->count_connectors; i++) {
-    conn = drmModeGetConnector(drmfd, dmr->connectors[i]);
+    conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[i]);
     if (!conn) {
       dlu_print_msg(DLU_DANGER, "[x] drmModeGetConnector: %s\n", strerror(errno));
       free_drm_objs(&conn, &enc, &crtc, &plane);
@@ -107,7 +108,7 @@ bool dlu_print_dconf_info(const char *gpu) {
     /* Finding a encoder (a deprecated KMS object) for a given connector */
     for (int e = 0; e < dmr->count_encoders; e++) {
       if (dmr->encoders[e] == conn->encoder_id) {
-        enc = drmModeGetEncoder(drmfd, dmr->encoders[e]);
+        enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[e]);
         if (!enc) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetEncoder: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
@@ -130,7 +131,7 @@ bool dlu_print_dconf_info(const char *gpu) {
     /* Finding a crtc for the given encoder */
     for (int c = 0; c < dmr->count_crtcs; c++) {
       if (dmr->crtcs[c] == enc_crtc_id) {
-        crtc = drmModeGetCrtc(drmfd, dmr->crtcs[c]);
+        crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[c]);
         if (!crtc) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetCrtc: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
@@ -144,7 +145,6 @@ bool dlu_print_dconf_info(const char *gpu) {
         /* DRM is supposed to provide a refresh interval, but often doesn't;
         * calculate our own in milliHz for higher precision anyway. */
         refresh = ((crtc->mode.clock * 1000000LL / crtc->mode.htotal) + (crtc->mode.vtotal / 2)) / crtc->mode.vtotal;
-        dlu_print_msg(DLU_DANGER, "\n\tscreen refresh: %u\n", refresh); refresh = UINT64_MAX;
         crtc_id = crtc->crtc_id; fb_id = crtc->buffer_id;
         drmModeFreeCrtc(crtc); enc_crtc_id = UINT32_MAX;
         break;
@@ -154,7 +154,7 @@ bool dlu_print_dconf_info(const char *gpu) {
     /* Only search for planes if a given CRTC has an encoder connected to it and a connector connected to that encoder */
     if (crtc) {
       for (uint32_t p = 0; p < pres->count_planes; p++) {
-        plane = drmModeGetPlane(drmfd, pres->planes[p]);
+        plane = drmModeGetPlane(core->device.kmsfd, pres->planes[p]);
         if (!plane) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlane: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
@@ -170,8 +170,8 @@ bool dlu_print_dconf_info(const char *gpu) {
           for (uint32_t j = 0; j < plane->count_formats; j++)
             dlu_print_msg(DLU_INFO, "%u ", plane->formats[j]);
           dlu_print_msg(DLU_INFO, "]\n");
-          dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", i);
-          pairs++;
+          dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", (i+1));
+          dlu_print_msg(DLU_DANGER, "\n\tscreen refresh: %u\n", refresh); refresh = UINT64_MAX;
         }
 
         drmModeFreePlane(plane); plane = NULL;
@@ -184,14 +184,12 @@ bool dlu_print_dconf_info(const char *gpu) {
     drmModeFreeConnector(conn); conn = NULL;
   }
 
-  if (pairs == 0)
-    dlu_print_msg(DLU_WARNING, "If no Plane -> CRTC -> Encoder -> Connector pair found for kms node '%s', then set plane_idx to 0", gpu);
   fprintf(stdout, "\n");
 free_plane_res:
   drmModeFreePlaneResources(pres);
 free_drm_res:
   drmModeFreeResources(dmr);
-  close(drmfd);
 exit_info:
+  dlu_drm_freeup_core(core);
   return ret;
 }

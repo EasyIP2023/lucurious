@@ -85,7 +85,7 @@ START_TEST(kms_node_enumeration) {
 
   uint32_t cur_odb = 0;
   /* Indexes for my particular system kms node */
-  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, 0, 0, 0, 4, 60000, "VGA")) {
+  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, 0, 0, 0, 3, 60000, "VGA")) {
     free_core(core);
     ck_abort_msg(NULL);
   }

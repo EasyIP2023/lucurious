@@ -95,7 +95,7 @@ bool dlu_drm_create_session(dlu_drm_core *core) {
     return false;
   }
 
-  char *type = NULL; /* Check that the available session is a tty */
+  char *type = NULL; /* Check that the available session type is a tty */
   if (sd_session_get_type(core->session.id, &type) < 0) {
     dlu_log_me(DLU_DANGER, "[x] sd_session_get_type: %s", strerror(-errno));
     dlu_log_me(DLU_DANGER, "[x] Couldn't get a tty session type for session '%s'", core->session.id);
@@ -143,7 +143,7 @@ start_session:
 
   /* Activate the session */
   if (!session_activate(core)) return false;
- 
+
   if (!take_control(core)) return false;
 
   dlu_log_me(DLU_SUCCESS, "Logind session successfully loaded");
