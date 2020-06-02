@@ -25,6 +25,6 @@
 #ifndef DLU_DRM_INFO_H
 #define DLU_DRM_INFO_H
 
-bool dlu_print_dconf_info();
+bool dlu_print_dconf_info(const char *device);
 
 #endif

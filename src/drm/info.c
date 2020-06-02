@@ -63,7 +63,7 @@ static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmMode
   }
 }
 
-bool dlu_print_dconf_info() {
+bool dlu_print_dconf_info(const char *device) {
   bool ret = true;
 
   dlu_drm_core *core = dlu_drm_init_core();
@@ -71,8 +71,8 @@ bool dlu_print_dconf_info() {
   if (dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1)) goto exit_info;
 
   /* Exit if not in a tty */
-  if (!dlu_drm_create_session(core)) { dlu_print_msg(DLU_WARNING, "Please run command with in a TTY"); goto exit_info; }
-  if (!dlu_drm_create_kms_node(core)) { dlu_print_msg(DLU_WARNING, "Please run command with in a TTY"); goto exit_info; }
+  if (!dlu_drm_create_session(core)) { dlu_log_me(DLU_WARNING, "Please run command from within a TTY"); goto exit_info; }
+  if (!dlu_drm_create_kms_node(core, device)) { dlu_log_me(DLU_WARNING, "Please run command from within a TTY"); goto exit_info; }
 
   drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
   if (!dmr) {
@@ -87,7 +87,7 @@ bool dlu_print_dconf_info() {
   }
 
   if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
-    dlu_print_msg(DLU_DANGER, "[x] Not a proper KMS node\n");
+    dlu_print_msg(DLU_DANGER, "[x] '%s' is not a KMS node\n", device);
     ret = false; goto free_plane_res;
   }
 
@@ -170,8 +170,8 @@ bool dlu_print_dconf_info() {
           for (uint32_t j = 0; j < plane->count_formats; j++)
             dlu_print_msg(DLU_INFO, "%u ", plane->formats[j]);
           dlu_print_msg(DLU_INFO, "]\n");
-          dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", (i+1));
           dlu_print_msg(DLU_DANGER, "\n\tscreen refresh: %u\n", refresh); refresh = UINT64_MAX;
+          dlu_print_msg(DLU_WARNING, "\n  Plane -> CRTC -> Encoder -> Connector Pair: %d\n", (i+1));
         }
 
         drmModeFreePlane(plane); plane = NULL;

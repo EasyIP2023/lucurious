@@ -49,7 +49,7 @@ START_TEST(init_create_kms_node) {
   if (!dlu_drm_create_session(core))
     goto exit_create_kms_node; // Exit if not in a tty
  
-  if (!dlu_drm_create_kms_node(core)) {
+  if (!dlu_drm_create_kms_node(core, "/dev/dri/card0")) {
     free_core(core);
     ck_abort_msg(NULL);
   }
@@ -78,7 +78,7 @@ START_TEST(kms_node_enumeration) {
   if (!dlu_drm_create_session(core))
     goto exit_create_kms_node; // Exit if not in a tty
 
-  if (!dlu_drm_create_kms_node(core)) {
+  if (!dlu_drm_create_kms_node(core, NULL)) {
     free_core(core);
     ck_abort_msg(NULL);
   }

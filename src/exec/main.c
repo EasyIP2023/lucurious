@@ -52,14 +52,14 @@ int main(int argc, char **argv) {
     int option_index = 0;
 
     static struct option long_options[] = {
-      {"version",      no_argument,       0,  0  },
-      {"help",         no_argument,       0,  0  },
-      {"pgvl",         no_argument,       0,  0  },
-      {"pie",          no_argument,       0,  0  },
-      {"pde",          required_argument, 0,  0  },
-      {"pdp",          required_argument, 0,  0  },
-      {"display-info", no_argument,       0,  0  },
-      {0,              0,                 0,  0  }
+      {"version",      no_argument,       NULL,  0  },
+      {"help",         no_argument,       NULL,  0  },
+      {"pgvl",         no_argument,       NULL,  0  },
+      {"pie",          no_argument,       NULL,  0  },
+      {"pde",          required_argument, NULL,  0  },
+      {"pdp",          required_argument, NULL,  0  },
+      {"display-info", optional_argument, NULL,  0  },
+      {0,              0,                 NULL,  0  }
     };
 
     c = getopt_long(argc, argv, "vhlid:", long_options, &option_index);
@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
         if (!strcmp(long_options[option_index].name, "version")) { version_num(); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "help")) { help_message(); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
-        if (!strcmp(long_options[option_index].name, "pie"))  print_instance_extensions();
-        if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info();
+        if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
+        if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info(optarg);
         if (!strcmp(long_options[option_index].name, "pde")) {
           if (optarg) {
             print_device_extensions(ret_dtype(optarg));
@@ -91,8 +91,8 @@ int main(int argc, char **argv) {
         }
         break;
       case 1: break;
-      case 'v': version_num(); break;
-      case 'h': help_message(); break;
+      case 'v': version_num(); goto exit_loop;
+      case 'h': help_message(); goto exit_loop;
       case 'l': print_gvalidation_layers(); break;
       case 'i': print_instance_extensions(); break;
       case 'd':

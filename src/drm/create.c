@@ -174,11 +174,19 @@ bool dlu_drm_create_vt(dlu_drm_core *core) {
   return true;
 }
 
-bool dlu_drm_create_kms_node(dlu_drm_core *core) {
-  drmDevicePtr *devices = NULL;
-  uint32_t num_dev = 0;
+bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev) {
+  bool ret = false;
 
-  num_dev = drmGetDevices2(0, NULL, 0);
+  if (preferred_dev) {
+    ret = check_if_good_candidate(core, preferred_dev);
+    if (ret) {
+      dlu_log_me(DLU_SUCCESS, "Your KMS node '%s' was suitable!!", preferred_dev);
+      return ret;
+    }
+  }
+
+  drmDevicePtr *devices = NULL;
+  uint32_t num_dev = drmGetDevices2(0, NULL, 0);
   if (!num_dev) {
     dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
     dlu_log_me(DLU_DANGER, "[x] no available KMS nodes from /dev/dri/*");
@@ -195,7 +203,7 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core) {
 
   dlu_log_me(DLU_SUCCESS, "%d available KMS nodes", num_dev);
 
-  bool ret = false; char *kms_node = NULL;
+  char *kms_node = NULL;
   for (uint32_t i = 0; i < num_dev; i++) {
     /**
     * We need /dev/dri/cardN nodes for modesetting, not render

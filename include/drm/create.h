@@ -32,7 +32,7 @@
 * If dlu_drm_create_kms_node somehow fails you can run just use this function, but sudo permission required.
 */
 bool dlu_drm_create_vt(dlu_drm_core *core);
-bool dlu_drm_create_kms_node(dlu_drm_core *core);
+bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev);
 bool dlu_drm_create_gbm_device(dlu_drm_core *core);
 
 #ifdef INAPI_CALLS
