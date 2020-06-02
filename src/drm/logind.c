@@ -78,7 +78,11 @@ exit_take_control:
 
 bool dlu_drm_create_session(dlu_drm_core *core) {
 
-  /* If there's a session active for the current process then just use that */
+  /**
+  * If there's a session active for the current process then just use that,
+  * This also allows for the setting of the session path, bus, and id variables
+  * needed for other operations such as "take device"
+  */
   if (sd_pid_get_session(getpid(), &core->session.id) == 0) goto start_session;
 
   /**

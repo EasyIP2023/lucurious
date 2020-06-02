@@ -59,7 +59,7 @@ exit_create_kms_node:
 } END_TEST;
 
 START_TEST(kms_node_enumeration) {
-  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 3 };
+  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 2 };
 
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
@@ -83,8 +83,9 @@ START_TEST(kms_node_enumeration) {
     ck_abort_msg(NULL);
   }
 
+  uint32_t cur_odb = 0;
   /* Indexes for my particular system kms node */
-  if (!dlu_drm_kms_node_enum_ouput_dev(core, 0, 0, 0, 0, 0, 60000, "VGA")) {
+  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, 0, 0, 0, 4, 60000, "VGA")) {
     free_core(core);
     ck_abort_msg(NULL);
   }

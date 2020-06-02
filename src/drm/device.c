@@ -8,52 +8,52 @@
 
 /* All properties and enum values supported one needs to */
 static struct drm_prop_enum_info plane_type_enums[] = {
-	[DLU_DRM_PLANE_TYPE_PRIMARY] = { .name = "Primary" },
-	[DLU_DRM_PLANE_TYPE_OVERLAY] = { .name = "Overlay" },
-	[DLU_DRM_PLANE_TYPE_CURSOR]  = { .name = "Cursor"  },
+  [DLU_DRM_PLANE_TYPE_PRIMARY] = { .name = "Primary" },
+  [DLU_DRM_PLANE_TYPE_OVERLAY] = { .name = "Overlay" },
+  [DLU_DRM_PLANE_TYPE_CURSOR]  = { .name = "Cursor"  }
 };
 
 static const struct drm_prop_info plane_props[] = {
-	[DLU_DRM_PLANE_TYPE] = {
-		.name = "type",
-		.enum_values = plane_type_enums,
-		.enum_values_cnt = DLU_DRM_PLANE_TYPE__CNT,
-	},
-	[DLU_DRM_PLANE_SRC_X] = { .name = "SRC_X", },
-	[DLU_DRM_PLANE_SRC_Y] = { .name = "SRC_Y", },
-	[DLU_DRM_PLANE_SRC_W] = { .name = "SRC_W", },
-	[DLU_DRM_PLANE_SRC_H] = { .name = "SRC_H", },
-	[DLU_DRM_PLANE_CRTC_X] = { .name = "CRTC_X", },
-	[DLU_DRM_PLANE_CRTC_Y] = { .name = "CRTC_Y", },
-	[DLU_DRM_PLANE_CRTC_W] = { .name = "CRTC_W", },
-	[DLU_DRM_PLANE_CRTC_H] = { .name = "CRTC_H", },
-	[DLU_DRM_PLANE_FB_ID] = { .name = "FB_ID", },
-	[DLU_DRM_PLANE_CRTC_ID] = { .name = "CRTC_ID", },
-	[DLU_DRM_PLANE_IN_FORMATS] = { .name = "IN_FORMATS" },
-	[DLU_DRM_PLANE_IN_FENCE_FD] = { .name = "IN_FENCE_FD" },
+  [DLU_DRM_PLANE_TYPE] = {
+    .name = "type",
+    .enum_values = plane_type_enums,
+    .enum_values_cnt = DLU_DRM_PLANE_TYPE__CNT,
+  },
+  [DLU_DRM_PLANE_SRC_X] = { .name = "SRC_X" },
+  [DLU_DRM_PLANE_SRC_Y] = { .name = "SRC_Y" },
+  [DLU_DRM_PLANE_SRC_W] = { .name = "SRC_W" },
+  [DLU_DRM_PLANE_SRC_H] = { .name = "SRC_H" },
+  [DLU_DRM_PLANE_CRTC_X] = { .name = "CRTC_X" },
+  [DLU_DRM_PLANE_CRTC_Y] = { .name = "CRTC_Y" },
+  [DLU_DRM_PLANE_CRTC_W] = { .name = "CRTC_W" },
+  [DLU_DRM_PLANE_CRTC_H] = { .name = "CRTC_H" },
+  [DLU_DRM_PLANE_FB_ID] = { .name = "FB_ID" },
+  [DLU_DRM_PLANE_CRTC_ID] = { .name = "CRTC_ID", },
+  [DLU_DRM_PLANE_IN_FORMATS] = { .name = "IN_FORMATS" },
+  [DLU_DRM_PLANE_IN_FENCE_FD] = { .name = "IN_FENCE_FD" }
 };
 
 /* Display Power Management Signaling */
 static struct drm_prop_enum_info dpms_state_enums[] = {
-	[DLU_DRM_DPMS_STATE_OFF] = { .name = "Off" },
-	[DLU_DRM_DPMS_STATE_ON] = { .name = "On" }
+  [DLU_DRM_DPMS_STATE_OFF] = { .name = "Off" },
+  [DLU_DRM_DPMS_STATE_ON] = { .name = "On" }
 };
 
 static const struct drm_prop_info conn_props[] = {
-	[DLU_DRM_CONNECTOR_EDID] = { .name = "EDID" },
-	[DLU_DRM_CONNECTOR_DPMS] = {
-		.name = "DPMS",
-		.enum_values = dpms_state_enums,
-		.enum_values_cnt = DLU_DRM_DPMS_STATE__CNT,
-	},
-	[DLU_DRM_CONNECTOR_CRTC_ID] = { .name = "CRTC_ID", },
-	[DLU_DRM_CONNECTOR_NON_DESKTOP] = { .name = "non-desktop", },
+  [DLU_DRM_CONNECTOR_EDID] = { .name = "EDID" },
+  [DLU_DRM_CONNECTOR_DPMS] = {
+    .name = "DPMS",
+    .enum_values = dpms_state_enums,
+    .enum_values_cnt = DLU_DRM_DPMS_STATE__CNT,
+  },
+  [DLU_DRM_CONNECTOR_CRTC_ID] = { .name = "CRTC_ID" },
+  [DLU_DRM_CONNECTOR_NON_DESKTOP] = { .name = "non-desktop" }
 };
 
 static const struct drm_prop_info crtc_props[] = {
-	[DLU_DRM_CRTC_MODE_ID] = { .name = "MODE_ID", },
-	[DLU_DRM_CRTC_ACTIVE] = { .name = "ACTIVE", },
-	[DLU_DRM_CRTC_OUT_FENCE_PTR] = { .name = "OUT_FENCE_PTR", },
+  [DLU_DRM_CRTC_MODE_ID] = { .name = "MODE_ID" },
+  [DLU_DRM_CRTC_ACTIVE] = { .name = "ACTIVE" },
+  [DLU_DRM_CRTC_OUT_FENCE_PTR] = { .name = "OUT_FENCE_PTR" }
 };
 
 static bool drm_prop_info_populate(
@@ -87,15 +87,15 @@ static bool drm_prop_info_populate(
   }
 
   for (i = 0; i < props->count_props; i++) {
-		unsigned int k;
+    unsigned int k;
 
-		prop = drmModeGetProperty(core->device.kmsfd, props->props[i]);
+    prop = drmModeGetProperty(core->device.kmsfd, props->props[i]);
     if (!prop) continue;
 
     for (j = 0; j < num_infos; j++) {
       if (!strcmp(prop->name, dst[j].name))
-				break;
-		}
+        break;
+    }
 
     /* We don't know/care about this property. */
     if (j == num_infos) {
@@ -106,7 +106,7 @@ static bool drm_prop_info_populate(
 
     dst[j].prop_id = props->props[i];
 
-		/* ensure we don't get mixed up between enum and normal properties. */
+    /* ensure we don't get mixed up between enum and normal properties. */
     if (!!(prop->flags & DRM_MODE_PROP_ENUM) != !!dst[j].enum_values_cnt) { drmModeFreeProperty(prop); return false; }
 
     for (k = 0; k < dst[j].enum_values_cnt; k++) {
@@ -143,7 +143,7 @@ static bool drm_prop_info_populate(
 * @param props Raw KMS properties for the target object
 * @param def Value to return if property is not found
 */
-static uint64_t UNUSED drm_property_get_value(
+static uint64_t drm_property_get_value(
   struct drm_prop_info *info,
   const drmModeObjectProperties *props,
   uint64_t def
@@ -177,26 +177,26 @@ static uint64_t UNUSED drm_property_get_value(
   return def;
 }
 
-static bool plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObjectProperties *props) {
+static void plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObjectProperties *props) {
   uint32_t blob_id = 0;
   drmModePropertyBlobRes *blob = NULL;
   struct drm_format_modifier_blob *fmt_mod_blob = NULL; /* IN_FORMATS content */
   uint32_t *blob_formats = NULL; /* array of formats */
   struct drm_format_modifier *blob_modifiers = NULL;
 
-	blob_id = drm_property_get_value(&core->device.output_data[odb].props.plane[DLU_DRM_PLANE_IN_FORMATS], props, 0);
-	if (blob_id == 0) {
-		dlu_log_me(DLU_DANGER, "[x] %s plane does not have IN_FORMATS", core->device.output_data[odb].name);
-		return false;
-	}
+  blob_id = drm_property_get_value(&core->device.output_data[odb].props.plane[DLU_DRM_PLANE_IN_FORMATS], props, 0);
+  if (blob_id == 0) {
+    dlu_log_me(DLU_WARNING, "'%s' plane does not have IN_FORMATS", core->device.output_data[odb].name);
+    return;
+  }
 
   blob = drmModeGetPropertyBlob(core->device.kmsfd, blob_id);
   if (!blob) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetPropertyBlob: %s", strerror(errno));
-    return false;
+    return;
   }
 
-	fmt_mod_blob = blob->data;
+  fmt_mod_blob = blob->data;
 	
   /**
   * The IN_FORMATS blob has two variable-length arrays at the end; one of
@@ -204,7 +204,7 @@ static bool plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObje
   * blob to be extended and carry more information, they carry byte offsets
   * pointing to the start of the two arrays.
   */
-	blob_formats = (uint32_t *) (((char *) fmt_mod_blob) + fmt_mod_blob->formats_offset);
+  blob_formats = (uint32_t *) (((char *) fmt_mod_blob) + fmt_mod_blob->formats_offset);
   blob_modifiers = (struct drm_format_modifier *) (((char *) fmt_mod_blob) + fmt_mod_blob->modifiers_offset);
 
   for (unsigned f = 0; f < fmt_mod_blob->count_formats; f++) {
@@ -217,11 +217,11 @@ static bool plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObje
       if (!(mod->formats & (1 << (f - mod->offset)))) continue;
     
       core->device.output_data[odb].modifiers = realloc(core->device.output_data[odb].modifiers,
-						    (core->device.output_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
-      
+          (core->device.output_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
+
       if (!core->device.output_data[odb].modifiers) {
         dlu_log_me(DLU_DANGER, "[x] realloc: %s", strerror(errno));
-        return false;
+        return;
       }
 
       core->device.output_data[odb].modifiers[core->device.output_data[odb].modifiers_cnt++] = mod->modifier;
@@ -229,7 +229,36 @@ static bool plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObje
   }
 
   drmModeFreePropertyBlob(blob);
-	return true;
+}
+
+static void output_get_edid(dlu_drm_core *core, uint32_t odb, drmModeObjectPropertiesPtr props) {
+  drmModePropertyBlobPtr blob = NULL;
+  struct edid_info *edid = NULL;
+  uint32_t blob_id = 0;
+
+  blob_id = drm_property_get_value(&core->device.output_data[odb].props.conn[DLU_DRM_CONNECTOR_EDID], props, 0);
+  if (blob_id == 0) {
+    dlu_log_me(DLU_WARNING, "'%s' output does not have EDID", core->device.output_data[odb].name);
+    return;
+  }
+
+  blob = drmModeGetPropertyBlob(core->device.kmsfd, blob_id);
+  if (!blob) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetPropertyBlob: %s", strerror(errno));
+    return;
+  }
+
+  edid = edid_parse(blob->data, blob->length);
+  drmModeFreePropertyBlob(blob);
+  if (!edid) return;
+
+  dlu_log_me(DLU_INFO, "For Output Device '%s'", core->device.output_data[odb].name);
+  dlu_log_me(DLU_INFO, "EDID PNP ID: %s", edid->pnp_id);
+  dlu_log_me(DLU_INFO, "EISA ID: %s", edid->eisa_id);
+  dlu_log_me(DLU_INFO, "Monitor Name: %s", edid->monitor_name);
+  dlu_log_me(DLU_INFO, "Serial: %s", edid->serial_number);
+
+  free(edid);
 }
 
 /* Can find here https://code.woboq.org/linux/linux/include/uapi/drm/drm_mode.h.html */
@@ -282,18 +311,18 @@ bool dlu_drm_kms_node_enum_ouput_dev(
 
   drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
   if (!dmr) {
-    dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s", strerror(errno));
     ret = false; goto exit_func;
   }
 
   drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
   if (!pres) {
-    dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetPlaneResources: %s", strerror(errno));
     ret = false; goto exit_free_drm_res;
   }
 
   if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
-    dlu_print_msg(DLU_DANGER, "[x] DRM device found is not a KMS node\n");
+    dlu_log_me(DLU_DANGER, "[x] DRM device found is not a KMS node");
     ret = false; goto exit_free_plane_res;
   }
 
@@ -358,11 +387,7 @@ bool dlu_drm_kms_node_enum_ouput_dev(
     ret = false; goto exit_free_mode_obj;
   }
 
-  if (!plane_formats_populate(core, odb, props)) {
-    dlu_log_me(DLU_DANGER, "[x] plane_formats_populate failed");
-    ret = false; goto exit_free_mode_obj;
-  }
-
+  plane_formats_populate(core, odb, props);
   drmModeFreeObjectProperties(props); props = NULL;
   /* Plane Query */
 
@@ -393,6 +418,7 @@ bool dlu_drm_kms_node_enum_ouput_dev(
     ret = false; goto exit_free_mode_obj;
   }
 
+  output_get_edid(core, odb, props);
   drmModeFreeObjectProperties(props); props = NULL;
   /* Connector Query */
 
