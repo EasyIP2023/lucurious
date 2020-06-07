@@ -33,10 +33,14 @@ dlu_drm_core *dlu_drm_init_core() {
 }
 
 void dlu_drm_freeup_core(dlu_drm_core *core) {
-  logind_release_device(core);
+  logind_release_device(DLU_KMS_FD, core);
   release_session_control(core);
   free(core->session.path);
   free(core->session.id);
+  if (core->input.inp)
+    libinput_unref(core->input.inp);
+  if (core->input.udev)
+    udev_unref(core->input.udev);
   if (core->device.vtfd != UINT32_MAX) {
     dlu_drm_reset_vt(core);
     close(core->device.vtfd);

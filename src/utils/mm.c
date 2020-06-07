@@ -95,6 +95,8 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     default: break;
   }
 
+  if (!current) return NULL;
+
   if (abytes >= bytes) {
     /* current block thats about to be allocated set few metadata */
     dlu_mem_block_t *block = current->addr;

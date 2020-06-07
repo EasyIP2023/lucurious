@@ -26,6 +26,7 @@ libdrm = dependency('libdrm', required: true)
 libinput = dependency('libinput', required: true)
 libgbm = dependency('gbm', required: true)
 libsystemd = dependency('libsystemd', required: true)
+libudev = dependency('libudev', required: true)
 
 fs = [
   'setup.c', 'create.c', 'logind.c',
@@ -34,5 +35,5 @@ fs = [
 
 lib_ldrm = static_library(
   'ldrm', files(fs), include_directories: lucur_inc,
-  dependencies: [libdrm, libgbm, libinput, libsystemd]
+  dependencies: [libdrm, libgbm, libinput, libsystemd, libudev]
 )

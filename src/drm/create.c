@@ -1,8 +1,8 @@
 /**
-* Parts of this file contain functionality similar to what is in kms-quads device.c:
+* Parts of this file contain functionality similar to what is in kms-quads device.c, kms.c, and input.c:
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/device.c
-* and
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
+* https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/input.c
 */
 
 /**
@@ -47,7 +47,7 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   * Open the device and ensure we have support for universal planes and
   * atomic modesetting. This function updates the kmsfd struct member
   */
-  if (!logind_take_device(core, device_name)) goto close_kms;
+  if (!logind_take_device(DLU_KMS_FD, core, device_name)) goto close_kms;
 
   /**
   * In order to drive KMS, we need to be 'master'. This should already
@@ -56,8 +56,7 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   * (e.g.) trying to run this test whilst a graphical session is
   * already active on the current VT.
   */
-  if (drmGetMagic(core->device.kmsfd, &magic) != 0 ||
-      drmAuthMagic(core->device.kmsfd, magic) != 0) {
+  if (drmGetMagic(core->device.kmsfd, &magic) != 0 || drmAuthMagic(core->device.kmsfd, magic) != 0) {
     dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
     goto close_kms;
   } else {
@@ -90,7 +89,7 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   return true;
 
 close_kms:
-  logind_release_device(core);
+  logind_release_device(DLU_KMS_FD, core);
   return false;
 }
 
@@ -180,7 +179,7 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev) {
   if (preferred_dev) {
     ret = check_if_good_candidate(core, preferred_dev);
     if (ret) {
-      dlu_log_me(DLU_SUCCESS, "Your KMS node '%s' was suitable!!", preferred_dev);
+      dlu_log_me(DLU_SUCCESS, "Your KMS node '%s' is suitable!!", preferred_dev);
       return ret;
     }
   }
@@ -230,6 +229,42 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   core->device.gbm_device = gbm_create_device(core->device.kmsfd);
   if (core->device.gbm_device) {
     dlu_log_me(DLU_DANGER, "[x] Failed to create a gbm device");
+    return false;
+  }
+
+  return true;
+}
+
+
+static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
+  return logind_take_device(DLU_INP_FD, (dlu_drm_core *) user_data, path);
+}
+
+static void close_restricted(int UNUSED fd, void *user_data) {
+  logind_release_device(DLU_INP_FD, (dlu_drm_core *) user_data);
+}
+
+static const struct libinput_interface libinput_impl = {
+  .open_restricted = open_restricted,
+  .close_restricted = close_restricted
+};
+
+bool dlu_drm_create_input_handle(dlu_drm_core *core) {
+
+  core->input.udev = udev_new();
+  if (!core->input.udev) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create a udev context");
+    return false;
+  }
+
+  core->input.inp = libinput_udev_create_context(&libinput_impl, core, core->input.udev);
+  if (!core->input.inp) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create libinput context");
+    return false;
+  }
+
+  if (libinput_udev_assign_seat(core->input.inp, "seat0") < 0) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to assign seat0 to instance of libinput");
     return false;
   }
 

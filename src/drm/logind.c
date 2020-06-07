@@ -164,7 +164,7 @@ void release_session_control(dlu_drm_core *core) {
   sd_bus_message_unref(msg);
 }
 
-bool logind_take_device(dlu_drm_core *core, const char *path) {
+bool logind_take_device(dlu_drm_fd_type type, dlu_drm_core *core, const char *path) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
   bool ret = true;
@@ -193,10 +193,16 @@ bool logind_take_device(dlu_drm_core *core, const char *path) {
 
   // The original fd seems to be closed when the message is freed
   // so we just clone it.
-  core->device.kmsfd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
-  if (core->device.kmsfd == UINT32_MAX) {
+  fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
+  if (fd == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] Failed to clone file descriptor for '%s': %s", path, strerror(errno));
     ret = false; goto exit_logind_take_dev;
+  }
+
+  switch(type) {
+    case DLU_KMS_FD: core->device.kmsfd = fd; break;
+    case DLU_INP_FD: core->input.inpfd = fd; break;
+    default: break;
   }
 
 exit_logind_take_dev:
@@ -205,23 +211,29 @@ exit_logind_take_dev:
   return ret;
 }
 
-void logind_release_device(dlu_drm_core *core) {
+void logind_release_device(dlu_drm_fd_type type, dlu_drm_core *core) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
+  int fd = NEG_ONE;
+
+  switch(type) {
+    case DLU_KMS_FD: fd = core->device.kmsfd; core->device.kmsfd = UINT32_MAX; break;
+    case DLU_INP_FD: fd = core->input.inpfd; core->input.inpfd = UINT32_MAX; break;
+    default: break;
+  }
 
   struct stat st;
-  if (fstat(core->device.kmsfd, &st) < 0) {
+  if (fstat(fd, &st) < 0) {
     dlu_log_me(DLU_DANGER, "[x] fstat: %s", strerror(errno));
     return;
   }
 
   if (sd_bus_call_method(core->session.bus, "org.freedesktop.login1", core->session.path, "org.freedesktop.login1.Session",
       "ReleaseDevice", &error, &msg, "uu", major(st.st_rdev), minor(st.st_rdev)) < 0) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to release device '%d': %s\n", core->device.kmsfd, error.message);
+    dlu_log_me(DLU_DANGER, "[x] Failed to release device '%d': %s\n", fd, error.message);
   }
 
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
-  close(core->device.kmsfd);
-  core->device.kmsfd = UINT32_MAX;
+  close(fd);
 }

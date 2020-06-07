@@ -49,6 +49,10 @@
 #include <systemd/sd-bus.h>
 #include <systemd/sd-login.h>
 
+/* For input handling */
+#include <libudev.h>
+#include <libinput.h>
+
 struct drm_prop_enum_info {
   const char *name; /**< name as string (static, not freed) */
   bool valid; /**< true if value is supported; ignore if false */
@@ -114,8 +118,13 @@ typedef enum _dlu_drm_plane_props {
   DLU_DRM_PLANE__CNT
 } dlu_drm_plan_props;
 
+typedef enum _dlu_drm_fd_type {
+  DLU_KMS_FD = 0x0000,
+  DLU_INP_FD = 0x0001
+} dlu_drm_fd_type;
+
 typedef struct _dlu_drm_core {
-  struct _dlu_device {
+  struct _device {
     /* KMS API Device node */
     uint32_t kmsfd;
 
@@ -163,7 +172,7 @@ typedef struct _dlu_drm_core {
     } *output_data;
   } device;
 
-  struct _dlu_logind {
+  struct _logind {
     /* For open D-Bus connection */
     sd_bus *bus;
 
@@ -172,6 +181,12 @@ typedef struct _dlu_drm_core {
 
     bool has_drm;
   } session;
+
+  struct _input {
+    uint32_t inpfd;
+    struct udev *udev;
+    struct libinput *inp;
+  } input;
 } dlu_drm_core;
 
 #endif

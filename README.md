@@ -20,6 +20,7 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 * libgbm
 * libinput
 * libsystemd
+* libudev
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Documentation](https://easyip2023.github.io/lucurious-docs/)
