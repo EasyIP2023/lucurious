@@ -295,50 +295,50 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
       {
         vkcomp *app = (vkcomp *) addr;
         app->sc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data));
-        if (!app->sc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->sdc = arr_size; return false;
+        if (!app->sc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->sdc = arr_size; return true;
       }
     case DLU_GP_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->gp_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data));
-        if (!app->gp_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->gdc = arr_size; return false;
+        if (!app->gp_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->gdc = arr_size; return true;
       }
     case DLU_CMD_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->cmd_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data));
-        if (!app->cmd_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->cdc = arr_size; return false;
+        if (!app->cmd_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->cdc = arr_size; return true;
       }
     case DLU_BUFF_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buff_data));
-        if (!app->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->bdc = arr_size; return false;
+        if (!app->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->bdc = arr_size; return true;
       }
     case DLU_DESC_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->desc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
-        if (!app->desc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->ddc = arr_size; return false;
+        if (!app->desc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->ddc = arr_size; return true;
       }
     case DLU_TEXT_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->text_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
-        if (!app->text_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->tdc = arr_size; return false;
+        if (!app->text_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->tdc = arr_size; return true;
       }
     case DLU_DIS_DATA:
       {
         vkcomp *app = (vkcomp *) addr;
         app->dis_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
-        if (!app->dis_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->dpc = arr_size; return false;
+        if (!app->dis_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->dpc = arr_size; return true;
       }
     case DLU_SC_DATA_MEMS:
       {
@@ -352,45 +352,46 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
 
         /* Allocate SwapChain Buffers (VkImage, VkImageView, VkFramebuffer) */
         app->sc_data[index].sc_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers));
-        if (!app->sc_data[index].sc_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
+        if (!app->sc_data[index].sc_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         /* Allocate CommandBuffers, This is okay */
         app->cmd_data[index].cmd_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer));
-        if (!app->cmd_data[index].cmd_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
+        if (!app->cmd_data[index].cmd_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         /* Allocate Semaphores */
         app->sc_data[index].syncs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
-        if (!app->sc_data[index].syncs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->sc_data[index].sic = arr_size; return false;
+        if (!app->sc_data[index].syncs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->sc_data[index].sic = arr_size; return true;
       }
     case DLU_DESC_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
         app->desc_data[index].layouts = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
-        if (!app->desc_data[index].layouts) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
+        if (!app->desc_data[index].layouts) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         app->desc_data[index].desc_set = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
-        if (!app->desc_data[index].desc_set) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->desc_data[index].dlsc = arr_size; return false;
+        if (!app->desc_data[index].desc_set) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->desc_data[index].dlsc = arr_size; return true;
       }
     case DLU_GP_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
         app->gp_data[index].graphics_pipelines = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkPipeline));
-        if (!app->gp_data[index].graphics_pipelines) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        app->gp_data[index].gpc = arr_size; return false;
+        if (!app->gp_data[index].graphics_pipelines) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        app->gp_data[index].gpc = arr_size; return true;
       }
     case DLU_DEVICE_OUTPUT_DATA:
       {
         dlu_drm_core *core = (dlu_drm_core *) addr;
         core->device.output_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_data));
-        if (!core->device.output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return true; }
-        core->device.odc = arr_size; return false;
+        if (!core->device.output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        core->device.odc = arr_size; return true;
       }
     default: break;
   }
 
-  return true;
+  /* They somehow passed compiler checks and failed here */
+  return false;
 }
 
 /**
@@ -415,6 +416,7 @@ void dlu_release_blocks() {
   }
 }
 
+/* This is an INAPI_CALL */
 void dlu_print_mb(dlu_block_type type) {
   dlu_mem_block_t *current = (type == DLU_SMALL_BLOCK_SHARED) ? sstart_addr_shared : sstart_addr_priv;
   while (current->next) {

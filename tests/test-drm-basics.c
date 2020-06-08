@@ -66,7 +66,7 @@ START_TEST(kms_node_enumeration) {
 
   dlu_drm_core *core = dlu_drm_init_core();
 
-  if (dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1))
+  if (!dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1))
     ck_abort_msg(NULL);
 
   /**

@@ -1,7 +1,7 @@
 /**
 * Parts of this file contain functionality similar to what is in kms-quads kms-quads.h:
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms-quads.h
-* If you want a tutorial got to the link above
+* If you want a tutorial go to the link above
 */
 
 /**
@@ -143,7 +143,7 @@ typedef struct _dlu_drm_core {
       uint32_t modifiers_cnt;
       uint32_t *modifiers;
 
-      /* A friendly name. */
+      /* connector name */
       char name[32];
 
       uint32_t mode_blob_id;

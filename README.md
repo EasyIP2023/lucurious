@@ -3,11 +3,16 @@
 <p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs**
+**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs.
+Although a working progress can't fully progress until VK_EXT_image_drm_format_modifier gets implemented in mesa.**
+
+https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466
 
 Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers that work directly with KMS. These renderers allow for easy creation of interactable single application compositors that appear to be straight out of science fiction.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly 
+sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers that work directly with KMS. These renderers allow for easy creation of 
+interactable single application compositors that appear to be straight out of science fiction.
 
 ## Dependencies
 * vulkan (Install your graphics card driver)
