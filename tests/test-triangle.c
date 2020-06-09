@@ -37,9 +37,9 @@
 #define HEIGHT 600
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 10, .desc_cnt = 10, .gp_cnt = 10,
-  .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
-  .cmdd_cnt = 10, .bd_cnt = 10
+  .vkcomp_cnt = 1, .gp_cnt = 1, .si_cnt = 5,
+  .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1,
+  .bd_cnt = 2
 };
 
 static bool init_buffs(vkcomp *app) {

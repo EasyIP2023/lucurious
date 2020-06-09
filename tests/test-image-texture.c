@@ -45,9 +45,9 @@
 char *concat(char *fmt, ...);
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 10, .desc_cnt = 10, .gp_cnt = 10,
-  .si_cnt = 15, .scd_cnt = 10, .gpd_cnt = 10,
-  .cmdd_cnt = 10, .bd_cnt = 10, .td_cnt = 10
+  .vkcomp_cnt = 1, .desc_cnt = 5, .gp_cnt = 1,
+  .si_cnt = 5, .scd_cnt = 1, .gpd_cnt = 1,
+  .cmdd_cnt = 1, .bd_cnt = 9, .td_cnt = 1
 };
 
 /* Be sure to make struct binary compatible with shader variable */

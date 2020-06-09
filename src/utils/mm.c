@@ -31,6 +31,8 @@
 #include "../../include/vkcomp/types.h"
 #include "../../include/drm/types.h"
 
+#define BLOCK_SIZE sizeof(dlu_mem_block_t)
+
 /**
 * Struct that stores block metadata
 * Using linked list to keep track of memory allocated
@@ -49,8 +51,6 @@ typedef struct mblock {
   void *saddr;
   void *prv_addr;
 } dlu_mem_block_t;
-
-#define BLOCK_SIZE sizeof(dlu_mem_block_t)
 
 /**
 * Globals used to keep track of memory blocks
@@ -95,6 +95,7 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     default: break;
   }
 
+  /* An extra check, current should never be NULL */
   if (!current) return NULL;
 
   if (abytes >= bytes) {
@@ -253,36 +254,36 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   if (large_block_priv) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
   if (large_block_shared) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
 
-  size += (ma.inta_cnt * sizeof(int));
-  size += (ma.cha_cnt * sizeof(char)); /* sizeof(char) is for formality */
-  size += (ma.fla_cnt * sizeof(float));
-  size += (ma.dba_cnt * sizeof(double));
+  size += (BLOCK_SIZE + ma.inta_cnt * sizeof(int));
+  size += (BLOCK_SIZE + ma.cha_cnt * sizeof(char)); /* sizeof(char) is for formality */
+  size += (BLOCK_SIZE + ma.fla_cnt * sizeof(float));
+  size += (BLOCK_SIZE + ma.dba_cnt * sizeof(double));
 
-  size += (ma.vkcomp_cnt * sizeof(vkcomp));
-  size += (ma.vkext_props_cnt * sizeof(VkExtensionProperties));
-  size += (ma.vkval_layer_cnt * sizeof(VkLayerProperties));
+  size += (BLOCK_SIZE + ma.vkcomp_cnt * sizeof(vkcomp));
+  size += (BLOCK_SIZE + ma.vkext_props_cnt * sizeof(VkExtensionProperties));
+  size += (BLOCK_SIZE + ma.vkval_layer_cnt * sizeof(VkLayerProperties));
 
-  size += (ma.si_cnt * sizeof(struct _swap_chain_buffers));
-  size += (ma.si_cnt * sizeof(struct _synchronizers));
-  size += (ma.scd_cnt * sizeof(struct _sc_data));
+  size += (BLOCK_SIZE + ma.si_cnt * sizeof(struct _swap_chain_buffers));
+  size += (BLOCK_SIZE + ma.si_cnt * sizeof(struct _synchronizers));
+  size += (BLOCK_SIZE + ma.scd_cnt * sizeof(struct _sc_data));
 
-  size += (ma.gp_cnt * sizeof(VkPipeline));
-  size += (ma.gpd_cnt * sizeof(struct _gp_data));
+  size += (BLOCK_SIZE + ma.gp_cnt * sizeof(VkPipeline));
+  size += (BLOCK_SIZE + ma.gpd_cnt * sizeof(struct _gp_data));
 
-  size += (ma.si_cnt * sizeof(VkCommandBuffer));
-  size += (ma.cmdd_cnt * sizeof(struct _cmd_data));
+  size += (BLOCK_SIZE + ma.si_cnt * sizeof(VkCommandBuffer));
+  size += (BLOCK_SIZE + ma.cmdd_cnt * sizeof(struct _cmd_data));
 
-  size += (ma.bd_cnt * sizeof(struct _buff_data));
+  size += (BLOCK_SIZE + ma.bd_cnt * sizeof(struct _buff_data));
 
-  size += (ma.desc_cnt * sizeof(VkDescriptorSet));
-  size += (ma.desc_cnt * sizeof(VkDescriptorSetLayout));
-  size += (ma.dd_cnt * sizeof(struct _desc_data));
+  size += (BLOCK_SIZE + ma.desc_cnt * sizeof(VkDescriptorSet));
+  size += (BLOCK_SIZE + ma.desc_cnt * sizeof(VkDescriptorSetLayout));
+  size += (BLOCK_SIZE + ma.dd_cnt * sizeof(struct _desc_data));
 
-  size += (ma.td_cnt * sizeof(struct _text_data));
-  size += (ma.dis_cnt * sizeof(struct _dis_data));
+  size += (BLOCK_SIZE + ma.td_cnt * sizeof(struct _text_data));
+  size += (BLOCK_SIZE + ma.dis_cnt * sizeof(struct _dis_data));
 
-  size += (ma.drmc_cnt * sizeof(dlu_drm_core));
-  size += (ma.dod_cnt * sizeof(struct _output_data));
+  size += (BLOCK_SIZE + ma.drmc_cnt * sizeof(dlu_drm_core));
+  size += (BLOCK_SIZE + ma.dod_cnt * sizeof(struct _output_data));
 
   if (!dlu_alloc(type, size)) return false;
 

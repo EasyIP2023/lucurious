@@ -117,7 +117,7 @@ START_TEST(test_set_logical_device) {
   VkResult err;
   dlu_log_me(DLU_WARNING, "FIFTH TEST");
 
-  dlu_otma_mems ma = { .vkcomp_cnt = 2 };
+  dlu_otma_mems ma = { .vkcomp_cnt = 1 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   vkcomp *app = dlu_init_vk();

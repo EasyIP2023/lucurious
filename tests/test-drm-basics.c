@@ -59,7 +59,7 @@ exit_create_kms_node:
 } END_TEST;
 
 START_TEST(kms_node_enumeration) {
-  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 2 };
+  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 1 };
 
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
