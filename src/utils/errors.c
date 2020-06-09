@@ -200,7 +200,7 @@ void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
       dlu_log_me(DLU_DANGER, "[x] Failure the current operation you are trying to do is wrong");
       break;
     case DLU_ALLOC_FAILED:
-      dlu_log_me(DLU_DANGER, "[x] Ugh something went wrong!! :( If you didn't forget to call dlu_otma(), please create an issue with information");
+      dlu_log_me(DLU_DANGER, "[x] Ugh something went wrong!! :( If you didn't forget to call dlu_otma(3). You might of under allocated");
       break;
     case DLU_ALREADY_ALLOC:
       dlu_log_me(DLU_DANGER, "[x] Buffer already allocated, Don't try again >>[]:");
