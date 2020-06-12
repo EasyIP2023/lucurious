@@ -35,7 +35,6 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
-
 #include "textures/texture.h"
 
 #define WIDTH 800
@@ -98,7 +97,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_instance(app, "Image Texture", "No Engine", ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(instance_extensions), instance_extensions);
   check_err(err, app, wc, NULL)
 
-  err = dlu_set_debug_message(app);
+  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT);
   check_err(err, app, wc, NULL)
 
   check_err(!dlu_create_client(wc), app, wc, NULL)

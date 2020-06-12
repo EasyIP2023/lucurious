@@ -75,10 +75,10 @@ START_TEST(test_create_instance) {
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
 
-  err = dlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
+  err = dlu_create_instance(app, "Create Instance", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app);
+  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
   check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_nonnull(app->instance);
@@ -96,10 +96,10 @@ START_TEST(test_enumerate_device) {
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
 
-  err = dlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
+  err = dlu_create_instance(app, "Enumerate Device", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app);
+  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
@@ -123,10 +123,10 @@ START_TEST(test_set_logical_device) {
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
 
-  err = dlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
+  err = dlu_create_instance(app, "Set Logical", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app);
+  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
@@ -155,10 +155,10 @@ START_TEST(test_swap_chain_fail_no_surface) {
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
 
-  err = dlu_create_instance(app, "Hello Triangle", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
+  err = dlu_create_instance(app, "Swap Chain Failure", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app);
+  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */

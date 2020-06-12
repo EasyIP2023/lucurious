@@ -3,16 +3,16 @@
 <p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs.
-Although a working progress can't fully progress until VK_EXT_image_drm_format_modifier gets implemented in mesa.**
-
-https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466
+**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs**
 
 Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
-Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly 
-sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers that work directly with KMS. These renderers allow for easy creation of 
-interactable single application compositors that appear to be straight out of science fiction.
+Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why stop now!!! Essentially it will be an easy to use library for building highly
+sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable single application
+compositors that appear to be straight out of science fiction.
+
+## Needed Implementations
+* [Implement VK_EXT_image_drm_format_modifier in mesa](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466)
 
 ## Dependencies
 * vulkan (Install your graphics card driver)
@@ -21,9 +21,9 @@ interactable single application compositors that appear to be straight out of sc
 * [CGLM (for linear algebra)](https://github.com/recp/cglm)
 * [libshaderc](https://github.com/google/shaderc)
 * [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang and libshaderc)
-* libdrm
-* libgbm
-* libinput
+* [libdrm](https://gitlab.freedesktop.org/mesa/drm)
+* [libgbm](https://gitlab.freedesktop.org/mesa/mesa/-/tree/master/src/gbm)
+* [libinput](https://gitlab.freedesktop.org/libinput/libinput)
 * libsystemd
 * libudev
 
