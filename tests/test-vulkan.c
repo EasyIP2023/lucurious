@@ -78,7 +78,9 @@ START_TEST(test_create_instance) {
   err = dlu_create_instance(app, "Create Instance", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
+  VkDebugUtilsMessageSeverityFlagsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  err = dlu_set_debug_message(app, 0, messageSeverity, messageType);
   check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_nonnull(app->instance);
@@ -99,7 +101,9 @@ START_TEST(test_enumerate_device) {
   err = dlu_create_instance(app, "Enumerate Device", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
+  VkDebugUtilsMessageSeverityFlagsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  err = dlu_set_debug_message(app, 0, messageSeverity, messageType);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
@@ -126,7 +130,9 @@ START_TEST(test_set_logical_device) {
   err = dlu_create_instance(app, "Set Logical", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
+  VkDebugUtilsMessageSeverityFlagsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  err = dlu_set_debug_message(app, 0, messageSeverity, messageType);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */
@@ -158,7 +164,9 @@ START_TEST(test_swap_chain_fail_no_surface) {
   err = dlu_create_instance(app, "Swap Chain Failure", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_set_debug_message(app, VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
+  VkDebugUtilsMessageSeverityFlagsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  err = dlu_set_debug_message(app, 0, messageSeverity, messageType);
   check_err(err, app, NULL, NULL)
 
   /* This will get the physical device, it's properties, and features */

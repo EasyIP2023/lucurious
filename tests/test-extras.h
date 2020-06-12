@@ -59,11 +59,12 @@ const char *device_extensions[] = {
   VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+/* The use of Vk_EXT_DEBUG_REPORT_EXTENSION is deprecated */
 const char *instance_extensions[] = {
   VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
   VK_KHR_SURFACE_EXTENSION_NAME,
   VK_KHR_DISPLAY_EXTENSION_NAME,
-  VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+  VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 };
 
 /* All of the useful standard validation is

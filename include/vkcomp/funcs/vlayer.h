@@ -25,7 +25,12 @@
 #ifndef DLU_VKCOMP_VLAYER_FUNCS_H
 #define DLU_VKCOMP_VLAYER_FUNCS_H
 
-VkResult dlu_set_debug_message(vkcomp *app, VkDebugReportFlagBitsEXT flags);
+VkResult dlu_set_debug_message(
+  vkcomp *app,
+  int flags, /* Leave for now */
+  VkDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+  VkDebugUtilsMessageTypeFlagsEXT messageType
+);
 
 #ifdef INAPI_CALLS
 VkResult dlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size);

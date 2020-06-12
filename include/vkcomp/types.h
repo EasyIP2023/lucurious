@@ -70,8 +70,8 @@ typedef enum _dlu_image_view_type {
 } dlu_image_view_type;
 
 typedef struct _vkcomp {
-  PFN_vkDestroyDebugReportCallbackEXT dbg_destroy_report_callback;
-  VkDebugReportCallbackEXT debug_report_callback;
+  PFN_vkDestroyDebugUtilsMessengerEXT dbg_destroy_utils_msg;
+  VkDebugUtilsMessengerEXT debug_utils_msg;
 
   VkInstance instance;
   VkSurfaceKHR surface;

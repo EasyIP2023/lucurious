@@ -127,8 +127,8 @@ void dlu_freeup_vk(void *data) {
   if (app->present_queue)
     vkQueueWaitIdle(app->present_queue);
 
-  if (app->debug_report_callback)
-    app->dbg_destroy_report_callback(app->instance, app->debug_report_callback, NULL);
+  if (app->debug_utils_msg)
+    app->dbg_destroy_utils_msg(app->instance, app->debug_utils_msg, NULL);
 
   if (app->cmd_data) {
     for (uint32_t i = 0; i < app->cdc; i++) {
