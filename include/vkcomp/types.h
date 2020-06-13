@@ -70,6 +70,13 @@ typedef enum _dlu_image_view_type {
 } dlu_image_view_type;
 
 typedef struct _vkcomp {
+  PFN_vkQueueBeginDebugUtilsLabelEXT dbg_utils_queue_begin;
+  PFN_vkQueueEndDebugUtilsLabelEXT dbg_utils_queue_end;
+  PFN_vkQueueInsertDebugUtilsLabelEXT dbg_utils_queue_insert;
+  PFN_vkCmdBeginDebugUtilsLabelEXT dbg_utils_cmd_begin;
+  PFN_vkCmdEndDebugUtilsLabelEXT dbg_utils_cmd_end;
+  PFN_vkCmdInsertDebugUtilsLabelEXT dbg_utils_cmd_insert;
+
   PFN_vkDestroyDebugUtilsMessengerEXT dbg_destroy_utils_msg;
   VkDebugUtilsMessengerEXT debug_utils_msg;
 

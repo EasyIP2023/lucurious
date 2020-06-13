@@ -68,13 +68,15 @@ VkResult dlu_set_debug_message(
   /**
   * Dynamically retrieving a VkInstance related function vkCreateDebugUtilsMessengerEXT
   * to expose the VkDebugReportCallbackEXT handle which stores a reference to a debug utils message object
+  * Basically call extension functions through a function pointer
   */
   DLU_DR_INSTANCE_PROC_ADDR(dbg_create_utils_msg, app->instance, CreateDebugUtilsMessengerEXT);
   if (!dbg_create_utils_msg) return VK_ERROR_INITIALIZATION_FAILED;
 
   /**
   * Dynamically retrieving a VkInstance related function vkDestroyDebugUtilsMessengerEXT
-  * to destroy the reference to a debug utils message object
+  * to destroy the reference to a debug utils message object.
+  * Basically call extension functions through a function pointer
   */
   DLU_DR_INSTANCE_PROC_ADDR(app->dbg_destroy_utils_msg, app->instance, DestroyDebugUtilsMessengerEXT);
   if (!app->dbg_destroy_utils_msg) return VK_ERROR_INITIALIZATION_FAILED;
@@ -96,6 +98,31 @@ VkResult dlu_set_debug_message(
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateDebugUtilsMessengerEXT");
 
   return res;
+}
+
+VkResult dlu_set_device_debug_ext(vkcomp *app) {
+
+  if (!app->device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_RESULT_MAX_ENUM; }
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_begin, app->device, QueueBeginDebugUtilsLabelEXT);
+  if (!app->dbg_utils_queue_begin) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_end, app->device, QueueEndDebugUtilsLabelEXT);
+  if (!app->dbg_utils_queue_end) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_insert, app->device, QueueInsertDebugUtilsLabelEXT);
+  if (!app->dbg_utils_queue_insert) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_begin, app->device, CmdBeginDebugUtilsLabelEXT);
+  if (!app->dbg_utils_cmd_begin) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_end, app->device, CmdEndDebugUtilsLabelEXT);
+  if (!app->dbg_utils_cmd_end) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_insert, app->device, CmdInsertDebugUtilsLabelEXT);
+  if (!app->dbg_utils_cmd_insert) return VK_ERROR_INITIALIZATION_FAILED;
+
+  return VK_SUCCESS;
 }
 
 /**

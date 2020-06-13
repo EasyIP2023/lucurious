@@ -121,6 +121,9 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_logical_device(app, &device_feats, 1, ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
 
+  err = dlu_set_device_debug_ext(app);
+  check_err(err, app, wc, NULL)
+
   VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
