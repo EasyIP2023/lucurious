@@ -114,6 +114,7 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     block = current->addr + BLOCK_SIZE + bytes;
     block->prv_addr = current->addr;
 
+    /* set next block meta data */
     block->addr = block;
     block->next = NULL;
     block->abytes = 0;
@@ -142,6 +143,7 @@ static dlu_mem_block_t *alloc_mem_block(dlu_block_type type, size_t bytes) {
     goto finish_alloc_mem_block;
   }
 
+  /* Can only allocate up to 8GB, 2^33, or 1ULL << 33 */
   int flags = (type == DLU_LARGE_BLOCK_SHARED) ? MAP_SHARED : MAP_PRIVATE;
   block = mmap(NULL, BLOCK_SIZE + bytes, PROT_READ | PROT_WRITE, flags | MAP_ANONYMOUS, fd, 0);
   if (block == MAP_FAILED) {
@@ -282,6 +284,9 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data)));
   size += (BLOCK_SIZE + (ma.dis_cnt * sizeof(struct _dis_data)));
 
+  size += (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data)));
+  size += (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data)));
+
   size += (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core)));
   size += (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data)));
 
@@ -297,6 +302,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->sc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sc_data));
         if (!app->sc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->sc_data[i].ldi = UINT32_MAX;
+
         app->sdc = arr_size; return true;
       }
     case DLU_GP_DATA:
@@ -304,6 +314,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->gp_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _gp_data));
         if (!app->gp_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->gp_data[i].ldi = UINT32_MAX;
+
         app->gdc = arr_size; return true;
       }
     case DLU_CMD_DATA:
@@ -311,6 +326,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->cmd_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _cmd_data));
         if (!app->cmd_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->cmd_data[i].ldi = UINT32_MAX;
+
         app->cdc = arr_size; return true;
       }
     case DLU_BUFF_DATA:
@@ -318,6 +338,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _buff_data));
         if (!app->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->buff_data[i].ldi = UINT32_MAX;
+
         app->bdc = arr_size; return true;
       }
     case DLU_DESC_DATA:
@@ -325,6 +350,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->desc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _desc_data));
         if (!app->desc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->gp_data[i].ldi = UINT32_MAX;
+
         app->ddc = arr_size; return true;
       }
     case DLU_TEXT_DATA:
@@ -332,6 +362,11 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         app->text_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _text_data));
         if (!app->text_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate ldi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->gp_data[i].ldi = UINT32_MAX;
+
         app->tdc = arr_size; return true;
       }
     case DLU_DIS_DATA:
@@ -340,6 +375,32 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         app->dis_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
         if (!app->dis_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
         app->dpc = arr_size; return true;
+      }
+    case DLU_PD_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->pd_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _pd_data));
+        if (!app->pd_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* need for dlu_create_queue_families(3) */
+        for (uint32_t i = 0; i < arr_size; i++) {
+          app->pd_data[i].gfam_idx = UINT32_MAX;
+          app->pd_data[i].pfam_idx = UINT32_MAX;
+        }
+
+        app->pdc = arr_size; return true;
+      }
+    case DLU_LD_DATA:
+      {
+        vkcomp *app = (vkcomp *) addr;
+        app->ld_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _ld_data));
+        if (!app->ld_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        /* Populate pdi for error checking */
+        for (uint32_t i = 0; i < arr_size; i++)
+          app->ld_data[i].pdi = UINT32_MAX;
+
+        app->ldc = arr_size; return true;
       }
     case DLU_SC_DATA_MEMS:
       {

@@ -50,9 +50,10 @@ VkResult dlu_create_vkwayland_surfaceKHR(vkcomp *app, void *wl_display, void *wl
 */
 VkResult dlu_create_physical_device(
   vkcomp *app,
+  uint32_t cur_pd,
   VkPhysicalDeviceType vkpdtype,
-  VkPhysicalDeviceProperties *device_properties,
-  VkPhysicalDeviceFeatures *device_features
+  VkPhysicalDeviceProperties *device_props,
+  VkPhysicalDeviceFeatures *device_feats
 );
 
 /**
@@ -62,7 +63,7 @@ VkResult dlu_create_physical_device(
 * that are supported by the VkQueueFlagBits set and assign the
 * available graphics and present queues
 */
-VkBool32 dlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
+VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits vkqfbits);
 
 /**
 * After selecting a physical device to use.
@@ -72,7 +73,9 @@ VkBool32 dlu_create_queue_families(vkcomp *app, VkQueueFlagBits vkqfbits);
 */
 VkResult dlu_create_logical_device(
   vkcomp *app,
-  VkPhysicalDeviceFeatures *device_feats,
+  uint32_t cur_pd,
+  uint32_t cur_ld,
+  VkPhysicalDeviceFeatures *pEnabledFeatures,
   uint32_t queue_count,
   uint32_t enabledLayerCount,
   const char *const *ppEnabledLayerNames,
@@ -86,6 +89,7 @@ VkResult dlu_create_logical_device(
 */
 VkResult dlu_create_swap_chain(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_scd,
   VkSurfaceCapabilitiesKHR capabilities,
   VkSurfaceFormatKHR surface_fmt,
@@ -125,6 +129,7 @@ VkResult dlu_create_depth_buff(
 */
 VkResult dlu_create_vk_buffer(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_bd,
   VkDeviceSize size,
   VkBufferCreateFlagBits flags,
@@ -165,6 +170,7 @@ VkResult dlu_create_framebuffers(
 */
 VkResult dlu_create_cmd_pool(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_scd,
   uint32_t cur_cmdd,
   uint32_t queueFamilyIndex,

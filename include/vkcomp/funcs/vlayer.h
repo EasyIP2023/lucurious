@@ -32,7 +32,7 @@ VkResult dlu_set_debug_message(
   VkDebugUtilsMessageTypeFlagsEXT messageType
 );
 
-VkResult dlu_set_device_debug_ext(vkcomp *app);
+VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld);
 
 #ifdef INAPI_CALLS
 VkResult dlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size);

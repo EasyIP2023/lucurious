@@ -36,7 +36,7 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
   alloc_info.commandBufferCount = 1;
 
   VkCommandBuffer cmd_buff;
-  res = vkAllocateCommandBuffers(app->device, &alloc_info, &cmd_buff);
+  res = vkAllocateCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, &alloc_info, &cmd_buff);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers"); return VK_NULL_HANDLE; }
 
   VkCommandBufferBeginInfo begin_info = {};
@@ -45,7 +45,7 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
 
   res = vkBeginCommandBuffer(cmd_buff, &begin_info);
   if (res) {
-    vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
+    vkFreeCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
     PERR(DLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer");
     return VK_NULL_HANDLE;
   }
@@ -64,14 +64,14 @@ static VkResult exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, Vk
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = cmd_buff;
 
-  res = vkQueueSubmit(app->graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
+  res = vkQueueSubmit(app->ld_data[app->cmd_data[cur_pool].ldi].graphics, 1, &submit_info, VK_NULL_HANDLE);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkQueueSubmit"); goto finish_estcb; }
 
-  res = vkQueueWaitIdle(app->graphics_queue);
+  res = vkQueueWaitIdle(app->ld_data[app->cmd_data[cur_pool].ldi].graphics);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkQueueWaitIdle"); goto finish_estcb; }
 
 finish_estcb:
-  vkFreeCommandBuffers(app->device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
+  vkFreeCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
 
   return res;
 }

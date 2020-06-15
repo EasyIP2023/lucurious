@@ -92,11 +92,14 @@ START_TEST(test_enumerate_device) {
   VkResult err;
   dlu_log_me(DLU_WARNING, "FOURTH TEST");
 
-  dlu_otma_mems ma = { .vkcomp_cnt = 1 };
+  dlu_otma_mems ma = { .vkcomp_cnt = 1, .pd_cnt = 1 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
+
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) ck_abort_msg(NULL);
 
   err = dlu_create_instance(app, "Enumerate Device", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
@@ -109,10 +112,10 @@ START_TEST(test_enumerate_device) {
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
+  err = dlu_create_physical_device(app, 0, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, NULL, NULL)
 
-  ck_assert_ptr_nonnull(app->physical_device);
+  ck_assert_ptr_nonnull(app->pd_data[0].phys_dev);
 
   FREEME(app, NULL)
 } END_TEST;
@@ -121,11 +124,17 @@ START_TEST(test_set_logical_device) {
   VkResult err;
   dlu_log_me(DLU_WARNING, "FIFTH TEST");
 
-  dlu_otma_mems ma = { .vkcomp_cnt = 1 };
+  dlu_otma_mems ma = { .vkcomp_cnt = 1, .ld_cnt = 1, .pd_cnt = 1 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
+
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) ck_abort_msg(NULL);
+
+  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) ck_abort_msg(NULL);
 
   err = dlu_create_instance(app, "Set Logical", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
@@ -138,14 +147,14 @@ START_TEST(test_set_logical_device) {
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
+  err = dlu_create_physical_device(app, 0, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
+  err = dlu_create_queue_families(app, 0, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, NULL, NULL)
 
-  app->indices.present_family = app->indices.graphics_family;
-  err = dlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
+  app->pd_data[0].pfam_idx = app->pd_data[0].gfam_idx;
+  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
   check_err(err, app, NULL, NULL)
 
   FREEME(app, NULL)
@@ -155,11 +164,17 @@ START_TEST(test_swap_chain_fail_no_surface) {
   VkResult err;
 
   dlu_log_me(DLU_WARNING, "SIXTH TEST");
-  dlu_otma_mems ma = { .vkcomp_cnt = 1 };
+  dlu_otma_mems ma = { .vkcomp_cnt = 1, .ld_cnt = 1, .pd_cnt = 1 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   vkcomp *app = dlu_init_vk();
   check_err(!app, app, NULL, NULL)
+
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) ck_abort_msg(NULL);
+
+  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) ck_abort_msg(NULL);
 
   err = dlu_create_instance(app, "Swap Chain Failure", "No Engine", 1, enabled_validation_layers, 4, instance_extensions);
   check_err(err, app, NULL, NULL)
@@ -172,14 +187,14 @@ START_TEST(test_swap_chain_fail_no_surface) {
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
+  err = dlu_create_physical_device(app, 0, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, NULL, NULL)
 
-  err = dlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
+  err = dlu_create_queue_families(app, 0, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, NULL, NULL)
 
-  app->indices.present_family = app->indices.graphics_family;
-  err = dlu_create_logical_device(app, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
+  app->pd_data[0].pfam_idx = app->pd_data[0].gfam_idx;
+  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
   check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_null(app->surface);
@@ -187,7 +202,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   VkSurfaceFormatKHR surface_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
   VkExtent2D extent2D = {1920, 1080};
   VkSurfaceCapabilitiesKHR capabilities;
-  err = dlu_create_swap_chain(app, 0, capabilities, surface_fmt, VK_PRESENT_MODE_MAX_ENUM_KHR, extent2D.width, extent2D.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+  err = dlu_create_swap_chain(app, 0, 0, capabilities, surface_fmt, VK_PRESENT_MODE_MAX_ENUM_KHR, extent2D.width, extent2D.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
   if (err) dlu_log_me(DLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   FREEME(app, NULL)

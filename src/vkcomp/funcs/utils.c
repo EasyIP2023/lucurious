@@ -26,10 +26,10 @@
 #include <lucom.h>
 
 /* Can find in vulkan SDK API-Samples/utils/util.cpp */
-bool memory_type_from_properties(vkcomp *app, uint32_t typeBits, VkFlags requirements_mask, uint32_t *typeIndex) {
+bool memory_type_from_properties(vkcomp *app, uint32_t pdi, uint32_t typeBits, VkFlags requirements_mask, uint32_t *typeIndex) {
 
   VkPhysicalDeviceMemoryProperties memory_properties;
-  vkGetPhysicalDeviceMemoryProperties(app->physical_device, &memory_properties);
+  vkGetPhysicalDeviceMemoryProperties(app->pd_data[pdi].phys_dev, &memory_properties);
 
   /* Search memtypes to find first index with those properties */
   for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {

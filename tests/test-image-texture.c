@@ -44,9 +44,9 @@
 char *concat(char *fmt, ...);
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 1, .desc_cnt = 5, .gp_cnt = 1,
-  .si_cnt = 5, .scd_cnt = 1, .gpd_cnt = 1,
-  .cmdd_cnt = 1, .bd_cnt = 9, .td_cnt = 1
+  .vkcomp_cnt = 10, .desc_cnt = 5, .gp_cnt = 1, .si_cnt = 5,
+  .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 9,
+  .dd_cnt = 1, .td_cnt = 1, .ld_cnt = 1, .pd_cnt = 1
 };
 
 /* Be sure to make struct binary compatible with shader variable */
@@ -58,6 +58,12 @@ struct uniform_block_data {
 
 static bool init_buffs(vkcomp *app) {
   bool err;
+
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) return err;
+
+  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) return err;
 
   err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, 9);
   if (!err) return err;
@@ -111,20 +117,21 @@ START_TEST(test_vulkan_image_texture) {
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
+  uint32_t cur_pd = 0, cur_ld = 0;
+  err = dlu_create_physical_device(app, cur_pd, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_queue_families(app, VK_QUEUE_GRAPHICS_BIT);
+  err = dlu_create_queue_families(app, cur_pd, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
   device_feats.samplerAnisotropy = VK_TRUE;
-  err = dlu_create_logical_device(app, &device_feats, 1, ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(device_extensions), device_extensions);
+  err = dlu_create_logical_device(app, cur_pd, cur_ld, &device_feats, 1, ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
 
-  err = dlu_set_device_debug_ext(app);
+  err = dlu_set_device_debug_ext(app, cur_ld);
   check_err(err, app, wc, NULL)
 
-  VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app);
+  VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app, cur_pd);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
   /**
@@ -133,10 +140,10 @@ START_TEST(test_vulkan_image_texture) {
   * SRGB if used for colorSpace if available, because it
   * results in more accurate perceived colors
   */
-  VkSurfaceFormatKHR surface_fmt = dlu_choose_swap_surface_format(app, VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+  VkSurfaceFormatKHR surface_fmt = dlu_choose_swap_surface_format(app, cur_pd, VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   check_err(surface_fmt.format == VK_FORMAT_UNDEFINED, app, wc, NULL)
 
-  VkPresentModeKHR pres_mode = dlu_choose_swap_present_mode(app);
+  VkPresentModeKHR pres_mode = dlu_choose_swap_present_mode(app, cur_pd);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
   VkExtent2D extent = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
@@ -146,10 +153,10 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
-  err = dlu_create_swap_chain(app, cur_scd, capabilities, surface_fmt, pres_mode, extent.width, extent.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+  err = dlu_create_swap_chain(app, cur_ld, cur_scd, capabilities, surface_fmt, pres_mode, extent.width, extent.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_cmd_pool(app, cur_scd, cur_cmdd, app->indices.graphics_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -167,36 +174,6 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
-  /* Starting point for render pass creation */
-  VkAttachmentDescription color_attachment = dlu_set_attachment_desc(surface_fmt.format,
-    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-  );
-
-  VkAttachmentReference color_attachment_ref = dlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-  VkSubpassDescription subpass = dlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL);
-
-  VkSubpassDependency subdep = dlu_set_subpass_dep(
-    VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
-    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
-  );
-
-  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);
-  check_err(err, app, wc, NULL)
-
-  dlu_log_me(DLU_SUCCESS, "Successfully created render pass");
-  /* ending point for render pass creation */
-
-  VkImageView vkimg_attach[1];
-  err = dlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent.width, extent.height, 1);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_pipeline_cache(app, 0, NULL);
-  check_err(err, app, wc, NULL)
-
   VkExtent3D img_extent = { 512, 512, 1};
   VkDeviceSize img_size = img_extent.width * img_extent.height * 4;
 
@@ -204,7 +181,7 @@ START_TEST(test_vulkan_image_texture) {
   * The buffer is a staging host visible memory buffer. That can be map.
   * It's usable as a transfer source so that we can copy it to an image later on
   */
-  err = dlu_create_vk_buffer(app, cur_bd, img_size, 0, 
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
@@ -219,7 +196,7 @@ START_TEST(test_vulkan_image_texture) {
   );
 
   uint32_t cur_tex = 0;
-  err = dlu_create_texture_image(app, cur_tex, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
   VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
@@ -255,8 +232,8 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Destroy staging buffer as it is no longer needed */
-  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
-  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
 
   /* Create Image View for texture image. So that application can access a VkImage resource */
   img_view_info.format = VK_FORMAT_R8G8B8A8_SRGB; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
@@ -295,7 +272,37 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_pipeline_layout(app, cur_gpd, cur_dd, 0, NULL);
+  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
+  check_err(err, app, wc, NULL)
+
+  /* Starting point for render pass creation */
+  VkAttachmentDescription color_attachment = dlu_set_attachment_desc(surface_fmt.format,
+    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+  );
+
+  VkAttachmentReference color_attachment_ref = dlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+  VkSubpassDescription subpass = dlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL);
+
+  VkSubpassDependency subdep = dlu_set_subpass_dep(
+    VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
+  );
+
+  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);
+  check_err(err, app, wc, NULL)
+
+  dlu_log_me(DLU_SUCCESS, "Successfully created render pass");
+  /* ending point for render pass creation */
+
+  VkImageView vkimg_attach[1];
+  err = dlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent.width, extent.height, 1);
+  check_err(err, app, wc, NULL)
+
+  err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
   check_err(err, app, wc, NULL)
 
   dlu_log_me(DLU_INFO, "Start of shader creation");
@@ -307,10 +314,10 @@ START_TEST(test_vulkan_image_texture) {
   dlu_shader_info shi_vert = dlu_compile_to_spirv(VK_SHADER_STAGE_VERTEX_BIT, text_map_vert_src, "vert.spv", "main");
   check_err(!shi_vert.bytes, app, wc, NULL)
 
-  VkShaderModule frag_shader_module = dlu_create_shader_module(app, shi_frag.bytes, shi_frag.byte_size);
+  VkShaderModule frag_shader_module = dlu_create_shader_module(app, cur_ld, shi_frag.bytes, shi_frag.byte_size);
   check_err(!frag_shader_module, app, wc, NULL)
 
-  VkShaderModule vert_shader_module = dlu_create_shader_module(app, shi_vert.bytes, shi_vert.byte_size);
+  VkShaderModule vert_shader_module = dlu_create_shader_module(app, cur_ld, shi_vert.bytes, shi_vert.byte_size);
   check_err(!vert_shader_module, app, wc, frag_shader_module)
 
   dlu_freeup_spriv_bytes(DLU_LIB_SHADERC_SPRIV, shi_vert.result);
@@ -359,7 +366,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_otba(DLU_GP_DATA_MEMS, app, cur_gpd, 1);
   check_err(!err, app, wc, NULL)
 
-  err = dlu_create_graphics_pipelines(app, cur_gpd, 2, shader_stages,
+  err = dlu_create_graphics_pipelines(app, cur_gpd, ARR_LEN(shader_stages), shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
     &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
@@ -368,8 +375,8 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, frag_shader_module)
 
   dlu_log_me(DLU_SUCCESS, "graphics pipeline creation successfull");
-  dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
-  dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
   /* Ending setup for graphics pipeline */
 
   /* Start of staging buffer for vertex */
@@ -397,7 +404,7 @@ START_TEST(test_vulkan_image_texture) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_bd, vsize, 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
@@ -409,13 +416,10 @@ START_TEST(test_vulkan_image_texture) {
   /* End of staging buffer for vertex */
 
   /* Start of vertex buffer */
-  err = dlu_create_vk_buffer(app, cur_bd, vsize, 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, NULL);
   check_err(err, app, wc, NULL)
   cur_bd++;
 
@@ -425,13 +429,13 @@ START_TEST(test_vulkan_image_texture) {
   /* End of vertex buffer */
 
   /* Destroy staging buffer as it is no longer needed */
-  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
-  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
 
   /* Start of staging buffer for index */
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = ARR_LEN(indices);
-  err = dlu_create_vk_buffer(app, cur_bd, isize, 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
@@ -443,13 +447,10 @@ START_TEST(test_vulkan_image_texture) {
   /* End of staging buffer for index */
 
   /* Start of index buffer */
-  err = dlu_create_vk_buffer(app, cur_bd, isize, 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, isize, 0,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'i', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, NULL);
   check_err(err, app, wc, NULL)
   cur_bd++;
 
@@ -459,8 +460,8 @@ START_TEST(test_vulkan_image_texture) {
   /* End of index buffer */
 
   /* Destroy staging buffer as it is no longer needed */
-  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
-  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
 
   /**
   * Now Creating uniform buffers
@@ -468,7 +469,7 @@ START_TEST(test_vulkan_image_texture) {
   * destroy uniform buffers allowing for easier swap chain recreation
   */
   for (uint32_t i = cur_bd; i < (cur_bd+app->sc_data[cur_scd].sic); i++) {
-    err = dlu_create_vk_buffer(app, i, sizeof(struct uniform_block_data), 0,
+    err = dlu_create_vk_buffer(app, cur_ld, i, sizeof(struct uniform_block_data), 0,
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
@@ -483,7 +484,7 @@ START_TEST(test_vulkan_image_texture) {
   pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
   pool_sizes[1] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app->sc_data[cur_scd].sic);
 
-  err = dlu_create_desc_pool(app, cur_dd, 0, ARR_LEN(pool_sizes), pool_sizes);
+  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, ARR_LEN(pool_sizes), pool_sizes);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_desc_set(app, cur_dd);
@@ -522,7 +523,7 @@ START_TEST(test_vulkan_image_texture) {
                 VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
     writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1,
                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
-    dlu_update_desc_sets(app, ARR_LEN(writes), writes, 0, NULL);
+    dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
     dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     dlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
     dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[1].buff, offsets);
@@ -586,7 +587,7 @@ START_TEST(test_vulkan_image_texture) {
     err = dlu_queue_graphics_queue(app, cur_scd, cur_frame, 1, &cmd_buffs[img_index], 1, &acquire_sems[cur_frame], &wait_stage, 1, &render_sems[cur_frame]);
     check_err(err, app, wc, NULL)
 
-    err = dlu_queue_present_queue(app, 1, &render_sems[cur_frame], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);
+    err = dlu_queue_present_queue(app, cur_ld, 1, &render_sems[cur_frame], 1, &app->sc_data[cur_scd].swap_chain, &img_index, NULL);
     check_err(err, app, wc, NULL)
 
     cur_frame = (cur_frame + 1) % MAX_FRAMES;

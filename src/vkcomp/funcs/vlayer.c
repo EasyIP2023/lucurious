@@ -100,26 +100,26 @@ VkResult dlu_set_debug_message(
   return res;
 }
 
-VkResult dlu_set_device_debug_ext(vkcomp *app) {
+VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld) {
 
-  if (!app->device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_RESULT_MAX_ENUM; }
+  if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_begin, app->device, QueueBeginDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_begin, app->ld_data[cur_ld].device, QueueBeginDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_begin) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_end, app->device, QueueEndDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_end, app->ld_data[cur_ld].device, QueueEndDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_end) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_insert, app->device, QueueInsertDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_insert, app->ld_data[cur_ld].device, QueueInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_insert) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_begin, app->device, CmdBeginDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_begin, app->ld_data[cur_ld].device, CmdBeginDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_begin) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_end, app->device, CmdEndDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_end, app->ld_data[cur_ld].device, CmdEndDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_end) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_insert, app->device, CmdInsertDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_insert, app->ld_data[cur_ld].device, CmdInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_insert) return VK_ERROR_INITIALIZATION_FAILED;
 
   return VK_SUCCESS;

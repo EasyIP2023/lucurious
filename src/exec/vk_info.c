@@ -90,7 +90,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props;
   VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, dt, &device_props, &device_feats);
+  err = dlu_create_physical_device(app, 0, dt, &device_props, &device_feats);
   if (err) { dlu_freeup_vk(app); return; }
 
   dlu_print_msg(DLU_SUCCESS, "\n\t   Device Extension List\n  SpecVersion\t\tExtension Name\n\n");
@@ -98,7 +98,7 @@ void print_device_extensions(VkPhysicalDeviceType dt) {
   VkExtensionProperties *de_props = VK_NULL_HANDLE;
   uint32_t de_count = 0;
 
-  err = get_extension_properties(app->physical_device, &de_count, &de_props);
+  err = get_extension_properties(app->pd_data[0].phys_dev, &de_count, &de_props);
   if (err) { dlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < de_count; i++) {
@@ -115,15 +115,18 @@ void print_display_extensions(VkPhysicalDeviceType dt) {
   VkResult err;
   vkcomp *app = dlu_init_vk();
 
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  if (!err) return;
+
   err = dlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 0, NULL);
   if (err) { dlu_freeup_vk(app); return; }
 
   /* This will get the physical device, it's properties, and features */
   VkPhysicalDeviceProperties device_props; VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, dt, &device_props, &device_feats);
+  err = dlu_create_physical_device(app, 0, dt, &device_props, &device_feats);
   if (err) { dlu_freeup_vk(app); return; }
 
-  err = dlu_get_physical_device_display_propertiesKHR(app);
+  err = dlu_get_physical_device_display_propertiesKHR(app, 0);
   if (err) { dlu_freeup_vk(app); return; }
 
   for (uint32_t i = 0; i < app->dpc; i++)

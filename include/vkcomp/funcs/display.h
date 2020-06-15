@@ -30,7 +30,7 @@
 * This function queries your physical device's surface capabilities.
 * Mainly used to get minImageCount and the extent/resolution
 */
-VkSurfaceCapabilitiesKHR dlu_get_physical_device_surface_capabilities(vkcomp *app);
+VkSurfaceCapabilitiesKHR dlu_get_physical_device_surface_capabilities(vkcomp *app, uint32_t cur_pd);
 
 /**
 * Needed to create the swap chain
@@ -38,14 +38,14 @@ VkSurfaceCapabilitiesKHR dlu_get_physical_device_surface_capabilities(vkcomp *ap
 * The "format" variable refers to the pixel formats and the
 * "colorSpace" variable refers to the Color Depth
 */
-VkSurfaceFormatKHR dlu_choose_swap_surface_format(vkcomp *app, VkFormat format, VkColorSpaceKHR colorSpace);
+VkSurfaceFormatKHR dlu_choose_swap_surface_format(vkcomp *app, uint32_t cur_pd, VkFormat format, VkColorSpaceKHR colorSpace);
 
 /**
 * Needed to create the swap chain
 * This function chooses the best presentation mode for swapchain
 * (Conditions required for swapping images to the screen)
 */
-VkPresentModeKHR dlu_choose_swap_present_mode(vkcomp *app);
+VkPresentModeKHR dlu_choose_swap_present_mode(vkcomp *app, uint32_t cur_pd);
 
 /**
 * Needed to create the swap chain
@@ -82,10 +82,11 @@ VkResult dlu_queue_graphics_queue(
 /* Submit results back to the swap chain, to be presented on the screen */
 VkResult dlu_queue_present_queue(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t waitSemaphoreCount,
   const VkSemaphore *pWaitSemaphores,
   uint32_t swapchainCount,
-  const VkSwapchainKHR *Swapchains,
+  const VkSwapchainKHR *pSwapchains,
   const uint32_t *pImageIndices,
   VkResult *pResults
 );
@@ -94,6 +95,6 @@ VkResult dlu_queue_present_queue(
 * Query display properities for a choosen physical device to allow for
 * implementation of a rendering/presentation backend of a windowing system
 */
-VkResult dlu_get_physical_device_display_propertiesKHR(vkcomp *app);
+VkResult dlu_get_physical_device_display_propertiesKHR(vkcomp *app, uint32_t cur_pd);
 
 #endif

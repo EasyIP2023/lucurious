@@ -32,6 +32,7 @@
 */
 bool memory_type_from_properties(
   vkcomp *app,
+  uint32_t pdi,
   uint32_t typeBits,
   VkFlags requirements_mask,
   uint32_t *typeIndex

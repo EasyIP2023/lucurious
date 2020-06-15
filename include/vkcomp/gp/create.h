@@ -25,7 +25,7 @@
 #ifndef DLU_GP_CREATE_H
 #define DLU_GP_CREATE_H
 
-VkShaderModule dlu_create_shader_module(vkcomp *app, char *code, size_t code_size);
+VkShaderModule dlu_create_shader_module(vkcomp *app, uint32_t cur_ld, char *code, size_t code_size);
 
 VkResult dlu_create_render_pass(
   vkcomp *app,
@@ -57,10 +57,11 @@ VkResult dlu_create_graphics_pipelines(
   uint32_t basePipelineIndex
 );
 
-VkResult dlu_create_pipeline_cache(vkcomp *app, size_t initialDataSize, const void *pInitialData);
+VkResult dlu_create_pipeline_cache(vkcomp *app, uint32_t cur_ld, size_t initialDataSize, const void *pInitialData);
 
 VkResult dlu_create_pipeline_layout(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_gpd,
   uint32_t cur_dd,
   uint32_t pushConstantRangeCount,
@@ -80,6 +81,7 @@ VkResult dlu_create_desc_set_layouts(
 /* Inorder to allocate descriptor sets you must create a descriptor pool */
 VkResult dlu_create_desc_pool(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_dd,
   VkDescriptorPoolCreateFlags flags,
   uint32_t psize,
@@ -102,6 +104,7 @@ VkResult dlu_create_desc_set(
 */
 VkResult dlu_create_texture_image(
   vkcomp *app,
+  uint32_t cur_ld,
   uint32_t cur_tex,
   VkImageCreateInfo *img_info,
   VkFlags requirements_mask

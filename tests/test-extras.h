@@ -51,7 +51,7 @@ typedef struct _vertex_tex_2D {
 
 #define check_err(err,app,wc,shader) \
   do { \
-    if (!shader && err) dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, shader); \
+    if (!shader && err) dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, 0, shader); \
     if (err) { FREEME(app, wc); ck_abort_msg(NULL); } \
   } while(0);
 

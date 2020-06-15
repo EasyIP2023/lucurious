@@ -51,11 +51,13 @@ typedef enum _dlu_data_type {
   DLU_DESC_DATA = 0x0004,
   DLU_TEXT_DATA = 0x0005,
   DLU_DIS_DATA = 0x0006,
-  DLU_SC_DATA_MEMS = 0x0007,
-  DLU_DESC_DATA_MEMS = 0x0008,
-  DLU_GP_DATA_MEMS = 0x0009,
-  DLU_DEVICE_PLANE_DATA = 0x000A,
-  DLU_DEVICE_OUTPUT_DATA = 0x000B
+  DLU_PD_DATA = 0x0007,
+  DLU_LD_DATA = 0x0008,
+  DLU_SC_DATA_MEMS = 0x0F01,
+  DLU_DESC_DATA_MEMS = 0x0F02,
+  DLU_GP_DATA_MEMS = 0x0F03,
+  DLU_DEVICE_PLANE_DATA = 0x0F04,
+  DLU_DEVICE_OUTPUT_DATA = 0x0F05
 } dlu_data_type;
 
 typedef struct _dlu_otma_mems {
@@ -76,6 +78,8 @@ typedef struct _dlu_otma_mems {
   uint32_t dd_cnt;      /* descriptor data count */
   uint32_t td_cnt;      /* texture data count */
   uint32_t dis_cnt;     /* display data count */
+  uint32_t pd_cnt;      /* physical device data count */
+  uint32_t ld_cnt;      /* logical device data count */
   uint32_t drmc_cnt;    /* dlu_drm_core struct count */
   uint32_t dod_cnt;     /* Device output_data struct count */
 } dlu_otma_mems;
@@ -101,6 +105,7 @@ typedef enum _dlu_err_msg_type {
   DLU_VKCOMP_BUFF_MEM = 0x010C,
   DLU_VKCOMP_CMD_POOL = 0x010D,
   DLU_VKCOMP_CMD_BUFFS = 0x010E,
+  DLU_VKCOMP_DEVICE_NOT_ASSOC = 0x010F,
   DLU_BUFF_NOT_ALLOC = 0x0FFC,
   DLU_OP_NOT_PERMITED = 0x0FFD,
   DLU_ALLOC_FAILED = 0x0FFE,

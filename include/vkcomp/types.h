@@ -83,15 +83,20 @@ typedef struct _vkcomp {
   VkInstance instance;
   VkSurfaceKHR surface;
 
-  VkPhysicalDevice physical_device;
-  VkDevice device; /* logical device */
-  struct _queue_family_indices {
-    uint32_t graphics_family;
-    uint32_t present_family;
-  } indices;
+  uint32_t pdc; /* physical device count */
+  struct _pd_data { /* physical device data */
+    VkPhysicalDevice phys_dev;
+    uint32_t gfam_idx; /* Graphics Family Index */
+    uint32_t pfam_idx; /* Present Family Index */
+  } *pd_data;
 
-  VkQueue graphics_queue;
-  VkQueue present_queue;
+  uint32_t ldc; /* Logical device count */
+  struct _ld_data {  /* logical device data */
+    VkQueue graphics;
+    VkQueue present;
+    VkDevice device;
+    uint32_t pdi; /* Physical device data index */
+  } *ld_data;
 
   uint32_t sdc; /* swap chain data count */
   struct _sc_data {
@@ -126,21 +131,36 @@ typedef struct _vkcomp {
       VkImageView view;
       VkDeviceMemory mem;
     } depth;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *sc_data;
 
+  struct _gp_cache {
+    VkPipelineCache pipe_cache;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
+  } gp_cache;
+
   uint32_t gdc;
-  VkPipelineCache pipeline_cache;
   struct _gp_data {
     VkRenderPass render_pass;
     VkPipelineLayout pipeline_layout;
     uint32_t gpc; /* graphics piplines count */
     VkPipeline *graphics_pipelines;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *gp_data;
 
   uint32_t cdc; /* command data count */
   struct _cmd_data {
     VkCommandPool cmd_pool;
     VkCommandBuffer *cmd_buffs;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *cmd_data;
 
   uint32_t bdc; /* buffer data count */
@@ -149,6 +169,9 @@ typedef struct _vkcomp {
     VkDeviceMemory mem;
     VkDeviceSize size;
     char name;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *buff_data;
 
   uint32_t ddc; /* descriptor data count */
@@ -157,6 +180,9 @@ typedef struct _vkcomp {
     uint32_t dlsc; /* descriptor layout/set count */
     VkDescriptorSetLayout *layouts;
     VkDescriptorSet *desc_set;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *desc_data;
   
   uint32_t tdc; /* texture data count */
@@ -165,6 +191,9 @@ typedef struct _vkcomp {
     VkImageView view;
     VkDeviceMemory mem;
     VkSampler sampler;
+
+    /* logical device index, Used to keep track of active VkDevice */
+    uint32_t ldi;
   } *text_data;
 
   uint32_t dpc; /* Display Data Count = VkDisplayProps Count */

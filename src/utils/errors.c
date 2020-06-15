@@ -193,6 +193,10 @@ void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
       dlu_log_me(DLU_DANGER, "[x] VkCommandBuffer buffers must be initialize");
       dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_cmd_buffs()");
       break;
+    case DLU_VKCOMP_DEVICE_NOT_ASSOC:
+      dlu_log_me(DLU_DANGER, "[x] Must have a VkDevice association");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to %s to create that association", dlu_msg);
+      break;
     case DLU_BUFF_NOT_ALLOC:
       dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_otba(): %s", dlu_msg);
       break;

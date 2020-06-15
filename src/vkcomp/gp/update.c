@@ -52,12 +52,13 @@ VkWriteDescriptorSet dlu_write_desc_set(
 }
 
 void dlu_update_desc_sets(
-  vkcomp *app,
+  VkDevice device,
   uint32_t descriptorWriteCount,
   const VkWriteDescriptorSet *pDescriptorWrites,
   uint32_t descriptorCopyCount,
   const VkCopyDescriptorSet *pDescriptorCopies
 ) {
-  vkUpdateDescriptorSets(app->device, descriptorWriteCount, pDescriptorWrites,
+
+  vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites,
                          descriptorCopyCount, pDescriptorCopies);
 }
