@@ -235,7 +235,6 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   return true;
 }
 
-
 static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
   return logind_take_device(DLU_INP_FD, (dlu_drm_core *) user_data, path);
 }

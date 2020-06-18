@@ -29,9 +29,9 @@
 vkcomp *dlu_init_vk();
 
 /* Free up all swapchain related memory, must reinitialize these objects */
-void dlu_freeup_sc(void *data);
+void dlu_freeup_sc(vkcomp *app);
 
 /* Free up all allocated vkcomp related memory */
-void dlu_freeup_vk(void *data);
+void dlu_freeup_vk(vkcomp *app);
 
 #endif

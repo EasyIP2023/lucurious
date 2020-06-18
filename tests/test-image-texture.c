@@ -35,7 +35,8 @@
 #include "test-extras.h"
 #include "test-shade.h"
 
-#include "textures/texture.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -140,7 +141,7 @@ START_TEST(test_vulkan_image_texture) {
   * SRGB if used for colorSpace if available, because it
   * results in more accurate perceived colors
   */
-  VkSurfaceFormatKHR surface_fmt = dlu_choose_swap_surface_format(app, cur_pd, VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+  VkSurfaceFormatKHR surface_fmt = dlu_choose_swap_surface_format(app, cur_pd, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
   check_err(surface_fmt.format == VK_FORMAT_UNDEFINED, app, wc, NULL)
 
   VkPresentModeKHR pres_mode = dlu_choose_swap_present_mode(app, cur_pd);
@@ -156,7 +157,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_swap_chain(app, cur_ld, cur_scd, capabilities, surface_fmt, pres_mode, extent.width, extent.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+  err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -174,8 +175,30 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
-  VkExtent3D img_extent = { 512, 512, 1};
-  VkDeviceSize img_size = img_extent.width * img_extent.height * 4;
+  /* Start of image loader */
+  VkDeviceSize img_size; VkExtent3D img_extent;
+  char *picture = concat("%s/tests/%s", DLU_DIR_SRC, "textures/texture.jpg");
+  check_err(!picture, app, wc, NULL)
+
+  int pw = 0, ph = 0, pchannels = 0;
+
+  /* First load the image */
+  stbi_uc *pixels = stbi_load(picture, &pw, &ph, &pchannels, STBI_rgb_alpha);
+  if (!pixels) {
+    free(picture); picture = NULL;
+    check_err(VK_TRUE, app, wc, NULL)
+  }
+
+  img_extent.width = pw;
+  img_extent.height = ph;
+  img_extent.depth = 1;
+
+  dlu_log_me(DLU_SUCCESS, "%s successfully loaded", picture);
+  dlu_log_me(DLU_SUCCESS, "Image width: %dpx, Image height: %dpx", pw, ph);
+  free(picture); picture = NULL;
+  /* End of image loader */
+
+  img_size = img_extent.width * img_extent.height * 4;
 
   /**
   * The buffer is a staging host visible memory buffer. That can be map.
@@ -187,10 +210,12 @@ START_TEST(test_vulkan_image_texture) {
   );
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, (void *) MagickImage);
+  err = dlu_create_vk_buff_mem_map(app, cur_bd, pixels);
   check_err(err, app, wc, NULL)
 
-  VkImageCreateInfo img_info = dlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, img_extent, 1, 1,
+  stbi_image_free(pixels); pixels = NULL;
+
+  VkImageCreateInfo img_info = dlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_B8G8R8A8_UNORM, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
@@ -231,13 +256,13 @@ START_TEST(test_vulkan_image_texture) {
   );
   check_err(err, app, wc, NULL)
 
-  /* Destroy staging buffer as it is no longer needed */
+  /* Destroy staging buffer and memory as it is no longer needed */
   dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
 
   /* Create Image View for texture image. So that application can access a VkImage resource */
-  img_view_info.format = VK_FORMAT_R8G8B8A8_SRGB; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
-  img_view_info.components = dlu_set_component_mapping(0, 0, 0, 0);
+  img_view_info.format = VK_FORMAT_B8G8R8A8_UNORM; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
+  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
 
   err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
   check_err(err, app, wc, NULL)
@@ -247,6 +272,10 @@ START_TEST(test_vulkan_image_texture) {
     VK_COMPARE_OP_ALWAYS, 0.0f, 0.0f, VK_BORDER_COLOR_INT_OPAQUE_BLACK, VK_FALSE
   );
 
+  /**
+  * Create a sampler to access a texture, which can apply filtering and
+  * transformations to compute the final color
+  */
   err = dlu_create_texture_sampler(app, cur_tex, &sampler);
   check_err(err, app, wc, NULL)
 

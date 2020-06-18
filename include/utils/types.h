@@ -56,8 +56,7 @@ typedef enum _dlu_data_type {
   DLU_SC_DATA_MEMS = 0x0F01,
   DLU_DESC_DATA_MEMS = 0x0F02,
   DLU_GP_DATA_MEMS = 0x0F03,
-  DLU_DEVICE_PLANE_DATA = 0x0F04,
-  DLU_DEVICE_OUTPUT_DATA = 0x0F05
+  DLU_DEVICE_OUTPUT_DATA = 0x0F04
 } dlu_data_type;
 
 typedef struct _dlu_otma_mems {

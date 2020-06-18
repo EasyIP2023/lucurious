@@ -157,7 +157,7 @@ typedef struct _dlu_drm_core {
 
       /**
       * Encoders are deprecated and unused KMS objects
-      * The plane -> CRTC -> connector chain construct
+      * The Plane -> CRTC -> Encoder -> Connector chain construct
       */
       drmModePlane *plane;
       drmModeCrtc *crtc;

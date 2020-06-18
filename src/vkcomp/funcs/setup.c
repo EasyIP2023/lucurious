@@ -31,8 +31,7 @@ vkcomp *dlu_init_vk() {
   return app;
 }
 
-void dlu_freeup_sc(void *data) {
-  vkcomp *app = (vkcomp *) data;
+void dlu_freeup_sc(vkcomp *app) {
 
   /* destory all uniform buffers */
   if (app->buff_data) {
@@ -117,8 +116,7 @@ void dlu_freeup_sc(void *data) {
   }
 }
 
-void dlu_freeup_vk(void *data) {
-  vkcomp *app = (vkcomp *) data;
+void dlu_freeup_vk(vkcomp *app) {
 
   /* Synchronous wait for present queue to empty. So that all objects can be properly destroyed */
   for (uint32_t i = 0; i < app->ldc; i++)
