@@ -126,7 +126,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   device_feats.samplerAnisotropy = VK_TRUE;
-  err = dlu_create_logical_device(app, cur_pd, cur_ld, &device_feats, 1, ARR_LEN(enabled_validation_layers), enabled_validation_layers, ARR_LEN(device_extensions), device_extensions);
+  err = dlu_create_logical_device(app, cur_pd, cur_ld, &device_feats, 1, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
 
   err = dlu_set_device_debug_ext(app, cur_ld);

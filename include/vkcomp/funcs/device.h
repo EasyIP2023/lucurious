@@ -25,13 +25,6 @@
 #ifndef DLU_VKCOMP_DEVICE_FUNCS_H
 #define DLU_VKCOMP_DEVICE_FUNCS_H
 
-VkBool32 is_device_suitable(
-  VkPhysicalDevice device,
-  VkPhysicalDeviceType vkpdtype,
-  VkPhysicalDeviceProperties *device_props,
-  VkPhysicalDeviceFeatures *device_feats
-);
-
 VkResult get_extension_properties(
   VkPhysicalDevice device,
   uint32_t *count,

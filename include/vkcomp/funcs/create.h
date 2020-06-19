@@ -77,8 +77,6 @@ VkResult dlu_create_logical_device(
   uint32_t cur_ld,
   VkPhysicalDeviceFeatures *pEnabledFeatures,
   uint32_t queue_count,
-  uint32_t enabledLayerCount,
-  const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
   const char *const *ppEnabledExtensionNames
 );

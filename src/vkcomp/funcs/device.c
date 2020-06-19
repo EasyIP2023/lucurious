@@ -25,26 +25,6 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-/**
-* This function is mainly where we query a given physical device
-* properties/features and assign data to addresses
-*/
-VkBool32 is_device_suitable(
-  VkPhysicalDevice device,
-  VkPhysicalDeviceType vkpdtype,
-  VkPhysicalDeviceProperties *device_props,
-  VkPhysicalDeviceFeatures *device_feats
-) {
-
-  vkGetPhysicalDeviceProperties(device, device_props); /* Query device properties */
-  vkGetPhysicalDeviceFeatures(device, device_feats); /* Query device features */
-
-  return (device_props->deviceType == vkpdtype && device_feats->depthClamp &&
-          device_feats->depthBiasClamp         && device_feats->logicOp    &&
-          device_feats->robustBufferAccess      && device_feats->samplerAnisotropy);
-}
-
-/* Maybe add error messaging here later, hmm... */
 VkResult get_extension_properties(
   VkPhysicalDevice device,
   uint32_t *count,

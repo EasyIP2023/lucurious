@@ -13,9 +13,6 @@
 # Ignore all gdb history files
 **/*.gdb_history
 
-# Ignore all se executables in examples
-examples/**/*se
-
 # Ignore all build folders
 build/
 ibuild/

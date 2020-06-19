@@ -154,7 +154,7 @@ START_TEST(test_set_logical_device) {
   check_err(err, app, NULL, NULL)
 
   app->pd_data[0].pfam_idx = app->pd_data[0].gfam_idx;
-  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
+  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, NULL, NULL)
 
   FREEME(app, NULL)
@@ -194,7 +194,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   check_err(err, app, NULL, NULL)
 
   app->pd_data[0].pfam_idx = app->pd_data[0].gfam_idx;
-  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, 1, enabled_validation_layers, 1, device_extensions);
+  err = dlu_create_logical_device(app, 0, 0, &device_feats, 1, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_null(app->surface);

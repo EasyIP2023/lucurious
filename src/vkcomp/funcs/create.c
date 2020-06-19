@@ -132,7 +132,9 @@ VkResult dlu_create_physical_device(
   * to do the graphics related task that we need
   */
   for (uint32_t i = 0; i < device_count; i++) {
-    if (is_device_suitable(devices[i], vkpdtype, device_props, device_feats)) {
+    vkGetPhysicalDeviceProperties(devices[i], device_props); /* Query device properties */
+    vkGetPhysicalDeviceFeatures(devices[i], device_feats); /* Query device features */
+    if (device_props->deviceType == vkpdtype) {
       memmove(&app->pd_data[cur_pd].phys_dev, &devices[i], sizeof(devices[i]));
       dlu_log_me(DLU_SUCCESS, "Suitable GPU Found: %s", device_props->deviceName);
       break;
@@ -194,8 +196,6 @@ VkResult dlu_create_logical_device(
   uint32_t cur_ld,
   VkPhysicalDeviceFeatures *pEnabledFeatures,
   uint32_t queue_count,
-  uint32_t enabledLayerCount,
-  const char *const *ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
   const char *const *ppEnabledExtensionNames
 ) {
@@ -229,8 +229,8 @@ VkResult dlu_create_logical_device(
   create_info.flags = 0;
   create_info.queueCreateInfoCount = dq_count;
   create_info.pQueueCreateInfos = pQueueCreateInfos;
-  create_info.enabledLayerCount = enabledLayerCount;
-  create_info.ppEnabledLayerNames = ppEnabledLayerNames;
+  create_info.enabledLayerCount = 0; // Deprecated and ignored
+  create_info.ppEnabledLayerNames = NULL; // Deprecated and ignored 
   create_info.enabledExtensionCount = enabledExtensionCount;
   create_info.ppEnabledExtensionNames = ppEnabledExtensionNames;
   create_info.pEnabledFeatures = pEnabledFeatures;
