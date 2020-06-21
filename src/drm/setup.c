@@ -51,6 +51,8 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
     uint32_t j, i;
     for (i = 0; i < core->device.odc; i++) {
       free(core->device.output_data[i].modifiers);
+      if (core->device.output_data[i].mode_blob_id != 0)
+        drmModeDestroyPropertyBlob(core->device.kmsfd, core->device.output_data[i].mode_blob_id);
       if (core->device.output_data[i].conn)
         drmModeFreeConnector(core->device.output_data[i].conn);
       if (core->device.output_data[i].enc)

@@ -53,7 +53,7 @@ START_TEST(test_set_global_layers) {
   VkLayerProperties *vk_props = VK_NULL_HANDLE;
 	uint32_t size = 0;
 
-  err = dlu_set_global_layers(&vk_props, &size);
+  err = dlu_set_vulkan_layer_props(&vk_props, &size);
   check_err(err, app, NULL, NULL)
 
   if (vk_props) {

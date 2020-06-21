@@ -126,10 +126,10 @@ VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld) {
 }
 
 /**
-* Set vulkan validation layers properties.
+* Set vulkan Vulkan layers properties.
 * To get more validation layers install vulkan sdk
 */
-VkResult dlu_set_global_layers(VkLayerProperties **vk_props, uint32_t *size) {
+VkResult dlu_set_vulkan_layer_props(VkLayerProperties **vk_props, uint32_t *size) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   /* Find the amount of validation layer */

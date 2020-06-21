@@ -37,7 +37,7 @@
 #include <linux/kd.h>
 #include <linux/vt.h>
 
-/* Open a single KMS device. Check to see if the node is a good candidate for usage */
+/* Open a single DRM device. Check to see if the node is a good candidate for usage */
 static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name) {
   drm_magic_t magic;
   uint64_t cap = 0;

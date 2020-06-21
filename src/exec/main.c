@@ -35,7 +35,7 @@ void help_message();
 void version_num();
 
 /* In vk_info.c */
-void print_gvalidation_layers();
+void print_validation_layers();
 void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
 void print_display_extensions(VkPhysicalDeviceType dt);
@@ -43,10 +43,6 @@ void print_display_extensions(VkPhysicalDeviceType dt);
 int main(int argc, char **argv) {
   int c = 0;
   int8_t track = 0;
-
-  /* Possible modification, Maybe remove and use general purpose allocator for command line interface */
-  dlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 200, .vkext_props_cnt = 200 };
-  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return EXIT_FAILURE;
 
   while (1) {
     int option_index = 0;
@@ -70,7 +66,7 @@ int main(int argc, char **argv) {
       case 0:
         if (!strcmp(long_options[option_index].name, "version")) { version_num(); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "help")) { help_message(); goto exit_loop; }
-        if (!strcmp(long_options[option_index].name, "pgvl")) print_gvalidation_layers();
+        if (!strcmp(long_options[option_index].name, "pgvl")) print_validation_layers();
         if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
         if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info(optarg);
         if (!strcmp(long_options[option_index].name, "pde")) {
@@ -93,7 +89,7 @@ int main(int argc, char **argv) {
       case 1: break;
       case 'v': version_num(); goto exit_loop;
       case 'h': help_message(); goto exit_loop;
-      case 'l': print_gvalidation_layers(); break;
+      case 'l': print_validation_layers(); break;
       case 'i': print_instance_extensions(); break;
       case 'd':
         if (optarg) {
@@ -110,6 +106,5 @@ int main(int argc, char **argv) {
 
 exit_loop:
   if (c == NEG_ONE && track == 0) help_message();
-  dlu_release_blocks();
   return EXIT_SUCCESS;
 }

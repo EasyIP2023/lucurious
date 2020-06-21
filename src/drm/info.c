@@ -63,12 +63,12 @@ static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmMode
   }
 }
 
-bool dlu_print_dconf_info(const char *device) {
-  bool ret = true;
+void dlu_print_dconf_info(const char *device) {
+  dlu_otma_mems ma = { .drmc_cnt = 1 };
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return;
 
   dlu_drm_core *core = dlu_drm_init_core();
-
-  if (dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1)) goto exit_info;
+  if (!core) goto exit_info;
 
   /* Exit if not in a tty */
   if (!dlu_drm_create_session(core)) { dlu_log_me(DLU_WARNING, "Please run command from within a TTY"); goto exit_info; }
@@ -77,18 +77,18 @@ bool dlu_print_dconf_info(const char *device) {
   drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
   if (!dmr) {
     dlu_print_msg(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
-    ret = false; goto exit_info;
+    goto exit_info;
   }
 
   drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
   if (!pres) {
     dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
-    ret = false; goto free_drm_res;
+    goto free_drm_res;
   }
 
   if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
     dlu_print_msg(DLU_DANGER, "[x] '%s' is not a KMS node\n", device);
-    ret = false; goto free_plane_res;
+    goto free_plane_res;
   }
 
   drmModeConnector *conn = NULL; drmModeEncoder *enc = NULL;
@@ -102,7 +102,7 @@ bool dlu_print_dconf_info(const char *device) {
     if (!conn) {
       dlu_print_msg(DLU_DANGER, "[x] drmModeGetConnector: %s\n", strerror(errno));
       free_drm_objs(&conn, &enc, &crtc, &plane);
-      ret = false; goto free_plane_res;
+      goto free_plane_res;
     }
 
     /* Finding a encoder (a deprecated KMS object) for a given connector */
@@ -112,7 +112,7 @@ bool dlu_print_dconf_info(const char *device) {
         if (!enc) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetEncoder: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
-          ret = false; goto free_plane_res;
+          goto free_plane_res;
         }
 
         dlu_print_msg(DLU_SUCCESS, "\n\t\tConnector INFO\n");
@@ -135,7 +135,7 @@ bool dlu_print_dconf_info(const char *device) {
         if (!crtc) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetCrtc: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
-          ret = false; goto free_plane_res;
+          goto free_plane_res;
         }
 
         dlu_print_msg(DLU_SUCCESS, "\n\t\tCRTC INFO\n");
@@ -158,10 +158,10 @@ bool dlu_print_dconf_info(const char *device) {
         if (!plane) {
           dlu_print_msg(DLU_DANGER, "[x] drmModeGetPlane: %s\n", strerror(errno));
           free_drm_objs(&conn, &enc, &crtc, &plane);
-          ret = false; goto free_plane_res;
+          goto free_plane_res;
         }
 
-        /* Check find primary plane for chosen crtc */
+        /* look for primary plane for chosen crtc */
         if (plane->crtc_id == crtc_id && plane->fb_id == fb_id) {
           dlu_print_msg(DLU_SUCCESS, "\n\t\tPlane INFO\n");
           dlu_print_msg(DLU_INFO, "\tPLANE ID : %u\tPlane Index : %u\n", plane->plane_id, p);
@@ -191,5 +191,5 @@ free_drm_res:
   drmModeFreeResources(dmr);
 exit_info:
   dlu_drm_freeup_core(core);
-  return ret;
+  dlu_release_blocks();
 }
