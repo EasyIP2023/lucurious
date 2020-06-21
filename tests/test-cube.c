@@ -40,7 +40,7 @@
 
 static dlu_otma_mems ma = {
   .vkcomp_cnt = 1, .desc_cnt = 1, .gp_cnt = 1, .si_cnt = 5,
-  .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 2,
+  .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 1,
   .dd_cnt = 1, .ld_cnt = 1, .pd_cnt = 1
 };
 
@@ -77,7 +77,7 @@ static bool init_buffs(vkcomp *app) {
   err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
   if (!err) return err;
 
-  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, 2);
+  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, 1);
   if (!err) return err;
 
   err = dlu_otba(DLU_SC_DATA, app, INDEX_IGNORE, 1);
@@ -183,7 +183,10 @@ START_TEST(test_vulkan_client_create_3D) {
 
   img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1);
   img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, comp_map, img_sub_rr);
-  err = dlu_create_depth_buff(app, cur_scd, &img_info, &img_view_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  err = dlu_create_depth_buff(app, cur_scd, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  check_err(err, app, wc, NULL)
+
+  dlu_create_image_views(DLU_DEPTH_IMAGE_VIEWS, app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_syncs(app, cur_scd);
@@ -204,17 +207,22 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_set_mvp_matrix(ubd.mvp, &ubd.clip, &ubd.proj, &ubd.view, &ubd.model);
   dlu_print_matrices();
 
-  /* Create uniform buffer that has the transformation matrices (for the vertex shader) */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, sizeof(ubd.mvp), 0,
-    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'u',
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  /* Create uniform buffer & vertex buffer that has the transformation matrices (for the vertex shader) */
+  VkDeviceSize vsize = sizeof(vertices);
+  const VkDeviceSize offsets[] = {0, vsize};
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, sizeof(ubd.mvp)+vsize, 0,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE,
+    0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   check_err(err, app, wc, NULL)
 
-  /* Only map mvp matrix into memory so that it's binary compatible with shader variable */
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, ubd.mvp);
+  /* Map vertices into vertex buffer */
+  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, vertices, offsets[0]);
   check_err(err, app, wc, NULL)
-  cur_bd++;
+  
+  /* Map mvp matrix into memory so that it's binary compatible with shader variable */
+  err = dlu_create_vk_buff_mem_map(app, cur_bd, sizeof(ubd.mvp), ubd.mvp, offsets[1]);
+  check_err(err, app, wc, NULL)
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
   err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
@@ -237,7 +245,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_desc_set(app, cur_dd);
   check_err(err, app, wc, NULL)
 
-  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, 0, sizeof(ubd.mvp));
+  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, offsets[1], sizeof(ubd.mvp));
   VkWriteDescriptorSet write = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
                                app->desc_data[cur_dd].dlsc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
                                &buff_info, NULL);
@@ -281,19 +289,6 @@ START_TEST(test_vulkan_client_create_3D) {
 
   err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
   check_err(err, app, wc, NULL)
-
-  /* Start of vertex buffer */
-  VkDeviceSize vsize = sizeof(vertices);
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v',
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  );
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, vertices);
-  check_err(err, app, wc, NULL)
-  cur_bd++;
-  /* End of vertex buffer */
 
   VkVertexInputBindingDescription vi_binding = dlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
@@ -404,22 +399,15 @@ START_TEST(test_vulkan_client_create_3D) {
   clear_values[0] = dlu_set_clear_value(float32, int32, uint32, 0.0f, 0);
   clear_values[1] = dlu_set_clear_value(float32, int32, uint32, 1.0f, 1);
 
-  err = dlu_exec_begin_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, NULL);
+  err = dlu_exec_begin_cmd_buffs(app, cur_pool, cur_scd, 0, NULL);
   check_err(err, app, wc, NULL)
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
-  dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width,
-                             extent2D.height, 2, clear_values, VK_SUBPASS_CONTENTS_INLINE);
+  dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, ARR_LEN(clear_values), clear_values, VK_SUBPASS_CONTENTS_INLINE);
   dlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   dlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[0], 0, NULL);
 
-  for (uint32_t i = 0; i < app->bdc; i++) {
-    dlu_log_me(DLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
-    dlu_log_me(DLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
-  }
-
-  const VkDeviceSize offsets[1] = {0};
-  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, offsets);
+  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[0].buff, offsets);
   dlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   dlu_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
 

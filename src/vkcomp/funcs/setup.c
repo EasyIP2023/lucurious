@@ -36,15 +36,13 @@ void dlu_freeup_sc(vkcomp *app) {
   /* destory all uniform buffers */
   if (app->buff_data) {
     for (uint32_t i = 0; i < app->bdc; i++) {
-      if (app->buff_data[i].name == 'u') {
-        if (app->buff_data[i].buff) {
-          vkDestroyBuffer(app->ld_data[app->buff_data[i].ldi].device, app->buff_data[i].buff, NULL);
-          app->buff_data[i].buff = VK_NULL_HANDLE;
-        }
-        if (app->buff_data[i].mem) {
-          vkFreeMemory(app->ld_data[app->buff_data[i].ldi].device, app->buff_data[i].mem, NULL);
-          app->buff_data[i].mem = VK_NULL_HANDLE;
-        }
+      if (app->buff_data[i].buff) {
+        vkDestroyBuffer(app->ld_data[app->buff_data[i].ldi].device, app->buff_data[i].buff, NULL);
+        app->buff_data[i].buff = VK_NULL_HANDLE;
+      }
+      if (app->buff_data[i].mem) {
+        vkFreeMemory(app->ld_data[app->buff_data[i].ldi].device, app->buff_data[i].mem, NULL);
+        app->buff_data[i].mem = VK_NULL_HANDLE;
       }
     }
   }

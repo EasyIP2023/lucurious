@@ -116,7 +116,6 @@ VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
-  VkImageViewCreateInfo *img_view_info,
   VkFlags requirements_mask
 );
 
@@ -135,14 +134,15 @@ VkResult dlu_create_vk_buffer(
   VkSharingMode sharingMode,
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
-  char buff_name,
   VkFlags requirements_mask
 );
 
 VkResult dlu_create_vk_buff_mem_map(
   vkcomp *app,
   uint32_t cur_bd,
-  void *data
+  VkDeviceSize size,
+  void *data,
+  VkDeviceSize offset
 );
 
 /**

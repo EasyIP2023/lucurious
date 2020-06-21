@@ -65,8 +65,9 @@ typedef enum _dlu_destroy_type {
 } dlu_destroy_type;
 
 typedef enum _dlu_image_view_type {
-  DLU_SC_IMAGE_VIEWS   = 0x0000, /* Swapchain image views */
-  DLU_TEXT_IMAGE_VIEWS = 0x0001  /* Texture image views */
+  DLU_SC_IMAGE_VIEWS    = 0x0000, /* Swapchain image views */
+  DLU_TEXT_IMAGE_VIEWS  = 0x0001, /* Texture image views */
+  DLU_DEPTH_IMAGE_VIEWS = 0x0002  /* Depth Buffer image view */
 } dlu_image_view_type;
 
 typedef struct _vkcomp {
@@ -168,7 +169,6 @@ typedef struct _vkcomp {
     VkBuffer buff;
     VkDeviceMemory mem;
     VkDeviceSize size;
-    char name;
 
     /* logical device index, Used to keep track of active VkDevice */
     uint32_t ldi;

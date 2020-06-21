@@ -306,7 +306,13 @@ VkResult dlu_create_texture_image(
   res = vkAllocateMemory(app->ld_data[cur_ld].device, &alloc_info, NULL, &app->text_data[cur_tex].mem);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
-  vkBindImageMemory(app->ld_data[cur_ld].device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
+  /**
+  * Associate the memory allocated with the VkBuffer resource.
+  * It is easier to attach the entire VkDeviceMemory to the VkBuffer resource
+  * So offset will always be zero whenever a call to vkBind*Memory is called
+  */
+  res = vkBindImageMemory(app->ld_data[cur_ld].device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory")
 
   return res;
 }

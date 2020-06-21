@@ -112,13 +112,14 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
     * Basically offset the memory address. Thus, allocating space.
     */
     block = current->addr + BLOCK_SIZE + bytes;
-    block->prv_addr = current->addr;
 
     /* set next block meta data */
     block->addr = block;
     block->next = NULL;
+    block->size = 0;
     block->abytes = 0;
     block->saddr = NULL;
+    block->prv_addr = current->addr;
 
     /* Decrement larger block available memory */
     switch(type) {
@@ -256,39 +257,40 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   if (large_block_priv) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
   if (large_block_shared) { PERR(DLU_ALREADY_ALLOC, 0, NULL); return false; }
 
-  size += (BLOCK_SIZE + (ma.inta_cnt * sizeof(int)));
-  size += (BLOCK_SIZE + (ma.cha_cnt  * sizeof(char)));
-  size += (BLOCK_SIZE + (ma.fla_cnt   * sizeof(float)));
-  size += (BLOCK_SIZE + (ma.dba_cnt  * sizeof(double)));
+  /* This allows for exact byte allocation. Resulting in no fragmented memory */
+  size += (ma.inta_cnt) ? (BLOCK_SIZE + (ma.inta_cnt * sizeof(int))) : 0;
+  size += (ma.cha_cnt ) ? (BLOCK_SIZE + (ma.cha_cnt  * sizeof(char))) : 0;
+  size += (ma.fla_cnt  ) ? (BLOCK_SIZE + (ma.fla_cnt   * sizeof(float))) : 0;
+  size += (ma.fla_cnt  ) ? (BLOCK_SIZE + (ma.dba_cnt  * sizeof(double))) : 0;
 
-  size += (BLOCK_SIZE + (ma.vkcomp_cnt * sizeof(vkcomp)));
-  size += (BLOCK_SIZE + (ma.vkext_props_cnt * sizeof(VkExtensionProperties)));
-  size += (BLOCK_SIZE + (ma.vkval_layer_cnt* sizeof(VkLayerProperties)));
+  size += (ma.vkcomp_cnt     ) ? (BLOCK_SIZE + (ma.vkcomp_cnt * sizeof(vkcomp))) : 0;
+  size += (ma.vkext_props_cnt) ? (BLOCK_SIZE + (ma.vkext_props_cnt * sizeof(VkExtensionProperties))) : 0;
+  size += (ma.vkval_layer_cnt) ? (BLOCK_SIZE + (ma.vkval_layer_cnt* sizeof(VkLayerProperties))) : 0;
 
-  size += (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers)));
-  size += (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers)));
-  size += (BLOCK_SIZE + (ma.scd_cnt* sizeof(struct _sc_data)));
+  size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers))) : 0;
+  size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers))) : 0;
+  size += (ma.scd_cnt) ? (BLOCK_SIZE + (ma.scd_cnt* sizeof(struct _sc_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.gp_cnt * sizeof(VkPipeline)));
-  size += (BLOCK_SIZE + (ma.gpd_cnt * sizeof(struct _gp_data)));
+  size += (ma.gp_cnt ) ? (BLOCK_SIZE + (ma.gp_cnt * sizeof(VkPipeline))) : 0;
+  size += (ma.gpd_cnt) ? (BLOCK_SIZE + (ma.gpd_cnt * sizeof(struct _gp_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.si_cnt * sizeof(VkCommandBuffer)));
-  size += (BLOCK_SIZE + (ma.cmdd_cnt * sizeof(struct _cmd_data)));
+  size += (ma.si_cnt  ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(VkCommandBuffer))) : 0;
+  size += (ma.cmdd_cnt) ? (BLOCK_SIZE + (ma.cmdd_cnt * sizeof(struct _cmd_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.bd_cnt * sizeof(struct _buff_data)));
+  size += (ma.bd_cnt) ? (BLOCK_SIZE + (ma.bd_cnt * sizeof(struct _buff_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSet)));
-  size += (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSetLayout)));
-  size += (BLOCK_SIZE + (ma.dd_cnt * sizeof(struct _desc_data)));
+  size += (ma.desc_cnt) ? (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSet))) : 0;
+  size += (ma.desc_cnt) ? (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSetLayout))) : 0;
+  size += (ma.dd_cnt  ) ? (BLOCK_SIZE + (ma.dd_cnt * sizeof(struct _desc_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data)));
-  size += (BLOCK_SIZE + (ma.dis_cnt * sizeof(struct _dis_data)));
+  size += (ma.td_cnt ) ? (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data))) : 0;
+  size += (ma.dis_cnt) ? (BLOCK_SIZE + (ma.dis_cnt * sizeof(struct _dis_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data)));
-  size += (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data)));
+  size += (ma.pd_cnt) ? (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data))) : 0;
+  size += (ma.ld_cnt) ? (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data))) : 0;
 
-  size += (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core)));
-  size += (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data)));
+  size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core))) : 0;
+  size += (ma.dod_cnt ) ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
 
   if (!dlu_alloc(type, size)) return false;
 
@@ -407,8 +409,8 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         vkcomp *app = (vkcomp *) addr;
         /**
         * Don't want to stick to minimum because one would have to wait on the
-        * drive to complete internal operations before one can acquire another
-        * images to render to. So it's recommended to add one to minImageCount
+        * driver to complete internal operations before one can acquire another
+        * image to render to. So it's recommended to add one to minImageCount
         */
         arr_size += 1;
 
@@ -416,7 +418,7 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         app->sc_data[index].sc_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _swap_chain_buffers));
         if (!app->sc_data[index].sc_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
-        /* Allocate CommandBuffers, This is okay */
+        /* Allocate CommandBuffers */
         app->cmd_data[index].cmd_buffs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkCommandBuffer));
         if (!app->cmd_data[index].cmd_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
@@ -428,11 +430,13 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
     case DLU_DESC_DATA_MEMS:
       {
         vkcomp *app = (vkcomp *) addr;
+
         app->desc_data[index].layouts = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSetLayout));
         if (!app->desc_data[index].layouts) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         app->desc_data[index].desc_set = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(VkDescriptorSet));
         if (!app->desc_data[index].desc_set) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
         app->desc_data[index].dlsc = arr_size; return true;
       }
     case DLU_GP_DATA_MEMS:

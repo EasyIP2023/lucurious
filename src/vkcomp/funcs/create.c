@@ -61,7 +61,7 @@ VkResult dlu_create_instance(
   features.pEnabledValidationFeatures = enables;
 
   /**
-  * tells the Vulkan driver which instance extensions
+  * Tells Vulkan which instance extensions
   * and validation layers we want to use
   */
   VkInstanceCreateInfo create_info = {};
@@ -366,16 +366,31 @@ VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t 
 
       break;
     case DLU_TEXT_IMAGE_VIEWS:
-      if (!app->text_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_TEXT_DATA"); return res; }
+      {
+        if (!app->text_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_TEXT_DATA"); return res; }
 
-      /**
-      * Could set the image inside the VkImageViewCreateInfo struct,
-      * but for reduncy and to ensure the image is correct assigning it here.
-      */
-      img_view_info->image = app->text_data[cur_idx].image;
-      res = vkCreateImageView(app->ld_data[app->text_data[cur_idx].ldi].device, img_view_info, NULL, &app->text_data[cur_idx].view);
-      if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
+        /**
+        * Could set the image inside the VkImageViewCreateInfo struct,
+        * but for reduncy and to ensure the image is correct assigning it here.
+        */
+        img_view_info->image = app->text_data[cur_idx].image;
+        res = vkCreateImageView(app->ld_data[app->text_data[cur_idx].ldi].device, img_view_info, NULL, &app->text_data[cur_idx].view);
+        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
+      }
+      break;
+    case DLU_DEPTH_IMAGE_VIEWS:
+      {
+        if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
+        /* ADD Depth Buffer Checking Here */
 
+        if (img_view_info->format == VK_FORMAT_D16_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D24_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+          img_view_info->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+        /* Create an image view object for depth buffer */
+        img_view_info->image = app->sc_data[cur_idx].depth.image;
+        res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, img_view_info, NULL, &app->sc_data[cur_idx].depth.view);
+        if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
+      }
       break;
     default: break;
   }
@@ -387,16 +402,12 @@ VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
-  VkImageViewCreateInfo *img_view_info,
   VkFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
-
-  if (img_view_info->format == VK_FORMAT_D16_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D24_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
-    img_view_info->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
   /* Create image object */
   res = vkCreateImage(app->ld_data[app->sc_data[cur_scd].ldi].device, img_info, NULL, &app->sc_data[cur_scd].depth.image);
@@ -429,14 +440,13 @@ VkResult dlu_create_depth_buff(
   res = vkAllocateMemory(app->ld_data[app->sc_data[cur_scd].ldi].device, &mem_alloc, NULL, &app->sc_data[cur_scd].depth.mem);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
-  /* Associate memory with image object by binding */
+  /**
+  * Associate the memory allocated with the VkBuffer resource.
+  * It is easier to attach the entire VkDeviceMemory to the VkBuffer resource
+  * So offset will always be zero whenever a call to vkBind*Memory is called
+  */
   res = vkBindImageMemory(app->ld_data[app->sc_data[cur_scd].ldi].device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);
-  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
-
-  /* Create an image view object for depth buffer */
-  img_view_info->image = app->sc_data[cur_scd].depth.image;
-  res = vkCreateImageView(app->ld_data[app->sc_data[cur_scd].ldi].device, img_view_info, NULL, &app->sc_data[cur_scd].depth.view);
-  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory")
 
   return res;
 }
@@ -451,13 +461,12 @@ VkResult dlu_create_vk_buffer(
   VkSharingMode sharingMode,
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
-  char buff_name,
   VkFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_buff_data"); return res; }
+  if (!app->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_BUFF_DATA"); return res; }
 
   VkBufferCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -469,7 +478,6 @@ VkResult dlu_create_vk_buffer(
   create_info.queueFamilyIndexCount = queueFamilyIndexCount;
   create_info.pQueueFamilyIndices = pQueueFamilyIndices;
 
-  app->buff_data[cur_bd].name = buff_name;
   res = vkCreateBuffer(app->ld_data[cur_ld].device, &create_info, NULL, &app->buff_data[cur_bd].buff);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateBuffer"); return res; }
 
@@ -492,7 +500,11 @@ VkResult dlu_create_vk_buffer(
   res = vkAllocateMemory(app->ld_data[cur_ld].device, &alloc_info, NULL, &app->buff_data[cur_bd].mem);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
-  /* associate the memory allocated with the buffer object */
+  /**
+  * Associate the memory allocated with the VkBuffer resource.
+  * It is easier to attach the entire VkDeviceMemory to the VkBuffer resource
+  * So offset will always be zero whenever a call to vkBind*Memory is called
+  */
   res = vkBindBufferMemory(app->ld_data[cur_ld].device, app->buff_data[cur_bd].buff, app->buff_data[cur_bd].mem, 0);
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindBufferMemory")
 
@@ -502,7 +514,9 @@ VkResult dlu_create_vk_buffer(
 VkResult dlu_create_vk_buff_mem_map(
   vkcomp *app,
   uint32_t cur_bd,
-  void *data
+  VkDeviceSize size,
+  void *data,
+  VkDeviceSize offset
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -516,9 +530,9 @@ VkResult dlu_create_vk_buff_mem_map(
   * the memory, you need to map it
   */
   void *p_data = NULL;
-  res = vkMapMemory(app->ld_data[app->buff_data[cur_bd].ldi].device, app->buff_data[cur_bd].mem, 0, app->buff_data[cur_bd].size, 0, &p_data);
+  res = vkMapMemory(app->ld_data[app->buff_data[cur_bd].ldi].device, app->buff_data[cur_bd].mem, offset, size, 0, &p_data);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
-  memmove(p_data, data, app->buff_data[cur_bd].size);
+  memmove(p_data, data, size);
 
   vkUnmapMemory(app->ld_data[app->buff_data[cur_bd].ldi].device, app->buff_data[cur_bd].mem);
 

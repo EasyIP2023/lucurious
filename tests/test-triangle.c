@@ -186,57 +186,6 @@ START_TEST(test_vulkan_client_create) {
   err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
   check_err(err, app, wc, NULL)
 
-  /* Start of staging buffer for vertex */
-  vertex_2D tri_verts[3] = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-  };
-  /* Let the compiler get the size of your array for you. Don't hard code */
-  VkDeviceSize vsize = sizeof(tri_verts);
-  const uint32_t vertex_count = ARR_LEN(tri_verts);
-
-  for (uint32_t i = 0; i < vertex_count; i++) {
-    dlu_print_vector(DLU_VEC2, &tri_verts[i].pos);
-    dlu_print_vector(DLU_VEC3, &tri_verts[i].color);
-  }
-
-  /**
-  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
-  * should be mapped so that the CPU (host) can access it.
-  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
-  * writes to the memory by the host are visible to the device
-  * (and vice-versa) without the need to flush memory caches.
-  */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 's',
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  );
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, tri_verts);
-  check_err(err, app, wc, NULL)
-  cur_bd++;
-  /* End of staging buffer for vertex */
-
-  /* Start of vertex buffer */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, 'v', VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-  );
-  check_err(err, app, wc, NULL)
-
-  cur_bd++;
-
-  err = dlu_exec_copy_buffer(app, cur_pool, cur_bd-2, cur_bd-1, 0, 0, vsize);
-  check_err(err, app, wc, NULL)
-  /* End of vertex buffer */
-
-  /* Destroy staging buffer as it is no longer needed */
-  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
-  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
-
   /* 0 is the binding # this is bytes between successive structs */
   VkVertexInputBindingDescription vi_binding = dlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
 
@@ -328,8 +277,58 @@ START_TEST(test_vulkan_client_create) {
   dlu_log_me(DLU_SUCCESS, "graphics pipeline creation successfull");
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
-
   /* Ending setup for graphics pipeline */
+
+  /* Start of staging buffer for vertex */
+  vertex_2D tri_verts[3] = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+  };
+  /* Let the compiler get the size of your array for you. Don't hard code */
+  VkDeviceSize vsize = sizeof(tri_verts);
+  const uint32_t vertex_count = ARR_LEN(tri_verts);
+
+  for (uint32_t i = 0; i < vertex_count; i++) {
+    dlu_print_vector(DLU_VEC2, &tri_verts[i].pos);
+    dlu_print_vector(DLU_VEC3, &tri_verts[i].color);
+  }
+
+  /**
+  * Only creating stagging buffer as a proof of concept
+  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+  * The VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT communicates that the memory
+  * should be mapped so that the CPU (host) can access it.
+  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+  * writes to the memory by the host are visible to the device
+  * (and vice-versa) without the need to flush memory caches.
+  */
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE,
+    0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  check_err(err, app, wc, NULL)
+
+  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, tri_verts, 0);
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+  /* End of staging buffer for vertex */
+
+  /* Start of vertex buffer */
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize, 0,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  );
+  check_err(err, app, wc, NULL)
+  cur_bd++;
+
+  /* Used to show functionality */
+  err = dlu_exec_copy_buffer(app, cur_pool, cur_bd-2, cur_bd-1, 0, 0, vsize);
+  check_err(err, app, wc, NULL)
+  /* End of vertex buffer */
+
+  /* Destroy staging buffer as it is no longer needed */
+  dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd-2].buff); app->buff_data[cur_bd-2].buff = VK_NULL_HANDLE;
+  dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd-2].mem); app->buff_data[cur_bd-2].mem = VK_NULL_HANDLE;
 
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -347,12 +346,6 @@ START_TEST(test_vulkan_client_create) {
   dlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
   const VkDeviceSize offsets = 0;
   dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, &offsets);
-
-  for (uint32_t i = 0; i < app->bdc; i++) {
-    dlu_log_me(DLU_INFO, "app->buff_data[%d].name: %c", i, app->buff_data[i].name);
-    dlu_log_me(DLU_INFO, "app->buff_data[%d].buff: %p - %p", i, &app->buff_data[i].buff, app->buff_data[i].buff);
-  }
-
   dlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);
