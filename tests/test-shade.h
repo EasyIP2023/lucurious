@@ -109,7 +109,7 @@ const char spin_square_vert_src[] =
 const char text_map_frag_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
-  "layout(binding = 1) uniform sampler2D texSampler;\n"
+  "layout(set = 1, binding = 1) uniform sampler2D texSampler;\n"
   "layout(location = 0) in vec3 fragColor;\n"
   "layout(location = 1) in vec2 fragTexCoord;\n"
   "layout(location = 0) out vec4 outColor;\n"
@@ -118,7 +118,7 @@ const char text_map_frag_src[] =
 const char text_map_vert_src[] =
   "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
-  "layout(binding = 0) uniform UniformBufferObject {\n"
+  "layout(set = 0, binding = 0) uniform UniformBufferObject {\n"
   "   mat4 model;\n"
   "   mat4 view;\n"
   "   mat4 proj;\n"

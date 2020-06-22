@@ -38,14 +38,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define NUM_DESCRIPTOR_SETS 2
+#define MAX_FRAMES 2
 #define WIDTH 800
 #define HEIGHT 600
-#define MAX_FRAMES 2
 
 char *concat(char *fmt, ...);
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 1, .desc_cnt = 5, .gp_cnt = 1, .si_cnt = 5,
+  .vkcomp_cnt = 1, .desc_cnt = 2, .gp_cnt = 1, .si_cnt = 5,
   .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 1,
   .dd_cnt = 1, .td_cnt = 1, .ld_cnt = 1, .pd_cnt = 1
 };
@@ -287,18 +288,23 @@ START_TEST(test_vulkan_image_texture) {
   vi_attribs[1] = dlu_set_vertex_input_attrib_desc(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vertex_text_2D, color));
   vi_attribs[2] = dlu_set_vertex_input_attrib_desc(2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(vertex_text_2D, tex_coord));
 
-  VkPipelineVertexInputStateCreateInfo vertex_input_info = dlu_set_vertex_input_state_info(1, &vi_binding, 3, vi_attribs);
+  VkPipelineVertexInputStateCreateInfo vertex_input_info = dlu_set_vertex_input_state_info(1, &vi_binding, ARR_LEN(vi_attribs), vi_attribs);
 
   /* This also sets the descriptor count */
-  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, app->sc_data[cur_scd].sic);
+  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
   check_err(!err, app, wc, NULL)
 
-  VkDescriptorSetLayoutBinding bindings[2];
-  bindings[0] = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
-  bindings[1] = dlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
+  VkDescriptorSetLayoutBinding binding; VkDescriptorSetLayoutCreateInfo desc_set_info;
 
-  VkDescriptorSetLayoutCreateInfo desc_set_info = dlu_set_desc_set_layout_info(0, 2, bindings);
-  err = dlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
+  /* One descriptor set per layout */
+  binding = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
+  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
+  check_err(err, app, wc, NULL)
+
+  binding = dlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
+  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
+  err = dlu_create_desc_set_layout(app, cur_dd, 1, &desc_set_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
@@ -462,13 +468,13 @@ START_TEST(test_vulkan_image_texture) {
   /* End of staging buffer for vertex */
 
   VkDescriptorPoolSize pool_sizes[2];
-  pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, app->sc_data[cur_scd].sic);
-  pool_sizes[1] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app->sc_data[cur_scd].sic);
+  pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
+  pool_sizes[1] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1);
 
   err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, ARR_LEN(pool_sizes), pool_sizes);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_desc_set(app, cur_dd);
+  err = dlu_create_desc_sets(app, cur_dd);
   check_err(err, app, wc, NULL)
 
   float float32[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -491,16 +497,17 @@ START_TEST(test_vulkan_image_texture) {
     app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
   );
 
+  buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], VK_WHOLE_SIZE);
+  writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+  writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[1], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
+  dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
+
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], VK_WHOLE_SIZE);
-    writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
-    writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[i], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
-    dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
     dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
-    dlu_bind_pipeline(app, cur_pool, i, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
+    dlu_bind_pipeline(app, cur_pool, i, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
     dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[0].buff, offsets);
-    dlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, app->buff_data[0].buff, offsets[1], VK_INDEX_TYPE_UINT16);
-    dlu_bind_desc_sets(app, cur_pool, i, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[i], 0, NULL);
+    dlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, cur_bd, offsets[1], VK_INDEX_TYPE_UINT16);
+    dlu_bind_desc_sets(app, cur_pool, i, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
     dlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }
 

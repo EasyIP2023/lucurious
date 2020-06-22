@@ -41,4 +41,5 @@ compositors that appear to be straight out of science fiction.
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)
 * [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-1)
 * [Vulkan Validation Layers](https://gpuopen.com/using-the-vulkan-validation-layers/)
+* [I am graphics and so can you](https://www.fasterthan.life/blog/2017/7/12/i-am-graphics-and-so-can-you-part-3-breaking-ground)
 * [MVP](https://jsantell.com/model-view-projection)

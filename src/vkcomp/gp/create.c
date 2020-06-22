@@ -172,13 +172,17 @@ VkResult dlu_create_pipeline_layout(
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
 
-  /* Function may be called multiple times and descriptor data struct array members may not be needed */
+  /* Function may be called in senarios descriptor data struct array members may not be needed */
   if (app->desc_data) {
-    if (!app->desc_data[cur_dd].layouts[0]) {
-      dlu_log_me(DLU_DANGER, "[x] VkDescriptorSetLayout not yet created");
-      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_set_layouts(3)");
-      return res;
+
+    for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
+      if (!app->desc_data[cur_dd].layouts[i]) {
+        dlu_log_me(DLU_DANGER, "[x] VkDescriptorSetLayout at index %d not yet created", i);
+        dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_set_layout(3)");
+        return res;
+      }
     }
+
     create_info.setLayoutCount = app->desc_data[cur_dd].dlsc;
     create_info.pSetLayouts = app->desc_data[cur_dd].layouts;
   } else {
@@ -195,9 +199,10 @@ VkResult dlu_create_pipeline_layout(
   return res;
 }
 
-VkResult dlu_create_desc_set_layouts(
+VkResult dlu_create_desc_set_layout(
   vkcomp *app,
   uint32_t cur_dd,
+  uint32_t cur_dl,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -205,10 +210,8 @@ VkResult dlu_create_desc_set_layouts(
   if (!app->desc_data[cur_dd].layouts) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DESC_DATA_MEMS"); return res; }
   if (app->desc_data[cur_dd].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_desc_pool(3)"); return res; }
 
-  for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
-    res = vkCreateDescriptorSetLayout(app->ld_data[app->desc_data[cur_dd].ldi].device, desc_set_info, NULL, &app->desc_data[cur_dd].layouts[i]);
-    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout"); return res; }
-  }
+  res = vkCreateDescriptorSetLayout(app->ld_data[app->desc_data[cur_dd].ldi].device, desc_set_info, NULL, &app->desc_data[cur_dd].layouts[cur_dl]);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout")
 
   return res;
 }
@@ -240,7 +243,7 @@ VkResult dlu_create_desc_pool(
   return res;
 }
 
-VkResult dlu_create_desc_set(
+VkResult dlu_create_desc_sets(
   vkcomp *app,
   uint32_t cur_dd
 ) {
@@ -281,8 +284,6 @@ VkResult dlu_create_texture_image(
   res = vkCreateImage(app->ld_data[cur_ld].device, img_info, NULL, &app->text_data[cur_tex].image);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImage"); }
 
-  app->text_data[cur_tex].ldi = cur_ld;
-
   /**
   * Although you know the width, height, and the size of a buffer element,
   * there is no way to determine exactly how much memory is needed to allocate.
@@ -313,6 +314,9 @@ VkResult dlu_create_texture_image(
   */
   res = vkBindImageMemory(app->ld_data[cur_ld].device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory")
+
+  /* Associate a texture with a given VkDevice */
+  app->text_data[cur_tex].ldi = cur_ld;
 
   return res;
 }

@@ -29,8 +29,9 @@ void dlu_bind_pipeline(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  VkPipelineBindPoint pipelineBindPoint,
-  VkPipeline pipeline
+  uint32_t cur_gpd,
+  uint32_t cur_pl,
+  VkPipelineBindPoint pipelineBindPoint
 );
 
 void dlu_bind_desc_sets(
@@ -38,10 +39,8 @@ void dlu_bind_desc_sets(
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t cur_gpd,
+  uint32_t cur_dd,
   VkPipelineBindPoint pipelineBindPoint,
-  uint32_t firstSet,
-  uint32_t descriptorSetCount,
-  const VkDescriptorSet *pDescriptorSets,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 );
@@ -60,7 +59,7 @@ void dlu_bind_index_buff_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  VkBuffer buffer,
+  uint32_t cur_bd,
   VkDeviceSize offset,
   VkIndexType indexType
 );

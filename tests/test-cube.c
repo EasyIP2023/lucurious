@@ -209,7 +209,9 @@ START_TEST(test_vulkan_client_create_3D) {
 
   /* Create uniform buffer & vertex buffer that has the transformation matrices (for the vertex shader) */
   VkDeviceSize vsize = sizeof(vertices);
+  const uint32_t vertex_count = ARR_LEN(vertices);
   const VkDeviceSize offsets[] = {0, vsize};
+
   err = dlu_create_vk_buffer(app, cur_ld, cur_bd, sizeof(ubd.mvp)+vsize, 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE,
     0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -228,29 +230,13 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
   check_err(!err, app, wc, NULL)
 
-  VkDescriptorSetLayoutBinding desc_set = dlu_set_desc_set_layout_binding(
-    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS, VK_SHADER_STAGE_VERTEX_BIT, NULL
-  );
-
-  VkDescriptorSetLayoutCreateInfo desc_set_info = dlu_set_desc_set_layout_info(0, 1, &desc_set);
-
+  VkDescriptorSetLayoutBinding desc_set; VkDescriptorSetLayoutCreateInfo desc_set_info;
+  
   /* Using same layout for all VkDescriptorSetLayout objects */
-  err = dlu_create_desc_set_layouts(app, cur_dd, &desc_set_info);
+  desc_set = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &desc_set);
+  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
   check_err(err, app, wc, NULL)
-
-  VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
-  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_desc_set(app, cur_dd);
-  check_err(err, app, wc, NULL)
-
-  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, offsets[1], sizeof(ubd.mvp));
-  VkWriteDescriptorSet write = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0,
-                               app->desc_data[cur_dd].dlsc, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL,
-                               &buff_info, NULL);
-
-  dlu_update_desc_sets(app->ld_data[cur_ld].device, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
   check_err(err, app, wc, NULL)
@@ -392,6 +378,13 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
 
+  VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
+  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);
+  check_err(err, app, wc, NULL)
+
+  err = dlu_create_desc_sets(app, cur_dd);
+  check_err(err, app, wc, NULL)
+
   VkClearValue clear_values[2];
   float float32[4] = {0.2f, 0.2f, 0.2f, 0.2f};
   int32_t int32[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -404,14 +397,19 @@ START_TEST(test_vulkan_client_create_3D) {
 
   /* Vertex buffer cannot be binded until we begin a renderpass */
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, ARR_LEN(clear_values), clear_values, VK_SUBPASS_CONTENTS_INLINE);
-  dlu_bind_pipeline(app, cur_pool, cur_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, app->gp_data[cur_gpd].graphics_pipelines[0]);
-  dlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, 1, &app->desc_data[cur_dd].desc_set[0], 0, NULL);
+
+  VkDescriptorBufferInfo buff_info; VkWriteDescriptorSet write;
+
+  buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, offsets[1], sizeof(ubd.mvp));
+  write = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, NUM_DESCRIPTOR_SETS, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+  dlu_update_desc_sets(app->ld_data[cur_ld].device, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
+
+  dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
+  dlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
 
   dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[0].buff, offsets);
   dlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   dlu_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
-
-  const uint32_t vertex_count = ARR_LEN(vertices);
   dlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);

@@ -69,12 +69,13 @@ VkResult dlu_create_pipeline_layout(
 );
 
 /**
-* Create the layouts that specify which resource (VkBuffer, VkImage)
+* Create the layouts that specify which resource (VkBuffer, VkImage, etc...)
 * the shaders in the graphics pipeline will access
 */
-VkResult dlu_create_desc_set_layouts(
+VkResult dlu_create_desc_set_layout(
   vkcomp *app,
   uint32_t cur_dd,
+  uint32_t cur_dl,
   VkDescriptorSetLayoutCreateInfo *desc_set_info
 );
 
@@ -94,7 +95,7 @@ VkResult dlu_create_desc_pool(
 * Specifies actual resource (VkBuffer,VkImage) that will be
 * bounded to the descriptors
 */
-VkResult dlu_create_desc_set(
+VkResult dlu_create_desc_sets(
   vkcomp *app,
   uint32_t cur_dd
 );

@@ -293,7 +293,7 @@ VkResult dlu_create_swap_chain(
   create_info.imageUsage = imageUsage;
   create_info.presentMode = presentMode;
 
-  /* Leave this way I want "presentable images associated with the swapchain will own all of the pixels they contain" */
+  /* Leave this way I want "presentable images associated with the swapchain to own all of the pixels they contain" */
   create_info.clipped = VK_FALSE;
   create_info.oldSwapchain = VK_NULL_HANDLE;
 
@@ -334,7 +334,7 @@ VkResult dlu_create_swap_chain(
   return res;
 }
 
-VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_idx, VkImageViewCreateInfo *img_view_info) {
+VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_idx, VkImageViewCreateInfo *ivi) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
   switch (type) {
@@ -344,6 +344,7 @@ VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t 
 
         if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
         if (!app->sc_data[cur_idx].swap_chain) { PERR(DLU_VKCOMP_SC, 0, NULL); return res; }
+        if (app->sc_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_swap_chain()"); return res; }
 
         /**
         * It's okay to reuse app->sc_data[cur_scd].sic. It'll give same result as minImageCount + 1.
@@ -358,8 +359,8 @@ VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t 
         if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
 
         for (uint32_t i = 0; i < app->sc_data[cur_idx].sic; i++) {
-          img_view_info->image = app->sc_data[cur_idx].sc_buffs[i].image = imgs[i];
-          res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, img_view_info, NULL, &app->sc_data[cur_idx].sc_buffs[i].view);
+          ivi->image = app->sc_data[cur_idx].sc_buffs[i].image = imgs[i];
+          res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, ivi, NULL, &app->sc_data[cur_idx].sc_buffs[i].view);
           if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
         }
       }
@@ -368,27 +369,29 @@ VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t 
     case DLU_TEXT_IMAGE_VIEWS:
       {
         if (!app->text_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_TEXT_DATA"); return res; }
+        if (app->text_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_texture_image()"); return res; }
 
         /**
         * Could set the image inside the VkImageViewCreateInfo struct,
         * but for reduncy and to ensure the image is correct assigning it here.
         */
-        img_view_info->image = app->text_data[cur_idx].image;
-        res = vkCreateImageView(app->ld_data[app->text_data[cur_idx].ldi].device, img_view_info, NULL, &app->text_data[cur_idx].view);
+        ivi->image = app->text_data[cur_idx].image;
+        res = vkCreateImageView(app->ld_data[app->text_data[cur_idx].ldi].device, ivi, NULL, &app->text_data[cur_idx].view);
         if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
       }
       break;
     case DLU_DEPTH_IMAGE_VIEWS:
       {
         if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
+        if (app->sc_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_swap_chain()"); return res; }
         /* ADD Depth Buffer Checking Here */
 
-        if (img_view_info->format == VK_FORMAT_D16_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D24_UNORM_S8_UINT || img_view_info->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
-          img_view_info->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        if (ivi->format == VK_FORMAT_D16_UNORM_S8_UINT || ivi->format == VK_FORMAT_D24_UNORM_S8_UINT || ivi->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+          ivi->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
         /* Create an image view object for depth buffer */
-        img_view_info->image = app->sc_data[cur_idx].depth.image;
-        res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, img_view_info, NULL, &app->sc_data[cur_idx].depth.view);
+        ivi->image = app->sc_data[cur_idx].depth.image;
+        res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, ivi, NULL, &app->sc_data[cur_idx].depth.view);
         if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
       }
       break;
@@ -408,6 +411,7 @@ VkResult dlu_create_depth_buff(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
+  if (app->sc_data[cur_scd].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_swap_chain()"); return res; }
 
   /* Create image object */
   res = vkCreateImage(app->ld_data[app->sc_data[cur_scd].ldi].device, img_info, NULL, &app->sc_data[cur_scd].depth.image);

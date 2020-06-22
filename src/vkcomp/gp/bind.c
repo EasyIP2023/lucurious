@@ -29,11 +29,13 @@ void dlu_bind_pipeline(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  VkPipelineBindPoint pipelineBindPoint,
-  VkPipeline pipeline
+  uint32_t cur_gpd,
+  uint32_t cur_pl,
+  VkPipelineBindPoint pipelineBindPoint
 ) {
-  vkCmdBindPipeline(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
-                    pipelineBindPoint, pipeline);
+
+  vkCmdBindPipeline(app->cmd_data[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint,
+                    app->gp_data[cur_gpd].graphics_pipelines[cur_pl]);
 }
 
 void dlu_bind_desc_sets(
@@ -41,16 +43,15 @@ void dlu_bind_desc_sets(
   uint32_t cur_pool,
   uint32_t cur_buff,
   uint32_t cur_gpd,
+  uint32_t cur_dd,
   VkPipelineBindPoint pipelineBindPoint,
-  uint32_t firstSet,
-  uint32_t descriptorSetCount,
-  const VkDescriptorSet *pDescriptorSets,
   uint32_t dynamicOffsetCount,
   const uint32_t *pDynamicOffsets
 ) {
-  vkCmdBindDescriptorSets(app->cmd_data[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint,
-                          app->gp_data[cur_gpd].pipeline_layout, firstSet, descriptorSetCount,
-                          pDescriptorSets, dynamicOffsetCount, pDynamicOffsets);
+  
+  /* Predefine the firstSet argument to be 0 for ease of use. " 'firstSet' is the set number of the first descriptor set to be bound." */
+  vkCmdBindDescriptorSets(app->cmd_data[cur_pool].cmd_buffs[cur_buff], pipelineBindPoint, app->gp_data[cur_gpd].pipeline_layout, 0,
+                          app->desc_data[cur_dd].dlsc, app->desc_data[cur_dd].desc_set, dynamicOffsetCount, pDynamicOffsets);
 }
 
 void dlu_bind_vertex_buffs_to_cmd_buff(
@@ -62,18 +63,18 @@ void dlu_bind_vertex_buffs_to_cmd_buff(
   const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 ) {
-  vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
-                        firstBinding, bindingCount, pBuffers, offsets);
+
+  vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff], firstBinding, bindingCount, pBuffers, offsets);
 }
 
 void dlu_bind_index_buff_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  VkBuffer buffer,
+  uint32_t cur_bd,
   VkDeviceSize offset,
   VkIndexType indexType
 ) {
-  vkCmdBindIndexBuffer(app->cmd_data[cur_pool].cmd_buffs[cur_buff],
-                      buffer, offset, indexType);
+
+  vkCmdBindIndexBuffer(app->cmd_data[cur_pool].cmd_buffs[cur_buff], app->buff_data[cur_bd].buff, offset, indexType);
 }
