@@ -39,6 +39,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   dlu_log_type type = DLU_NONE;
 
   switch (messageSeverity) {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: type = DLU_INFO; break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: type = DLU_WARNING; break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: type = DLU_DANGER; break;

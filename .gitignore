@@ -28,3 +28,6 @@ xdg-shell-protocol.h
 tests/textures/texture.h
 
 *.cpp
+*.supp
+*.out
+*.txt

@@ -25,11 +25,31 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+VkResult get_layer_props(uint32_t *count, VkLayerProperties **props) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  res = vkEnumerateInstanceLayerProperties(count, NULL);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties")
+
+  if (*count == 0) return VK_RESULT_MAX_ENUM;
+
+  *props = calloc((size_t) *count, sizeof(VkLayerProperties));
+  if (!(*props)) { dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno)); return VK_RESULT_MAX_ENUM; }
+
+  res = vkEnumerateInstanceLayerProperties(count, *props);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkEnumerateInstanceLayerProperties")
+
+  return res;
+}
+
 VkResult get_extension_properties(
   VkPhysicalDevice device,
   uint32_t *count,
-  VkExtensionProperties **eprops
+  VkExtensionProperties **eprops ,
+  const char *pLayerName
 ) {
+
   VkResult res = VK_RESULT_MAX_ENUM;
 
   res = (!device) ? vkEnumerateInstanceExtensionProperties(NULL, count, NULL) : vkEnumerateDeviceExtensionProperties(device, NULL, count, NULL);
@@ -38,10 +58,10 @@ VkResult get_extension_properties(
   if (*count == 0) return VK_RESULT_MAX_ENUM;
 
   /* Allocate space for extensions then set the available instance extensions */
-  *eprops = dlu_alloc(DLU_SMALL_BLOCK_PRIV, *count * sizeof(VkExtensionProperties));
-  if (!(*eprops)) { PERR(DLU_ALLOC_FAILED, 0, NULL); return VK_RESULT_MAX_ENUM; }
+  *eprops = calloc((size_t) *count, sizeof(VkExtensionProperties));
+  if (!(*eprops)) { dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno)); return VK_RESULT_MAX_ENUM; }
 
-  res = (!device) ? vkEnumerateInstanceExtensionProperties(NULL, count, *eprops) : vkEnumerateDeviceExtensionProperties(device, NULL, count, *eprops);
+  res = (!device) ? vkEnumerateInstanceExtensionProperties(NULL, count, *eprops) : vkEnumerateDeviceExtensionProperties(device, pLayerName, count, *eprops);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, (!device) ? "vkEnumerateInstanceExtensionProperties" : "vkEnumerateDeviceExtensionProperties"); return res; }
 
   return res;

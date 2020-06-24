@@ -124,6 +124,14 @@ typedef enum _dlu_drm_fd_type {
 } dlu_drm_fd_type;
 
 typedef struct _dlu_drm_core {
+
+  struct _buffer {
+    uint32_t odid; /* Output Device ID */ 
+
+    /* true if a buffer (scan out buffer) is currently owned by KMS. */ 
+    bool in_use;
+  } *buffer;
+
   struct _device {
     /* KMS API Device node */
     uint32_t kmsfd;

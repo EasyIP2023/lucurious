@@ -129,7 +129,7 @@ void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
       dlu_log_me(DLU_DANGER, "[x] vkGetDeviceProcAddr: Unable to find %s function", dlu_msg);
       break;
     case DLU_VK_FUNC_ERR:
-      dlu_log_me(DLU_DANGER, "[x] %s:", dlu_msg, vkres_msg(vkerr));
+      dlu_log_me(DLU_DANGER, "[x] %s: %s", dlu_msg, vkres_msg(vkerr));
       break;
     case DLU_MEM_TYPE_ERR:
       dlu_log_me(DLU_DANGER, "[x] memory_type_from_properties failed");

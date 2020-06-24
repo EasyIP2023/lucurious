@@ -18,11 +18,14 @@ meson test -C build/ --suite images
 
 There are a few valgrind reported leaks that the API has no control over.
 ```
-valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --undef-value-errors=no --trace-children=yes --gen-suppressions==all &> <filename>.supp
+valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --undef-value-errors=no --trace-children=yes --gen-suppressions=all  <executable> &> <filename>.supp
 ```
-
+ 
+These are potential commands one could type to delete lines after the top
 ```
-sed '/==/d' <filename>.supp > <new_filname>.supp
+sed '/==/d' <filename>.supp > <new_filname>.supp 
+sed '/1m/d' <filename>.supp > <new_filname>.supp
+sed '/0m/d' <filename>.supp > <new_filname>.supp 
 ```
 
 ```

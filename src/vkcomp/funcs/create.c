@@ -36,9 +36,9 @@ VkResult dlu_create_instance(
   char *app_name,
   char *engine_name,
   uint32_t enabledLayerCount,
-  const char *const *ppEnabledLayerNames,
+  const char **ppEnabledLayerNames,
   uint32_t enabledExtensionCount,
-  const char *const *ppEnabledExtensionNames
+  const char **ppEnabledExtensionNames
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;

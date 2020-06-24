@@ -24,11 +24,14 @@
 
 #ifndef DLU_VKCOMP_DEVICE_FUNCS_H
 #define DLU_VKCOMP_DEVICE_FUNCS_H
+ 
+VkResult get_layer_props(uint32_t *count, VkLayerProperties **props);
 
 VkResult get_extension_properties(
   VkPhysicalDevice device,
   uint32_t *count,
-  VkExtensionProperties **eprops
+  VkExtensionProperties **eprops,
+  const char *pLayerName
 );
 
 #endif
