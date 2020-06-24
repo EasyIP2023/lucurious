@@ -25,7 +25,7 @@
 #ifndef DLU_DRM_INFO_H
 #define DLU_DRM_INFO_H
 
-dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) ;
+bool dlu_drm_q_output_dev_info(dlu_drm_core *core, dlu_drm_device_info *info);
 
 #ifdef INAPI_CALLS
 void dlu_print_dconf_info(const char *device);

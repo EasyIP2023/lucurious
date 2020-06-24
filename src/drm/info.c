@@ -193,10 +193,10 @@ exit_info:
   dlu_release_blocks();
 }
 
-dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) {
-  dlu_drm_device_info ret = { UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT64_MAX, "" };
+bool dlu_drm_q_output_dev_info(dlu_drm_core *core, dlu_drm_device_info *info) {
+  bool ret = false; uint32_t cur_info = 0;
 
-  if (core->device.kmsfd == UINT32_MAX) { return ret; }
+  if (core->device.kmsfd == UINT32_MAX) goto exit_func;
 
   drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
   if (!dmr) {
@@ -238,9 +238,9 @@ dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) {
           goto free_plane_res;
         }
 
-        ret.enc_idx = e;
-        ret.conn_idx = i;
-        snprintf(ret.conn_name, sizeof(ret.conn_name), "%s", ouput_devices(conn->connector_type_id));
+        info[cur_info].enc_idx = e;
+        info[cur_info].conn_idx = i;
+        snprintf(info[cur_info].conn_name, sizeof(info[cur_info].conn_name), "%s", ouput_devices(conn->connector_type_id));
 
         enc_crtc_id = enc->crtc_id;
         drmModeFreeEncoder(enc); enc = NULL;
@@ -258,7 +258,7 @@ dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) {
           goto free_plane_res;
         }
         
-        ret.crtc_idx = c;
+        info[cur_info].crtc_idx = c;
         refresh = ((crtc->mode.clock * 1000000LL / crtc->mode.htotal) + (crtc->mode.vtotal / 2)) / crtc->mode.vtotal;
 
         crtc_id = crtc->crtc_id; fb_id = crtc->buffer_id;
@@ -279,8 +279,8 @@ dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) {
 
         /* look for primary plane for chosen crtc */
         if (plane->crtc_id == crtc_id && plane->fb_id == fb_id) {
-           ret.plane_idx = p; ret.refresh  = refresh;
-           refresh = UINT64_MAX;
+           info[cur_info].plane_idx = p; info[cur_info].refresh  = refresh;
+           cur_info++; ret = true; refresh = UINT64_MAX;
         }
 
         drmModeFreePlane(plane); plane = NULL;
