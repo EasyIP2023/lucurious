@@ -292,6 +292,8 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core))) : 0;
   size += (ma.dod_cnt ) ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
 
+  size += (ma.odb_cnt) ? (BLOCK_SIZE + (ma.odb_cnt * sizeof(struct _drm_buff_data))) : 0;
+
   if (!dlu_alloc(type, size)) return false;
 
   return true;
@@ -452,6 +454,13 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         core->device.output_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_data));
         if (!core->device.output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
         core->device.odc = arr_size; return true;
+      }
+    case DLU_DEVICE_OUTPUT_BUFF_DATA:
+      {
+        dlu_drm_core *core = (dlu_drm_core *) addr;
+        core->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _drm_buff_data));
+        if (!core->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        core->odbc = arr_size; return true;
       }
     default: break;
   }

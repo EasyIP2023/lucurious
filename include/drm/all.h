@@ -29,9 +29,9 @@
 #include "create.h"
 #include "logind.h"
 #include "device.h"
+#include "info.h"
 
 #ifdef INAPI_CALLS
-#include "info.h"
 #include "timespec-util.h"
 #include "edid.h"
 #endif

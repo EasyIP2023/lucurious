@@ -56,7 +56,8 @@ typedef enum _dlu_data_type {
   DLU_SC_DATA_MEMS = 0x0F01,
   DLU_DESC_DATA_MEMS = 0x0F02,
   DLU_GP_DATA_MEMS = 0x0F03,
-  DLU_DEVICE_OUTPUT_DATA = 0x0F04
+  DLU_DEVICE_OUTPUT_DATA = 0xF001,
+  DLU_DEVICE_OUTPUT_BUFF_DATA = 0xF002
 } dlu_data_type;
 
 typedef struct _dlu_otma_mems {
@@ -67,20 +68,21 @@ typedef struct _dlu_otma_mems {
   uint32_t vkcomp_cnt;  /* Vkcomp struct count */
   uint32_t vkext_props_cnt;
   uint32_t vkval_layer_cnt;
-  uint32_t desc_cnt;    /* descriptor count */
+  uint32_t desc_cnt;  /* descriptor count */
   uint32_t gp_cnt;      /* Graphics pipelines count */
-  uint32_t si_cnt;      /* swap chain image count */
-  uint32_t scd_cnt;     /* swap chain data count */
-  uint32_t gpd_cnt;     /* graphics pipeline data count */
-  uint32_t cmdd_cnt;    /* command data count */
+  uint32_t si_cnt;       /* swap chain image count */
+  uint32_t scd_cnt;    /* swap chain data count */
+  uint32_t gpd_cnt;    /* graphics pipeline data count */
+  uint32_t cmdd_cnt; /* command data count */
   uint32_t bd_cnt;      /* buffer data count */
   uint32_t dd_cnt;      /* descriptor data count */
-  uint32_t td_cnt;      /* texture data count */
+  uint32_t td_cnt;       /* texture data count */
   uint32_t dis_cnt;     /* display data count */
   uint32_t pd_cnt;      /* physical device data count */
-  uint32_t ld_cnt;      /* logical device data count */
-  uint32_t drmc_cnt;    /* dlu_drm_core struct count */
-  uint32_t dod_cnt;     /* Device output_data struct count */
+  uint32_t ld_cnt;       /* logical device data count */
+  uint32_t drmc_cnt;  /* dlu_drm_core struct count */
+  uint32_t dod_cnt;    /* Device output_data struct count */
+  uint32_t odb_cnt;    /* Output Device Buffer Count */
 } dlu_otma_mems;
 
 #ifdef INAPI_CALLS

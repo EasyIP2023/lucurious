@@ -285,7 +285,10 @@ const char *ouput_devices(uint32_t type) {
   }
 }
 
-/* Might be a good idea to run lucur --display-info=/dev/dri/card0 from within a TTY :) */
+/** 
+* Might be a good idea to run lucur --display-info=/dev/dri/card0 from within a TTY :)  
+* or make a call to dlu_drm_q_ouput_dev_info(3)
+*/
 bool dlu_drm_kms_node_enum_ouput_dev(
   dlu_drm_core *core,
   uint32_t odb,

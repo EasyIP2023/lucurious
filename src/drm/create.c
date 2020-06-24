@@ -225,16 +225,6 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev) {
   return ret;
 }
 
-bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
-  core->device.gbm_device = gbm_create_device(core->device.kmsfd);
-  if (core->device.gbm_device) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to create a gbm device");
-    return false;
-  }
-
-  return true;
-}
-
 static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
   return logind_take_device(DLU_INP_FD, (dlu_drm_core *) user_data, path);
 }
@@ -265,6 +255,36 @@ bool dlu_drm_create_input_handle(dlu_drm_core *core) {
   if (libinput_udev_assign_seat(core->input.inp, "seat0") < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to assign seat0 to instance of libinput");
     return false;
+  }
+
+  return true;
+}
+
+bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
+  core->device.gbm_device = gbm_create_device(core->device.kmsfd);
+  if (core->device.gbm_device) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create a gbm device");
+    return false;
+  }
+
+  return true;
+}
+
+bool dlu_drm_create_buffer(dlu_drm_core *core, uint32_t UNUSED cur_bi) {
+
+  if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); return false; }
+
+  return true;
+}
+
+bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t UNUSED cur_bi) {
+
+  if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); return false; }
+
+  switch (type) {
+    case DLU_DRM_BO: break;
+    case DLU_DRM_BO_WITH_MODIFIERS: break;
+    default: break;
   }
 
   return true;

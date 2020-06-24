@@ -93,8 +93,7 @@ void dlu_print_dconf_info(const char *device) {
 
   drmModeConnector *conn = NULL; drmModeEncoder *enc = NULL;
   drmModeCrtc *crtc = NULL; drmModePlane *plane = NULL;
-  uint32_t enc_crtc_id = 0, crtc_id = 0;
-  uint32_t fb_id = 0;
+  uint32_t enc_crtc_id = 0, crtc_id = 0, fb_id = 0;
   uint64_t refresh = 0;
 
   for (int i = 0; i < dmr->count_connectors; i++) {
@@ -192,4 +191,112 @@ free_drm_res:
 exit_info:
   dlu_drm_freeup_core(core);
   dlu_release_blocks();
+}
+
+dlu_drm_device_info dlu_drm_q_output_dev_info(dlu_drm_core *core) {
+  dlu_drm_device_info ret = { UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT64_MAX, "" };
+
+  if (core->device.kmsfd == UINT32_MAX) { return ret; }
+
+  drmModeRes *dmr = drmModeGetResources(core->device.kmsfd);
+  if (!dmr) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetResources: %s\n", strerror(errno));
+    goto exit_func;
+  }
+
+  drmModePlaneRes *pres = drmModeGetPlaneResources(core->device.kmsfd);
+  if (!pres) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeGetPlaneResources: %s\n", strerror(errno));
+    goto free_drm_res;
+  }
+
+  if (dmr->count_crtcs <= 0 || dmr->count_connectors <= 0 || dmr->count_encoders <= 0 || pres->count_planes <= 0) {
+    dlu_log_me(DLU_DANGER, "[x] Current device is somehow not a KMS node");
+    goto free_plane_res;
+  }
+
+  drmModeConnector *conn = NULL; drmModeEncoder *enc = NULL;
+  drmModeCrtc *crtc = NULL; drmModePlane *plane = NULL;
+  uint32_t enc_crtc_id = 0, crtc_id = 0, fb_id = 0;
+  uint64_t refresh = 0;
+
+  for (int i = 0; i < dmr->count_connectors; i++) {
+    conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[i]);
+    if (!conn) {
+      dlu_log_me(DLU_DANGER, "[x] drmModeGetConnector: %s\n", strerror(errno));
+      free_drm_objs(&conn, &enc, &crtc, &plane);
+      goto free_plane_res;
+    }
+
+    /* Finding a encoder (a deprecated KMS object) for a given connector */
+    for (int e = 0; e < dmr->count_encoders; e++) {
+      if (dmr->encoders[e] == conn->encoder_id) {
+        enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[e]);
+        if (!enc) {
+          dlu_log_me(DLU_DANGER, "[x] drmModeGetEncoder: %s\n", strerror(errno));
+          free_drm_objs(&conn, &enc, &crtc, &plane);
+          goto free_plane_res;
+        }
+
+        ret.enc_idx = e;
+        ret.conn_idx = i;
+        snprintf(ret.conn_name, sizeof(ret.conn_name), "%s", ouput_devices(conn->connector_type_id));
+
+        enc_crtc_id = enc->crtc_id;
+        drmModeFreeEncoder(enc); enc = NULL;
+        break;
+      }
+    }
+
+    /* Finding a crtc for the given encoder */
+    for (int c = 0; c < dmr->count_crtcs; c++) {
+      if (dmr->crtcs[c] == enc_crtc_id) {
+        crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[c]);
+        if (!crtc) {
+          dlu_log_me(DLU_DANGER, "[x] drmModeGetCrtc: %s\n", strerror(errno));
+          free_drm_objs(&conn, &enc, &crtc, &plane);
+          goto free_plane_res;
+        }
+        
+        ret.crtc_idx = c;
+        refresh = ((crtc->mode.clock * 1000000LL / crtc->mode.htotal) + (crtc->mode.vtotal / 2)) / crtc->mode.vtotal;
+
+        crtc_id = crtc->crtc_id; fb_id = crtc->buffer_id;
+        drmModeFreeCrtc(crtc); enc_crtc_id = UINT32_MAX;
+        break;
+      }
+    }
+
+    /* Only search for planes if a given CRTC has an encoder connected to it and a connector connected to that encoder */
+    if (crtc) {
+      for (uint32_t p = 0; p < pres->count_planes; p++) {
+        plane = drmModeGetPlane(core->device.kmsfd, pres->planes[p]);
+        if (!plane) {
+          dlu_log_me(DLU_DANGER, "[x] drmModeGetPlane: %s\n", strerror(errno));
+          free_drm_objs(&conn, &enc, &crtc, &plane);
+          goto free_plane_res;
+        }
+
+        /* look for primary plane for chosen crtc */
+        if (plane->crtc_id == crtc_id && plane->fb_id == fb_id) {
+           ret.plane_idx = p; ret.refresh  = refresh;
+           refresh = UINT64_MAX;
+        }
+
+        drmModeFreePlane(plane); plane = NULL;
+      }
+
+      /* Reset values */
+      crtc = NULL; crtc_id = fb_id = 0;
+    }
+
+    drmModeFreeConnector(conn); conn = NULL;
+  }
+
+free_plane_res:
+  drmModeFreePlaneResources(pres);
+free_drm_res:
+  drmModeFreeResources(dmr);  
+exit_func:
+  return ret;
 }

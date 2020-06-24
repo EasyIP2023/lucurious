@@ -123,14 +123,30 @@ typedef enum _dlu_drm_fd_type {
   DLU_INP_FD = 0x0001
 } dlu_drm_fd_type;
 
-typedef struct _dlu_drm_core {
+typedef enum _dlu_drm_bo_type {
+  DLU_DRM_BO = 0x0000,
+  DLU_DRM_BO_WITH_MODIFIERS  = 0x0001
+} dlu_drm_bo_type;
 
-  struct _buffer {
+typedef struct _dlu_drm_device_info {
+  uint32_t conn_idx;
+  uint32_t enc_idx;
+  uint32_t crtc_idx;
+  uint32_t plane_idx;
+  uint64_t refresh;
+  char conn_name[32];
+} dlu_drm_device_info;
+
+typedef struct _dlu_drm_core {
+ 
+  uint32_t odbc;
+  struct _drm_buff_data {
     uint32_t odid; /* Output Device ID */ 
+    struct gbm_bo *bo;
 
     /* true if a buffer (scan out buffer) is currently owned by KMS. */ 
     bool in_use;
-  } *buffer;
+  } *buff_data;
 
   struct _device {
     /* KMS API Device node */

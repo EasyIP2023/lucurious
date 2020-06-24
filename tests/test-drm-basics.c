@@ -83,9 +83,15 @@ START_TEST(kms_node_enumeration) {
     ck_abort_msg(NULL);
   }
 
+  dlu_drm_device_info dinfo = dlu_drm_q_output_dev_info(core);
+  if (dinfo.plane_idx == UINT32_MAX) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
   uint32_t cur_odb = 0;
   /* Indexes for my particular system kms node */
-  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, 0, 0, 0, 3, 60000, "VGA")) {
+  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo.conn_idx, dinfo.enc_idx, dinfo.crtc_idx, dinfo.plane_idx, dinfo.refresh, dinfo.conn_name)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
