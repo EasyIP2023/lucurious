@@ -39,6 +39,7 @@ compositors that appear to be straight out of science fiction.
 * [Direct Rendering Manager](https://dri.freedesktop.org/wiki/DRM/)
 * [Vulkan](https://vulkan.lunarg.com)
 * [Vulkan Tutorial](https://vulkan-tutorial.com/)
+* [Vulkan LunarG Tutorial](https://vulkan.lunarg.com/doc/sdk/1.2.141.2/linux/tutorial/html/index.html)
 * [Vulkan Api Without Secrets](https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-1)
 * [Vulkan Validation Layers](https://gpuopen.com/using-the-vulkan-validation-layers/)
 * [I am graphics and so can you](https://www.fasterthan.life/blog/2017/7/12/i-am-graphics-and-so-can-you-part-3-breaking-ground)

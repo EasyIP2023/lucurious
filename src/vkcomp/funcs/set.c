@@ -25,6 +25,24 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+VkDeviceQueueCreateInfo dlu_set_device_queue_info(
+  VkDeviceQueueCreateFlags flags,
+  uint32_t queueFamilyIndex,
+  uint32_t queueCount,
+  const float *pQueuePriorities
+) {
+  
+  VkDeviceQueueCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  create_info.pNext = NULL;
+  create_info.flags = flags;
+  create_info.queueFamilyIndex = queueFamilyIndex;
+  create_info.queueCount = queueCount;
+  create_info.pQueuePriorities = pQueuePriorities;
+
+  return create_info;
+}
+
 VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   VkRenderPass renderPass,
   uint32_t subpass,

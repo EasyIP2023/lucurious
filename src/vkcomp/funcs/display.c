@@ -220,7 +220,7 @@ VkResult dlu_queue_present_queue(
   present.pImageIndices = pImageIndices;
   present.pResults = pResults;
 
-  res = vkQueuePresentKHR(app->ld_data[cur_ld].present, &present);
+  res = vkQueuePresentKHR(app->ld_data[cur_ld].graphics, &present);
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkQueuePresentKHR")
 
   return res;

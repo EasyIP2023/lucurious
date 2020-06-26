@@ -91,7 +91,7 @@ START_TEST(kms_node_enumeration) {
 
   uint32_t cur_odb = 0;
   /* Indexes for my particular system kms node */
-  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo[0].conn_idx, dinfo[0].enc_idx, dinfo[0].crtc_idx, dinfo[0].plane_idx, dinfo[0].refresh, dinfo[0].conn_name)) {
+  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo->conn_idx, dinfo->enc_idx, dinfo->crtc_idx, dinfo->plane_idx, dinfo->refresh, dinfo->conn_name)) {
     free_core(core);
     ck_abort_msg(NULL);
   }

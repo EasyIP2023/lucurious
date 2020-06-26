@@ -104,8 +104,15 @@ START_TEST(test_vulkan_rect) {
   err = dlu_create_queue_families(app, cur_pd, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_logical_device(app, cur_pd, cur_ld, &device_feats, 1, ARR_LEN(device_extensions), device_extensions);
+  float queue_priorities[1] = {1.0};
+  VkDeviceQueueCreateInfo dqueue_create_info[1];
+  dqueue_create_info[0] = dlu_set_device_queue_info(0, app->pd_data[cur_pd].gfam_idx, 1, queue_priorities);
+
+  err = dlu_create_logical_device(app, cur_pd, cur_ld, 0, ARR_LEN(dqueue_create_info), dqueue_create_info, &device_feats, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
+
+  err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
+  check_err(!err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app, cur_pd);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)

@@ -126,9 +126,16 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_queue_families(app, cur_pd, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
+  float queue_priorities[1] = {1.0};
+  VkDeviceQueueCreateInfo dqueue_create_info[1];
+  dqueue_create_info[0] = dlu_set_device_queue_info(0, app->pd_data[cur_pd].gfam_idx, 1, queue_priorities);
+
   device_feats.samplerAnisotropy = VK_TRUE;
-  err = dlu_create_logical_device(app, cur_pd, cur_ld, &device_feats, 1, ARR_LEN(device_extensions), device_extensions);
+  err = dlu_create_logical_device(app, cur_pd, cur_ld, 0, ARR_LEN(dqueue_create_info), dqueue_create_info, &device_feats, ARR_LEN(device_extensions), device_extensions);
   check_err(err, app, wc, NULL)
+
+  err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
+  check_err(!err, app, wc, NULL)
 
   err = dlu_set_device_debug_ext(app, cur_ld);
   check_err(err, app, wc, NULL)

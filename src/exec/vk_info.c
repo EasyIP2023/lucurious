@@ -42,7 +42,7 @@ void print_validation_layers() {
   err = dlu_set_vulkan_layer_props(&vk_props, &lcount);
   if (err) {
     dlu_freeup_vk(app);
-    dlu_print_msg(DLU_DANGER, "[x] dlu_set_vulkan_layer_propsd failed\n");
+    dlu_print_msg(DLU_DANGER, "[x] dlu_set_vulkan_layer_props failed\n");
     goto end_free_vk;
   }
 

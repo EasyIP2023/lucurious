@@ -31,6 +31,13 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
+VkDeviceQueueCreateInfo dlu_set_device_queue_info(
+  VkDeviceQueueCreateFlags flags,
+  uint32_t queueFamilyIndex,
+  uint32_t queueCount,
+  const float *pQueuePriorities
+);
+
 VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   VkRenderPass renderPass,
   uint32_t subpass,

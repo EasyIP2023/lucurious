@@ -389,7 +389,8 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         /* need for dlu_create_queue_families(3) */
         for (uint32_t i = 0; i < arr_size; i++) {
           app->pd_data[i].gfam_idx = UINT32_MAX;
-          app->pd_data[i].pfam_idx = UINT32_MAX;
+          app->pd_data[i].cfam_idx = UINT32_MAX;
+          app->pd_data[i].tfam_idx = UINT32_MAX;
         }
 
         app->pdc = arr_size; return true;

@@ -35,39 +35,38 @@
 #define GENERAL_TIMEOUT 100000000
 
 typedef enum _dlu_sync_type {
-  DLU_VK_WAIT_RENDER_FENCE   = 0x0000,  /* Set render fence to signal state */
-  DLU_VK_WAIT_IMAGE_FENCE    = 0x0001,  /* Set image fence to signal state */
-  DLU_VK_WAIT_PRESENT_QUEUE  = 0x0002,  /* Synchronously wait on the present queue */
-  DLU_VK_WAIT_GRAPHICS_QUEUE = 0x0003,  /* Synchronously wait on the present queue */
-  DLU_VK_RESET_RENDER_FENCE  = 0x0004,  /* Set Render Fence in unsignaled state */
-  DLU_VK_GET_RENDER_FENCE    = 0x0005   /* Get the state of the fence */
+  DLU_VK_WAIT_RENDER_FENCE = 0x0000,     /* Set render fence to signal state */
+  DLU_VK_WAIT_IMAGE_FENCE = 0x0001,        /* Set image fence to signal state */
+  DLU_VK_WAIT_GRAPHICS_QUEUE = 0x0002, /* Synchronously wait on the present queue */
+  DLU_VK_RESET_RENDER_FENCE = 0x0003,  /* Set Render Fence in unsignaled state */
+  DLU_VK_GET_RENDER_FENCE = 0x0004      /* Get the state of the fence */
 } dlu_sync_type;
 
 typedef enum _dlu_destroy_type {
-  DLU_DESTROY_VK_SHADER           = 0x0000,  /* Destroy VkShaderModule Objects */
-  DLU_DESTROY_VK_BUFFER           = 0x0001,  /* Destroy VkBuffer Objects */
-  DLU_DESTROY_VK_MEMORY           = 0x0002,  /* Destroy VkMemory Objects */
-  DLU_DESTROY_VK_CMD_POOL         = 0x0003,  /* Destroy VkCommandPool Objects */
-  DLU_DESTROY_VK_DESC_POOL        = 0x0004,  /* Destroy VkDescriptorPool Objects */
-  DLU_DESTROY_VK_DESC_SET_LAYOUT  = 0x0005,  /* Destroy VkDescriptorSetLayout Objects */
-  DLU_DESTROY_PIPELINE_CACHE      = 0x0006,  /* Destroy VkPipelineCache Objects */
-  DLU_DESTROY_VK_FRAME_BUFFER     = 0x0007,  /* Destroy VkFrameBuffer Objects */
-  DLU_DESTROY_VK_RENDER_PASS      = 0x0008,  /* Destroy VkRenderPass Objects */
-  DLU_DESTROY_VK_PIPE_LAYOUT      = 0x0009,  /* Destroy VkPipelineLayout Objects */
-  DLU_DESTROY_PIPELINE            = 0x000A,  /* Destroy VkPipeline Objects */
-  DLU_DESTROY_VK_SAMPLER          = 0x000B,  /* Destroy VkSampler Objects */
-  DLU_DESTROY_VK_IMAGE            = 0x000C,  /* Destroy VkImage Objects */
-  DLU_DESTROY_VK_IMAGE_VIEW       = 0x000D,  /* Destroy VkImageView Objects */
-  DLU_DESTROY_VK_SWAPCHAIN        = 0x000E,  /* Destroy VkSwapchainKHR Objects */
-  DLU_DESTROY_VK_SEMAPHORE        = 0x000F,  /* Destroy VkSemaphore Objects */
-  DLU_DESTROY_VK_FENCE            = 0x0010,  /* Destroy VkFence Objects */
-  DLU_DESTROY_VK_LOGIC_DEVICE     = 0x0011   /* Destroy VkDevice Objects */
+  DLU_DESTROY_VK_SHADER = 0x0000, /* Destroy VkShaderModule Objects */
+  DLU_DESTROY_VK_BUFFER = 0x0001, /* Destroy VkBuffer Objects */
+  DLU_DESTROY_VK_MEMORY = 0x0002, /* Destroy VkMemory Objects */
+  DLU_DESTROY_VK_CMD_POOL = 0x0003, /* Destroy VkCommandPool Objects */
+  DLU_DESTROY_VK_DESC_POOL = 0x0004, /* Destroy VkDescriptorPool Objects */
+  DLU_DESTROY_VK_DESC_SET_LAYOUT = 0x0005, /* Destroy VkDescriptorSetLayout Objects */
+  DLU_DESTROY_PIPELINE_CACHE = 0x0006, /* Destroy VkPipelineCache Objects */
+  DLU_DESTROY_VK_FRAME_BUFFER = 0x0007, /* Destroy VkFrameBuffer Objects */
+  DLU_DESTROY_VK_RENDER_PASS = 0x0008, /* Destroy VkRenderPass Objects */
+  DLU_DESTROY_VK_PIPE_LAYOUT = 0x0009, /* Destroy VkPipelineLayout Objects */
+  DLU_DESTROY_PIPELINE = 0x000A, /* Destroy VkPipeline Objects */
+  DLU_DESTROY_VK_SAMPLER = 0x000B, /* Destroy VkSampler Objects */
+  DLU_DESTROY_VK_IMAGE = 0x000C, /* Destroy VkImage Objects */
+  DLU_DESTROY_VK_IMAGE_VIEW = 0x000D, /* Destroy VkImageView Objects */
+  DLU_DESTROY_VK_SWAPCHAIN = 0x000E, /* Destroy VkSwapchainKHR Objects */
+  DLU_DESTROY_VK_SEMAPHORE = 0x000F, /* Destroy VkSemaphore Objects */
+  DLU_DESTROY_VK_FENCE = 0x0010, /* Destroy VkFence Objects */
+  DLU_DESTROY_VK_LOGIC_DEVICE = 0x0011 /* Destroy VkDevice Objects */
 } dlu_destroy_type;
 
 typedef enum _dlu_image_view_type {
-  DLU_SC_IMAGE_VIEWS    = 0x0000, /* Swapchain image views */
-  DLU_TEXT_IMAGE_VIEWS  = 0x0001, /* Texture image views */
-  DLU_DEPTH_IMAGE_VIEWS = 0x0002  /* Depth Buffer image view */
+  DLU_SC_IMAGE_VIEWS    = 0x0000,    /* Swapchain image views */
+  DLU_TEXT_IMAGE_VIEWS  = 0x0001,  /* Texture image views */
+  DLU_DEPTH_IMAGE_VIEWS = 0x0002 /* Depth Buffer image view */
 } dlu_image_view_type;
 
 typedef struct _vkcomp {
@@ -87,14 +86,16 @@ typedef struct _vkcomp {
   uint32_t pdc; /* physical device count */
   struct _pd_data { /* physical device data */
     VkPhysicalDevice phys_dev;
-    uint32_t gfam_idx; /* Graphics Family Index */
-    uint32_t pfam_idx; /* Present Family Index */
+    uint32_t gfam_idx; /* Graphics Queue, Queue Family Index */
+    uint32_t tfam_idx; /* Transfer Queue, Queue Family Index */ 
+    uint32_t cfam_idx; /* Compute Queue, Queue Family Index */
   } *pd_data;
 
   uint32_t ldc; /* Logical device count */
   struct _ld_data {  /* logical device data */
     VkQueue graphics;
-    VkQueue present;
+    VkQueue transfer;
+    VkQueue compute;
     VkDevice device;
     uint32_t pdi; /* Physical device data index */
   } *ld_data;

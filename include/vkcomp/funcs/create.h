@@ -73,12 +73,22 @@ VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits
 */
 VkResult dlu_create_logical_device(
   vkcomp *app,
-  uint32_t cur_pd,
   uint32_t cur_ld,
+  uint32_t cur_pd,
+  VkDeviceCreateFlags flags,
+  uint32_t queueCreateInfoCount,
+  const VkDeviceQueueCreateInfo *pQueueCreateInfos,
   VkPhysicalDeviceFeatures *pEnabledFeatures,
-  uint32_t queue_count,
   uint32_t enabledExtensionCount,
   const char *const *ppEnabledExtensionNames
+);
+
+/* Will retrieve a queue handle */
+VkBool32 dlu_create_device_queue(
+  vkcomp *app,
+  uint32_t cur_ld,
+  uint32_t queueIndex,
+  VkQueueFlagBits vkqfbits
 );
 
 /**

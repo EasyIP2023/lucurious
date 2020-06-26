@@ -166,24 +166,31 @@ VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits
   present_support = (VkBool32 *) alloca(qfc * sizeof(VkBool32));
 
   if (app->surface)
-    for (uint32_t i = 0; i < qfc; i++) /* Check for present queue family */
+    for (uint32_t i = 0; i < qfc; i++) /* Allows for the checking of presentation support */
       vkGetPhysicalDeviceSurfaceSupportKHR(app->pd_data[cur_pd].phys_dev, i, app->surface, &present_support[i]);
 
   for (uint32_t i = 0; i < qfc; i++) {
     if (queue_families[i].queueFlags & vkqfbits) {
-      if (app->pd_data[cur_pd].gfam_idx == UINT32_MAX) {
+      /* Check to see if a device can present images onto a surface */
+      if (vkqfbits & VK_QUEUE_GRAPHICS_BIT && app->pd_data[cur_pd].gfam_idx == UINT32_MAX) {
         /* Retrieve Graphics Family Queue index */
         app->pd_data[cur_pd].gfam_idx = i; ret = VK_FALSE;
-        dlu_log_me(DLU_SUCCESS, "Physical Device has support for provided Queue Family");
+        dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports graphics operations", i);
+        if (app->surface && present_support[i])
+            dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %s supports presentation to a given surface", i);
       }
-    }
 
-    /* Check to see if a device can present images onto a surface */
-    if (app->surface && present_support[i] && app->pd_data[cur_pd].pfam_idx == UINT32_MAX) {
-      /* Retrieve Present Family Queue index */
-      app->pd_data[cur_pd].pfam_idx = i; ret = VK_FALSE;
-      dlu_log_me(DLU_SUCCESS, "Physical Device Surface has presentation support");
-      break;
+      if (vkqfbits & VK_QUEUE_COMPUTE_BIT && app->pd_data[cur_pd].cfam_idx == UINT32_MAX) {
+        /* Retrieve Compute Family Queue index */
+        app->pd_data[cur_pd].cfam_idx = i; ret = VK_FALSE;
+        dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d has support for commute operations", i);
+      }
+
+      if (vkqfbits & VK_QUEUE_TRANSFER_BIT && app->pd_data[cur_pd].tfam_idx == UINT32_MAX) {
+        /* Retrieve Transfer Family Queue index */
+        app->pd_data[cur_pd].tfam_idx = i; ret = VK_FALSE;
+        dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d has support for transfer operations", i);
+      }
     }
   }
 
@@ -194,40 +201,24 @@ VkResult dlu_create_logical_device(
   vkcomp *app,
   uint32_t cur_pd,
   uint32_t cur_ld,
+  VkDeviceCreateFlags flags,
+  uint32_t queueCreateInfoCount,
+  const VkDeviceQueueCreateInfo *pQueueCreateInfos,
   VkPhysicalDeviceFeatures *pEnabledFeatures,
-  uint32_t queue_count,
   uint32_t enabledExtensionCount,
   const char *const *ppEnabledExtensionNames
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
-  VkDeviceQueueCreateInfo *pQueueCreateInfos = NULL;
-  float queue_priorities[1] = {1.0};
 
-  if (!app->ld_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_LD_DATA"); return res; }
+  if (!app->ld_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_LD_DATA"); return res; }  
   if (!app->pd_data[cur_pd].phys_dev) { PERR(DLU_VKCOMP_PHYS_DEV, 0, NULL); return res; }
-  if (app->pd_data[cur_pd].gfam_idx == UINT32_MAX || app->pd_data[cur_pd].pfam_idx == UINT32_MAX) { PERR(DLU_VKCOMP_INDICES, 0, NULL); return res; }
-
-  /* Will need to change this later but for now, These two hardware queues should currently always be the same */
-  uint32_t queue_fam_indices[2] = {app->pd_data[cur_pd].gfam_idx, app->pd_data[cur_pd].pfam_idx};
-  uint32_t dq_count = 1;
-
-  pQueueCreateInfos = (VkDeviceQueueCreateInfo *) alloca(dq_count * sizeof(VkDeviceQueueCreateInfo));
-
-  for (uint32_t i = 0; i < dq_count; i++) {
-    pQueueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    pQueueCreateInfos[i].pNext = NULL;
-    pQueueCreateInfos[i].flags = 0;
-    pQueueCreateInfos[i].queueFamilyIndex = queue_fam_indices[i];
-    pQueueCreateInfos[i].queueCount = queue_count;
-    pQueueCreateInfos[i].pQueuePriorities = queue_priorities;
-  }
 
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.queueCreateInfoCount = dq_count;
+  create_info.flags = flags;
+  create_info.queueCreateInfoCount = queueCreateInfoCount;
   create_info.pQueueCreateInfos = pQueueCreateInfos;
   create_info.enabledLayerCount = 0; // Deprecated and ignored
   create_info.ppEnabledLayerNames = NULL; // Deprecated and ignored 
@@ -242,17 +233,39 @@ VkResult dlu_create_logical_device(
   /* Associate a logical device with a given physical */
   app->ld_data[cur_ld].pdi = cur_pd;
 
+  return res;
+}
+
+VkBool32 dlu_create_device_queue(
+  vkcomp *app,
+  uint32_t cur_ld,
+  uint32_t queueIndex,
+  VkQueueFlagBits vkqfbits
+) {
+
+  if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_FALSE; }
+  if (app->ld_data[cur_ld].pdi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_logical_device()"); return VK_FALSE; }
+
   /**
   * Queues are automatically created with the logical device, but you need a
   * VkQueue handle to interface with them
   */
-  vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[cur_pd].gfam_idx, 0, &app->ld_data[cur_ld].graphics);
-  if (app->pd_data[cur_pd].gfam_idx == app->pd_data[cur_pd].pfam_idx)
-    app->ld_data[cur_ld].present = app->ld_data[cur_ld].graphics;
-  else
-    vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[cur_pd].pfam_idx, 0, &app->ld_data[cur_ld].present);
+  if (vkqfbits & VK_QUEUE_GRAPHICS_BIT) {
+    vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx, queueIndex, &app->ld_data[cur_ld].graphics);
+    if (!app->ld_data[cur_ld].graphics)  { dlu_log_me(DLU_DANGER, "[x] Failed to get graphics queue handle"); return VK_FALSE; }
+  }
 
-  return res;
+  if (vkqfbits & VK_QUEUE_COMPUTE_BIT) {
+    vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].cfam_idx, queueIndex, &app->ld_data[cur_ld].compute);
+    if (!app->ld_data[cur_ld].compute)  { dlu_log_me(DLU_DANGER, "[x] Failed to get compute queue handle"); return VK_FALSE; }
+  }
+
+  if (vkqfbits & VK_QUEUE_TRANSFER_BIT) {
+    vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].tfam_idx, queueIndex, &app->ld_data[cur_ld].transfer);
+    if (!app->ld_data[cur_ld].transfer)  { dlu_log_me(DLU_DANGER, "[x] Failed to get transfer queue handle"); return VK_FALSE; }
+  }
+
+  return VK_TRUE;
 }
 
 VkResult dlu_create_swap_chain(
@@ -309,21 +322,22 @@ VkResult dlu_create_swap_chain(
   }
 
   /* specify how to handle swap chain images that will be used across multiple queue families, Leave like this for now */
-  if (app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx != app->pd_data[app->ld_data[cur_ld].pdi].pfam_idx) {
+  /*if (app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx != app->pd_data[app->ld_data[cur_ld].pdi].pfam_idx) {
     const uint32_t queue_family_indices[2] = {
       app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx,
       app->pd_data[app->ld_data[cur_ld].pdi].pfam_idx
     };
-    /* images can be used across multiple queue families */
+    
+    images can be used across multiple queue families
     create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    create_info.queueFamilyIndexCount = 2;
+    create_info.queueFamilyIndexCount = ARR_LEN(queue_family_indices);
     create_info.pQueueFamilyIndices = queue_family_indices;
-  } else {
+  } else { */
     /* image is owned by one queue family at a time, Best for performance */
     create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     create_info.queueFamilyIndexCount = 0;
     create_info.pQueueFamilyIndices = NULL;
-  }
+  // }
 
   res = vkCreateSwapchainKHR(app->ld_data[cur_ld].device, &create_info, NULL, &app->sc_data[cur_scd].swap_chain);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }

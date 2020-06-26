@@ -118,8 +118,8 @@ void dlu_freeup_vk(vkcomp *app) {
 
   /* Synchronous wait for present queue to empty. So that all objects can be properly destroyed */
   for (uint32_t i = 0; i < app->ldc; i++)
-    if (app->ld_data[i].present)
-      vkQueueWaitIdle(app->ld_data[i].present);
+    if (app->ld_data[i].graphics)
+      vkQueueWaitIdle(app->ld_data[i].graphics);
 
   if (app->debug_utils_msg)
     app->dbg_destroy_utils_msg(app->instance, app->debug_utils_msg, NULL);

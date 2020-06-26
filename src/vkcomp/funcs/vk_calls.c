@@ -37,10 +37,6 @@ VkResult dlu_vk_sync(dlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t
       res = vkWaitForFences(app->ld_data[app->sc_data[cur_scd].ldi].device, 1, &app->sc_data[cur_scd].syncs[synci].fence.render, VK_TRUE, GENERAL_TIMEOUT);
       if (res) PERR(DLU_VK_FUNC_ERR, res, "vkWaitForFences")
       break;
-    case DLU_VK_WAIT_PRESENT_QUEUE:
-      res = vkQueueWaitIdle(app->ld_data[app->sc_data[cur_scd].ldi].present);
-      if (res) PERR(DLU_VK_FUNC_ERR, res, "vkQueueWaitIdle")
-      break;
     case DLU_VK_WAIT_GRAPHICS_QUEUE:
       res = vkQueueWaitIdle(app->ld_data[app->sc_data[cur_scd].ldi].graphics);
       if (res) PERR(DLU_VK_FUNC_ERR, res, "vkQueueWaitIdle") 
