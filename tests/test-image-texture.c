@@ -155,14 +155,20 @@ START_TEST(test_vulkan_image_texture) {
   VkPresentModeKHR pres_mode = dlu_choose_swap_present_mode(app, cur_pd);
   check_err(pres_mode == VK_PRESENT_MODE_MAX_ENUM_KHR, app, wc, NULL)
 
-  VkExtent2D extent = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
-  check_err(extent.width == UINT32_MAX, app, wc, NULL)
+  VkExtent2D extent2D = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
+  check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
   uint32_t cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
-  err = dlu_create_swap_chain(app, cur_ld, cur_scd, capabilities, surface_fmt, pres_mode, extent.width, extent.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+  /* image is owned by one queue family at a time, Best for performance */
+  VkSwapchainCreateInfoKHR swapchain_info = dlu_set_swap_chain_info(NULL, 0, app->surface, app->sc_data[cur_scd].sic, surface_fmt.format, surface_fmt.colorSpace,
+    extent2D, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, capabilities.supportedTransforms, capabilities.supportedCompositeAlpha,
+    pres_mode, VK_FALSE, VK_NULL_HANDLE
+  );
+
+  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, 0);
@@ -339,7 +345,7 @@ START_TEST(test_vulkan_image_texture) {
   /* ending point for render pass creation */
 
   VkImageView vkimg_attach[1];
-  err = dlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent.width, extent.height, 1);
+  err = dlu_create_framebuffers(app, cur_scd, cur_gpd, 1, vkimg_attach, extent2D.width, extent2D.height, 1);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
@@ -379,8 +385,8 @@ START_TEST(test_vulkan_image_texture) {
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly = dlu_set_input_assembly_state_info(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
-  VkViewport viewport = dlu_set_view_port(0.0f, 0.0f, (float) extent.width, (float) extent.height, 0.0f, 1.0f);
-  VkRect2D scissor = dlu_set_rect2D(0, 0, extent.width, extent.height);
+  VkViewport viewport = dlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
+  VkRect2D scissor = dlu_set_rect2D(0, 0, extent2D.width, extent2D.height);
   VkPipelineViewportStateCreateInfo view_port_info = dlu_set_view_port_state_info(1, &viewport, 1, &scissor);
 
   VkPipelineRasterizationStateCreateInfo rasterizer = dlu_set_rasterization_state_info(
@@ -444,8 +450,8 @@ START_TEST(test_vulkan_image_texture) {
   struct uniform_block_data ubd;
   float convert = 1000000000.0f;
   float fovy = dlu_set_radian(45.0f), angle = dlu_set_radian(90.f);
-  float hw = (float) extent.width / (float) extent.height;
-  if (extent.width > extent.height) fovy *= hw;
+  float hw = (float) extent2D.width / (float) extent2D.height;
+  if (extent2D.width > extent2D.height) fovy *= hw;
   dlu_set_perspective(ubd.proj, fovy, hw, 0.1f, 10.0f);
   dlu_set_lookat(ubd.view, spin_eye, spin_center, spin_up);
   ubd.proj[1][1] *= -1; /* Invert Y-Coordinate */
@@ -492,7 +498,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Drawing will start when you begin a render pass */
-  dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent.width, extent.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+  dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
   /* set uniform buffer VKBufferInfos */
   VkWriteDescriptorSet writes[2];

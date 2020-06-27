@@ -272,13 +272,7 @@ VkResult dlu_create_swap_chain(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_scd,
-  VkSurfaceCapabilitiesKHR capabilities,
-  VkSurfaceFormatKHR surface_fmt,
-  VkPresentModeKHR presentMode,
-  uint32_t width,
-  uint32_t height,
-  uint32_t imageArrayLayers,
-  VkImageUsageFlags imageUsage
+  VkSwapchainCreateInfoKHR *create_info
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -292,54 +286,18 @@ VkResult dlu_create_swap_chain(
     VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
   };
 
-  VkSwapchainCreateInfoKHR create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  create_info.pNext = NULL;
-  create_info.flags = 0;
-  create_info.surface = app->surface;
-  create_info.minImageCount = app->sc_data[cur_scd].sic;
-  create_info.imageFormat = surface_fmt.format;
-  create_info.imageColorSpace = surface_fmt.colorSpace;
-  create_info.imageExtent.width = width;
-  create_info.imageExtent.height = height;
-  create_info.imageArrayLayers = imageArrayLayers;
-  create_info.imageUsage = imageUsage;
-  create_info.presentMode = presentMode;
-
-  /* Leave this way I want "presentable images associated with the swapchain to own all of the pixels they contain" */
-  create_info.clipped = VK_FALSE;
-  create_info.oldSwapchain = VK_NULL_HANDLE;
-
   /* current transform should be applied to images in the swap chain */
-  create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
-     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
+  create_info->preTransform = (create_info->preTransform & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) ? \
+     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : create_info->preTransform;
 
   for (uint8_t i = 0; i < ARR_LEN(ca_flags); i++) {
-    if (capabilities.supportedCompositeAlpha & ca_flags[i]) {
-      create_info.compositeAlpha = ca_flags[i];
+    if (create_info->compositeAlpha & ca_flags[i]) {
+      create_info->compositeAlpha = ca_flags[i];
       break;
     }
   }
 
-  /* specify how to handle swap chain images that will be used across multiple queue families, Leave like this for now */
-  /*if (app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx != app->pd_data[app->ld_data[cur_ld].pdi].pfam_idx) {
-    const uint32_t queue_family_indices[2] = {
-      app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx,
-      app->pd_data[app->ld_data[cur_ld].pdi].pfam_idx
-    };
-    
-    images can be used across multiple queue families
-    create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    create_info.queueFamilyIndexCount = ARR_LEN(queue_family_indices);
-    create_info.pQueueFamilyIndices = queue_family_indices;
-  } else { */
-    /* image is owned by one queue family at a time, Best for performance */
-    create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    create_info.queueFamilyIndexCount = 0;
-    create_info.pQueueFamilyIndices = NULL;
-  // }
-
-  res = vkCreateSwapchainKHR(app->ld_data[cur_ld].device, &create_info, NULL, &app->sc_data[cur_scd].swap_chain);
+  res = vkCreateSwapchainKHR(app->ld_data[cur_ld].device, create_info, NULL, &app->sc_data[cur_scd].swap_chain);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }
 
   /* Associate a swapchain with a given VkDevice */

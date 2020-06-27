@@ -136,7 +136,13 @@ START_TEST(test_vulkan_client_create) {
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
-  err = dlu_create_swap_chain(app, cur_ld, cur_cmdd, capabilities, surface_fmt, pres_mode, extent2D.width, extent2D.height, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+  /* image is owned by one queue family at a time, Best for performance */
+  VkSwapchainCreateInfoKHR swapchain_info = dlu_set_swap_chain_info(NULL, 0, app->surface, app->sc_data[cur_scd].sic, surface_fmt.format, surface_fmt.colorSpace,
+    extent2D, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, capabilities.supportedTransforms, capabilities.supportedCompositeAlpha,
+    pres_mode, VK_FALSE, VK_NULL_HANDLE
+  );
+
+  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, 0);

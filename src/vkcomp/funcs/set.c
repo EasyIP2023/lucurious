@@ -65,6 +65,48 @@ VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   return create_info;
 }
 
+VkSwapchainCreateInfoKHR dlu_set_swap_chain_info(
+  const void *pNext,
+  VkSwapchainCreateFlagsKHR flags,
+  VkSurfaceKHR surface,
+  uint32_t minImageCount,
+  VkFormat imageFormat,
+  VkColorSpaceKHR imageColorSpace,
+  VkExtent2D imageExtent,
+  uint32_t imageArrayLayers,
+  VkImageUsageFlags imageUsage,
+  VkSharingMode imageSharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
+  VkSurfaceTransformFlagBitsKHR preTransform,
+  VkCompositeAlphaFlagBitsKHR compositeAlpha,
+  VkPresentModeKHR presentMode,
+  VkBool32 clipped,
+  VkSwapchainKHR oldSwapchain
+) {
+
+  VkSwapchainCreateInfoKHR create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  create_info.pNext = pNext;
+  create_info.flags = flags;
+  create_info.surface = surface;
+  create_info.minImageCount = minImageCount;
+  create_info.imageFormat = imageFormat;
+  create_info.imageColorSpace = imageColorSpace;
+  create_info.imageExtent = imageExtent;
+  create_info.imageArrayLayers = imageArrayLayers;
+  create_info.imageUsage = imageUsage;
+  create_info.imageSharingMode = imageSharingMode;
+  create_info.queueFamilyIndexCount = queueFamilyIndexCount;
+  create_info.pQueueFamilyIndices = pQueueFamilyIndices;
+  create_info.preTransform = preTransform;
+  create_info.compositeAlpha = compositeAlpha;
+  create_info.presentMode = presentMode;
+  create_info.clipped = clipped;
+  create_info.oldSwapchain = oldSwapchain;
+
+  return create_info;
+}
 
 VkImageSubresourceRange dlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,

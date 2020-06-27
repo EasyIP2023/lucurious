@@ -47,6 +47,26 @@ VkCommandBufferInheritanceInfo dlu_set_cmd_buff_inheritance_info(
   VkQueryPipelineStatisticFlags pipelineStatistics
 );
 
+VkSwapchainCreateInfoKHR dlu_set_swap_chain_info(
+  const void *pNext,
+  VkSwapchainCreateFlagsKHR flags,
+  VkSurfaceKHR surface,
+  uint32_t minImageCount,
+  VkFormat imageFormat,
+  VkColorSpaceKHR imageColorSpace,
+  VkExtent2D imageExtent,
+  uint32_t imageArrayLayers,
+  VkImageUsageFlags imageUsage,
+  VkSharingMode imageSharingMode,
+  uint32_t queueFamilyIndexCount,
+  const uint32_t *pQueueFamilyIndices,
+  VkSurfaceTransformFlagBitsKHR preTransform,
+  VkCompositeAlphaFlagBitsKHR compositeAlpha,
+  VkPresentModeKHR presentMode,
+  VkBool32 clipped,
+  VkSwapchainKHR oldSwapchain
+);
+
 VkImageSubresourceRange dlu_set_image_sub_resource_range(
   VkImageAspectFlags aspectMask,
   uint32_t baseMipLevel,
