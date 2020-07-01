@@ -44,7 +44,7 @@ START_TEST(test_set_global_layers) {
 
   VkResult err;
 
-  dlu_otma_mems ma = { .vkcomp_cnt = 1, .vkval_layer_cnt = 200 };
+  dlu_otma_mems ma = { .vkcomp_cnt = 1, .vk_layer_cnt = 200 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) ck_abort_msg(NULL);
 
   vkcomp *app = dlu_init_vk();
@@ -161,7 +161,7 @@ START_TEST(test_set_logical_device) {
   check_err(err, app, NULL, NULL)
 
   err = dlu_create_device_queue(app, 0, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, NULL, NULL)
+  check_err(err, app, NULL, NULL)
 
   FREEME(app, NULL)
 } END_TEST;
@@ -210,7 +210,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
   check_err(err, app, NULL, NULL)
 
   err = dlu_create_device_queue(app, 0, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, NULL, NULL)
+  check_err(err, app, NULL, NULL)
 
   ck_assert_ptr_null(app->surface);
 

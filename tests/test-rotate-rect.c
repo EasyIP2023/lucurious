@@ -127,7 +127,7 @@ START_TEST(test_vulkan_rotate_rect) {
   check_err(err, app, wc, NULL)
 
   err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, wc, NULL)
+  check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app, cur_pd);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
@@ -347,10 +347,10 @@ START_TEST(test_vulkan_rotate_rect) {
   );
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, rr_vertices, offsets[0]);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, vsize, rr_vertices, offsets[0], 0);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, isize, indices, offsets[1]);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, isize, indices, offsets[1], 0);
   check_err(err, app, wc, NULL)
   /* End of buffer creation */
 
@@ -425,7 +425,7 @@ START_TEST(test_vulkan_rotate_rect) {
     dlu_set_matrix(DLU_MAT4_IDENTITY, ubd.model, NULL);
     dlu_set_rotate(DLU_AXIS_Z, ubd.model, ((float) time / convert) * angle, spin_up);
 
-    err = dlu_create_vk_buff_mem_map(app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[2]);
+    err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[2], 0);
     check_err(err, app, wc, NULL)
 
     /* Check if a previous frame is using image */

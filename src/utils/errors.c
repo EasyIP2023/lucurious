@@ -179,7 +179,7 @@ void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
       break;
     case DLU_VKCOMP_BUFF_MEM:
       dlu_log_me(DLU_DANGER, "[x] VkDeviceMemory not created");
-      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_vk_buffer()");
+      dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_vk_buffer() or dlu_create_texture_image()");
       break;
     case DLU_VKCOMP_CMD_POOL:
       dlu_log_me(DLU_DANGER, "[x] In order to allocate command buffers one must have a command pool");

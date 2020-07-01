@@ -25,7 +25,9 @@
 #ifndef DLU_VKCOMP_TYPES_H
 #define DLU_VKCOMP_TYPES_H
 
+/* Leave for right now. This will need to be changed */
 #define VK_USE_PLATFORM_WAYLAND_KHR
+#define VK_USE_PLATFORM_DISPLAY_KHR
 #include <vulkan/vulkan.h>
 
 /**
@@ -68,6 +70,11 @@ typedef enum _dlu_image_view_type {
   DLU_TEXT_IMAGE_VIEWS  = 0x0001,  /* Texture image views */
   DLU_DEPTH_IMAGE_VIEWS = 0x0002 /* Depth Buffer image view */
 } dlu_image_view_type;
+
+typedef enum _dlu_mem_map_type {
+  DLU_VK_BUFFER = 0x0000,
+  DLU_TEXT_VK_IMAGE = 0x0001
+} dlu_mem_map_type;
 
 typedef struct _vkcomp {
   PFN_vkQueueBeginDebugUtilsLabelEXT dbg_utils_queue_begin;

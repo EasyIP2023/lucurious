@@ -59,9 +59,8 @@ VkResult dlu_create_physical_device(
 /**
 * Almost every operation in Vulkan, from submitting command buffers
 * to presenting images to a surface, requires commands to be submitted
-* to a hardware queue. This will create multiple queue families
-* that are supported by the VkQueueFlagBits set and assign the
-* available graphics and present queues
+* to a hardware queue. This will create multiple queue family indices
+* that are supported by a device.
 */
 VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits vkqfbits);
 
@@ -139,14 +138,6 @@ VkResult dlu_create_vk_buffer(
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
   VkFlags requirements_mask
-);
-
-VkResult dlu_create_vk_buff_mem_map(
-  vkcomp *app,
-  uint32_t cur_bd,
-  VkDeviceSize size,
-  void *data,
-  VkDeviceSize offset
 );
 
 /**

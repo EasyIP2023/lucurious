@@ -141,7 +141,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, wc, NULL)
+  check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app, cur_pd);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
@@ -232,11 +232,11 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   /* Map vertices into vertex buffer */
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, vertices, offsets[0]);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, vsize, vertices, offsets[0], 0);
   check_err(err, app, wc, NULL)
   
-  /* Map mvp matrix into memory so that it's binary compatible with shader variable */
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, sizeof(ubd.mvp), ubd.mvp, offsets[1]);
+  /* Map mvp matrix into memory. Matrix is binary compatible with shader variable */
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(ubd.mvp), ubd.mvp, offsets[1], 0);
   check_err(err, app, wc, NULL)
 
   /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */

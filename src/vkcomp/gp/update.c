@@ -35,7 +35,7 @@ VkWriteDescriptorSet dlu_write_desc_set(
   const VkDescriptorBufferInfo *pBufferInfo,
   const VkBufferView *pTexelBufferView
 ) {
-  /* Copy Uniform Buffer Info */
+
   VkWriteDescriptorSet write = {};
   write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   write.pNext = NULL;
@@ -59,6 +59,5 @@ void dlu_update_desc_sets(
   const VkCopyDescriptorSet *pDescriptorCopies
 ) {
 
-  vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites,
-                         descriptorCopyCount, pDescriptorCopies);
+  vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies);
 }

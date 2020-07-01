@@ -113,7 +113,7 @@ const char text_map_frag_src[] =
   "layout(location = 0) in vec3 fragColor;\n"
   "layout(location = 1) in vec2 fragTexCoord;\n"
   "layout(location = 0) out vec4 outColor;\n"
-  "void main() { outColor = texture(texSampler, fragTexCoord); }";
+  "void main() { outColor = texture(texSampler, fragTexCoord); }\n";
 
 const char text_map_vert_src[] =
   "#version 450\n"

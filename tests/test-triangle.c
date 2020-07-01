@@ -112,7 +112,7 @@ START_TEST(test_vulkan_client_create) {
   check_err(err, app, wc, NULL)
 
   err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, wc, NULL)
+  check_err(err, app, wc, NULL)
 
   VkSurfaceCapabilitiesKHR capabilities = dlu_get_physical_device_surface_capabilities(app, cur_pd);
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
@@ -321,7 +321,7 @@ START_TEST(test_vulkan_client_create) {
   );
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, tri_verts, 0);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, vsize, tri_verts, 0, 0);
   check_err(err, app, wc, NULL)
   cur_bd++;
   /* End of staging buffer for vertex */

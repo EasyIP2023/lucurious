@@ -142,3 +142,53 @@ void dlu_vk_destroy(dlu_destroy_type type, vkcomp *app, uint32_t cur_ld, void *d
       default: break;
   }
 }
+
+VkResult dlu_vk_map_mem(
+  dlu_mem_map_type type,
+  vkcomp *app,
+  uint32_t cur_idx,
+  VkDeviceSize size,
+  void *data,
+  VkDeviceSize offset,
+  VkMemoryMapFlags flags
+) {
+
+  VkResult res = VK_RESULT_MAX_ENUM;
+
+  switch (type) {
+    case DLU_VK_BUFFER:
+      {
+        if (!app->buff_data[cur_idx].mem) { PERR(DLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
+
+        /**
+        * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
+        * With any buffer, you need to populate it with the data that
+        * you want the shader to read. In order to get CPU access to
+        * the memory, you need to map it
+        */
+        void *p_data = NULL;
+        res = vkMapMemory(app->ld_data[app->buff_data[cur_idx].ldi].device, app->buff_data[cur_idx].mem, offset, size, flags, &p_data);
+        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
+        memmove(p_data, data, size);
+
+        vkUnmapMemory(app->ld_data[app->buff_data[cur_idx].ldi].device, app->buff_data[cur_idx].mem);
+      }
+      break;
+    case DLU_TEXT_VK_IMAGE:
+      {
+        if (!app->text_data[cur_idx].mem) { PERR(DLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
+
+        void *p_data = NULL;
+        res = vkMapMemory(app->ld_data[app->text_data[cur_idx].ldi].device, app->text_data[cur_idx].mem, offset, size, flags, &p_data);
+        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
+        memmove(p_data, data, size);
+
+        vkUnmapMemory(app->ld_data[app->text_data[cur_idx].ldi].device, app->text_data[cur_idx].mem);
+      }
+      break;
+    default: break;
+  }
+
+
+  return res;
+}

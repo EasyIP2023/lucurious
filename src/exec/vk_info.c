@@ -29,7 +29,7 @@
 void lower_to_upper(char *s);
 
 void print_validation_layers() {
-  dlu_otma_mems ma = {.vkcomp_cnt = 1, .vkval_layer_cnt = 40 };
+  dlu_otma_mems ma = {.vkcomp_cnt = 1, .vk_layer_cnt = 10 };
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return;
 
   VkResult err;

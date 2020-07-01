@@ -46,7 +46,7 @@
 char *concat(char *fmt, ...);
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 1, .desc_cnt = 2, .gp_cnt = 1, .si_cnt = 5,
+  .vkcomp_cnt = 1, .desc_cnt = NUM_DESCRIPTOR_SETS, .gp_cnt = 1, .si_cnt = 5,
   .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 1,
   .dd_cnt = 1, .td_cnt = 1, .ld_cnt = 1, .pd_cnt = 1
 };
@@ -117,8 +117,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* This will get the physical device, it's properties, and features */
-  VkPhysicalDeviceProperties device_props;
-  VkPhysicalDeviceFeatures device_feats;
+  VkPhysicalDeviceProperties device_props; VkPhysicalDeviceFeatures device_feats;
   uint32_t cur_pd = 0, cur_ld = 0;
   err = dlu_create_physical_device(app, cur_pd, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, &device_props, &device_feats);
   check_err(err, app, wc, NULL)
@@ -135,7 +134,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(!err, app, wc, NULL)
+  check_err(err, app, wc, NULL)
 
   err = dlu_set_device_debug_ext(app, cur_ld);
   check_err(err, app, wc, NULL)
@@ -198,7 +197,8 @@ START_TEST(test_vulkan_image_texture) {
 
   /* First load the image */
   stbi_uc *pixels = stbi_load(picture, &pw, &ph, &pchannels, STBI_rgb_alpha);
-  if (!pixels) {
+  if (!pixels) {  
+    dlu_log_me(DLU_DANGER, "[x] %s failed to load", picture);
     free(picture); picture = NULL;
     check_err(VK_TRUE, app, wc, NULL)
   }
@@ -215,17 +215,23 @@ START_TEST(test_vulkan_image_texture) {
   img_size = img_extent.width * img_extent.height * 4;
 
   /**
-  * The buffer is a staging host visible memory buffer. That can be map.
+  * The buffer is a staging host visible memory buffer. That can be mapped.
   * It's usable as a transfer source so that we can copy it to an image later on
   */
   err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
-  check_err(err, app, wc, NULL)
+  if (err) {
+    stbi_image_free(pixels); pixels = NULL;
+    check_err(VK_TRUE, app, wc, NULL)
+  }
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, img_size, pixels, 0);
-  check_err(err, app, wc, NULL)
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, img_size, pixels, 0, 0);
+  if (err) {
+    stbi_image_free(pixels); pixels = NULL;
+    check_err(VK_TRUE, app, wc, NULL)
+  }
 
   stbi_image_free(pixels); pixels = NULL;
 
@@ -248,6 +254,15 @@ START_TEST(test_vulkan_image_texture) {
     VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
   );
   check_err(err, app, wc, NULL)
+
+  /*
+  If one were to choose to map the jpg, png, etc.. directly into a bounded VkDeviceMemory
+  err = dlu_vk_map_mem(DLU_TEXT_VK_IMAGE app, cur_tex, img_size, pixels, 0, 0);
+  if (err) {
+    stbi_image_free(pixels); pixels = NULL;
+    check_err(VK_TRUE, app, wc, NULL)
+  }
+ */
 
   VkOffset3D offset3D = {0, 0, 0};
   VkImageSubresourceLayers img_sub_rl = dlu_set_image_sub_resource_layers(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
@@ -293,7 +308,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_texture_sampler(app, cur_tex, &sampler);
   check_err(err, app, wc, NULL)
 
-  /* 0 is the binding. The # of is bytes there is between successive structs */
+  /* 0 is the binding. The # of bytes there is between successive structs */
   VkVertexInputBindingDescription vi_binding = dlu_set_vertex_input_binding_desc(0, sizeof(vertex_text_2D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[3];
@@ -426,11 +441,11 @@ START_TEST(test_vulkan_image_texture) {
   /* Ending setup for graphics pipeline */
 
   /* Start of buffer for vertex */
-  vertex_text_2D tvertices[4] = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+  vertex_text_2D tvertices[4] = {    
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
   };
 
   VkDeviceSize vsize = sizeof(tvertices);
@@ -470,13 +485,13 @@ START_TEST(test_vulkan_image_texture) {
   );
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, vsize, tvertices, offsets[0]);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, vsize, tvertices, offsets[0], 0);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_vk_buff_mem_map(app, cur_bd, isize, indices, offsets[1]);
+  err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, isize, indices, offsets[1], 0);
   check_err(err, app, wc, NULL)
 
-  /* End of staging buffer for vertex */
+  /* End of  buffer creation */
 
   VkDescriptorPoolSize pool_sizes[2];
   pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
@@ -500,15 +515,13 @@ START_TEST(test_vulkan_image_texture) {
   /* Drawing will start when you begin a render pass */
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
-  /* set uniform buffer VKBufferInfos */
-  VkWriteDescriptorSet writes[2];
-  VkDescriptorBufferInfo buff_info;
-
+  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], sizeof(struct uniform_block_data));
   VkDescriptorImageInfo desc_img_info = dlu_set_desc_img_info(app->text_data[cur_tex].sampler,
     app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
   );
 
-  buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], VK_WHOLE_SIZE);
+  /* set uniform buffer VKBufferInfos */
+  VkWriteDescriptorSet writes[2];
   writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
   writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[1], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
@@ -549,7 +562,7 @@ START_TEST(test_vulkan_image_texture) {
     dlu_set_matrix(DLU_MAT4_IDENTITY, ubd.model, NULL);
     dlu_set_rotate(DLU_AXIS_Z, ubd.model, ((float) time / convert) * angle, spin_up);
 
-    err = dlu_create_vk_buff_mem_map(app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[2]);
+    err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[1], 0);
     check_err(err, app, wc, NULL)
 
     /* Check if a previous frame is using image */
@@ -598,7 +611,7 @@ int main (void) {
 
   sr = srunner_create(main_suite());
 
-  sleep(8);
+  sleep(9);
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

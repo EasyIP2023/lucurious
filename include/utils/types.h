@@ -67,7 +67,7 @@ typedef struct _dlu_otma_mems {
   uint32_t dba_cnt;     /* double array count */
   uint32_t vkcomp_cnt;  /* Vkcomp struct count */
   uint32_t vkext_props_cnt;
-  uint32_t vkval_layer_cnt;
+  uint32_t vk_layer_cnt;
   uint32_t desc_cnt;  /* descriptor count */
   uint32_t gp_cnt;      /* Graphics pipelines count */
   uint32_t si_cnt;       /* swap chain image count */

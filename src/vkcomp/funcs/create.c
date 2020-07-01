@@ -177,7 +177,7 @@ VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits
         app->pd_data[cur_pd].gfam_idx = i; ret = VK_FALSE;
         dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports graphics operations", i);
         if (app->surface && present_support[i])
-            dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %s supports presentation to a given surface", i);
+            dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports presentation to a given surface", i);
       }
 
       if (vkqfbits & VK_QUEUE_COMPUTE_BIT && app->pd_data[cur_pd].cfam_idx == UINT32_MAX) {
@@ -243,8 +243,8 @@ VkBool32 dlu_create_device_queue(
   VkQueueFlagBits vkqfbits
 ) {
 
-  if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_FALSE; }
-  if (app->ld_data[cur_ld].pdi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_logical_device()"); return VK_FALSE; }
+  if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_TRUE; }
+  if (app->ld_data[cur_ld].pdi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_logical_device()"); return VK_TRUE; }
 
   /**
   * Queues are automatically created with the logical device, but you need a
@@ -252,20 +252,20 @@ VkBool32 dlu_create_device_queue(
   */
   if (vkqfbits & VK_QUEUE_GRAPHICS_BIT) {
     vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].gfam_idx, queueIndex, &app->ld_data[cur_ld].graphics);
-    if (!app->ld_data[cur_ld].graphics)  { dlu_log_me(DLU_DANGER, "[x] Failed to get graphics queue handle"); return VK_FALSE; }
+    if (!app->ld_data[cur_ld].graphics)  { dlu_log_me(DLU_DANGER, "[x] Failed to get graphics queue handle"); return VK_TRUE; }
   }
 
   if (vkqfbits & VK_QUEUE_COMPUTE_BIT) {
     vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].cfam_idx, queueIndex, &app->ld_data[cur_ld].compute);
-    if (!app->ld_data[cur_ld].compute)  { dlu_log_me(DLU_DANGER, "[x] Failed to get compute queue handle"); return VK_FALSE; }
+    if (!app->ld_data[cur_ld].compute)  { dlu_log_me(DLU_DANGER, "[x] Failed to get compute queue handle"); return VK_TRUE; }
   }
 
   if (vkqfbits & VK_QUEUE_TRANSFER_BIT) {
     vkGetDeviceQueue(app->ld_data[cur_ld].device, app->pd_data[app->ld_data[cur_ld].pdi].tfam_idx, queueIndex, &app->ld_data[cur_ld].transfer);
-    if (!app->ld_data[cur_ld].transfer)  { dlu_log_me(DLU_DANGER, "[x] Failed to get transfer queue handle"); return VK_FALSE; }
+    if (!app->ld_data[cur_ld].transfer)  { dlu_log_me(DLU_DANGER, "[x] Failed to get transfer queue handle"); return VK_TRUE; }
   }
 
-  return VK_TRUE;
+  return VK_FALSE;
 }
 
 VkResult dlu_create_swap_chain(
@@ -483,34 +483,6 @@ VkResult dlu_create_vk_buffer(
   */
   res = vkBindBufferMemory(app->ld_data[cur_ld].device, app->buff_data[cur_bd].buff, app->buff_data[cur_bd].mem, 0);
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindBufferMemory")
-
-  return res;
-}
-
-VkResult dlu_create_vk_buff_mem_map(
-  vkcomp *app,
-  uint32_t cur_bd,
-  VkDeviceSize size,
-  void *data,
-  VkDeviceSize offset
-) {
-
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  if (!app->buff_data[cur_bd].mem) { PERR(DLU_VKCOMP_BUFF_MEM, 0, NULL); return res; }
-
-  /**
-  * Can Find in vulkan SDK doc/tutorial/html/07-init_uniform_buffer.html
-  * With any buffer, you need to populate it with the data that
-  * you want the shader to read. In order to get CPU access to
-  * the memory, you need to map it
-  */
-  void *p_data = NULL;
-  res = vkMapMemory(app->ld_data[app->buff_data[cur_bd].ldi].device, app->buff_data[cur_bd].mem, offset, size, 0, &p_data);
-  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
-  memmove(p_data, data, size);
-
-  vkUnmapMemory(app->ld_data[app->buff_data[cur_bd].ldi].device, app->buff_data[cur_bd].mem);
 
   return res;
 }

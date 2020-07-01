@@ -28,7 +28,7 @@ compositors that appear to be straight out of science fiction.
 * libudev
 
 ### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
-### [Documentation](https://easyip2023.github.io/lucurious-docs/)
+### [Documentation](https://github.com/EasyIP2023/lucurious-docs/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
 
@@ -44,3 +44,4 @@ compositors that appear to be straight out of science fiction.
 * [Vulkan Validation Layers](https://gpuopen.com/using-the-vulkan-validation-layers/)
 * [I am graphics and so can you](https://www.fasterthan.life/blog/2017/7/12/i-am-graphics-and-so-can-you-part-3-breaking-ground)
 * [MVP](https://jsantell.com/model-view-projection)
+* [OpenGL MVP](https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/)

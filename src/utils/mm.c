@@ -265,7 +265,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
 
   size += (ma.vkcomp_cnt     ) ? (BLOCK_SIZE + (ma.vkcomp_cnt * sizeof(vkcomp))) : 0;
   size += (ma.vkext_props_cnt) ? (BLOCK_SIZE + (ma.vkext_props_cnt * sizeof(VkExtensionProperties))) : 0;
-  size += (ma.vkval_layer_cnt) ? (BLOCK_SIZE + (ma.vkval_layer_cnt* sizeof(VkLayerProperties))) : 0;
+  size += (ma.vk_layer_cnt) ? (BLOCK_SIZE + (ma.vk_layer_cnt * sizeof(VkLayerProperties))) : 0;
 
   size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers))) : 0;
   size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers))) : 0;
