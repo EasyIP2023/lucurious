@@ -151,7 +151,7 @@ VkResult dlu_create_physical_device(
 
 VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits vkqfbits) {
   VkBool32 ret = VK_TRUE;
-  VkBool32 *present_support = NULL;
+  VkBool32 present_support = VK_FALSE;
   VkQueueFamilyProperties *queue_families = NULL;
   uint32_t qfc = 0; /* queue family count */
 
@@ -163,21 +163,21 @@ VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits
 
   vkGetPhysicalDeviceQueueFamilyProperties(app->pd_data[cur_pd].phys_dev, &qfc, queue_families);
 
-  present_support = (VkBool32 *) alloca(qfc * sizeof(VkBool32));
-
-  if (app->surface)
-    for (uint32_t i = 0; i < qfc; i++) /* Allows for the checking of presentation support */
-      vkGetPhysicalDeviceSurfaceSupportKHR(app->pd_data[cur_pd].phys_dev, i, app->surface, &present_support[i]);
-
   for (uint32_t i = 0; i < qfc; i++) {
     if (queue_families[i].queueFlags & vkqfbits) {
-      /* Check to see if a device can present images onto a surface */
-      if (vkqfbits & VK_QUEUE_GRAPHICS_BIT && app->pd_data[cur_pd].gfam_idx == UINT32_MAX) {
-        /* Retrieve Graphics Family Queue index */
-        app->pd_data[cur_pd].gfam_idx = i; ret = VK_FALSE;
-        dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports graphics operations", i);
-        if (app->surface && present_support[i])
-            dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports presentation to a given surface", i);
+      if (app->surface && !present_support) {
+        /* Allows for the checking of presentation support and if a given queue family supports swap chains */
+        vkGetPhysicalDeviceSurfaceSupportKHR(app->pd_data[cur_pd].phys_dev, i, app->surface, &present_support);
+
+        /* Check to see if a device has support for the grapphics bit and if if can present images onto a surface */
+        if (vkqfbits & VK_QUEUE_GRAPHICS_BIT && app->pd_data[cur_pd].gfam_idx == UINT32_MAX && present_support) {
+          /* Retrieve Graphics/Present Family Queue index */
+          app->pd_data[cur_pd].gfam_idx = i; ret = VK_FALSE;
+          dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports graphics operations", i);
+          dlu_log_me(DLU_SUCCESS, "Physical Device Queue Family Index %d supports presentation to a given surface", i);
+        }
+
+        present_support = VK_FALSE;
       }
 
       if (vkqfbits & VK_QUEUE_COMPUTE_BIT && app->pd_data[cur_pd].cfam_idx == UINT32_MAX) {

@@ -199,7 +199,7 @@ START_TEST(test_vulkan_rect) {
   err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
   check_err(err, app, wc, NULL)
 
-  /* 0 is the binding # this is bytes between successive structs */
+  /* 0 is the binding. The # of bytes there is between successive structs */
   VkVertexInputBindingDescription vi_binding = dlu_set_vertex_input_binding_desc(0, sizeof(vertex_2D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[2];

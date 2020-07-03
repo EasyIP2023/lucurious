@@ -324,12 +324,13 @@ START_TEST(test_vulkan_image_texture) {
 
   VkDescriptorSetLayoutBinding binding; VkDescriptorSetLayoutCreateInfo desc_set_info;
 
-  /* One descriptor set per layout */
+  /* Specify to X particular VkPipelineLayout/graphics pipeline how you plan on utilizing a descriptor set */
   binding = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
   desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
   err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
   check_err(err, app, wc, NULL)
 
+  /* Specify to X particular VkPipelineLayout/graphics pipeline how you plan on utilizing a descriptor set */
   binding = dlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
   desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
   err = dlu_create_desc_set_layout(app, cur_dd, 1, &desc_set_info);

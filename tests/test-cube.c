@@ -245,7 +245,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkDescriptorSetLayoutBinding desc_set; VkDescriptorSetLayoutCreateInfo desc_set_info;
   
-  /* Using same layout for all VkDescriptorSetLayout objects */
+  /* Specify to X particular graphics pipeline how you plan on utilizing a descriptor set */
   desc_set = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
   desc_set_info = dlu_set_desc_set_layout_info(0, 1, &desc_set);
   err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
@@ -289,6 +289,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_pipeline_cache(app, cur_ld, 0, NULL);
   check_err(err, app, wc, NULL)
 
+  /* 0 is the binding. The # of bytes there is between successive structs */
   VkVertexInputBindingDescription vi_binding = dlu_set_vertex_input_binding_desc(0, sizeof(vertex_3D), VK_VERTEX_INPUT_RATE_VERTEX);
 
   VkVertexInputAttributeDescription vi_attribs[2];

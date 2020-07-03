@@ -151,7 +151,10 @@ START_TEST(test_set_logical_device) {
   check_err(err, app, NULL, NULL)
 
   err = dlu_create_queue_families(app, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(err, app, NULL, NULL)
+  check_err(!err, app, NULL, NULL)
+
+  /* Graphics/Present Family index is most likely zero on most linux systems */
+  app->pd_data[0].gfam_idx  = 0;
 
   float queue_priorities[1] = {1.0};
   VkDeviceQueueCreateInfo dqueue_create_info[1];
@@ -200,7 +203,10 @@ START_TEST(test_swap_chain_fail_no_surface) {
   check_err(err, app, NULL, NULL)
 
   err = dlu_create_queue_families(app, 0, VK_QUEUE_GRAPHICS_BIT);
-  check_err(err, app, NULL, NULL)
+  check_err(!err, app, NULL, NULL)
+
+  /* Graphics/Present Family index is most likely zero on most linux systems */
+  app->pd_data[0].gfam_idx  = 0;
 
   float queue_priorities[1] = {1.0};
   VkDeviceQueueCreateInfo dqueue_create_info[1];
