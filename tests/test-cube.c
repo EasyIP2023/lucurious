@@ -205,11 +205,6 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
-  /* Acquire the swapchain image in order to set its layout */
-  uint32_t cur_img, cur_frame = 0;
-  err = dlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
-  check_err(err, app, wc, NULL)
-
   float fovy = dlu_set_radian(45.0f);
   float hw = (float) extent2D.width / (float) extent2D.height;
   if (extent2D.width > extent2D.height) fovy *= hw;
@@ -225,9 +220,8 @@ START_TEST(test_vulkan_client_create_3D) {
   const uint32_t vertex_count = ARR_LEN(vertices);
   const VkDeviceSize offsets[] = {0, vsize};
 
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, sizeof(ubd.mvp)+vsize, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE,
-    0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, sizeof(ubd.mvp)+vsize, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -239,19 +233,16 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(ubd.mvp), ubd.mvp, offsets[1], 0);
   check_err(err, app, wc, NULL)
 
-  /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
-  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
-  check_err(!err, app, wc, NULL)
+  /**
+  * MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1
+  * Specify to X particular graphics pipeline how you plan on utilizing descriptor sets and
+  * at what shader stages these descriptor sets operate on. The binding represents the index of
+  * a descriptor within a set.
+  */
+  VkDescriptorSetLayoutBinding binding = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  VkDescriptorSetLayoutCreateInfo desc_set_info[1]; desc_set_info[0] = dlu_set_desc_set_layout_info(0, 1, &binding);
 
-  VkDescriptorSetLayoutBinding desc_set; VkDescriptorSetLayoutCreateInfo desc_set_info;
-  
-  /* Specify to X particular graphics pipeline how you plan on utilizing a descriptor set */
-  desc_set = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
-  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &desc_set);
-  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
+  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, ARR_LEN(desc_set_info), desc_set_info, 0, NULL, 0);
   check_err(err, app, wc, NULL)
 
   /* start of render pass creation */
@@ -392,6 +383,13 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, frag_shader_module); frag_shader_module = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
 
+  /* This also sets the descriptor count */
+  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
+  check_err(!err, app, wc, NULL)
+
+  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info[0]);
+  check_err(err, app, wc, NULL)
+
   VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
   err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);
   check_err(err, app, wc, NULL)
@@ -434,6 +432,10 @@ START_TEST(test_vulkan_client_create_3D) {
   VkSemaphore acquire_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.image};
   VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
+
+  uint32_t cur_img, cur_frame = 0;
+  err = dlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
+  check_err(err, app, wc, NULL)
 
   /* set fence to unsignal state */
   err = dlu_vk_sync(DLU_VK_RESET_RENDER_FENCE, app, cur_scd, 0);

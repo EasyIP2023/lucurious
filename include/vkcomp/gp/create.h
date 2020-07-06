@@ -59,13 +59,16 @@ VkResult dlu_create_graphics_pipelines(
 
 VkResult dlu_create_pipeline_cache(vkcomp *app, uint32_t cur_ld, size_t initialDataSize, const void *pInitialData);
 
+/* Informs the driver what types of resources need to be accessed at a given pipeline */
 VkResult dlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_gpd,
-  uint32_t cur_dd,
+  uint32_t layout_count,
+  VkDescriptorSetLayoutCreateInfo *layouts_info,
   uint32_t pushConstantRangeCount,
-  const VkPushConstantRange *pPushConstantRanges
+  const VkPushConstantRange *pPushConstantRanges,
+  VkPipelineLayoutCreateFlags flags
 );
 
 /**

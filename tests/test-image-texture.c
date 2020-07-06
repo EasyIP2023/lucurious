@@ -38,7 +38,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define NUM_DESCRIPTOR_SETS 2
+#define NUM_DESCRIPTOR_SETS 1
 #define MAX_FRAMES 2
 #define WIDTH 800
 #define HEIGHT 600
@@ -217,10 +217,12 @@ START_TEST(test_vulkan_image_texture) {
   /**
   * The buffer is a staging host visible memory buffer. That can be mapped.
   * It's usable as a transfer source so that we can copy it to an image later on
+  * The VK_MEMORY_PROPERTY_HOST_COHERENT_BIT requests that the
+  * writes to the memory by the host are visible to the device
+  * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0,
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
   if (err) {
     stbi_image_free(pixels); pixels = NULL;
@@ -241,7 +243,7 @@ START_TEST(test_vulkan_image_texture) {
   );
 
   uint32_t cur_tex = 0;
-  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   check_err(err, app, wc, NULL)
 
   VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
@@ -256,7 +258,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /*
-  If one were to choose to map the jpg, png, etc.. directly into a bounded VkDeviceMemory
+  If one were to choose to map the jpg, png, etc.. directly into a textures bounded VkDeviceMemory (Staging Image)
   err = dlu_vk_map_mem(DLU_TEXT_VK_IMAGE app, cur_tex, img_size, pixels, 0, 0);
   if (err) {
     stbi_image_free(pixels); pixels = NULL;
@@ -270,7 +272,7 @@ START_TEST(test_vulkan_image_texture) {
   /* Specify what part of the buffer is copied to which part of the image */
   VkBufferImageCopy region = dlu_set_buff_image_copy(0, 0, 0, img_sub_rl, offset3D, img_extent);
 
-  /* cur_bd: must be a valid VkBuffer that contains your image pixels */
+  /* cur_bd: must be a valid VkBuffer that contains your image pixels. Now Copy pixels in VkBuffer over to VkImage */
   err = dlu_exec_copy_buff_to_image(app, cur_pool, cur_bd, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
   check_err(err, app, wc, NULL)
 
@@ -318,25 +320,18 @@ START_TEST(test_vulkan_image_texture) {
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = dlu_set_vertex_input_state_info(1, &vi_binding, ARR_LEN(vi_attribs), vi_attribs);
 
-  /* This also sets the descriptor count */
-  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
-  check_err(!err, app, wc, NULL)
+  /**
+  * MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1
+  * Specify to X particular graphics pipeline how you plan on utilizing descriptor sets and
+  * at what shader stages these descriptor sets operate on. The binding represents the index of
+  * a descriptor within a set.
+  */
+  VkDescriptorSetLayoutBinding binding[NUM_DESCRIPTOR_SETS+1]; VkDescriptorSetLayoutCreateInfo desc_set_info[NUM_DESCRIPTOR_SETS];
+  binding[0] = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  binding[1] = dlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
+  desc_set_info[0] = dlu_set_desc_set_layout_info(0, ARR_LEN(binding), binding);
 
-  VkDescriptorSetLayoutBinding binding; VkDescriptorSetLayoutCreateInfo desc_set_info;
-
-  /* Specify to X particular VkPipelineLayout/graphics pipeline how you plan on utilizing a descriptor set */
-  binding = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
-  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
-  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
-  check_err(err, app, wc, NULL)
-
-  /* Specify to X particular VkPipelineLayout/graphics pipeline how you plan on utilizing a descriptor set */
-  binding = dlu_set_desc_set_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL);
-  desc_set_info = dlu_set_desc_set_layout_info(0, 1, &binding);
-  err = dlu_create_desc_set_layout(app, cur_dd, 1, &desc_set_info);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
+  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, ARR_LEN(desc_set_info), desc_set_info, 0, NULL, 0);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -482,7 +477,7 @@ START_TEST(test_vulkan_image_texture) {
   */
   err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize + isize + sizeof(struct uniform_block_data), 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -493,6 +488,13 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* End of  buffer creation */
+
+  /* This also sets the descriptor count */
+  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
+  check_err(!err, app, wc, NULL)
+
+  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info[0]);
+  check_err(err, app, wc, NULL)
 
   VkDescriptorPoolSize pool_sizes[2];
   pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
@@ -524,7 +526,7 @@ START_TEST(test_vulkan_image_texture) {
   /* set uniform buffer VKBufferInfos */
   VkWriteDescriptorSet writes[2];
   writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
-  writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[1], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
+  writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {

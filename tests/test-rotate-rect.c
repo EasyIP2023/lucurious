@@ -41,7 +41,7 @@
 #define HEIGHT 600
 
 static dlu_otma_mems ma = {
-  .vkcomp_cnt = 1, .desc_cnt = 1, .gp_cnt = 1, .si_cnt = 5,
+  .vkcomp_cnt = 1, .desc_cnt = NUM_DESCRIPTOR_SETS, .gp_cnt = 1, .si_cnt = 5,
   .scd_cnt = 1, .gpd_cnt = 1, .cmdd_cnt = 1, .bd_cnt = 1,
   .dd_cnt = 1, .ld_cnt = 1, .pd_cnt = 1
 };
@@ -185,19 +185,16 @@ START_TEST(test_vulkan_rotate_rect) {
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info = dlu_set_vertex_input_state_info(1, &vi_binding, ARR_LEN(vi_attribs), vi_attribs);
 
-  /* This also sets the descriptor count */
-  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
-  check_err(!err, app, wc, NULL)
+  /**
+  * MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1
+  * Specify to X particular graphics pipeline how you plan on utilizing descriptor sets and
+  * at what shader stages these descriptor sets operate on. The binding represents the index of
+  * a descriptor within a set.
+  */
+  VkDescriptorSetLayoutBinding binding = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
+  VkDescriptorSetLayoutCreateInfo desc_set_info[1]; desc_set_info[0] = dlu_set_desc_set_layout_info(0, 1, &binding);
 
-  /* MVP transformation is in a single uniform buffer variable (not an array), So descriptor count is 1 */
-  VkDescriptorSetLayoutBinding desc_set = dlu_set_desc_set_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL);
-  VkDescriptorSetLayoutCreateInfo desc_set_info = dlu_set_desc_set_layout_info(0, 1, &desc_set);
-
-  /* Specify to X particular graphics pipeline how you plan on utilizing a descriptor set */
-  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
+  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, ARR_LEN(desc_set_info), desc_set_info, 0, NULL, 0);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -342,7 +339,7 @@ START_TEST(test_vulkan_rotate_rect) {
   */
   err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize + isize + sizeof(struct uniform_block_data), 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -352,6 +349,13 @@ START_TEST(test_vulkan_rotate_rect) {
   err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, isize, indices, offsets[1], 0);
   check_err(err, app, wc, NULL)
   /* End of buffer creation */
+
+  /* This also sets the descriptor count */
+  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
+  check_err(!err, app, wc, NULL)
+
+  err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info[0]);
+  check_err(err, app, wc, NULL)
 
   VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
   err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);

@@ -132,7 +132,7 @@ START_TEST(test_vulkan_rect) {
   VkExtent2D extent2D = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0;
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
@@ -162,12 +162,7 @@ START_TEST(test_vulkan_rect) {
   err = dlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
-  /* Acquire the swapchain image in order to set its layout */
-  uint32_t cur_img, cur_frame = 0;
-  err = dlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
-  check_err(err, app, wc, NULL)
-
-  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, cur_dd, 0, NULL);
+  err = dlu_create_pipeline_layout(app, cur_ld, cur_gpd, 0, NULL, 0, NULL, 0);
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
@@ -321,9 +316,8 @@ START_TEST(test_vulkan_rect) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize+isize, 0,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE,
-    0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize+isize, 0, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
   check_err(err, app, wc, NULL)
 
@@ -359,6 +353,10 @@ START_TEST(test_vulkan_rect) {
   VkSemaphore acquire_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.image};
   VkSemaphore render_sems[1] = {app->sc_data[cur_scd].syncs[0].sem.render};
   VkCommandBuffer cmd_buffs[1] = {app->cmd_data[cur_pool].cmd_buffs[cur_buff]};
+
+  uint32_t cur_img, cur_frame = 0;
+  err = dlu_acquire_sc_image_index(app, cur_scd, cur_frame, &cur_img);
+  check_err(err, app, wc, NULL)
 
   /* set fence to unsignal state */
   err = dlu_vk_sync(DLU_VK_RESET_RENDER_FENCE, app, cur_scd, 0);

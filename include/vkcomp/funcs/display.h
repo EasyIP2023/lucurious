@@ -34,16 +34,19 @@ VkSurfaceCapabilitiesKHR dlu_get_physical_device_surface_capabilities(vkcomp *ap
 
 /**
 * Needed to create the swap chain
-* Function returns the best format and the color depth for an image(s).
-* The "format" variable refers to the pixel formats and the
-* "colorSpace" variable refers to the Color Depth
+* Function returns the best format and the color depth for an image(s),
+* but gives the option to select a preference.
+* The "format" variable refers to the pixel formats (width of each texels color space in memory)
+* and the "colorSpace" variable refers to the Color Depth
 */
 VkSurfaceFormatKHR dlu_choose_swap_surface_format(vkcomp *app, uint32_t cur_pd, VkFormat format, VkColorSpaceKHR colorSpace);
 
 /**
 * Needed to create the swap chain
-* This function chooses the best presentation mode for swapchain
-* (Conditions required for swapping images to the screen)
+* This function chooses the best presentation mode for the swapchain/presentation engine.
+* Conditions required for swapping images to the screen.
+* Basically determines if an application should be waiting for v-sync or display
+* an image immediately (definitely leads to image tearing). 
 */
 VkPresentModeKHR dlu_choose_swap_present_mode(vkcomp *app, uint32_t cur_pd);
 

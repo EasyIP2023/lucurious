@@ -152,6 +152,30 @@ VkImageMemoryBarrier dlu_set_image_mem_barrier(
   return create_info;
 }
 
+VkBufferMemoryBarrier dlu_set_buffer_mem_barrier(
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  uint32_t srcQueueFamilyIndex,
+  uint32_t dstQueueFamilyIndex,
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize size
+) {
+
+  VkBufferMemoryBarrier create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+  create_info.pNext = NULL;
+  create_info.srcAccessMask = srcAccessMask;
+  create_info.dstAccessMask = dstAccessMask;
+  create_info.srcQueueFamilyIndex = srcQueueFamilyIndex;
+  create_info.dstQueueFamilyIndex = dstQueueFamilyIndex;
+  create_info.buffer = buffer;
+  create_info.offset = offset;
+  create_info.size = size;
+
+  return create_info;
+}
+
 VkImageCreateInfo dlu_set_image_info(
   VkImageCreateFlags flags,
   VkImageType imageType,

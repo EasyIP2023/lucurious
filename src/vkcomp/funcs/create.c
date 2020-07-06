@@ -390,7 +390,7 @@ VkResult dlu_create_depth_buff(
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImage"); return res; }
 
   /**
-  * Although you know the width, height, and the size of a buffer element,
+  * Although you know the width, height, and the size of a image element,
   * there is no way to determine exactly how much memory is needed to allocate.
   * This is because alignment constraints that may be placed by the GPU hardware.
   * This function allows you to find out everything you need to allocate the
@@ -417,8 +417,8 @@ VkResult dlu_create_depth_buff(
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateMemory"); return res; }
 
   /**
-  * Associate the memory allocated with the VkBuffer resource.
-  * It is easier to attach the entire VkDeviceMemory to the VkBuffer resource
+  * Associate the memory allocated with the VkImage resource.
+  * It is easier to attach the entire VkDeviceMemory to the VkImage resource
   * So offset will always be zero whenever a call to vkBind*Memory is called
   */
   res = vkBindImageMemory(app->ld_data[app->sc_data[cur_scd].ldi].device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);

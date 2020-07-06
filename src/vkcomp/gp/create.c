@@ -156,45 +156,42 @@ VkResult dlu_create_pipeline_layout(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_gpd,
-  uint32_t cur_dd,
+  uint32_t layout_count,
+  VkDescriptorSetLayoutCreateInfo *layout_infos,
   uint32_t pushConstantRangeCount,
-  const VkPushConstantRange *pPushConstantRanges
+  const VkPushConstantRange *pPushConstantRanges,
+  VkPipelineLayoutCreateFlags flags
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->gp_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_GP_DATA"); return res; }
 
+  VkDescriptorSetLayout  *pSetLayouts  = (layout_infos) ? alloca(layout_count * sizeof(VkDescriptorSetLayout)) :  NULL;
+  for (uint32_t i = 0; i < layout_count; i++) {
+    res = vkCreateDescriptorSetLayout(app->ld_data[cur_ld].device, &layout_infos[i], NULL, &pSetLayouts[i]);
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout"); goto end_func; }
+  }
+
   VkPipelineLayoutCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   create_info.pNext = NULL;
-  create_info.flags = 0;
+  create_info.flags = flags;
+  create_info.setLayoutCount = layout_count;
+  create_info.pSetLayouts = pSetLayouts;
   create_info.pushConstantRangeCount = pushConstantRangeCount;
   create_info.pPushConstantRanges = pPushConstantRanges;
-
-  /* Function may be called in senarios descriptor data struct array members may not be needed */
-  if (app->desc_data) {
-
-    for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
-      if (!app->desc_data[cur_dd].layouts[i]) {
-        dlu_log_me(DLU_DANGER, "[x] VkDescriptorSetLayout at index %d not yet created", i);
-        dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_set_layout(3)");
-        return res;
-      }
-    }
-
-    create_info.setLayoutCount = app->desc_data[cur_dd].dlsc;
-    create_info.pSetLayouts = app->desc_data[cur_dd].layouts;
-  } else {
-    create_info.setLayoutCount = 0;
-    create_info.pSetLayouts = NULL;
-  }
 
   res = vkCreatePipelineLayout(app->ld_data[cur_ld].device, &create_info, NULL, &app->gp_data[cur_gpd].pipeline_layout);
   if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreatePipelineLayout")
 
   /* Associate a logical device with a graphics pipeline */
   app->gp_data[cur_gpd].ldi = cur_ld;
+
+end_func:
+  for (uint32_t i = 0; i < layout_count; i++)
+    if (pSetLayouts[i])
+      vkDestroyDescriptorSetLayout(app->ld_data[cur_ld].device, pSetLayouts[i], NULL);
 
   return res;
 }
@@ -251,10 +248,16 @@ VkResult dlu_create_desc_sets(
   VkResult res = VK_RESULT_MAX_ENUM;
 
   if (!app->desc_data[cur_dd].desc_pool) { PERR(DLU_VKCOMP_DESC_POOL, 0, NULL); return res; }
-  /* Leaving this error check here for now */
-  if (!app->desc_data[cur_dd].layouts) { PERR(DLU_VKCOMP_DESC_LAYOUT, 0, NULL); return res; }
+  if (!app->desc_data[cur_dd].layouts) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DESC_DATA_MEMS"); return res; }
   if (!app->desc_data[cur_dd].desc_set) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DESC_DATA_MEMS"); return res; }
   if (app->desc_data[cur_dd].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_desc_pool(3)"); return res; }
+  /* Be Sure all VkDescriptorSetLayouts are present. Same check is in dlu_create_pipeline_layout(3) */
+  for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
+    if (!app->desc_data[cur_dd].layouts[i]) {
+      PERR(DLU_VKCOMP_DESC_LAYOUT, i , NULL);
+      return res;
+    }
+  }
 
   VkDescriptorSetAllocateInfo alloc_info;
   alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -285,7 +288,7 @@ VkResult dlu_create_texture_image(
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImage"); }
 
   /**
-  * Although you know the width, height, and the size of a buffer element,
+  * Although you know the width, height, and the size of a image element,
   * there is no way to determine exactly how much memory is needed to allocate.
   * This is because alignment constraints that may be placed by the GPU hardware.
   * This function allows you to find out everything you need to allocate the

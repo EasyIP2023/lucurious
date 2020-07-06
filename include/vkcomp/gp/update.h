@@ -25,7 +25,10 @@
 #ifndef DLU_VKCOMP_GP_UPDATE_H
 #define DLU_VKCOMP_GP_UPDATE_H
 
-/* descriptorCount: Specify the amount of descriptors to update */
+/**
+* descriptorCount: Specify the amount of descriptors to update
+* Tell the driver that which resource to use for descriptors in a set
+*/
 VkWriteDescriptorSet dlu_write_desc_set(
   VkDescriptorSet dstSet,
   uint32_t dstBinding,

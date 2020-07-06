@@ -75,7 +75,7 @@ VkImageSubresourceRange dlu_set_image_sub_resource_range(
   uint32_t layerCount
 );
 
-/* set info for resource synchronization access */
+/* set info for resource (i.e VkBuffer, VkImage) synchronization access */
 VkImageMemoryBarrier dlu_set_image_mem_barrier(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
@@ -85,6 +85,16 @@ VkImageMemoryBarrier dlu_set_image_mem_barrier(
   uint32_t dstQueueFamilyIndex,
   VkImage image,
   VkImageSubresourceRange subresourceRange
+);
+
+VkBufferMemoryBarrier dlu_set_buffer_mem_barrier(
+  VkAccessFlags srcAccessMask,
+  VkAccessFlags dstAccessMask,
+  uint32_t srcQueueFamilyIndex,
+  uint32_t dstQueueFamilyIndex,
+  VkBuffer buffer,
+  VkDeviceSize offset,
+  VkDeviceSize size
 );
 
 VkImageCreateInfo dlu_set_image_info(

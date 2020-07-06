@@ -154,7 +154,7 @@ void _show_err_msg(uint32_t dlu_err, int vkerr, const char *dlu_msg) {
       dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_pool()");
       break;
     case DLU_VKCOMP_DESC_LAYOUT:
-      dlu_log_me(DLU_DANGER, "[x] In order to allocate descriptor sets one must define a descriptor layout");
+      dlu_log_me(DLU_DANGER, "[x] VkDescriptorSetLayout at index %d not yet created", vkerr);
       dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_create_desc_set_layouts()");
       break;
     case DLU_VKCOMP_PHYS_DEV:
