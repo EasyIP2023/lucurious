@@ -169,7 +169,7 @@ VkBool32 dlu_create_queue_families(vkcomp *app, uint32_t cur_pd, VkQueueFlagBits
         /* Allows for the checking of presentation support and if a given queue family supports swap chains */
         vkGetPhysicalDeviceSurfaceSupportKHR(app->pd_data[cur_pd].phys_dev, i, app->surface, &present_support);
 
-        /* Check to see if a device has support for the grapphics bit and if if can present images onto a surface */
+        /* Check to see if a device has support for the grapphics bit and if if can present images onto a surface in one queue */
         if (vkqfbits & VK_QUEUE_GRAPHICS_BIT && app->pd_data[cur_pd].gfam_idx == UINT32_MAX && present_support) {
           /* Retrieve Graphics/Present Family Queue index */
           app->pd_data[cur_pd].gfam_idx = i; ret = VK_FALSE;

@@ -180,39 +180,34 @@ START_TEST(test_vulkan_image_texture) {
   VkImageSubresourceRange img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
   VkImageViewCreateInfo img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
-  /* Create Image Views. So that the application can access a VkImage resource */
-  err = dlu_create_image_views(DLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
-  check_err(err, app, wc, NULL)
-
   /* This is where creation of the graphics pipeline begins */
   err = dlu_create_syncs(app, cur_scd);
   check_err(err, app, wc, NULL)
 
   /* Start of image loader */
-  VkDeviceSize img_size; VkExtent3D img_extent;
-  char *picture = concat("%s/tests/%s", DLU_DIR_SRC, "textures/texture.jpg");
-  check_err(!picture, app, wc, NULL)
+  const char *filename = IMG_SRC;
+  dlu_file_info picture = dlu_read_file(filename);
+  check_err(!picture.bytes, app, wc, NULL)
 
-  int pw = 0, ph = 0, pchannels = 0;
+  VkDeviceSize img_size; VkExtent3D img_extent;
 
   /* First load the image */
-  stbi_uc *pixels = stbi_load(picture, &pw, &ph, &pchannels, STBI_rgb_alpha);
+  int pw = 0, ph = 0, pchannels = 0, requested_channels = STBI_rgb_alpha;
+  unsigned char *pixels = stbi_load_from_memory((unsigned char *) picture.bytes, picture.byte_size, &pw, &ph, &pchannels, requested_channels);
   if (!pixels) {  
-    dlu_log_me(DLU_DANGER, "[x] %s failed to load", picture);
-    free(picture); picture = NULL;
+    dlu_log_me(DLU_DANGER, "[x] %s failed to load", filename);
+    /* Going to leave function call the same for legacy reasons */
+    dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes);
     check_err(VK_TRUE, app, wc, NULL)
   }
 
-  img_extent.width = pw;
-  img_extent.height = ph;
-  img_extent.depth = 1;
-
-  dlu_log_me(DLU_SUCCESS, "%s successfully loaded", picture);
+  dlu_log_me(DLU_SUCCESS, "%s successfully loaded", filename);
   dlu_log_me(DLU_SUCCESS, "Image width: %dpx, Image height: %dpx", pw, ph);
-  free(picture); picture = NULL;
+  dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes); picture.bytes = NULL;
   /* End of image loader */
 
-  img_size = img_extent.width * img_extent.height * 4;
+  img_extent.width = pw; img_extent.height = ph; img_extent.depth = 1;
+  img_size = img_extent.width * img_extent.height * (requested_channels <= 0 ? pchannels : requested_channels);
 
   /**
   * The buffer is a staging host visible memory buffer. That can be mapped.
@@ -244,6 +239,15 @@ START_TEST(test_vulkan_image_texture) {
 
   uint32_t cur_tex = 0;
   err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  check_err(err, app, wc, NULL)
+
+  /**
+  * Create Image View for texture image. So that application can access a VkImage resource
+  * VK_COMPONENT_SWIZZLE_IDENTITY defined as zero
+  */
+  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
+
+  err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
   check_err(err, app, wc, NULL)
 
   VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
@@ -291,11 +295,8 @@ START_TEST(test_vulkan_image_texture) {
   dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
 
-  /* Create Image View for texture image. So that application can access a VkImage resource */
-  img_view_info.format = VK_FORMAT_B8G8R8A8_UNORM; /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
-  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
-
-  err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
+  /* Create Image Views. So that the application can access a VkImage resource */
+  err = dlu_create_image_views(DLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
   VkSamplerCreateInfo sampler = dlu_set_sampler_info(0, VK_FILTER_LINEAR, VK_FILTER_LINEAR, 0.0f, VK_SAMPLER_MIPMAP_MODE_LINEAR,
@@ -335,9 +336,8 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Starting point for render pass creation */
-  VkAttachmentDescription color_attachment = dlu_set_attachment_desc(surface_fmt.format,
-    VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+  VkAttachmentDescription color_attachment = dlu_set_attachment_desc(surface_fmt.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
   );
 

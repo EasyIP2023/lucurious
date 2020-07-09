@@ -74,11 +74,16 @@ lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
   c_args: '-DDEV_ENV --std=gnu18', install: false
 )
 
-it_files = ['test-image-texture.c', 'helpers.c']
+it_files = ['test-image-texture.c']
 lucur_img_texture_test = executable('lucur-img-texture-test',
   it_files, include_directories: lucur_inc,
   dependencies: [check, libmath], link_with: [lib_lucur, lib_lwayland],
-  c_args: '-DDEV_ENV --std=gnu18', install: false
+  c_args: [
+    '--std=gnu18',
+    '-DDEV_ENV',
+    '-DIMG_SRC=' + '"@0@"'.format(meson.current_source_dir() + '/textures/texture.jpg')
+  ],
+  install: false
 )
 
 test('lucur-alloc-test', lucur_alloc_test, suite: ['all', 'alloc'])

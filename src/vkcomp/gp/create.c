@@ -251,7 +251,7 @@ VkResult dlu_create_desc_sets(
   if (!app->desc_data[cur_dd].layouts) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DESC_DATA_MEMS"); return res; }
   if (!app->desc_data[cur_dd].desc_set) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DESC_DATA_MEMS"); return res; }
   if (app->desc_data[cur_dd].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_desc_pool(3)"); return res; }
-  /* Be Sure all VkDescriptorSetLayouts are present. Same check is in dlu_create_pipeline_layout(3) */
+  /* Be Sure all VkDescriptorSetLayouts are present */
   for (uint32_t i = 0; i < app->desc_data[cur_dd].dlsc; i++) {
     if (!app->desc_data[cur_dd].layouts[i]) {
       PERR(DLU_VKCOMP_DESC_LAYOUT, i , NULL);
