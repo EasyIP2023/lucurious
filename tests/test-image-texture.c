@@ -185,8 +185,7 @@ START_TEST(test_vulkan_image_texture) {
   check_err(err, app, wc, NULL)
 
   /* Start of image loader */
-  const char *filename = IMG_SRC;
-  dlu_file_info picture = dlu_read_file(filename);
+  dlu_file_info picture = dlu_read_file(IMG_SRC);
   check_err(!picture.bytes, app, wc, NULL)
 
   VkDeviceSize img_size; VkExtent3D img_extent;
@@ -195,13 +194,13 @@ START_TEST(test_vulkan_image_texture) {
   int pw = 0, ph = 0, pchannels = 0, requested_channels = STBI_rgb_alpha;
   unsigned char *pixels = stbi_load_from_memory((unsigned char *) picture.bytes, picture.byte_size, &pw, &ph, &pchannels, requested_channels);
   if (!pixels) {  
-    dlu_log_me(DLU_DANGER, "[x] %s failed to load", filename);
+    dlu_log_me(DLU_DANGER, "[x] %s failed to load", IMG_SRC);
     /* Going to leave function call the same for legacy reasons */
     dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes);
     check_err(VK_TRUE, app, wc, NULL)
   }
 
-  dlu_log_me(DLU_SUCCESS, "%s successfully loaded", filename);
+  dlu_log_me(DLU_SUCCESS, "%s successfully loaded", IMG_SRC);
   dlu_log_me(DLU_SUCCESS, "Image width: %dpx, Image height: %dpx", pw, ph);
   dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes); picture.bytes = NULL;
   /* End of image loader */
@@ -523,7 +522,7 @@ START_TEST(test_vulkan_image_texture) {
     app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
   );
 
-  /* set uniform buffer VKBufferInfos */
+  /* set uniform buffer VKBufferInfo and uniform texture ImageInfo */
   VkWriteDescriptorSet writes[2];
   writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
   writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);

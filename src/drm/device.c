@@ -184,9 +184,9 @@ static void plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObje
   uint32_t *blob_formats = NULL; /* array of formats */
   struct drm_format_modifier *blob_modifiers = NULL;
 
-  blob_id = drm_property_get_value(&core->device.output_data[odb].props.plane[DLU_DRM_PLANE_IN_FORMATS], props, 0);
+  blob_id = drm_property_get_value(&core->output_data[odb].props.plane[DLU_DRM_PLANE_IN_FORMATS], props, 0);
   if (blob_id == 0) {
-    dlu_log_me(DLU_WARNING, "'%s' plane does not have IN_FORMATS", core->device.output_data[odb].name);
+    dlu_log_me(DLU_WARNING, "'%s' plane does not have IN_FORMATS", core->output_data[odb].name);
     return;
   }
 
@@ -216,15 +216,15 @@ static void plane_formats_populate(dlu_drm_core *core, uint32_t odb, drmModeObje
       if ((f < mod->offset) || (f > mod->offset + 63)) continue;
       if (!(mod->formats & (1 << (f - mod->offset)))) continue;
     
-      core->device.output_data[odb].modifiers = realloc(core->device.output_data[odb].modifiers,
-          (core->device.output_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
+      core->output_data[odb].modifiers = realloc(core->output_data[odb].modifiers,
+          (core->output_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
 
-      if (!core->device.output_data[odb].modifiers) {
+      if (!core->output_data[odb].modifiers) {
         dlu_log_me(DLU_DANGER, "[x] realloc: %s", strerror(errno));
         return;
       }
 
-      core->device.output_data[odb].modifiers[core->device.output_data[odb].modifiers_cnt++] = mod->modifier;
+      core->output_data[odb].modifiers[core->output_data[odb].modifiers_cnt++] = mod->modifier;
     }
   }
 
@@ -236,9 +236,9 @@ static void output_get_edid(dlu_drm_core *core, uint32_t odb, drmModeObjectPrope
   struct edid_info *edid = NULL;
   uint32_t blob_id = 0;
 
-  blob_id = drm_property_get_value(&core->device.output_data[odb].props.conn[DLU_DRM_CONNECTOR_EDID], props, 0);
+  blob_id = drm_property_get_value(&core->output_data[odb].props.conn[DLU_DRM_CONNECTOR_EDID], props, 0);
   if (blob_id == 0) {
-    dlu_log_me(DLU_WARNING, "'%s' output does not have EDID", core->device.output_data[odb].name);
+    dlu_log_me(DLU_WARNING, "'%s' output does not have EDID", core->output_data[odb].name);
     return;
   }
 
@@ -252,7 +252,7 @@ static void output_get_edid(dlu_drm_core *core, uint32_t odb, drmModeObjectPrope
   drmModeFreePropertyBlob(blob);
   if (!edid) return;
 
-  dlu_log_me(DLU_INFO, "For Output Device '%s'", core->device.output_data[odb].name);
+  dlu_log_me(DLU_INFO, "For Output Device '%s'", core->output_data[odb].name);
   dlu_log_me(DLU_INFO, "EDID PNP ID: %s", edid->pnp_id);
   dlu_log_me(DLU_INFO, "EISA ID: %s", edid->eisa_id);
   dlu_log_me(DLU_INFO, "Monitor Name: %s", edid->monitor_name);
@@ -308,7 +308,7 @@ bool dlu_drm_kms_node_enum_ouput_dev(
     goto exit_func;
   }
 
-  if (!core->device.output_data) {
+  if (!core->output_data) {
     PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_DATA");
     goto exit_func;
   }
@@ -330,45 +330,45 @@ bool dlu_drm_kms_node_enum_ouput_dev(
     ret = false; goto exit_free_plane_res;
   }
 
-  core->device.output_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_idx]);
-  if (!core->device.output_data[odb].conn) {
+  core->output_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_idx]);
+  if (!core->output_data[odb].conn) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetConnector: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->device.output_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_idx]);
-  if (!core->device.output_data[odb].enc) {
+  core->output_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_idx]);
+  if (!core->output_data[odb].enc) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetEncoder: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->device.output_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_idx]);
-  if (!core->device.output_data[odb].crtc) {
+  core->output_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_idx]);
+  if (!core->output_data[odb].crtc) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetCrtc: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->device.output_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_idx]);
-  if (!core->device.output_data[odb].plane) {
+  core->output_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_idx]);
+  if (!core->output_data[odb].plane) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetPlane: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  snprintf(core->device.output_data[odb].name, sizeof(core->device.output_data[odb].name), "%s", conn_name);
-  core->device.output_data[odb].refresh = millihz_to_nsec(refresh);
+  snprintf(core->output_data[odb].name, sizeof(core->output_data[odb].name), "%s", conn_name);
+  core->output_data[odb].refresh = millihz_to_nsec(refresh);
 
   /* This members are redundant and mainly for easy of access */
-  core->device.output_data[odb].conn_id = core->device.output_data[odb].conn->connector_id;
-  core->device.output_data[odb].enc_id  = core->device.output_data[odb].enc->encoder_id;
-  core->device.output_data[odb].crtc_id = core->device.output_data[odb].crtc->crtc_id;
-  core->device.output_data[odb].pp_id   = core->device.output_data[odb].plane->plane_id;
-  core->device.output_data[odb].mode    = core->device.output_data[odb].crtc->mode;
+  core->output_data[odb].conn_id = core->output_data[odb].conn->connector_id;
+  core->output_data[odb].enc_id  = core->output_data[odb].enc->encoder_id;
+  core->output_data[odb].crtc_id = core->output_data[odb].crtc->crtc_id;
+  core->output_data[odb].pp_id   = core->output_data[odb].plane->plane_id;
+  core->output_data[odb].mode    = core->output_data[odb].crtc->mode;
 
   /**
   * Now creating MODE_ID blob
   * Go here for more information: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
   */
-  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->device.output_data[odb].mode, sizeof(drmModeModeInfo), &core->device.output_data[odb].mode_blob_id) < 0) {
+  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->output_data[odb].mode, sizeof(drmModeModeInfo), &core->output_data[odb].mode_blob_id) < 0) {
     dlu_log_me(DLU_DANGER, "[x] drmModeCreatePropertyBlob: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
@@ -380,13 +380,13 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   */
   
   /* Plane Query */
-  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->device.output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
+  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, plane_props, core->device.output_data[odb].props.plane, DLU_DRM_PLANE__CNT, props)) {
+  if (!drm_prop_info_populate(core, plane_props, core->output_data[odb].props.plane, DLU_DRM_PLANE__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }
@@ -396,13 +396,13 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   /* Plane Query */
 
   /* CRTC Query */
-  props = drmModeObjectGetProperties(core->device.kmsfd, core->device.output_data[odb].crtc_id, DRM_MODE_OBJECT_CRTC);
+  props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].crtc_id, DRM_MODE_OBJECT_CRTC);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, crtc_props, core->device.output_data[odb].props.crtc, DLU_DRM_CRTC__CNT, props)) {
+  if (!drm_prop_info_populate(core, crtc_props, core->output_data[odb].props.crtc, DLU_DRM_CRTC__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }
@@ -411,13 +411,13 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   /* CRTC Query */
 
   /* Connector Query */
-  props = drmModeObjectGetProperties(core->device.kmsfd, core->device.output_data[odb].conn_id, DRM_MODE_OBJECT_CONNECTOR);
+  props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].conn_id, DRM_MODE_OBJECT_CONNECTOR);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, conn_props, core->device.output_data[odb].props.conn, DLU_DRM_CONNECTOR__CNT, props)) {
+  if (!drm_prop_info_populate(core, conn_props, core->output_data[odb].props.conn, DLU_DRM_CONNECTOR__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }

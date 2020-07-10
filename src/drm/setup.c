@@ -47,28 +47,31 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->session.bus)
     sd_bus_unref(core->session.bus);
-  if (core->device.output_data) {
+  if (core->output_data) {
     uint32_t j, i;
-    for (i = 0; i < core->device.odc; i++) {
-      free(core->device.output_data[i].modifiers);
-      if (core->device.output_data[i].mode_blob_id != 0)
-        drmModeDestroyPropertyBlob(core->device.kmsfd, core->device.output_data[i].mode_blob_id);
-      if (core->device.output_data[i].conn)
-        drmModeFreeConnector(core->device.output_data[i].conn);
-      if (core->device.output_data[i].enc)
-        drmModeFreeEncoder(core->device.output_data[i].enc);
-      if (core->device.output_data[i].crtc)
-        drmModeFreeCrtc(core->device.output_data[i].crtc);
-      if (core->device.output_data[i].plane)
-        drmModeFreePlane(core->device.output_data[i].plane);
+    for (i = 0; i < core->odc; i++) {
+      free(core->output_data[i].modifiers);
+      if (core->output_data[i].mode_blob_id != 0)
+        drmModeDestroyPropertyBlob(core->device.kmsfd, core->output_data[i].mode_blob_id);
+      if (core->output_data[i].conn)
+        drmModeFreeConnector(core->output_data[i].conn);
+      if (core->output_data[i].enc)
+        drmModeFreeEncoder(core->output_data[i].enc);
+      if (core->output_data[i].crtc)
+        drmModeFreeCrtc(core->output_data[i].crtc);
+      if (core->output_data[i].plane)
+        drmModeFreePlane(core->output_data[i].plane);
       for (j = 0; j < DLU_DRM_PLANE_TYPE__CNT; j++)
-        free(core->device.output_data[i].props.plane[j].enum_values);
+        free(core->output_data[i].props.plane[j].enum_values);
       for (j = 0; j < DLU_DRM_CRTC__CNT; j++)
-        free(core->device.output_data[i].props.crtc[j].enum_values);
+        free(core->output_data[i].props.crtc[j].enum_values);
       for (j = 0; j < DLU_DRM_CONNECTOR__CNT; j++)
-        free(core->device.output_data[i].props.conn[j].enum_values);
+        free(core->output_data[i].props.conn[j].enum_values);
     }
   }
+  if (core->buff_data)
+    for (uint32_t i = 0; i < core->odbc; i++)
+      gbm_bo_destroy(core->buff_data[i].bo);
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);
 }

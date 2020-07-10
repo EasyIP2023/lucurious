@@ -466,7 +466,7 @@ VkResult dlu_create_vk_buffer(
   VkMemoryAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   alloc_info.pNext = NULL;
-  alloc_info.allocationSize = app->buff_data[cur_bd].size = mem_reqs.size;
+  alloc_info.allocationSize = mem_reqs.size;
   alloc_info.memoryTypeIndex = 0;
 
   /* find a suitable memory type for VkBuffer */

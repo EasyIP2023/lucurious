@@ -26,14 +26,16 @@
 #define DLU_DRM_CREATE_H
 
 /**
-* This function must be executed
-* It sets up a VT/TTY so the process can in graphical mode.
+* Function sets up a VT/TTY so the process can in graphical mode.
 * It also sets a process up so that it can handle its own input.
 * If dlu_drm_create_kms_node somehow fails you can run just use this function, but sudo permission required.
 */
 bool dlu_drm_create_vt(dlu_drm_core *core);
 bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev);
 bool dlu_drm_create_gbm_device(dlu_drm_core *core);
+
+/* One should query using the lucur(1) cmd tool to see if there device supports framebuffer modifiers */
+bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_odb, uint32_t format);
 
 #ifdef INAPI_CALLS
 void dlu_drm_reset_vt(dlu_drm_core *core);

@@ -176,7 +176,6 @@ typedef struct _vkcomp {
   struct _buff_data {
     VkBuffer buff;
     VkDeviceMemory mem;
-    VkDeviceSize size;
 
     /* logical device index, Used to keep track of active VkDevice */
     uint32_t ldi;

@@ -58,8 +58,8 @@ exit_create_kms_node:
   free_core(core);
 } END_TEST;
 
-START_TEST(kms_node_enumeration) {
-  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 1 };
+START_TEST(kms_node_enumeration_gbm_bo_creation) {
+  dlu_otma_mems ma = { .drmc_cnt = 1, .dod_cnt = 1, .odb_cnt = 1 };
 
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
@@ -67,6 +67,9 @@ START_TEST(kms_node_enumeration) {
   dlu_drm_core *core = dlu_drm_init_core();
 
   if (!dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1))
+    ck_abort_msg(NULL);
+
+  if (!dlu_otba(DLU_DEVICE_OUTPUT_BUFF_DATA, core, INDEX_IGNORE, 1))
     ck_abort_msg(NULL);
 
   /**
@@ -96,6 +99,16 @@ START_TEST(kms_node_enumeration) {
     ck_abort_msg(NULL);
   }
 
+  if (!dlu_drm_create_gbm_device(core)) {
+    free_core(core);
+    ck_abort_msg(NULL);  
+  }
+
+  if (!dlu_drm_create_gbm_bo(DLU_DRM_GBM_BO, core, 0, cur_odb, DRM_FORMAT_XRGB8888)) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
 exit_create_kms_node:
   free_core(core);
 } END_TEST;
@@ -110,7 +123,7 @@ Suite *alloc_suite(void) {
   tc_core = tcase_create("Core");
 
   tcase_add_test(tc_core, init_create_kms_node);
-  tcase_add_test(tc_core, kms_node_enumeration);
+  tcase_add_test(tc_core, kms_node_enumeration_gbm_bo_creation);
   suite_add_tcase(s, tc_core);
 
   return s;

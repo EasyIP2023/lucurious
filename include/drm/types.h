@@ -124,8 +124,8 @@ typedef enum _dlu_drm_fd_type {
 } dlu_drm_fd_type;
 
 typedef enum _dlu_drm_bo_type {
-  DLU_DRM_BO = 0x0000,
-  DLU_DRM_BO_WITH_MODIFIERS  = 0x0001
+  DLU_DRM_GBM_BO = 0x0000,
+  DLU_DRM_GBM_BO_WITH_MODIFIERS  = 0x0001
 } dlu_drm_bo_type;
 
 typedef struct _dlu_drm_device_info {
@@ -148,6 +148,43 @@ typedef struct _dlu_drm_core {
     bool in_use;
   } *buff_data;
 
+  /**
+  * Output Data struct contains information of a given
+  * Plane, CRTC, Encoder, Connector pair
+  */
+  uint32_t odc; /* Output data count */
+  struct _output_data {
+    unsigned int modifiers_cnt;
+    uint64_t *modifiers;
+
+    /* connector name */
+    char name[32];
+
+    uint32_t mode_blob_id;
+    drmModeModeInfo mode;
+    uint64_t refresh; /* Refresh rate for a pair store in nanoseconds */
+
+    uint32_t pp_id;   /* Primary Plane ID */
+    uint32_t crtc_id; /* CTRC ID */
+    uint32_t conn_id; /* Connector ID */
+    uint32_t enc_id;  /* Keeping encoder ID just because */
+
+    /**
+    * Encoders are deprecated and unused KMS objects
+    * The Plane -> CRTC -> Encoder -> Connector chain construct
+    */
+    drmModePlane *plane;
+    drmModeCrtc *crtc;
+    drmModeEncoder *enc;
+    drmModeConnector *conn;
+
+    struct {
+      struct drm_prop_info plane[DLU_DRM_PLANE__CNT];
+      struct drm_prop_info crtc[DLU_DRM_CRTC__CNT];
+      struct drm_prop_info conn[DLU_DRM_CONNECTOR__CNT];
+    } props;
+  } *output_data;
+
   struct _device {
     /* KMS API Device node */
     uint32_t kmsfd;
@@ -157,43 +194,6 @@ typedef struct _dlu_drm_core {
 
     /* A GBM device is used to create gbm_bo (it's a buffer allocator) */
     struct gbm_device *gbm_device;
-
-    /**
-    * Output Data struct contains information of a given
-    * Plane, CRTC, Encoder, Connector pair
-    */
-    uint32_t odc; /* Output data count */
-    struct _output_data {
-      uint32_t modifiers_cnt;
-      uint32_t *modifiers;
-
-      /* connector name */
-      char name[32];
-
-      uint32_t mode_blob_id;
-      drmModeModeInfo mode;
-      uint64_t refresh; /* Refresh rate for a pair store in nanoseconds */
-
-      uint32_t pp_id;   /* Primary Plane ID */
-      uint32_t crtc_id; /* CTRC ID */
-      uint32_t conn_id; /* Connector ID */
-      uint32_t enc_id;  /* Keeping encoder ID just because */
-
-      /**
-      * Encoders are deprecated and unused KMS objects
-      * The Plane -> CRTC -> Encoder -> Connector chain construct
-      */
-      drmModePlane *plane;
-      drmModeCrtc *crtc;
-      drmModeEncoder *enc;
-      drmModeConnector *conn;
-
-      struct {
-        struct drm_prop_info plane[DLU_DRM_PLANE__CNT];
-        struct drm_prop_info crtc[DLU_DRM_CRTC__CNT];
-        struct drm_prop_info conn[DLU_DRM_CONNECTOR__CNT];
-      } props;
-    } *output_data;
   } device;
 
   struct _logind {
