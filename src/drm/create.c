@@ -285,9 +285,9 @@ bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cu
                                                 GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT); break;
     case DLU_DRM_GBM_BO_WITH_MODIFIERS:
       core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-                                                                core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, format,
-                                                                core->output_data[core->buff_data[cur_bi].odid].modifiers,
-                                                                core->output_data[core->buff_data[cur_bi].odid].modifiers_cnt); break;
+                                                               core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, format,
+                                                               core->output_data[core->buff_data[cur_bi].odid].modifiers,
+                                                               core->output_data[core->buff_data[cur_bi].odid].modifiers_cnt); break;
     default: break;
   }
 

@@ -71,7 +71,8 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->buff_data)
     for (uint32_t i = 0; i < core->odbc; i++)
-      gbm_bo_destroy(core->buff_data[i].bo);
+      if (core->buff_data[i].bo)
+        gbm_bo_destroy(core->buff_data[i].bo);
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);
 }

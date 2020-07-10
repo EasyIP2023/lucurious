@@ -92,7 +92,7 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
     ck_abort_msg(NULL);
   }
 
-  uint32_t cur_odb = 0;
+  uint32_t cur_odb = 0, cur_bi = 0;
   /* Indexes for my particular system kms node */
   if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo->conn_idx, dinfo->enc_idx, dinfo->crtc_idx, dinfo->plane_idx, dinfo->refresh, dinfo->conn_name)) {
     free_core(core);
@@ -104,7 +104,7 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
     ck_abort_msg(NULL);  
   }
 
-  if (!dlu_drm_create_gbm_bo(DLU_DRM_GBM_BO, core, 0, cur_odb, DRM_FORMAT_XRGB8888)) {
+  if (!dlu_drm_create_gbm_bo(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, DRM_FORMAT_XRGB8888)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
