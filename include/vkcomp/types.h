@@ -84,6 +84,7 @@ typedef struct _vkcomp {
   PFN_vkCmdBeginDebugUtilsLabelEXT dbg_utils_cmd_begin;
   PFN_vkCmdEndDebugUtilsLabelEXT dbg_utils_cmd_end;
   PFN_vkCmdInsertDebugUtilsLabelEXT dbg_utils_cmd_insert;
+  PFN_vkSetDebugUtilsObjectNameEXT dbg_utils_set_object_name;
 
   PFN_vkDestroyDebugUtilsMessengerEXT dbg_destroy_utils_msg;
   VkDebugUtilsMessengerEXT debug_utils_msg;

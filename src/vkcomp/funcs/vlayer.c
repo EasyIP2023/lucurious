@@ -73,10 +73,11 @@ static const char *obj_to_str(const VkObjectType type) {
 * whether the Vulkan API call that triggered the report should be exited or not.
 * Due to this function only being used when debugging secure buffer boundary
 * base C functions are not needed.
+* https://www.lunarg.com/wp-content/uploads/2018/05/Vulkan-Debug-Utils_05_18_v1.pdf
 */
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-  VkDebugUtilsMessageTypeFlagsEXT UNUSED messageType,
+  VkDebugUtilsMessageTypeFlagsEXT messageType,
   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
   void UNUSED *pUserData
 ) {
@@ -89,32 +90,32 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
 
   switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-      strcpy(prefix, "\n\nVERBOSE : "); type = DLU_INFO;
+      strcpy(prefix, "\n\nValidation Verbose "); type = DLU_INFO;
       break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      strcpy(prefix, "\n\nINFO : "); type = DLU_INFO;
+      strcpy(prefix, "\n\nValidation Info "); type = DLU_INFO;
       break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      strcpy(prefix, "\n\nWARNING : "); type = DLU_WARNING;
+      strcpy(prefix, "\n\nValidation Warning "); type = DLU_WARNING;
       break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-       strcpy(prefix, "\n\nERROR : "); type = DLU_DANGER;
+       strcpy(prefix, "\n\nValidation Error "); type = DLU_DANGER;
        break;
     default: break;
   }
 
   switch (messageType) {
     case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
-      strcat(prefix, "GENERAL");
-      break;
+      strcat(prefix, "General: ");
+      sprintf(message, "%s MessageID = 0x%x" PRIu32 ", MessageID Name = [ %s ]\n\t  %s\n\n",
+              prefix, pCallbackData->messageIdNumber, pCallbackData->pMessageIdName, pCallbackData->pMessage);
+      break; /* Leave bellow for now */
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
-      strcat(prefix, "PERFORMANCE");
+      sprintf(message, "\n\n%s\n\n", pCallbackData->pMessage);
       break;
     default: break;
   }
-
-  sprintf(message, "%s - MessageID: 0x%x" PRIu32 ", MessageID Name: %s\n",
-          prefix, pCallbackData->messageIdNumber, pCallbackData->pMessageIdName);
 
   char tmp_msg[1000];
   if (pCallbackData->objectCount > 0) {
@@ -122,7 +123,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
     strncat(message, tmp_msg, str_sze);
 
     for (unsigned object = 0; object < pCallbackData->objectCount; object++) {
-      snprintf(tmp_msg, sizeof(tmp_msg), "\t\tObject[%d] - Type = %s, Handle = %p, Name = \"%s\"\n", object, obj_to_str(pCallbackData->pObjects[object].objectType),
+      snprintf(tmp_msg, sizeof(tmp_msg), "\t\tObject[%d] : Type = %s, Handle = %p, Name = \"%s\"\n", object, obj_to_str(pCallbackData->pObjects[object].objectType),
               (void *) (pCallbackData->pObjects[object].objectHandle), pCallbackData->pObjects[object].pObjectName);
       strncat(message, tmp_msg, str_sze);
     }
@@ -133,7 +134,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
     snprintf(tmp_msg, sizeof(tmp_msg), "VkCommandBuffer Labels - %d\n", pCallbackData->cmdBufLabelCount);
     strncat(message, tmp_msg, str_sze);
     for (uint32_t label = 0; label < pCallbackData->cmdBufLabelCount; label++) {
-      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n",
+      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] : %s { %f, %f, %f, %f }\n",
                label, pCallbackData->pCmdBufLabels[label].pLabelName,
                pCallbackData->pCmdBufLabels[label].color[0], pCallbackData->pCmdBufLabels[label].color[1],
                pCallbackData->pCmdBufLabels[label].color[2], pCallbackData->pCmdBufLabels[label].color[3]);
@@ -146,7 +147,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
     snprintf(tmp_msg, sizeof(tmp_msg), "VkQueue Labels - %d\n", pCallbackData->queueLabelCount);
     strncat(message, tmp_msg, str_sze);
     for (uint32_t label = 0; label < pCallbackData->queueLabelCount; label++) {
-      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n",
+      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] : %s { %f, %f, %f, %f }\n",
                label, pCallbackData->pQueueLabels[label].pLabelName,
                pCallbackData->pQueueLabels[label].color[0], pCallbackData->pQueueLabels[label].color[1],
                pCallbackData->pQueueLabels[label].color[2], pCallbackData->pQueueLabels[label].color[3]);
@@ -154,9 +155,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
     }
     memset(tmp_msg, 0, sizeof(tmp_msg));
   }
-
-  snprintf(tmp_msg, sizeof(tmp_msg), "\nMessage: %s\n", pCallbackData->pMessage);
-  strncat(message, tmp_msg, str_sze);
 
   dlu_log_me(type, "%s", message);
 
@@ -231,6 +229,9 @@ VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld) {
 
   DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_cmd_insert, CmdInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_insert) return VK_ERROR_INITIALIZATION_FAILED;
+
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_set_object_name, SetDebugUtilsObjectNameEXT);
+  if (!app->dbg_utils_set_object_name) return VK_ERROR_INITIALIZATION_FAILED;
 
   return VK_SUCCESS;
 }
