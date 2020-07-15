@@ -43,15 +43,22 @@
 
 #ifdef INAPI_CALLS
 #include "funcs/device.h"
-/* Dynamically retrieve a VkInstance related function */
-#define DLU_DR_INSTANCE_PROC_ADDR(var, inst, func) \
+
+/** 
+* Dynamically retrieve or acquire a VkInstance related function
+* via token concatenation and String-izing Tokens
+*/
+#define DLU_DR_INSTANCE_PROC_ADDR(inst, var, func) \
   do { \
     var = (PFN_vk##func) vkGetInstanceProcAddr(inst, "vk" #func); \
     if (!var) PERR(DLU_DR_INSTANCE_PROC_ADDR_ERR, 0, #func); \
   } while(0);
 
-/* Dynamically retrieve a VkDevice (logical device) related function */
-#define DLU_DR_DEVICE_PROC_ADDR(var, dev, func) \
+/**
+* Dynamically retrieve or acquire a VkDevice (logical device) related function
+* via token concatenation and String-izing Tokens
+*/
+#define DLU_DR_DEVICE_PROC_ADDR(dev, var, func) \
   do { \
     var = (PFN_vk##func) vkGetDeviceProcAddr(dev, "vk" #func); \
     if (!var) PERR(DLU_DR_DEVICE_PROC_ADDR_ERR, 0, #func); \

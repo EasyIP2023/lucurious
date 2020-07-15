@@ -136,6 +136,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_device_queue(app, cur_ld, 0, VK_QUEUE_GRAPHICS_BIT);
   check_err(err, app, wc, NULL)
 
+  /* Get debug functions for a given logical device */
   err = dlu_set_device_debug_ext(app, cur_ld);
   check_err(err, app, wc, NULL)
 
@@ -195,6 +196,7 @@ START_TEST(test_vulkan_image_texture) {
   unsigned char *pixels = stbi_load_from_memory((unsigned char *) picture.bytes, picture.byte_size, &pw, &ph, &pchannels, requested_channels);
   if (!pixels) {  
     dlu_log_me(DLU_DANGER, "[x] %s failed to load", IMG_SRC);
+    dlu_log_me(DLU_DANGER, "[x] %s", stbi_failure_reason());
     /* Going to leave function call the same for legacy reasons */
     dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes);
     check_err(VK_TRUE, app, wc, NULL)

@@ -77,6 +77,7 @@ typedef enum _dlu_mem_map_type {
 } dlu_mem_map_type;
 
 typedef struct _vkcomp {
+  /* Function pointers bellow are used for debugging purposes */ 
   PFN_vkQueueBeginDebugUtilsLabelEXT dbg_utils_queue_begin;
   PFN_vkQueueEndDebugUtilsLabelEXT dbg_utils_queue_end;
   PFN_vkQueueInsertDebugUtilsLabelEXT dbg_utils_queue_insert;

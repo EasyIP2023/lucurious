@@ -35,7 +35,7 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev);
 bool dlu_drm_create_gbm_device(dlu_drm_core *core);
 
 /* One should query using the lucur(1) cmd tool to see if there device supports framebuffer modifiers */
-bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_odb, uint32_t format);
+bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_od, uint32_t format);
 
 #ifdef INAPI_CALLS
 void dlu_drm_reset_vt(dlu_drm_core *core);

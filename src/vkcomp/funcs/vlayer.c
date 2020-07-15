@@ -25,9 +25,54 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
+static const char *obj_to_str(const VkObjectType type) {
+  switch(type) {
+    case VK_OBJECT_TYPE_INSTANCE: return "VkInstance";
+    case VK_OBJECT_TYPE_PHYSICAL_DEVICE: return "VkPhysicalDevice";
+    case VK_OBJECT_TYPE_DEVICE: return "VkDevice";
+    case VK_OBJECT_TYPE_QUEUE: return "VkQueue";
+    case VK_OBJECT_TYPE_SEMAPHORE: return "VkSemaphore";
+    case VK_OBJECT_TYPE_COMMAND_BUFFER: return "VkCommandBuffer";
+    case VK_OBJECT_TYPE_FENCE: return "VkFence";
+    case VK_OBJECT_TYPE_DEVICE_MEMORY: return "VkDeviceMemory";
+    case VK_OBJECT_TYPE_BUFFER: return "VkBuffer";
+    case VK_OBJECT_TYPE_IMAGE: return "VkImage";
+    case VK_OBJECT_TYPE_EVENT: return "VkEvent";
+    case VK_OBJECT_TYPE_QUERY_POOL: return "VkQueryPool";
+    case VK_OBJECT_TYPE_BUFFER_VIEW: return "VkBufferView";
+    case VK_OBJECT_TYPE_IMAGE_VIEW: return "VkImageView";
+    case VK_OBJECT_TYPE_SHADER_MODULE: return "VkShaderModule";
+    case VK_OBJECT_TYPE_PIPELINE_CACHE: return "VkPipelineCache";
+    case VK_OBJECT_TYPE_PIPELINE_LAYOUT: return "VkPipelineLayout";
+    case VK_OBJECT_TYPE_RENDER_PASS: return "VkRenderPass";
+    case VK_OBJECT_TYPE_PIPELINE: return "VkPipeline";
+    case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT: return "VkDescriptorSetLayout";
+    case VK_OBJECT_TYPE_SAMPLER: return "VkSampler";
+    case VK_OBJECT_TYPE_DESCRIPTOR_POOL: return "VkDescriptorPool";
+    case VK_OBJECT_TYPE_DESCRIPTOR_SET: return "VkDescriptorSet";
+    case VK_OBJECT_TYPE_FRAMEBUFFER: return "VkFramebuffer";
+    case VK_OBJECT_TYPE_COMMAND_POOL: return "VkCommandPool";
+    case VK_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION: return "VkSamplerYcbcrConversion";
+    case VK_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE: return "VkDescriptorUpdateTemplate";
+    case VK_OBJECT_TYPE_SURFACE_KHR: return "VkSurfaceKHR";
+    case VK_OBJECT_TYPE_SWAPCHAIN_KHR: return "VkSwapchainKHR";
+    case VK_OBJECT_TYPE_DISPLAY_KHR: return "VkDisplayKHR";
+    case VK_OBJECT_TYPE_DISPLAY_MODE_KHR: return "VkDisplayModeKHR";
+    case VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT: return "VkDebugReportCallbackEXT";
+    case VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NV: return "VkIndirectCommandsLayoutNV";
+    case VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT: return "VkDebugUtilsMessengerEXT";
+    case VK_OBJECT_TYPE_VALIDATION_CACHE_EXT: return "VkValidationCacheEXT";
+    case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR: return "VkAccelerationStructureKHR";
+    case VK_OBJECT_TYPE_PERFORMANCE_CONFIGURATION_INTEL: return "VkPerformanceConfigurationINTEL";
+    default: return "Unknown/Undefined Handle";
+  }
+}
+
 /**
 * The return value must be a Boolean to indicated to the validation layers
 * whether the Vulkan API call that triggered the report should be exited or not.
+* Due to this function only being used when debugging secure buffer boundary
+* base C functions are not needed.
 */
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -38,18 +83,68 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
 
   dlu_log_type type = DLU_NONE;
 
+  char prefix[64];
+  uint32_t str_sze = strlen(pCallbackData->pMessage) + 500;
+  char *message = (char *) alloca(str_sze);
+
   switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: type = DLU_INFO; break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: type = DLU_WARNING; break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: type = DLU_DANGER; break;
+      strcpy(prefix, "\n\nVERBOSE : "); type = DLU_INFO;
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      strcpy(prefix, "\n\nINFO : "); type = DLU_INFO;
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      strcpy(prefix, "\n\nWARNING : "); type = DLU_WARNING;
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+       strcpy(prefix, "\n\nERROR : "); type = DLU_DANGER;
+       break;
     default: break;
   }
 
-//  dlu_log_me(type, "Message ID: %d", pCallbackData->messageIdNumber);
-//  dlu_log_me(type, "Message ID Name: %s", pCallbackData->pMessageIdName);
+  switch (messageType) {
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
+      strcat(prefix, "GENERAL");
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
+      strcat(prefix, "PERFORMANCE");
+      break;
+    default: break;
+  }
 
-  dlu_log_me(type, "%s", pCallbackData->pMessage);
+  sprintf(message, "%s - MessageID: 0x%x" PRIu32 ", MessageID Name: %s\n",
+          prefix, pCallbackData->messageIdNumber, pCallbackData->pMessageIdName);
+
+  char tmp_msg[500];
+  if (pCallbackData->objectCount > 0) {
+    snprintf(tmp_msg, sizeof(tmp_msg), "\t  Objects - %d\n", pCallbackData->objectCount);
+    strncat(message, tmp_msg, str_sze);
+
+    for (unsigned object = 0; object < pCallbackData->objectCount; object++) {
+      snprintf(tmp_msg, sizeof(tmp_msg), "\t\tObject[%d] - Type = %s, Handle = %p, Name = \"%s\"\n", object, obj_to_str(pCallbackData->pObjects[object].objectType),
+              (void *) (pCallbackData->pObjects[object].objectHandle), pCallbackData->pObjects[object].pObjectName);
+      strncat(message, tmp_msg, str_sze);
+    }
+    memset(tmp_msg, 0, sizeof(tmp_msg));
+  }
+
+  if (pCallbackData->cmdBufLabelCount > 0) {
+    snprintf(tmp_msg, sizeof(tmp_msg), "Command Buffer Labels - %d\n", pCallbackData->cmdBufLabelCount);
+    strncat(message, tmp_msg, str_sze);
+    for (uint32_t label = 0; label < pCallbackData->cmdBufLabelCount; label++) {
+      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n", label, pCallbackData->pCmdBufLabels[label].pLabelName,
+               pCallbackData->pCmdBufLabels[label].color[0], pCallbackData->pCmdBufLabels[label].color[1],
+               pCallbackData->pCmdBufLabels[label].color[2], pCallbackData->pCmdBufLabels[label].color[3]);
+      strncat(message, tmp_msg, str_sze);
+    }
+    memset(tmp_msg, 0, sizeof(tmp_msg));
+  }
+
+  snprintf(tmp_msg, sizeof(tmp_msg), "\nMessage: %s\n", pCallbackData->pMessage);
+  strncat(message, tmp_msg, str_sze);
+
+  dlu_log_me(type, "%s", message);
 
   return VK_FALSE;
 }
@@ -71,7 +166,7 @@ VkResult dlu_set_debug_message(
   * to expose the VkDebugReportCallbackEXT handle which stores a reference to a debug utils message object
   * Basically call extension functions through a function pointer
   */
-  DLU_DR_INSTANCE_PROC_ADDR(dbg_create_utils_msg, app->instance, CreateDebugUtilsMessengerEXT);
+  DLU_DR_INSTANCE_PROC_ADDR(app->instance, dbg_create_utils_msg, CreateDebugUtilsMessengerEXT);
   if (!dbg_create_utils_msg) return VK_ERROR_INITIALIZATION_FAILED;
 
   /**
@@ -79,7 +174,7 @@ VkResult dlu_set_debug_message(
   * to destroy the reference to a debug utils message object.
   * Basically call extension functions through a function pointer
   */
-  DLU_DR_INSTANCE_PROC_ADDR(app->dbg_destroy_utils_msg, app->instance, DestroyDebugUtilsMessengerEXT);
+  DLU_DR_INSTANCE_PROC_ADDR(app->instance, app->dbg_destroy_utils_msg, DestroyDebugUtilsMessengerEXT);
   if (!app->dbg_destroy_utils_msg) return VK_ERROR_INITIALIZATION_FAILED;
 
   VkDebugUtilsMessengerCreateInfoEXT create_info = {};
@@ -105,22 +200,22 @@ VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld) {
 
   if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return VK_RESULT_MAX_ENUM; }
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_begin, app->ld_data[cur_ld].device, QueueBeginDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_queue_begin, QueueBeginDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_begin) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_end, app->ld_data[cur_ld].device, QueueEndDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_queue_end, QueueEndDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_end) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_queue_insert, app->ld_data[cur_ld].device, QueueInsertDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_queue_insert, QueueInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_queue_insert) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_begin, app->ld_data[cur_ld].device, CmdBeginDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_cmd_begin, CmdBeginDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_begin) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_end, app->ld_data[cur_ld].device, CmdEndDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_cmd_end, CmdEndDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_end) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->dbg_utils_cmd_insert, app->ld_data[cur_ld].device, CmdInsertDebugUtilsLabelEXT);
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_cmd_insert, CmdInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_insert) return VK_ERROR_INITIALIZATION_FAILED;
 
   return VK_SUCCESS;

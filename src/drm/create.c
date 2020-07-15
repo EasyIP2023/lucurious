@@ -270,30 +270,29 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   return true;
 }
 
-bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_odb, uint32_t format) {
+bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_od, uint32_t format) {
   bool ret = true;
 
   if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); return !ret; }
-  if (!core->device.gbm_device) { dlu_log_me(DLU_DANGER, "GBM device not created");  return !ret; }
+  if (!core->device.gbm_device) { dlu_log_me(DLU_DANGER, "[x] GBM device not created");  return !ret; }
 
-  core->buff_data[cur_bi].odid = cur_odb;
+  core->buff_data[cur_bi].odid = cur_od;
   
   switch (type) {
     case DLU_DRM_GBM_BO:
-      core->buff_data[cur_bi].bo = gbm_bo_create(core->device.gbm_device, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-                                                core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, format,
-                                                GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT); break;
+      core->buff_data[cur_bi].bo = gbm_bo_create(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay,
+                                                 core->output_data[cur_od].mode.vdisplay, format,
+                                                 GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT); break;
     case DLU_DRM_GBM_BO_WITH_MODIFIERS:
-      core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-                                                               core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, format,
-                                                               core->output_data[core->buff_data[cur_bi].odid].modifiers,
-                                                               core->output_data[core->buff_data[cur_bi].odid].modifiers_cnt); break;
+      core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay,
+                                                                core->output_data[cur_od].mode.vdisplay, format, core->output_data[cur_od].modifiers,
+                                                                core->output_data[cur_od].modifiers_cnt); break;
     default: break;
   }
 
   if (!core->buff_data[cur_bi].bo) {
-    dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-                                                                           core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay);
+    dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[cur_od].mode.hdisplay,
+                                                                           core->output_data[cur_od].mode.vdisplay);
     ret = false;
   } else {
     dlu_log_me(DLU_SUCCESS, "Successfully created gbm_bo"); 
