@@ -44,9 +44,9 @@
 #ifdef INAPI_CALLS
 #include "funcs/device.h"
 
-/** 
-* Dynamically retrieve or acquire a VkInstance related function
-* via token concatenation and String-izing Tokens
+/**
+* Dynamically retrieve or acquire the address of a VkInstance func.
+* Via token concatenation and String-izing Tokens
 */
 #define DLU_DR_INSTANCE_PROC_ADDR(inst, var, func) \
   do { \
@@ -55,8 +55,8 @@
   } while(0);
 
 /**
-* Dynamically retrieve or acquire a VkDevice (logical device) related function
-* via token concatenation and String-izing Tokens
+* Dynamically retrieve or acquire the address of a VkDevice (logical device) func.
+* Via token concatenation and String-izing Tokens
 */
 #define DLU_DR_DEVICE_PROC_ADDR(dev, var, func) \
   do { \

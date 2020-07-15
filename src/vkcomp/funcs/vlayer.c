@@ -84,7 +84,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   dlu_log_type type = DLU_NONE;
 
   char prefix[64];
-  uint32_t str_sze = strlen(pCallbackData->pMessage) + 500;
+  uint32_t str_sze = strlen(pCallbackData->pMessage) + 1000;
   char *message = (char *) alloca(str_sze);
 
   switch (messageSeverity) {
@@ -116,7 +116,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   sprintf(message, "%s - MessageID: 0x%x" PRIu32 ", MessageID Name: %s\n",
           prefix, pCallbackData->messageIdNumber, pCallbackData->pMessageIdName);
 
-  char tmp_msg[500];
+  char tmp_msg[1000];
   if (pCallbackData->objectCount > 0) {
     snprintf(tmp_msg, sizeof(tmp_msg), "\t  Objects - %d\n", pCallbackData->objectCount);
     strncat(message, tmp_msg, str_sze);
@@ -130,12 +130,26 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_callbackFN(
   }
 
   if (pCallbackData->cmdBufLabelCount > 0) {
-    snprintf(tmp_msg, sizeof(tmp_msg), "Command Buffer Labels - %d\n", pCallbackData->cmdBufLabelCount);
+    snprintf(tmp_msg, sizeof(tmp_msg), "VkCommandBuffer Labels - %d\n", pCallbackData->cmdBufLabelCount);
     strncat(message, tmp_msg, str_sze);
     for (uint32_t label = 0; label < pCallbackData->cmdBufLabelCount; label++) {
-      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n", label, pCallbackData->pCmdBufLabels[label].pLabelName,
+      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n",
+               label, pCallbackData->pCmdBufLabels[label].pLabelName,
                pCallbackData->pCmdBufLabels[label].color[0], pCallbackData->pCmdBufLabels[label].color[1],
                pCallbackData->pCmdBufLabels[label].color[2], pCallbackData->pCmdBufLabels[label].color[3]);
+      strncat(message, tmp_msg, str_sze);
+    }
+    memset(tmp_msg, 0, sizeof(tmp_msg));
+  }
+
+  if (pCallbackData->queueLabelCount > 0) {
+    snprintf(tmp_msg, sizeof(tmp_msg), "VkQueue Labels - %d\n", pCallbackData->queueLabelCount);
+    strncat(message, tmp_msg, str_sze);
+    for (uint32_t label = 0; label < pCallbackData->queueLabelCount; label++) {
+      snprintf(tmp_msg, sizeof(tmp_msg), "\tLabel[%d] - %s { %f, %f, %f, %f}\n",
+               label, pCallbackData->pQueueLabels[label].pLabelName,
+               pCallbackData->pQueueLabels[label].color[0], pCallbackData->pQueueLabels[label].color[1],
+               pCallbackData->pQueueLabels[label].color[2], pCallbackData->pQueueLabels[label].color[3]);
       strncat(message, tmp_msg, str_sze);
     }
     memset(tmp_msg, 0, sizeof(tmp_msg));
