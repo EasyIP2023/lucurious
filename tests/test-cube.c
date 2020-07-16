@@ -264,7 +264,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkAttachmentReference color_ref = dlu_set_attachment_ref(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
   VkAttachmentReference depth_ref = dlu_set_attachment_ref(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-  VkSubpassDescription subpass = dlu_set_subpass_desc(VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
+  VkSubpassDescription subpass = dlu_set_subpass_desc(0, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
 
   err = dlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL);
   check_err(err, app, wc, NULL)
@@ -312,11 +312,11 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_log_me(DLU_INFO, "End of shader creation");
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = dlu_set_shader_stage_info(
-    vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL
+    vert_shader_module, "main", VK_SHADER_STAGE_VERTEX_BIT, NULL, 0
   );
 
   VkPipelineShaderStageCreateInfo frag_shader_stage_info = dlu_set_shader_stage_info(
-    frag_shader_module, "main", VK_SHADER_STAGE_FRAGMENT_BIT, NULL
+    frag_shader_module, "main", VK_SHADER_STAGE_FRAGMENT_BIT, NULL, 0
   );
 
   VkPipelineShaderStageCreateInfo shader_stages[] = {
@@ -330,9 +330,7 @@ START_TEST(test_vulkan_client_create_3D) {
 
   VkPipelineDynamicStateCreateInfo dynamic_state = dlu_set_dynamic_state_info(2, dynamic_states);
 
-  VkPipelineInputAssemblyStateCreateInfo input_assembly = dlu_set_input_assembly_state_info(
-    VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE
-  );
+  VkPipelineInputAssemblyStateCreateInfo input_assembly = dlu_set_input_assembly_state_info(0, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
   VkPipelineRasterizationStateCreateInfo rasterizer = dlu_set_rasterization_state_info(
     VK_TRUE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT,

@@ -31,7 +31,7 @@
 * who don't want to fill out the entire VK struct themselves
 */
 
-VkAttachmentDescription dlu_set_attachment_desc(
+static inline VkAttachmentDescription dlu_set_attachment_desc(
   VkFormat format,
   VkSampleCountFlagBits samples,
   VkAttachmentLoadOp loadOp,
@@ -40,13 +40,20 @@ VkAttachmentDescription dlu_set_attachment_desc(
   VkAttachmentStoreOp stencilStoreOp,
   VkImageLayout initialLayout,
   VkImageLayout finalLayout
-);
+) {
 
-VkAttachmentReference dlu_set_attachment_ref(
-  uint32_t attachment, VkImageLayout layout
-);
+  return (VkAttachmentDescription) {
+         .format = format, .samples = samples, .loadOp = loadOp, .storeOp = storeOp, .stencilLoadOp = stencilLoadOp,
+         .stencilStoreOp = stencilStoreOp, .initialLayout = initialLayout, .finalLayout = finalLayout
+  };
+}
 
-VkSubpassDescription dlu_set_subpass_desc(
+static inline VkAttachmentReference dlu_set_attachment_ref(uint32_t attachment, VkImageLayout layout) {
+  return (VkAttachmentReference) { .attachment = attachment, .layout = layout };
+}
+
+static inline VkSubpassDescription dlu_set_subpass_desc(
+  VkSubpassDescriptionFlags flags,
   VkPipelineBindPoint pipelineBindPoint,
   uint32_t inputAttachmentCount,
   const VkAttachmentReference *pInputAttachments,
@@ -56,9 +63,16 @@ VkSubpassDescription dlu_set_subpass_desc(
   const VkAttachmentReference *pDepthStencilAttachment,
   uint32_t preserveAttachmentCount,
   const uint32_t *pPreserveAttachments
-);
+) {
 
-VkSubpassDependency dlu_set_subpass_dep(
+  return (VkSubpassDescription) {
+         .flags = flags, .pipelineBindPoint = pipelineBindPoint, .inputAttachmentCount = inputAttachmentCount, .pInputAttachments = pInputAttachments,
+         .colorAttachmentCount = colorAttachmentCount, .pColorAttachments = pColorAttachments, .pResolveAttachments = pResolveAttachments,
+         .pDepthStencilAttachment = pDepthStencilAttachment, .preserveAttachmentCount = preserveAttachmentCount, .pPreserveAttachments = pPreserveAttachments
+  };
+}
+
+static inline VkSubpassDependency dlu_set_subpass_dep(
   uint32_t srcSubpass,
   uint32_t dstSubpass,
   VkPipelineStageFlags srcStageMask,
@@ -66,27 +80,64 @@ VkSubpassDependency dlu_set_subpass_dep(
   VkAccessFlags srcAccessMask,
   VkAccessFlags dstAccessMask,
   VkDependencyFlags dependencyFlags
-);
+) {
 
-VkPipelineShaderStageCreateInfo dlu_set_shader_stage_info(
-  VkShaderModule mod,
+  return (VkSubpassDependency) {
+         .srcSubpass = srcSubpass, .dstSubpass = dstSubpass, .srcStageMask = srcStageMask, .dstStageMask = dstStageMask,
+         .srcAccessMask = srcAccessMask, .dstAccessMask = dstAccessMask, .dependencyFlags = dependencyFlags
+  };
+}
+
+/* Allows for actual use of the shaders we created */
+static inline VkPipelineShaderStageCreateInfo dlu_set_shader_stage_info(
+  VkShaderModule module,
   const char *pName,
   VkShaderStageFlagBits stage,
-  const VkSpecializationInfo *pSpecializationInfo
-);
+  const VkSpecializationInfo *pSpecializationInfo,
+  VkPipelineShaderStageCreateFlags flags
+) {
 
-VkPipelineInputAssemblyStateCreateInfo dlu_set_input_assembly_state_info(
-  VkPrimitiveTopology topology, VkBool32 pre
-);
+  return (VkPipelineShaderStageCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+         .pNext = NULL, .flags = flags, .stage = stage, .module = module,
+         .pName = pName, .pSpecializationInfo = pSpecializationInfo
+  };
+}
 
-/* Describe at which rate to load data from memory throughout the vertices */
-VkVertexInputBindingDescription dlu_set_vertex_input_binding_desc(
+/**
+* Defines what kind of geometry will be drawn from the vertices and
+* if primitive restart should be enable
+*/
+static inline VkPipelineInputAssemblyStateCreateInfo dlu_set_input_assembly_state_info(
+  VkPipelineInputAssemblyStateCreateFlags flags,
+  VkPrimitiveTopology topology,
+  VkBool32 primitiveRestartEnable
+) {
+
+  return (VkPipelineInputAssemblyStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = flags, .topology = topology, .primitiveRestartEnable = primitiveRestartEnable
+  };
+}
+
+/**
+* binding: Specifiy the shader vertex attribute variable binding
+* stride: Specify the size in bytes of the shader vertex attribute variables
+* inputRate: Describe at which rate to load data from memory throughout the vertices
+*/
+static inline VkVertexInputBindingDescription dlu_set_vertex_input_binding_desc(
   uint32_t binding, uint32_t stride, VkVertexInputRate inputRate
-);
+) {
 
-VkVertexInputAttributeDescription dlu_set_vertex_input_attrib_desc(
+  return (VkVertexInputBindingDescription) { .binding = binding, .stride = stride, .inputRate = inputRate };
+}
+
+static inline VkVertexInputAttributeDescription dlu_set_vertex_input_attrib_desc(
   uint32_t location, uint32_t binding, VkFormat format, uint32_t offset
-);
+) {
+
+  return (VkVertexInputAttributeDescription) { .location = location, .binding = binding, .format = format, .offset = offset };
+}
 
 /**
 * Describes the format of the vertex data passed to the vertex shader
@@ -95,35 +146,58 @@ VkVertexInputAttributeDescription dlu_set_vertex_input_attrib_desc(
 * Attribute descriptions: type of the attributes passed to the vertex shader,
 * which binding to load them from and at which offset
 */
-VkPipelineVertexInputStateCreateInfo dlu_set_vertex_input_state_info(
+static inline VkPipelineVertexInputStateCreateInfo dlu_set_vertex_input_state_info(
   uint32_t vertexBindingDescriptionCount,
   const VkVertexInputBindingDescription *pVertexBindingDescriptions,
   uint32_t vertexAttributeDescriptionCount,
   const VkVertexInputAttributeDescription *pVertexAttributeDescriptions
-);
+) {
 
-/* specify which region of a framebuffer to an output should render to */
-VkViewport dlu_set_view_port(
-  float x, float y, float width, float height,
-  float minDepth, float maxDepth
-);
+  return (VkPipelineVertexInputStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .vertexBindingDescriptionCount = vertexBindingDescriptionCount, .pVertexBindingDescriptions = pVertexBindingDescriptions,
+         .vertexAttributeDescriptionCount = vertexAttributeDescriptionCount, .pVertexAttributeDescriptions = pVertexAttributeDescriptions
+  };
+}
 
-VkPipelineViewportStateCreateInfo dlu_set_view_port_state_info(
+/* specify which region of a framebuffer should be rendered to an output */
+static inline VkViewport dlu_set_view_port(float x, float y, float width, float height, float minDepth, float maxDepth) {
+
+  return (VkViewport) { .x = x, .y = y, .width = width, .height = height, .minDepth = minDepth, .maxDepth = maxDepth };
+}
+
+static inline VkPipelineViewportStateCreateInfo dlu_set_view_port_state_info(
   uint32_t viewportCount,
   VkViewport *viewport,
   uint32_t scissorCount,
   VkRect2D *scissor
-);
+) {
 
-VkRect2D dlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+  return (VkPipelineViewportStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .viewportCount = viewportCount, .pViewports = viewport,
+         .scissorCount = scissorCount, .pScissors = scissor
+  };
+}
+
+static inline VkRect2D dlu_set_rect2D(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+
+  return (VkRect2D) { .offset.x = x, .offset.y = y, .extent.width = width, .extent.height = height };
+}
 
 /**
-* Rasterizer takes the geometry shaped by the vertices from the vertex shader
+* Rasterizer takes the geometry shaped by the vertex/geometry/tesellation shaders
 * and turns it into fragments to be colored by the fragment shader.
 * It also performs depth testing, face culling and the scissor test.
 * Can be configured to output fragments that fill entire polygons
+* depthClampEnable: If set to VK_TRUE, then fragments that are beyond the near and far
+*                   planes are clamped to them as opposed to discarding them.
+* rasterizerDiscardEnable: If set to VK_TRUE, then geometry never passes through the rasterizer stage.
+*                          This basically disables any output to the framebuffer.
+* polygonMode: Determines how fragments are generated for geometry
+* lineWidth: Describes the thickness of the line segments
 */
-VkPipelineRasterizationStateCreateInfo dlu_set_rasterization_state_info(
+static inline VkPipelineRasterizationStateCreateInfo dlu_set_rasterization_state_info(
   VkBool32 depthClampEnable,
   VkBool32 rasterizerDiscardEnable,
   VkPolygonMode polygonMode,
@@ -134,19 +208,35 @@ VkPipelineRasterizationStateCreateInfo dlu_set_rasterization_state_info(
   float depthBiasClamp,
   float depthBiasSlopeFactor,
   float lineWidth
-);
+) {
+
+  return (VkPipelineRasterizationStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .depthClampEnable = depthClampEnable, .rasterizerDiscardEnable = rasterizerDiscardEnable, .polygonMode = polygonMode,
+         .cullMode = cullMode, .frontFace = frontFace, .depthBiasEnable = depthBiasEnable, .depthBiasConstantFactor = depthBiasConstantFactor,
+         .depthBiasClamp = depthBiasClamp, .depthBiasSlopeFactor = depthBiasSlopeFactor, .lineWidth = lineWidth
+  };
+}
 
 /* Used for anti-aliasing */
-VkPipelineMultisampleStateCreateInfo dlu_set_multisample_state_info(
+static inline VkPipelineMultisampleStateCreateInfo dlu_set_multisample_state_info(
   VkSampleCountFlagBits rasterizationSamples,
   VkBool32 sampleShadingEnable,
   float minSampleShading,
   const VkSampleMask *pSampleMask,
   VkBool32 alphaToCoverageEnable,
   VkBool32 alphaToOneEnable
-);
+) {
 
-VkStencilOpState dlu_set_stencil_op_state(
+  return (VkPipelineMultisampleStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .rasterizationSamples = rasterizationSamples, .sampleShadingEnable = sampleShadingEnable,
+         .minSampleShading = minSampleShading, .pSampleMask = pSampleMask, .alphaToCoverageEnable = alphaToCoverageEnable,
+         .alphaToOneEnable = alphaToOneEnable
+  };
+}
+
+static inline VkStencilOpState dlu_set_stencil_op_state(
   VkStencilOp failOp,
   VkStencilOp passOp,
   VkStencilOp depthFailOp,
@@ -154,9 +244,15 @@ VkStencilOpState dlu_set_stencil_op_state(
   uint32_t compareMask,
   uint32_t writeMask,
   uint32_t reference
-);
+) {
 
-VkPipelineDepthStencilStateCreateInfo dlu_set_depth_stencil_state(
+  return (VkStencilOpState) {
+         .failOp = failOp, .passOp = passOp, .depthFailOp = depthFailOp, .compareOp = compareOp,
+         .compareMask = compareMask, .writeMask = writeMask, .reference = reference
+  };
+}
+
+static inline VkPipelineDepthStencilStateCreateInfo dlu_set_depth_stencil_state(
   VkBool32 depthTestEnable,
   VkBool32 depthWriteEnable,
   VkCompareOp depthCompareOp,
@@ -166,13 +262,23 @@ VkPipelineDepthStencilStateCreateInfo dlu_set_depth_stencil_state(
   VkStencilOpState back,
   float minDepthBounds,
   float maxDepthBounds
-);
+) {
+
+  return (VkPipelineDepthStencilStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .depthTestEnable = depthTestEnable, .depthWriteEnable = depthWriteEnable, .depthCompareOp = depthCompareOp,
+         .depthBoundsTestEnable = depthBoundsTestEnable, .stencilTestEnable = stencilTestEnable, .front = front, .back = back, .minDepthBounds = minDepthBounds, .maxDepthBounds = maxDepthBounds
+  };
+}
 
 /**
-* After fragment shader returns color one needs to combine it
-* with a color that is already in the framebuffer
+* Once a fragment shader has returned a color,
+* colorblending combines the color that is already in the framebuffer
+* Done by:
+* Mixing the old and new values to produce a final color
+* Combining the old and new values using a bitwise operation
 */
-VkPipelineColorBlendAttachmentState dlu_set_color_blend_attachment_state(
+static inline VkPipelineColorBlendAttachmentState dlu_set_color_blend_attachment_state(
   VkBool32 blendEnable,
   VkBlendFactor srcColorBlendFactor,
   VkBlendFactor dstColorBlendFactor,
@@ -181,61 +287,98 @@ VkPipelineColorBlendAttachmentState dlu_set_color_blend_attachment_state(
   VkBlendFactor dstAlphaBlendFactor,
   VkBlendOp alphaBlendOp,
   VkColorComponentFlags colorWriteMask
-);
+) {
 
-VkPipelineColorBlendStateCreateInfo dlu_set_color_blend_attachment_state_info(
+  return (VkPipelineColorBlendAttachmentState) {
+         .blendEnable = blendEnable, .srcColorBlendFactor = srcColorBlendFactor, .dstColorBlendFactor = dstColorBlendFactor, .colorBlendOp = colorBlendOp,
+         .srcAlphaBlendFactor = srcAlphaBlendFactor, .dstAlphaBlendFactor = dstAlphaBlendFactor, .alphaBlendOp = alphaBlendOp, .colorWriteMask = colorWriteMask
+  };
+}
+
+static inline VkPipelineColorBlendStateCreateInfo dlu_set_color_blend_attachment_state_info(
   VkBool32 logicOpEnable,
   VkLogicOp logicOp,
   uint32_t attachmentCount,
   const VkPipelineColorBlendAttachmentState *pAttachments,
   float blendConstants[4]
-);
+) {
 
-VkPipelineDynamicStateCreateInfo dlu_set_dynamic_state_info(
+  return (VkPipelineColorBlendStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .logicOpEnable = logicOpEnable, .logicOp = logicOp, .attachmentCount = attachmentCount, .pAttachments = pAttachments,
+         .blendConstants[0] = blendConstants[0], .blendConstants[1] = blendConstants[1], .blendConstants[2] = blendConstants[2], .blendConstants[3] = blendConstants[3]
+  };
+}
+
+static inline VkPipelineDynamicStateCreateInfo dlu_set_dynamic_state_info(
   uint32_t dynamicStateCount,
   const VkDynamicState *pDynamicStates
-);
+) {
 
-VkDescriptorSetLayoutBinding dlu_set_desc_set_layout_binding(
+  return (VkPipelineDynamicStateCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+         .pNext = NULL, .flags = 0, .dynamicStateCount = dynamicStateCount, .pDynamicStates = pDynamicStates
+  };
+}
+
+static inline VkDescriptorSetLayoutBinding dlu_set_desc_set_layout_binding(
   uint32_t binding,
   VkDescriptorType descriptorType,
   uint32_t descriptorCount,
   VkShaderStageFlags stageFlags,
   const VkSampler *pImmutableSamplers
-);
+) {
 
-VkDescriptorSetLayoutCreateInfo dlu_set_desc_set_layout_info(
+  return (VkDescriptorSetLayoutBinding) {
+         .binding = binding, .descriptorType = descriptorType, .descriptorCount = descriptorCount,
+         .stageFlags = stageFlags, .pImmutableSamplers = pImmutableSamplers
+  };
+}
+
+static inline VkDescriptorSetLayoutCreateInfo dlu_set_desc_set_layout_info(
   VkDescriptorSetLayoutCreateFlags flags,
   uint32_t bindingCount,
   const VkDescriptorSetLayoutBinding *pBindings
-);
+) {
 
-VkDescriptorPoolSize dlu_set_desc_pool_size(
-  VkDescriptorType type,
-  uint32_t descriptorCount
-);
+  return (VkDescriptorSetLayoutCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+         .pNext = NULL, .flags = flags, .bindingCount = bindingCount, .pBindings = pBindings
+  };
+}
 
-VkDescriptorBufferInfo dlu_set_desc_buff_info(
-  VkBuffer buffer,
-  VkDeviceSize offset,
-  VkDeviceSize range
-);
+static inline VkDescriptorPoolSize dlu_set_desc_pool_size(VkDescriptorType type, uint32_t descriptorCount) {
 
-VkClearValue dlu_set_clear_value(
+  return (VkDescriptorPoolSize) { .type = type, .descriptorCount = descriptorCount };
+}
+
+static inline VkDescriptorBufferInfo dlu_set_desc_buff_info(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range) {
+
+  return (VkDescriptorBufferInfo) { .buffer = buffer, .offset = offset, .range = range };
+}
+
+static inline VkClearValue dlu_set_clear_value(
   float float32[4],
   int32_t int32[4],
   uint32_t uint32[4],
   float depth,
   uint32_t stencil
-);
+) {
 
-VkDescriptorImageInfo dlu_set_desc_img_info(
-  VkSampler sampler,
-  VkImageView imageView,
-  VkImageLayout imageLayout
-);
+  return (VkClearValue) {
+         .color.float32[0] = float32[0], .color.float32[1] = float32[1], .color.float32[2] = float32[2], .color.float32[3] = float32[3],
+         .color.int32[0] = int32[0], .color.int32[1] = int32[1], .color.int32[2] = int32[2], .color.int32[3] = int32[3],
+         .color.uint32[0] = uint32[0], .color.uint32[1] = uint32[1], .color.uint32[2] = uint32[2], .color.uint32[3] = uint32[3],
+        .depthStencil.depth = depth, .depthStencil.stencil = stencil
+  };
+}
 
-VkSamplerCreateInfo dlu_set_sampler_info(
+static inline VkDescriptorImageInfo dlu_set_desc_img_info(VkSampler sampler, VkImageView imageView, VkImageLayout imageLayout) {
+
+  return (VkDescriptorImageInfo) { .sampler = sampler, .imageView = imageView, .imageLayout = imageLayout };
+}
+
+static inline VkSamplerCreateInfo dlu_set_sampler_info(
   VkSamplerCreateFlags flags,
   VkFilter magFilter,
   VkFilter minFilter,
@@ -252,6 +395,16 @@ VkSamplerCreateInfo dlu_set_sampler_info(
   float maxLod,
   VkBorderColor borderColor,
   VkBool32 unnormalizedCoordinates
-);
+) {
+
+  return (VkSamplerCreateInfo) {
+         .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+         .pNext = NULL, .flags = flags, .magFilter = magFilter, .minFilter = minFilter, .mipmapMode = mipmapMode,
+         .addressModeU = addressModeU, .addressModeV = addressModeV, .addressModeW = addressModeW,
+         .mipLodBias = mipLodBias, .anisotropyEnable = anisotropyEnable, .maxAnisotropy = maxAnisotropy,
+         .compareEnable = compareEnable, .compareOp = compareOp, .minLod = minLod, .maxLod = maxLod,
+         .borderColor = borderColor, .unnormalizedCoordinates = unnormalizedCoordinates
+  };
+}
 
 #endif
