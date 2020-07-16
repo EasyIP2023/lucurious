@@ -24,19 +24,14 @@
 
 libvulkan = dependency('vulkan', required: true)
 
-funcs_files = [
-  'funcs/create.c', 'funcs/device.c', 'funcs/display.c', 'funcs/exec.c',
-  'funcs/setup.c', 'funcs/utils.c', 'funcs/vlayer.c', 'funcs/vk_calls.c'
-]
-
-gp_files = [
-  'gp/bind.c', 'gp/cmd.c', 'gp/create.c',
-  'gp/exec.c', 'gp/update.c'
+vkcomp_files = [
+  'create.c', 'device.c', 'display.c', 'exec.c', 'bind.c', 'cmd.c', 'update.c', 
+  'setup.c', 'utils.c', 'vlayer.c', 'vk_calls.c'
 ]
 
 lib_vkcomp = static_library(
   'lvkcomp',
-  files(funcs_files, gp_files),
+  files(vkcomp_files),
   include_directories: lucur_inc,
   dependencies: [libvulkan]
 )

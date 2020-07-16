@@ -225,30 +225,3 @@ VkResult dlu_queue_present_queue(
 
   return res;
 }
-
-VkResult dlu_get_physical_device_display_propertiesKHR(vkcomp *app, uint32_t cur_pd) {
-
-  VkResult res = VK_RESULT_MAX_ENUM;
-  VkDisplayPropertiesKHR *pProperties = NULL;
-
-  if (app->dis_data) { dlu_log_me(DLU_DANGER, "[x] dlu_get_physical_device_display_propertiesKHR: can only run once"); return res; }
-
-  res = vkGetPhysicalDeviceDisplayPropertiesKHR(app->pd_data[cur_pd].phys_dev, &app->dpc, NULL);
-  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetPhysicalDeviceDisplayPropertiesKHR"); return res; }
-
-  if (!app->dpc) { dlu_log_me(DLU_DANGER, "[x] vkGetPhysicalDeviceDisplayPropertiesKHR: pPropertyCount = 0"); return res; }
-
-  pProperties = alloca(app->dpc * sizeof(VkDisplayPropertiesKHR));
-
-  res = vkGetPhysicalDeviceDisplayPropertiesKHR(app->pd_data[cur_pd].phys_dev, &app->dpc, pProperties);
-  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkGetPhysicalDeviceDisplayPropertiesKHR");
-
-  /* Allocate and Assign */
-  res = dlu_otba(DLU_DIS_DATA, app, INDEX_IGNORE, app->dpc);
-  if (res) { PERR(DLU_ALLOC_FAILED, 0, NULL); return res; }
-
-  for (uint32_t i = 0; i < app->dpc; i++)
-    app->dis_data[i].props = pProperties[i];
-
-  return res;
-}

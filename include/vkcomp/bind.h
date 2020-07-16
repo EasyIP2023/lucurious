@@ -22,46 +22,46 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_GP_CMD_H
-#define DLU_VKCOMP_GP_CMD_H
+#ifndef DLU_VKCOMP_BIND_H
+#define DLU_VKCOMP_BIND_H
 
-void dlu_cmd_draw(
+void dlu_bind_pipeline(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  uint32_t vertexCount,
-  uint32_t instanceCount,
-  uint32_t firstVertex,
-  uint32_t firstInstance
+  uint32_t cur_gpd,
+  uint32_t cur_pl,
+  VkPipelineBindPoint pipelineBindPoint
 );
 
-void dlu_cmd_draw_indexed(
+void dlu_bind_desc_sets(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  uint32_t indexCount,
-  uint32_t instanceCount,
-  uint32_t firstIndex,
-  int32_t vertexOffset,
-  uint32_t firstInstance
+  uint32_t cur_gpd,
+  uint32_t cur_dd,
+  VkPipelineBindPoint pipelineBindPoint,
+  uint32_t dynamicOffsetCount,
+  const uint32_t *pDynamicOffsets
 );
 
-void dlu_cmd_set_viewport(
+void dlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
-  VkViewport *viewport,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  uint32_t firstViewport,
-  uint32_t viewportCount
+  uint32_t firstBinding,
+  uint32_t bindingCount,
+  const VkBuffer *pBuffers,
+  const VkDeviceSize *offsets
 );
 
-void dlu_cmd_set_scissor(
+void dlu_bind_index_buff_to_cmd_buff(
   vkcomp *app,
-  VkRect2D *scissor,
   uint32_t cur_pool,
   uint32_t cur_buff,
-  uint32_t firstScissor,
-  uint32_t scissorCount
+  uint32_t cur_bd,
+  VkDeviceSize offset,
+  VkIndexType indexType
 );
 
 #endif

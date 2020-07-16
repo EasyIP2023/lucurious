@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_VLAYER_FUNCS_H
-#define DLU_VKCOMP_VLAYER_FUNCS_H
+#ifndef DLU_VKCOMP_VLAYER_H
+#define DLU_VKCOMP_VLAYER_H
 
 VkResult dlu_set_debug_message(
   vkcomp *app,

@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_EXEC_FUNCS_H
-#define DLU_VKCOMP_EXEC_FUNCS_H
+#ifndef DLU_VKCOMP_EXEC_H
+#define DLU_VKCOMP_EXEC_H
 
 VkResult dlu_exec_begin_cmd_buffs(
   vkcomp *app,
@@ -82,6 +82,26 @@ VkResult dlu_exec_pipeline_barrier(
   const VkBufferMemoryBarrier *pBufferMemoryBarriers,
   uint32_t imageMemoryBarrierCount,
   const VkImageMemoryBarrier *pImageMemoryBarriers
+);
+
+void dlu_exec_begin_render_pass(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_scd,
+  uint32_t cur_gpd,
+  uint32_t x,
+  uint32_t y,
+  uint32_t width,
+  uint32_t height,
+  uint32_t clearValueCount,
+  const VkClearValue *pClearValues,
+  VkSubpassContents contents
+);
+
+void dlu_exec_stop_render_pass(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_scd
 );
 
 #endif

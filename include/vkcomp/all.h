@@ -25,24 +25,20 @@
 #ifndef DLU_VKCOMP_ALL_H
 #define DLU_VKCOMP_ALL_H
 
-#include "funcs/create.h"
-#include "funcs/display.h"
-#include "funcs/exec.h"
-#include "funcs/set.h"
-#include "funcs/setup.h"
-#include "funcs/utils.h"
-#include "funcs/vlayer.h"
-#include "funcs/vk_calls.h"
-
-#include "gp/bind.h"
-#include "gp/cmd.h"
-#include "gp/create.h"
-#include "gp/exec.h"
-#include "gp/set.h"
-#include "gp/update.h"
+#include "create.h"
+#include "exec.h"
+#include "set.h"
+#include "bind.h"
+#include "cmd.h"
+#include "update.h"
+#include "display.h"
+#include "setup.h"
+#include "utils.h"
+#include "vlayer.h"
+#include "vk_calls.h"
 
 #ifdef INAPI_CALLS
-#include "funcs/device.h"
+#include "device.h"
 
 /**
 * Dynamically retrieve or acquire the address of a VkInstance func.

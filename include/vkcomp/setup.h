@@ -22,23 +22,16 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_VK_CALLS_FUNCS_H
-#define DLU_VKCOMP_VK_CALLS_FUNCS_H
+#ifndef DLU_VKCOMP_SETUP_H
+#define DLU_VKCOMP_SETUP_H
 
-/* Allows for vulkan synchronization function calling within lucurious */
-VkResult dlu_vk_sync(dlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
+/* Initailize vulkan struct */
+vkcomp *dlu_init_vk();
 
-/* Allows for more developer vulkan object destruction control */
-void dlu_vk_destroy(dlu_destroy_type type, vkcomp *app, uint32_t cur_ld, void *data);
+/* Free up all swapchain related memory, must reinitialize these objects */
+void dlu_freeup_sc(vkcomp *app);
 
-VkResult dlu_vk_map_mem(
-  dlu_mem_map_type type,
-  vkcomp *app,
-  uint32_t cur_idx,
-  VkDeviceSize size,
-  void *data,
-  VkDeviceSize offset,
-  VkMemoryMapFlags flags
-);
+/* Free up all allocated vkcomp related memory */
+void dlu_freeup_vk(vkcomp *app);
 
 #endif

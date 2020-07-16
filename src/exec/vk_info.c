@@ -168,34 +168,3 @@ end_free_vk:
 end:
   dlu_release_blocks();
 }
-
-void print_display_extensions(VkPhysicalDeviceType dt) {
-  dlu_otma_mems ma = { .vkcomp_cnt = 1, .pd_cnt = 1, .dis_cnt = 1 };
-  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma)) return;
-
-  VkResult err;
-  vkcomp *app = dlu_init_vk();
-  if (!app) goto end;
-
-  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
-  if (!err) goto end_free_vk;
-
-  err = dlu_create_instance(app, "PrintStmt", "PrintStmt", 0, NULL, 0, NULL);
-  if (err) goto end_free_vk;
-
-  /* This will get the physical device, it's properties, and features */
-  VkPhysicalDeviceProperties device_props; VkPhysicalDeviceFeatures device_feats;
-  err = dlu_create_physical_device(app, 0, dt, &device_props, &device_feats);
-  if (err) goto end_free_vk;
-
-  err = dlu_get_physical_device_display_propertiesKHR(app, 0);
-  if (err) goto end_free_vk;
-
-  for (uint32_t i = 0; i < app->dpc; i++)
-    dlu_print_msg(DLU_SUCCESS, "%s\n", app->dis_data[i].props.displayName);
-
-end_free_vk:
-  dlu_freeup_vk(app);
-end:
-  dlu_release_blocks();
-}

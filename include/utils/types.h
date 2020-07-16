@@ -50,9 +50,8 @@ typedef enum _dlu_data_type {
   DLU_BUFF_DATA = 0x0003,
   DLU_DESC_DATA = 0x0004,
   DLU_TEXT_DATA = 0x0005,
-  DLU_DIS_DATA = 0x0006,
-  DLU_PD_DATA = 0x0007,
-  DLU_LD_DATA = 0x0008,
+  DLU_PD_DATA = 0x0006,
+  DLU_LD_DATA = 0x0007,
   DLU_SC_DATA_MEMS = 0x0F01,
   DLU_DESC_DATA_MEMS = 0x0F02,
   DLU_GP_DATA_MEMS = 0x0F03,
@@ -77,7 +76,6 @@ typedef struct _dlu_otma_mems {
   uint32_t bd_cnt;      /* buffer data count */
   uint32_t dd_cnt;      /* descriptor data count */
   uint32_t td_cnt;       /* texture data count */
-  uint32_t dis_cnt;     /* display data count */
   uint32_t pd_cnt;      /* physical device data count */
   uint32_t ld_cnt;       /* logical device data count */
   uint32_t drmc_cnt;  /* dlu_drm_core struct count */

@@ -52,25 +52,9 @@ install_headers(math_hs, install_dir: i_dir + 'math')
 #############################
 # Installing vkcomp headers #
 #############################
-vkcomp_i_dir = i_dir + 'vkcomp/'
-vkcomp_main_hs = ['vkcomp/all.h', 'vkcomp/types.h']
-install_headers(vkcomp_main_hs, install_dir: vkcomp_i_dir)
-
-#######################################
-# Installing vkcomp functions headers #
-#######################################
-vkcomp_func_hs = [
-  'vkcomp/funcs/create.h', 'vkcomp/funcs/display.h', 'vkcomp/funcs/exec.h',
-  'vkcomp/funcs/set.h', 'vkcomp/funcs/setup.h', 'vkcomp/funcs/utils.h',
-  'vkcomp/funcs/vlayer.h', 'vkcomp/funcs/vk_calls.h'
+vkcomp_hs = [
+  'vkcomp/all.h', 'vkcomp/types.h', 'vkcomp/set.h', 'vkcomp/create.h', 'vkcomp/exec.h',
+  'vkcomp/bind.h', 'vkcomp/cmd.h', 'vkcomp/update.h', 'vkcomp/display.h', 'vkcomp/setup.h',
+  'vkcomp/utils.h', 'vkcomp/vlayer.h', 'vkcomp/vk_calls.h'
 ]
-install_headers(vkcomp_func_hs, install_dir: vkcomp_i_dir + 'funcs')
-
-###############################################
-# Installing vkcomp graphics pipeline headers #
-###############################################
-vkcomp_gp_hs = [
-  'vkcomp/gp/bind.h', 'vkcomp/gp/cmd.h', 'vkcomp/gp/create.h',
-  'vkcomp/gp/exec.h', 'vkcomp/gp/set.h', 'vkcomp/gp/update.h'
-]
-install_headers(vkcomp_gp_hs, install_dir: vkcomp_i_dir + 'gp')
+install_headers(vkcomp_hs, install_dir: i_dir + 'vkcomp')

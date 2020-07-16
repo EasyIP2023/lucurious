@@ -22,27 +22,23 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_GP_EXEC_H
-#define DLU_VKCOMP_GP_EXEC_H
+#ifndef DLU_VKCOMP_VK_CALLS_H
+#define DLU_VKCOMP_VK_CALLS_H
 
-void dlu_exec_begin_render_pass(
-  vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t cur_scd,
-  uint32_t cur_gpd,
-  uint32_t x,
-  uint32_t y,
-  uint32_t width,
-  uint32_t height,
-  uint32_t clearValueCount,
-  const VkClearValue *pClearValues,
-  VkSubpassContents contents
-);
+/* Allows for vulkan synchronization function calling within lucurious */
+VkResult dlu_vk_sync(dlu_sync_type type, vkcomp *app, uint32_t cur_scd, uint32_t synci);
 
-void dlu_exec_stop_render_pass(
+/* Allows for more developer vulkan object destruction control */
+void dlu_vk_destroy(dlu_destroy_type type, vkcomp *app, uint32_t cur_ld, void *data);
+
+VkResult dlu_vk_map_mem(
+  dlu_mem_map_type type,
   vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t cur_scd
+  uint32_t cur_idx,
+  VkDeviceSize size,
+  void *data,
+  VkDeviceSize offset,
+  VkMemoryMapFlags flags
 );
 
 #endif

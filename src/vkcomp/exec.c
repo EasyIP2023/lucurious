@@ -192,3 +192,41 @@ VkResult dlu_exec_pipeline_barrier(
 
   return res;
 }
+void dlu_exec_begin_render_pass(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_scd,
+  uint32_t cur_gpd,
+  uint32_t x,
+  uint32_t y,
+  uint32_t width,
+  uint32_t height,
+  uint32_t clearValueCount,
+  const VkClearValue *pClearValues,
+  VkSubpassContents contents
+) {
+
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA_MEMS"); return; }
+
+  VkRenderPassBeginInfo render_pass_info = {};
+  render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  render_pass_info.pNext = NULL;
+  render_pass_info.renderPass = app->gp_data[cur_gpd].render_pass;
+  render_pass_info.renderArea.offset.x = x;
+  render_pass_info.renderArea.offset.y = y;
+  render_pass_info.renderArea.extent.width = width;
+  render_pass_info.renderArea.extent.height = height;
+  render_pass_info.clearValueCount = clearValueCount;
+  render_pass_info.pClearValues = pClearValues;
+
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    render_pass_info.framebuffer = app->sc_data[cur_scd].sc_buffs[i].fb;
+    /* Instert render pass into command buffer */
+    vkCmdBeginRenderPass(app->cmd_data[cur_pool].cmd_buffs[i], &render_pass_info, contents);
+  }
+}
+
+void dlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++)
+    vkCmdEndRenderPass(app->cmd_data[cur_pool].cmd_buffs[i]);
+}

@@ -22,16 +22,31 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_SETUP_FUNCS_H
-#define DLU_VKCOMP_SETUP_FUNCS_H
+#ifndef DLU_VKCOMP_UPDATE_H
+#define DLU_VKCOMP_UPDATE_H
 
-/* Initailize vulkan struct */
-vkcomp *dlu_init_vk();
+/**
+* descriptorCount: Specify the amount of descriptors to update
+* Tell the driver that which resource to use for descriptors in a set
+*/
+VkWriteDescriptorSet dlu_write_desc_set(
+  VkDescriptorSet dstSet,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  uint32_t descriptorCount,
+  VkDescriptorType descriptorType,
+  const VkDescriptorImageInfo *pImageInfo,
+  const VkDescriptorBufferInfo *pBufferInfo,
+  const VkBufferView *pTexelBufferView
+);
 
-/* Free up all swapchain related memory, must reinitialize these objects */
-void dlu_freeup_sc(vkcomp *app);
-
-/* Free up all allocated vkcomp related memory */
-void dlu_freeup_vk(vkcomp *app);
+/* Update the configurations of descriptors */
+void dlu_update_desc_sets(
+  VkDevice device,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
+);
 
 #endif

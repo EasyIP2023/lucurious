@@ -22,31 +22,46 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_GP_UPDATE_H
-#define DLU_VKCOMP_GP_UPDATE_H
+#ifndef DLU_VKCOMP_CMD_H
+#define DLU_VKCOMP_CMD_H
 
-/**
-* descriptorCount: Specify the amount of descriptors to update
-* Tell the driver that which resource to use for descriptors in a set
-*/
-VkWriteDescriptorSet dlu_write_desc_set(
-  VkDescriptorSet dstSet,
-  uint32_t dstBinding,
-  uint32_t dstArrayElement,
-  uint32_t descriptorCount,
-  VkDescriptorType descriptorType,
-  const VkDescriptorImageInfo *pImageInfo,
-  const VkDescriptorBufferInfo *pBufferInfo,
-  const VkBufferView *pTexelBufferView
+void dlu_cmd_draw(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
 );
 
-/* Update the configurations of descriptors */
-void dlu_update_desc_sets(
-  VkDevice device,
-  uint32_t descriptorWriteCount,
-  const VkWriteDescriptorSet *pDescriptorWrites,
-  uint32_t descriptorCopyCount,
-  const VkCopyDescriptorSet *pDescriptorCopies
+void dlu_cmd_draw_indexed(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t indexCount,
+  uint32_t instanceCount,
+  uint32_t firstIndex,
+  int32_t vertexOffset,
+  uint32_t firstInstance
+);
+
+void dlu_cmd_set_viewport(
+  vkcomp *app,
+  VkViewport *viewport,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t firstViewport,
+  uint32_t viewportCount
+);
+
+void dlu_cmd_set_scissor(
+  vkcomp *app,
+  VkRect2D *scissor,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t firstScissor,
+  uint32_t scissorCount
 );
 
 #endif

@@ -204,11 +204,6 @@ typedef struct _vkcomp {
     /* logical device index, Used to keep track of active VkDevice */
     uint32_t ldi;
   } *text_data;
-
-  uint32_t dpc; /* Display Data Count = VkDisplayProps Count */
-  struct _dis_data {
-    VkDisplayPropertiesKHR props;
-  } *dis_data;
 } vkcomp;
 
 #endif

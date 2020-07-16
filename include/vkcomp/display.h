@@ -22,8 +22,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_VKCOMP_DISPLAY_FUNCS_H
-#define DLU_VKCOMP_DISPLAY_FUNCS_H
+#ifndef DLU_VKCOMP_DISPLAY_H
+#define DLU_VKCOMP_DISPLAY_H
 
 /**
 * Needed to create the swap chain
@@ -93,11 +93,5 @@ VkResult dlu_queue_present_queue(
   const uint32_t *pImageIndices,
   VkResult *pResults
 );
-
-/**
-* Query display properities for a choosen physical device to allow for
-* implementation of a rendering/presentation backend of a windowing system
-*/
-VkResult dlu_get_physical_device_display_propertiesKHR(vkcomp *app, uint32_t cur_pd);
 
 #endif

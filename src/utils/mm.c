@@ -284,7 +284,6 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.dd_cnt  ) ? (BLOCK_SIZE + (ma.dd_cnt * sizeof(struct _desc_data))) : 0;
 
   size += (ma.td_cnt ) ? (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data))) : 0;
-  size += (ma.dis_cnt) ? (BLOCK_SIZE + (ma.dis_cnt * sizeof(struct _dis_data))) : 0;
 
   size += (ma.pd_cnt) ? (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data))) : 0;
   size += (ma.ld_cnt) ? (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data))) : 0;
@@ -372,13 +371,6 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
           app->gp_data[i].ldi = UINT32_MAX;
 
         app->tdc = arr_size; return true;
-      }
-    case DLU_DIS_DATA:
-      {
-        vkcomp *app = (vkcomp *) addr;
-        app->dis_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _dis_data));
-        if (!app->dis_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
-        app->dpc = arr_size; return true;
       }
     case DLU_PD_DATA:
       {
