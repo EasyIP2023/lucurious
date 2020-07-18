@@ -24,55 +24,48 @@
 
 #ifndef DLU_VKCOMP_EXEC_H
 #define DLU_VKCOMP_EXEC_H
+ 
+/* Function creates VkCommandBuffer */
+VkCommandBuffer dlu_exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool);
 
-VkResult dlu_exec_begin_cmd_buffs(
-  vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t cur_scd,
-  VkCommandBufferUsageFlags flags,
-  const VkCommandBufferInheritanceInfo *pInheritanceInfo
-);
-
-VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
+/* Function submits and closes one time VkCommandBuffer to the graphics queue */
+VkResult dlu_exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, VkCommandBuffer *cmd_buff);
 
 /**
 * cur_pool: Function uses one time command buffer allocate/submit
 * src_bd: must be a valid VkBuffer
 * dst_bd: must be a valid VkBuffer
 */
-VkResult dlu_exec_copy_buffer(
+void dlu_exec_copy_buffer(
   vkcomp *app,
-  uint32_t cur_pool,
   uint32_t src_bd,
   uint32_t dst_bd,
   VkDeviceSize srcOffset,
   VkDeviceSize dstOffset,
-  VkDeviceSize size
+  VkDeviceSize size,
+  VkCommandBuffer cmd_buff
 );
 
 /**
 * cur_pool: Function uses one time command buffer allocate/submit
 * cur_bd: must be a valid VkBuffer that contains your image pixels
 */
-VkResult dlu_exec_copy_buff_to_image(
+void dlu_exec_copy_buff_to_image(
   vkcomp *app,
-  uint32_t cur_pool,
   uint32_t cur_bd,
   uint32_t cur_tex,
   VkImageLayout dstImageLayout,
   uint32_t regionCount,
-  const VkBufferImageCopy *pRegions
+  const VkBufferImageCopy *pRegion,
+  VkCommandBuffer cmd_buff
 );
 
 /**
-* cur_pool: Function uses one time command buffer allocate/submit
 * Using image memory barrier to preform layout transitions.
 * Image memory barrier is used to synchronize access to image resources.
 * Example: writing to a buffer completely before reading from it
 */
-VkResult dlu_exec_pipeline_barrier(
-  vkcomp *app, 
-  uint32_t cur_pool,
+void dlu_exec_pipeline_barrier(
   VkPipelineStageFlags srcStageMask,
   VkPipelineStageFlags dstStageMask,
   VkDependencyFlags dependencyFlags,
@@ -81,7 +74,8 @@ VkResult dlu_exec_pipeline_barrier(
   uint32_t bufferMemoryBarrierCount,
   const VkBufferMemoryBarrier *pBufferMemoryBarriers,
   uint32_t imageMemoryBarrierCount,
-  const VkImageMemoryBarrier *pImageMemoryBarriers
+  const VkImageMemoryBarrier *pImageMemoryBarriers,
+  VkCommandBuffer cmd_buff
 );
 
 void dlu_exec_begin_render_pass(
@@ -103,5 +97,15 @@ void dlu_exec_stop_render_pass(
   uint32_t cur_pool,
   uint32_t cur_scd
 );
+ 
+VkResult dlu_exec_begin_cmd_buffs(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_scd,
+  VkCommandBufferUsageFlags flags,
+  const VkCommandBufferInheritanceInfo *pInheritanceInfo
+);
+
+VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd);
 
 #endif

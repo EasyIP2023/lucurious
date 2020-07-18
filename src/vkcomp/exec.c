@@ -25,8 +25,11 @@
 #define LUCUR_VKCOMP_API
 #include <lucom.h>
 
-static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool) {
+VkCommandBuffer dlu_exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool) {
+  VkCommandBuffer cmd_buff = VK_NULL_HANDLE;
   VkResult res = VK_RESULT_MAX_ENUM;
+
+  if (!app->cmd_data[cur_pool].cmd_pool) { PERR(DLU_VKCOMP_CMD_POOL, 0, NULL); return cmd_buff; }
 
   VkCommandBufferAllocateInfo alloc_info = {};
   alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -35,27 +38,28 @@ static VkCommandBuffer exec_begin_single_time_cmd_buff(vkcomp *app, uint32_t cur
   alloc_info.commandPool = app->cmd_data[cur_pool].cmd_pool;
   alloc_info.commandBufferCount = 1;
 
-  VkCommandBuffer cmd_buff;
   res = vkAllocateCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, &alloc_info, &cmd_buff);
-  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers"); return VK_NULL_HANDLE; }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkAllocateCommandBuffers"); return cmd_buff; }
 
   VkCommandBufferBeginInfo begin_info = {};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   res = vkBeginCommandBuffer(cmd_buff, &begin_info);
-  if (res) {
-    vkFreeCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
-    PERR(DLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer");
-    return VK_NULL_HANDLE;
-  }
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBeginCommandBuffer"); goto finish_estcb; }
 
   return cmd_buff;
+
+finish_estcb:
+  vkFreeCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, app->cmd_data[cur_pool].cmd_pool, 1, &cmd_buff);
+  return VK_NULL_HANDLE;
 }
 
-static VkResult exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, VkCommandBuffer *cmd_buff) {
+VkResult dlu_exec_end_single_time_cmd_buff(vkcomp *app, uint32_t cur_pool, VkCommandBuffer *cmd_buff) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
+  if (!app->cmd_data[cur_pool].cmd_pool) { PERR(DLU_VKCOMP_CMD_POOL, 0, NULL); return res; }
+  
   res = vkEndCommandBuffer(*cmd_buff);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkEndCommandBuffer"); goto finish_estcb; }
 
@@ -74,6 +78,94 @@ finish_estcb:
   vkFreeCommandBuffers(app->ld_data[app->cmd_data[cur_pool].ldi].device, app->cmd_data[cur_pool].cmd_pool, 1, cmd_buff);
 
   return res;
+}
+
+void dlu_exec_copy_buffer(
+  vkcomp *app,
+  uint32_t src_bd,
+  uint32_t dst_bd,
+  VkDeviceSize srcOffset,
+  VkDeviceSize dstOffset,
+  VkDeviceSize size,
+  VkCommandBuffer cmd_buff
+) {
+
+  VkBufferCopy copy_region = {};
+  copy_region.srcOffset = srcOffset;
+  copy_region.dstOffset = dstOffset;
+  copy_region.size = size;
+
+  vkCmdCopyBuffer(cmd_buff, app->buff_data[src_bd].buff, app->buff_data[dst_bd].buff, 1, &copy_region);
+}
+
+void dlu_exec_copy_buff_to_image(
+  vkcomp *app,
+  uint32_t cur_bd,
+  uint32_t cur_tex,
+  VkImageLayout dstImageLayout,
+  uint32_t regionCount,
+  const VkBufferImageCopy *pRegions,
+  VkCommandBuffer cmd_buff
+) {
+
+  vkCmdCopyBufferToImage(cmd_buff, app->buff_data[cur_bd].buff, app->text_data[cur_tex].image,
+                        dstImageLayout, regionCount, pRegions);
+}
+
+void dlu_exec_pipeline_barrier(
+  VkPipelineStageFlags srcStageMask,
+  VkPipelineStageFlags dstStageMask,
+  VkDependencyFlags dependencyFlags,
+  uint32_t memoryBarrierCount,
+  const VkMemoryBarrier *pMemoryBarriers,
+  uint32_t bufferMemoryBarrierCount,
+  const VkBufferMemoryBarrier *pBufferMemoryBarriers,
+  uint32_t imageMemoryBarrierCount,
+  const VkImageMemoryBarrier *pImageMemoryBarriers,
+  VkCommandBuffer cmd_buff
+) {
+
+  vkCmdPipelineBarrier(cmd_buff, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers,
+                       bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
+}
+
+void dlu_exec_begin_render_pass(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_scd,
+  uint32_t cur_gpd,
+  uint32_t x,
+  uint32_t y,
+  uint32_t width,
+  uint32_t height,
+  uint32_t clearValueCount,
+  const VkClearValue *pClearValues,
+  VkSubpassContents contents
+) {
+
+  if (!app->sc_data[cur_scd].sc_buffs) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA_MEMS"); return; }
+
+  VkRenderPassBeginInfo render_pass_info = {};
+  render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  render_pass_info.pNext = NULL;
+  render_pass_info.renderPass = app->gp_data[cur_gpd].render_pass;
+  render_pass_info.renderArea.offset.x = x;
+  render_pass_info.renderArea.offset.y = y;
+  render_pass_info.renderArea.extent.width = width;
+  render_pass_info.renderArea.extent.height = height;
+  render_pass_info.clearValueCount = clearValueCount;
+  render_pass_info.pClearValues = pClearValues;
+
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    render_pass_info.framebuffer = app->sc_data[cur_scd].sc_buffs[i].fb;
+    /* Instert render pass into command buffer */
+    vkCmdBeginRenderPass(app->cmd_data[cur_pool].cmd_buffs[i], &render_pass_info, contents);
+  }
+}
+
+void dlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++)
+    vkCmdEndRenderPass(app->cmd_data[cur_pool].cmd_buffs[i]);
 }
 
 VkResult dlu_exec_begin_cmd_buffs(
@@ -113,120 +205,4 @@ VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc
   }
 
   return res;
-}
-
-VkResult dlu_exec_copy_buffer(
-  vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t src_bd,
-  uint32_t dst_bd,
-  VkDeviceSize srcOffset,
-  VkDeviceSize dstOffset,
-  VkDeviceSize size
-) {
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  VkCommandBuffer cmd_buff = exec_begin_single_time_cmd_buff(app, cur_pool);
-  if (!cmd_buff) return res;
-
-  VkBufferCopy copy_region = {};
-  copy_region.srcOffset = srcOffset;
-  copy_region.dstOffset = dstOffset;
-  copy_region.size = size;
-
-  vkCmdCopyBuffer(cmd_buff, app->buff_data[src_bd].buff, app->buff_data[dst_bd].buff, 1, &copy_region);
-
-  res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
-  if (res) return res;
-
-  return res;
-}
-
-VkResult dlu_exec_copy_buff_to_image(
-  vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t cur_bd,
-  uint32_t cur_tex,
-  VkImageLayout dstImageLayout,
-  uint32_t regionCount,
-  const VkBufferImageCopy *pRegions
-) {
-
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  VkCommandBuffer cmd_buff = exec_begin_single_time_cmd_buff(app, cur_pool);
-  if (!cmd_buff) return res;
-
-  vkCmdCopyBufferToImage(cmd_buff, app->buff_data[cur_bd].buff, app->text_data[cur_tex].image,
-                        dstImageLayout, regionCount, pRegions);
-
-  res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
-  if (res) return res;
-
-  return res;
-}
-
-VkResult dlu_exec_pipeline_barrier(
-  vkcomp *app,
-  uint32_t cur_pool,
-  VkPipelineStageFlags srcStageMask,
-  VkPipelineStageFlags dstStageMask,
-  VkDependencyFlags dependencyFlags,
-  uint32_t memoryBarrierCount,
-  const VkMemoryBarrier *pMemoryBarriers,
-  uint32_t bufferMemoryBarrierCount,
-  const VkBufferMemoryBarrier *pBufferMemoryBarriers,
-  uint32_t imageMemoryBarrierCount,
-  const VkImageMemoryBarrier *pImageMemoryBarriers
-) {
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  VkCommandBuffer cmd_buff = exec_begin_single_time_cmd_buff(app, cur_pool);
-  if (!cmd_buff) return res;
-
-  vkCmdPipelineBarrier(cmd_buff, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers,
-                       bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
-
-  res = exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
-  if (res) return res;
-
-  return res;
-}
-void dlu_exec_begin_render_pass(
-  vkcomp *app,
-  uint32_t cur_pool,
-  uint32_t cur_scd,
-  uint32_t cur_gpd,
-  uint32_t x,
-  uint32_t y,
-  uint32_t width,
-  uint32_t height,
-  uint32_t clearValueCount,
-  const VkClearValue *pClearValues,
-  VkSubpassContents contents
-) {
-
-  if (!app->sc_data[cur_scd].sc_buffs) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA_MEMS"); return; }
-
-  VkRenderPassBeginInfo render_pass_info = {};
-  render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  render_pass_info.pNext = NULL;
-  render_pass_info.renderPass = app->gp_data[cur_gpd].render_pass;
-  render_pass_info.renderArea.offset.x = x;
-  render_pass_info.renderArea.offset.y = y;
-  render_pass_info.renderArea.extent.width = width;
-  render_pass_info.renderArea.extent.height = height;
-  render_pass_info.clearValueCount = clearValueCount;
-  render_pass_info.pClearValues = pClearValues;
-
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    render_pass_info.framebuffer = app->sc_data[cur_scd].sc_buffs[i].fb;
-    /* Instert render pass into command buffer */
-    vkCmdBeginRenderPass(app->cmd_data[cur_pool].cmd_buffs[i], &render_pass_info, contents);
-  }
-}
-
-void dlu_exec_stop_render_pass(vkcomp *app, uint32_t cur_pool, uint32_t cur_scd) {
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++)
-    vkCmdEndRenderPass(app->cmd_data[cur_pool].cmd_buffs[i]);
 }

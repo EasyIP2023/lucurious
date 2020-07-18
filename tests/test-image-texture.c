@@ -256,11 +256,27 @@ START_TEST(test_vulkan_image_texture) {
     VK_QUEUE_FAMILY_IGNORED, app->text_data[cur_tex].image, img_sub_rr
   );
 
-  /* Using image memory barrier to perform layout transitions */
-  err = dlu_exec_pipeline_barrier(app, cur_pool, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-    VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
+  VkCommandBuffer cmd_buff = dlu_exec_begin_single_time_cmd_buff(app, cur_pool);
+  check_err(!cmd_buff, app, wc, NULL)
+
+  app->set_obj.dbg_utils_set_object_name(app->ld_data[app->set_obj.ldi].device, &(VkDebugUtilsObjectNameInfoEXT) {
+      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+      .pNext = NULL,
+      .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
+      .objectHandle = (uint64_t) cmd_buff,
+      .pObjectName = "VkPipelineBarrier"
+    }
   );
-  check_err(err, app, wc, NULL)
+
+  app->dbg_utils_cmd_begin(cmd_buff, &(VkDebugUtilsLabelEXT) {
+    .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+    .pNext = NULL,
+    .pLabelName = "Inside VkPipelineBarrier Command Buffer",
+    .color[0] = 0.4f, .color[1] = 0.3f, .color[2] = 0.2f, .color[3] = 0.1f
+  });
+
+  /* Using image memory barrier to perform layout transitions */
+  dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
 
   /*
   If one were to choose to map the jpg, png, etc.. directly into a textures bounded VkDeviceMemory (Staging Image)
@@ -278,8 +294,7 @@ START_TEST(test_vulkan_image_texture) {
   VkBufferImageCopy region = dlu_set_buff_image_copy(0, 0, 0, img_sub_rl, offset3D, img_extent);
 
   /* cur_bd: must be a valid VkBuffer that contains your image pixels. Now Copy pixels in VkBuffer over to VkImage */
-  err = dlu_exec_copy_buff_to_image(app, cur_pool, cur_bd, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-  check_err(err, app, wc, NULL)
+  dlu_exec_copy_buff_to_image(app, cur_bd, cur_tex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region, cmd_buff);
 
   /**
   * Allows for in shader sampling of a texture image,
@@ -287,9 +302,9 @@ START_TEST(test_vulkan_image_texture) {
   */
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
   barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  err = dlu_exec_pipeline_barrier(app, cur_pool, VK_PIPELINE_STAGE_TRANSFER_BIT,
-    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier
-  );
+  dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
+
+  err = dlu_exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
   check_err(err, app, wc, NULL)
 
   /* Destroy staging buffer and memory as it is no longer needed */
@@ -531,6 +546,22 @@ START_TEST(test_vulkan_image_texture) {
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    app->set_obj.dbg_utils_set_object_name(app->ld_data[app->set_obj.ldi].device, &(VkDebugUtilsObjectNameInfoEXT) {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .pNext = NULL,
+        .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
+        .objectHandle = (uint64_t) app->cmd_data[0].cmd_buffs[i],
+        .pObjectName = "vkCmdCopyBufferToImage"
+      }
+    );
+
+    app->dbg_utils_cmd_begin(app->cmd_data[0].cmd_buffs[i], &(VkDebugUtilsLabelEXT) {
+      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+      .pNext = NULL,
+      .pLabelName = "Inside Bind and Draw",
+      .color[0] = 0.4f, .color[1] = 0.3f, .color[2] = 0.2f, .color[3] = 0.1f
+    });
+
     dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     dlu_bind_pipeline(app, cur_pool, i, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
     dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[0].buff, offsets);
@@ -590,6 +621,8 @@ START_TEST(test_vulkan_image_texture) {
 
     cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
+
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) app->dbg_utils_cmd_end(app->cmd_data[0].cmd_buffs[i]);
 
   FREEME(app, wc)
 } END_TEST;

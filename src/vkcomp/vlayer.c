@@ -230,8 +230,9 @@ VkResult dlu_set_device_debug_ext(vkcomp *app, uint32_t cur_ld) {
   DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_cmd_insert, CmdInsertDebugUtilsLabelEXT);
   if (!app->dbg_utils_cmd_insert) return VK_ERROR_INITIALIZATION_FAILED;
 
-  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->dbg_utils_set_object_name, SetDebugUtilsObjectNameEXT);
-  if (!app->dbg_utils_set_object_name) return VK_ERROR_INITIALIZATION_FAILED;
+  DLU_DR_DEVICE_PROC_ADDR(app->ld_data[cur_ld].device, app->set_obj.dbg_utils_set_object_name, SetDebugUtilsObjectNameEXT);
+  if (!app->set_obj.dbg_utils_set_object_name) return VK_ERROR_INITIALIZATION_FAILED;
+  app->set_obj.ldi = cur_ld;
 
   return VK_SUCCESS;
 }
