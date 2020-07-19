@@ -242,15 +242,6 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   check_err(err, app, wc, NULL)
 
-  /**
-  * Create Image View for texture image. So that application can access a VkImage resource
-  * VK_COMPONENT_SWIZZLE_IDENTITY defined as zero
-  */
-  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
-
-  err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
-  check_err(err, app, wc, NULL)
-
   VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_QUEUE_FAMILY_IGNORED,
     VK_QUEUE_FAMILY_IGNORED, app->text_data[cur_tex].image, img_sub_rr
@@ -259,12 +250,23 @@ START_TEST(test_vulkan_image_texture) {
   VkCommandBuffer cmd_buff = dlu_exec_begin_single_time_cmd_buff(app, cur_pool);
   check_err(!cmd_buff, app, wc, NULL)
 
-  app->set_obj.dbg_utils_set_object_name(app->ld_data[app->set_obj.ldi].device, &(VkDebugUtilsObjectNameInfoEXT) {
+  dlu_log_me(DLU_WARNING, "cmd_buff: %p", cmd_buff);
+
+  app->dbg_utils_set_object_name(app->ld_data[cur_ld].device, &(VkDebugUtilsObjectNameInfoEXT) {
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
       .pNext = NULL,
       .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
       .objectHandle = (uint64_t) cmd_buff,
-      .pObjectName = "VkPipelineBarrier"
+      .pObjectName = "VkPipelineBarrier Command Buffer"
+    }
+  ); 
+
+  app->dbg_utils_set_object_name(app->ld_data[cur_ld].device, &(VkDebugUtilsObjectNameInfoEXT) {
+      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+      .pNext = NULL,
+      .objectType = VK_OBJECT_TYPE_IMAGE,
+      .objectHandle = (uint64_t) app->text_data[cur_tex].image,
+      .pObjectName = "VkPipelineBarrier Texture Image"
     }
   );
 
@@ -272,20 +274,20 @@ START_TEST(test_vulkan_image_texture) {
     .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
     .pNext = NULL,
     .pLabelName = "Inside VkPipelineBarrier Command Buffer",
-    .color[0] = 0.4f, .color[1] = 0.3f, .color[2] = 0.2f, .color[3] = 0.1f
+    .color[0] = 0.0f, .color[1] = 0.0f, .color[2] = 0.0f, .color[3] = 0.0f
   });
 
   /* Using image memory barrier to perform layout transitions */
   dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
 
-  /*
-  If one were to choose to map the jpg, png, etc.. directly into a textures bounded VkDeviceMemory (Staging Image)
-  err = dlu_vk_map_mem(DLU_TEXT_VK_IMAGE app, cur_tex, img_size, pixels, 0, 0);
-  if (err) {
-    stbi_image_free(pixels); pixels = NULL;
-    check_err(VK_TRUE, app, wc, NULL)
-  }
- */
+  /** 
+  * If one were to choose to map the jpg, png, etc.. directly into a textures bounded VkDeviceMemory (Staging Image)
+  * err = dlu_vk_map_mem(DLU_TEXT_VK_IMAGE, app, cur_tex, img_size, pixels, 0, 0);
+  * if (err) {
+  *   stbi_image_free(pixels); pixels = NULL;
+  *   check_err(VK_TRUE, app, wc, NULL)
+  * }
+  */
 
   VkOffset3D offset3D = {0, 0, 0};
   VkImageSubresourceLayers img_sub_rl = dlu_set_image_sub_resource_layers(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1);
@@ -304,6 +306,8 @@ START_TEST(test_vulkan_image_texture) {
   barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
 
+  app->dbg_utils_cmd_end(cmd_buff);
+
   err = dlu_exec_end_single_time_cmd_buff(app, cur_pool, &cmd_buff);
   check_err(err, app, wc, NULL)
 
@@ -311,7 +315,15 @@ START_TEST(test_vulkan_image_texture) {
   dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
 
-  /* Create Image Views. So that the application can access a VkImage resource */
+  /**
+  * Create Image View for texture image. So that application can access a VkImage resource
+  * VK_COMPONENT_SWIZZLE_IDENTITY defined as zero
+  */
+  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
+  err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
+  check_err(err, app, wc, NULL)
+
+  /* Create Swap Chain Image Views. So that the application can access a VkImage resource */
   err = dlu_create_image_views(DLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
   check_err(err, app, wc, NULL)
 
@@ -546,7 +558,7 @@ START_TEST(test_vulkan_image_texture) {
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    app->set_obj.dbg_utils_set_object_name(app->ld_data[app->set_obj.ldi].device, &(VkDebugUtilsObjectNameInfoEXT) {
+    app->dbg_utils_set_object_name(app->ld_data[cur_ld].device, &(VkDebugUtilsObjectNameInfoEXT) {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
         .pNext = NULL,
         .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
@@ -559,7 +571,7 @@ START_TEST(test_vulkan_image_texture) {
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
       .pNext = NULL,
       .pLabelName = "Inside Bind and Draw",
-      .color[0] = 0.4f, .color[1] = 0.3f, .color[2] = 0.2f, .color[3] = 0.1f
+      .color[0] = 0.0f, .color[1] = 0.0f, .color[2] = 0.0f, .color[3] = 0.0f
     });
 
     dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
