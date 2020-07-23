@@ -137,6 +137,7 @@ typedef struct _vkcomp {
       } sem;
     } *syncs;
 
+    /* I might either remove this or keep it here */
     struct _depth_buffer {
       VkImage image;
       VkImageView view;

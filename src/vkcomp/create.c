@@ -48,9 +48,9 @@ VkResult dlu_create_instance(
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pNext = NULL;
   app_info.pApplicationName = app_name;
-  app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 2);
   app_info.pEngineName = engine_name;
-  app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.engineVersion = VK_MAKE_VERSION(0, 0, 2);
   app_info.apiVersion = VK_API_VERSION_1_0;
 
   /* enable validation layers best practice */
@@ -377,7 +377,7 @@ VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
-  VkFlags requirements_mask
+  VkMemoryPropertyFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -437,7 +437,7 @@ VkResult dlu_create_vk_buffer(
   VkSharingMode sharingMode,
   uint32_t queueFamilyIndexCount,
   const uint32_t *pQueueFamilyIndices,
-  VkFlags requirements_mask
+  VkMemoryPropertyFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -864,7 +864,7 @@ VkResult dlu_create_texture_image(
   uint32_t cur_ld,
   uint32_t cur_tex,
   VkImageCreateInfo *img_info,
-  VkFlags requirements_mask
+  VkMemoryPropertyFlags requirements_mask
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;

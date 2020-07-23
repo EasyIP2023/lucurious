@@ -35,7 +35,7 @@ bool memory_type_from_properties(vkcomp *app, uint32_t pdi, uint32_t typeBits, V
   for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
     if ((typeBits & 1) == 1) {
       /* Type is available, does it match user properties */
-      if ((memory_properties.memoryTypes[i].propertyFlags & requirements_mask) == requirements_mask) {
+      if (memory_properties.memoryTypes[i].propertyFlags & requirements_mask) {
         *typeIndex = i;
         return true;
       }
