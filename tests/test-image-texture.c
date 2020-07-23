@@ -168,7 +168,12 @@ START_TEST(test_vulkan_image_texture) {
     pres_mode, VK_FALSE, VK_NULL_HANDLE
   );
 
-  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info);
+  VkComponentMapping comp_map =  dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
+  VkImageSubresourceRange img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageViewCreateInfo img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
+
+  /* Create Swapchain and Swapchain Image Views. So that the application can access a VkImage resource */
+  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info, &img_view_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, 0);
@@ -176,10 +181,6 @@ START_TEST(test_vulkan_image_texture) {
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   check_err(err, app, wc, NULL)
-
-  VkComponentMapping comp_map = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  VkImageSubresourceRange img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
-  VkImageViewCreateInfo img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
 
   /* This is where creation of the graphics pipeline begins */
   err = dlu_create_syncs(app, cur_scd);
@@ -238,8 +239,12 @@ START_TEST(test_vulkan_image_texture) {
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
 
+  /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
+  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
+  img_view_info.subresourceRange =  dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0, 1);
+
   uint32_t cur_tex = 0;
-  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, &img_view_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   check_err(err, app, wc, NULL)
 
   VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
@@ -314,18 +319,6 @@ START_TEST(test_vulkan_image_texture) {
   /* Destroy staging buffer and memory as it is no longer needed */
   dlu_vk_destroy(DLU_DESTROY_VK_BUFFER, app, cur_ld, app->buff_data[cur_bd].buff); app->buff_data[cur_bd].buff = VK_NULL_HANDLE;
   dlu_vk_destroy(DLU_DESTROY_VK_MEMORY, app, cur_ld, app->buff_data[cur_bd].mem); app->buff_data[cur_bd].mem = VK_NULL_HANDLE;
-
-  /**
-  * Create Image View for texture image. So that application can access a VkImage resource
-  * VK_COMPONENT_SWIZZLE_IDENTITY defined as zero
-  */
-  img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
-  err = dlu_create_image_views(DLU_TEXT_IMAGE_VIEWS, app, cur_tex, &img_view_info);
-  check_err(err, app, wc, NULL)
-
-  /* Create Swap Chain Image Views. So that the application can access a VkImage resource */
-  err = dlu_create_image_views(DLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
-  check_err(err, app, wc, NULL)
 
   VkSamplerCreateInfo sampler = dlu_set_sampler_info(0, VK_FILTER_LINEAR, VK_FILTER_LINEAR, 0.0f, VK_SAMPLER_MIPMAP_MODE_LINEAR,
     VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT, 16.0f, VK_TRUE, VK_FALSE,

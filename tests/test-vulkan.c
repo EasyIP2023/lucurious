@@ -220,17 +220,7 @@ START_TEST(test_swap_chain_fail_no_surface) {
 
   ck_assert_ptr_null(app->surface);
 
-  VkSurfaceFormatKHR surface_fmt = {VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR};
-  VkExtent2D extent2D = {1920, 1080};
-  VkPresentModeKHR pres_mode = VK_PRESENT_MODE_MAILBOX_KHR;
-
-  /* image is owned by one queue family at a time, Best for performance */
-  VkSwapchainCreateInfoKHR swapchain_info = dlu_set_swap_chain_info(NULL, 0, app->surface, app->sc_data[0].sic, surface_fmt.format, surface_fmt.colorSpace,
-    extent2D, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-    VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, pres_mode, VK_FALSE, VK_NULL_HANDLE
-  );
-
-  err = dlu_create_swap_chain(app, 0, 0, &swapchain_info);
+  err = dlu_create_swap_chain(app, 0, 0, VK_NULL_HANDLE, VK_NULL_HANDLE);
   if (err) dlu_log_me(DLU_WARNING, "[x] failed to create swap chain no surface\n");
 
   FREEME(app, NULL)

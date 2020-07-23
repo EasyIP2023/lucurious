@@ -171,7 +171,12 @@ START_TEST(test_vulkan_client_create_3D) {
     pres_mode, VK_FALSE, VK_NULL_HANDLE
   );
 
-  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info);
+  /* describe what the image's purpose is and which part of the image should be accessed */
+  VkComponentMapping comp_map = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
+  VkImageSubresourceRange img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  VkImageViewCreateInfo img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
+
+  err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info, &img_view_info);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmd, app->pd_data[cur_pd].gfam_idx, 0);
@@ -180,26 +185,15 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   check_err(err, app, wc, NULL)
 
-  /* describe what the image's purpose is and which part of the image should be accessed */
-  VkComponentMapping comp_map = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  VkImageSubresourceRange img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
-  VkImageViewCreateInfo img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, surface_fmt.format, comp_map, img_sub_rr);
-
-  err = dlu_create_image_views(DLU_SC_IMAGE_VIEWS, app, cur_scd, &img_view_info);
-  check_err(err, app, wc, NULL)
-
   VkExtent3D extend3D = {extent2D.width, extent2D.height, DEPTH};
   VkImageCreateInfo img_info = dlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_D16_UNORM, extend3D, 1,
     1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
-  
-  err = dlu_create_depth_buff(app, cur_scd, &img_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  check_err(err, app, wc, NULL)
 
   img_sub_rr = dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1);
-  img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, comp_map, img_sub_rr);
-  dlu_create_image_views(DLU_DEPTH_IMAGE_VIEWS, app, cur_scd, &img_view_info);
+  img_view_info = dlu_set_image_view_info(0, VK_NULL_HANDLE, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, comp_map, img_sub_rr);  
+  err = dlu_create_depth_buff(app, cur_scd, &img_info, &img_view_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_syncs(app, cur_scd);

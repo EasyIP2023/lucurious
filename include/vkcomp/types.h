@@ -65,12 +65,6 @@ typedef enum _dlu_destroy_type {
   DLU_DESTROY_VK_LOGIC_DEVICE = 0x0011 /* Destroy VkDevice Objects */
 } dlu_destroy_type;
 
-typedef enum _dlu_image_view_type {
-  DLU_SC_IMAGE_VIEWS    = 0x0000,    /* Swapchain image views */
-  DLU_TEXT_IMAGE_VIEWS  = 0x0001,  /* Texture image views */
-  DLU_DEPTH_IMAGE_VIEWS = 0x0002 /* Depth Buffer image view */
-} dlu_image_view_type;
-
 typedef enum _dlu_mem_map_type {
   DLU_VK_BUFFER = 0x0000,
   DLU_TEXT_VK_IMAGE = 0x0001
@@ -137,7 +131,7 @@ typedef struct _vkcomp {
       } sem;
     } *syncs;
 
-    /* I might either remove this or keep it here */
+    /* Generally only need one depth buffer for multiple swap chain images */
     struct _depth_buffer {
       VkImage image;
       VkImageView view;

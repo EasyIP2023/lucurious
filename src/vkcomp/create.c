@@ -268,11 +268,13 @@ VkBool32 dlu_create_device_queue(
   return VK_FALSE;
 }
 
+/* This function will eventually be removed */
 VkResult dlu_create_swap_chain(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_scd,
-  VkSwapchainCreateInfoKHR *create_info
+  VkSwapchainCreateInfoKHR *create_info,
+  VkImageViewCreateInfo *ivi
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -300,75 +302,28 @@ VkResult dlu_create_swap_chain(
   res = vkCreateSwapchainKHR(app->ld_data[cur_ld].device, create_info, NULL, &app->sc_data[cur_scd].swap_chain);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateSwapchainKHR"); }
 
+  VkImage *imgs = VK_NULL_HANDLE;
+
+  /**
+  * It's okay to reuse app->sc_data[cur_scd].sic. It'll give same result as minImageCount + 1.
+  * Removal of function will result in validation layer errors
+  */
+  res = vkGetSwapchainImagesKHR(app->ld_data[cur_ld].device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, NULL);
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
+
+  imgs = (VkImage *) alloca(app->sc_data[cur_scd].sic * sizeof(VkImage));
+
+  res = vkGetSwapchainImagesKHR(app->ld_data[cur_ld].device, app->sc_data[cur_scd].swap_chain, &app->sc_data[cur_scd].sic, imgs);
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
+
+  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
+    ivi->image = app->sc_data[cur_scd].sc_buffs[i].image = imgs[i];
+    res = vkCreateImageView(app->ld_data[cur_ld].device, ivi, NULL, &app->sc_data[cur_scd].sc_buffs[i].view);
+    if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
+  }
+
   /* Associate a swapchain with a given VkDevice */
   app->sc_data[cur_scd].ldi = cur_ld;
-
-  return res;
-}
-
-VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_idx, VkImageViewCreateInfo *ivi) {
-  VkResult res = VK_RESULT_MAX_ENUM;
-
-  switch (type) {
-    case DLU_SC_IMAGE_VIEWS:
-      {
-        VkImage *imgs = NULL;
-
-        if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
-        if (!app->sc_data[cur_idx].swap_chain) { PERR(DLU_VKCOMP_SC, 0, NULL); return res; }
-        if (app->sc_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_swap_chain()"); return res; }
-
-        /**
-        * It's okay to reuse app->sc_data[cur_scd].sic. It'll give same result as minImageCount + 1.
-        * Removal of function will result in validation layer errors
-        */
-        res = vkGetSwapchainImagesKHR(app->ld_data[app->sc_data[cur_idx].ldi].device, app->sc_data[cur_idx].swap_chain, &app->sc_data[cur_idx].sic, NULL);
-        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
-
-        imgs = (VkImage *) alloca(app->sc_data[cur_idx].sic * sizeof(VkImage));
-
-        res = vkGetSwapchainImagesKHR(app->ld_data[app->sc_data[cur_idx].ldi].device, app->sc_data[cur_idx].swap_chain, &app->sc_data[cur_idx].sic, imgs);
-        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkGetSwapchainImagesKHR"); return res; }
-
-        for (uint32_t i = 0; i < app->sc_data[cur_idx].sic; i++) {
-          ivi->image = app->sc_data[cur_idx].sc_buffs[i].image = imgs[i];
-          res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, ivi, NULL, &app->sc_data[cur_idx].sc_buffs[i].view);
-          if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
-        }
-      }
-
-      break;
-    case DLU_TEXT_IMAGE_VIEWS:
-      {
-        if (!app->text_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_TEXT_DATA"); return res; }
-        if (app->text_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_texture_image()"); return res; }
-
-        /**
-        * Could set the image inside the VkImageViewCreateInfo struct,
-        * but for reduncy and to ensure the image is correct assigning it here.
-        */
-        ivi->image = app->text_data[cur_idx].image;
-        res = vkCreateImageView(app->ld_data[app->text_data[cur_idx].ldi].device, ivi, NULL, &app->text_data[cur_idx].view);
-        if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView"); return res; }
-      }
-      break;
-    case DLU_DEPTH_IMAGE_VIEWS:
-      {
-        if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
-        if (app->sc_data[cur_idx].ldi == UINT32_MAX) { PERR(DLU_VKCOMP_DEVICE_NOT_ASSOC, 0, "dlu_create_swap_chain()"); return res; }
-        /* ADD Depth Buffer Checking Here */
-
-        if (ivi->format == VK_FORMAT_D16_UNORM_S8_UINT || ivi->format == VK_FORMAT_D24_UNORM_S8_UINT || ivi->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
-          ivi->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-
-        /* Create an image view object for depth buffer */
-        ivi->image = app->sc_data[cur_idx].depth.image;
-        res = vkCreateImageView(app->ld_data[app->sc_data[cur_idx].ldi].device, ivi, NULL, &app->sc_data[cur_idx].depth.view);
-        if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
-      }
-      break;
-    default: break;
-  }
 
   return res;
 }
@@ -377,6 +332,7 @@ VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *ivi,
   VkMemoryPropertyFlags requirements_mask
 ) {
 
@@ -422,8 +378,16 @@ VkResult dlu_create_depth_buff(
   * So offset will always be zero whenever a call to vkBind*Memory is called
   */
   res = vkBindImageMemory(app->ld_data[app->sc_data[cur_scd].ldi].device, app->sc_data[cur_scd].depth.image, app->sc_data[cur_scd].depth.mem, 0);
-  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory")
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
 
+  if (ivi->format == VK_FORMAT_D16_UNORM_S8_UINT || ivi->format == VK_FORMAT_D24_UNORM_S8_UINT || ivi->format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+    ivi->subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+  /* Create an image view object for depth buffer */
+  ivi->image = app->sc_data[cur_scd].depth.image;
+  res = vkCreateImageView(app->ld_data[app->sc_data[cur_scd].ldi].device, ivi, NULL, &app->sc_data[cur_scd].depth.view);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
+ 
   return res;
 }
 
@@ -864,6 +828,7 @@ VkResult dlu_create_texture_image(
   uint32_t cur_ld,
   uint32_t cur_tex,
   VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *ivi,
   VkMemoryPropertyFlags requirements_mask
 ) {
 
@@ -903,7 +868,15 @@ VkResult dlu_create_texture_image(
   * So offset will always be zero whenever a call to vkBind*Memory is called
   */
   res = vkBindImageMemory(app->ld_data[cur_ld].device, app->text_data[cur_tex].image, app->text_data[cur_tex].mem, 0);
-  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory")
+  if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkBindImageMemory"); return res; }
+
+  /**
+  * Could set the image inside the VkImageViewCreateInfo struct,
+  * but for reduncy and to ensure the image is correct assigning it here.
+  */
+  ivi->image = app->text_data[cur_tex].image;
+  res = vkCreateImageView(app->ld_data[cur_ld].device, ivi, NULL, &app->text_data[cur_tex].view);
+  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkCreateImageView")
 
   /* Associate a texture with a given VkDevice */
   app->text_data[cur_tex].ldi = cur_ld;

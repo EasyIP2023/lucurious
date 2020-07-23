@@ -94,12 +94,6 @@ VkBool32 dlu_create_device_queue(
 * Create the actual swap chain used to present images to a surface.
 * Does not check if image count exceeds the max
 */
-VkResult dlu_create_swap_chain(
-  vkcomp *app,
-  uint32_t cur_ld,
-  uint32_t cur_scd,
-  VkSwapchainCreateInfoKHR *create_info
-);
 
 /**
 * Create image views which is the way you communicate to vulkan
@@ -107,7 +101,13 @@ VkResult dlu_create_swap_chain(
 * It creates VkImageView handles for any particular image
 * cur_index: Corresponds to the index of either vkcomp members text_data/sc_data
 */
-VkResult dlu_create_image_views(dlu_image_view_type type, vkcomp *app, uint32_t cur_index, VkImageViewCreateInfo *img_view_info);
+VkResult dlu_create_swap_chain(
+  vkcomp *app,
+  uint32_t cur_ld,
+  uint32_t cur_scd,
+  VkSwapchainCreateInfoKHR *create_info,
+  VkImageViewCreateInfo *ivi
+);
 
 /**
 * Need to depth buffer to render 3D images (only need one)
@@ -119,6 +119,7 @@ VkResult dlu_create_depth_buff(
   vkcomp *app,
   uint32_t cur_scd,
   VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *ivi,
   VkMemoryPropertyFlags requirements_mask
 );
 
@@ -276,6 +277,7 @@ VkResult dlu_create_texture_image(
   uint32_t cur_ld,
   uint32_t cur_tex,
   VkImageCreateInfo *img_info,
+  VkImageViewCreateInfo *ivi,
   VkMemoryPropertyFlags requirements_mask
 );
 
