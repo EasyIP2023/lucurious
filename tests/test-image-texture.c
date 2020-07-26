@@ -218,8 +218,8 @@ START_TEST(test_vulkan_image_texture) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-    VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, img_size, 0, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE,
+    0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
   if (err) {
     stbi_image_free(pixels); pixels = NULL;
@@ -241,21 +241,13 @@ START_TEST(test_vulkan_image_texture) {
 
   /* VK_COMPONENT_SWIZZLE_IDENTITY defined as zero */
   img_view_info.components = dlu_set_component_mapping(VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY);
-  img_view_info.subresourceRange =  dlu_set_image_sub_resource_range(VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0, 1);
 
   uint32_t cur_tex = 0;
-  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, &img_view_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  err = dlu_create_texture_image(app, cur_ld, cur_tex, &img_info, &img_view_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   check_err(err, app, wc, NULL)
-
-  VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
-    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_QUEUE_FAMILY_IGNORED,
-    VK_QUEUE_FAMILY_IGNORED, app->text_data[cur_tex].image, img_sub_rr
-  );
 
   VkCommandBuffer cmd_buff = dlu_exec_begin_single_time_cmd_buff(app, cur_pool);
   check_err(!cmd_buff, app, wc, NULL)
-
-  dlu_log_me(DLU_WARNING, "cmd_buff: %p", cmd_buff);
 
   app->dbg_utils_set_object_name(app->ld_data[cur_ld].device, &(VkDebugUtilsObjectNameInfoEXT) {
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
@@ -281,6 +273,11 @@ START_TEST(test_vulkan_image_texture) {
     .pLabelName = "Inside VkPipelineBarrier Command Buffer",
     .color[0] = 0.0f, .color[1] = 0.0f, .color[2] = 0.0f, .color[3] = 0.0f
   });
+
+  VkImageMemoryBarrier barrier = dlu_set_image_mem_barrier(0, VK_ACCESS_TRANSFER_WRITE_BIT,
+    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_QUEUE_FAMILY_IGNORED,
+    VK_QUEUE_FAMILY_IGNORED, app->text_data[cur_tex].image, img_sub_rr
+  );
 
   /* Using image memory barrier to perform layout transitions */
   dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
@@ -367,10 +364,10 @@ START_TEST(test_vulkan_image_texture) {
   VkSubpassDescription subpass = dlu_set_subpass_desc(0, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_attachment_ref, NULL, NULL, 0, NULL);
 
   VkSubpassDependency subdep = dlu_set_subpass_dep(VK_SUBPASS_EXTERNAL, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
-  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);
+  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep, 0);
   check_err(err, app, wc, NULL)
 
   dlu_log_me(DLU_SUCCESS, "Successfully created render pass");
@@ -411,9 +408,6 @@ START_TEST(test_vulkan_image_texture) {
   );
 
   VkPipelineShaderStageCreateInfo shader_stages[2] = { vert_shader_stage_info, frag_shader_stage_info };
-  VkDynamicState dynamic_states[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
-
-  VkPipelineDynamicStateCreateInfo dynamic_state = dlu_set_dynamic_state_info(2, dynamic_states);
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly = dlu_set_input_assembly_state_info(0, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
@@ -447,7 +441,7 @@ START_TEST(test_vulkan_image_texture) {
   err = dlu_create_graphics_pipelines(app, cur_gpd, ARR_LEN(shader_stages), shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+    VK_NULL_HANDLE, 0, VK_NULL_HANDLE, UINT32_MAX
   );
   check_err(err, NULL, NULL, vert_shader_module)
   check_err(err, app, wc, frag_shader_module)
@@ -459,10 +453,10 @@ START_TEST(test_vulkan_image_texture) {
 
   /* Start of buffer for vertex */
   vertex_text_2D tvertices[4] = {    
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
   };
 
   VkDeviceSize vsize = sizeof(tvertices);
@@ -474,9 +468,9 @@ START_TEST(test_vulkan_image_texture) {
   const VkDeviceSize offsets[] = {0, vsize, vsize+isize};
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    dlu_log_me(DLU_INFO, "Position Coordinates"); dlu_print_vector(DLU_VEC2, &tvertices[i].pos);
-    dlu_log_me(DLU_INFO, "Color Coordinates"); dlu_print_vector(DLU_VEC3, &tvertices[i].color);
-    dlu_log_me(DLU_INFO, "Text Coordinates"); dlu_print_vector(DLU_VEC2, &tvertices[i].tex_coord);
+    dlu_log_me(DLU_INFO, "Position Coordinates"); dlu_print_vector(DLU_VEC2, tvertices[i].pos);
+    dlu_log_me(DLU_INFO, "Color Coordinates"); dlu_print_vector(DLU_VEC3, tvertices[i].color);
+    dlu_log_me(DLU_INFO, "Text Coordinates"); dlu_print_vector(DLU_VEC2, tvertices[i].tex_coord);
   }
 
   struct uniform_block_data ubd;
@@ -521,7 +515,7 @@ START_TEST(test_vulkan_image_texture) {
   pool_sizes[0] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
   pool_sizes[1] = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1);
 
-  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, ARR_LEN(pool_sizes), pool_sizes);
+  err = dlu_create_desc_pool(app, cur_ld, cur_dd, ARR_LEN(pool_sizes), pool_sizes, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_desc_sets(app, cur_dd);
@@ -540,9 +534,7 @@ START_TEST(test_vulkan_image_texture) {
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
   VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], sizeof(struct uniform_block_data));
-  VkDescriptorImageInfo desc_img_info = dlu_set_desc_img_info(app->text_data[cur_tex].sampler,
-    app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-  );
+  VkDescriptorImageInfo desc_img_info = dlu_set_desc_img_info(app->text_data[cur_tex].sampler, app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   /* set uniform buffer VKBufferInfo and uniform texture ImageInfo */
   VkWriteDescriptorSet writes[2];
@@ -551,28 +543,12 @@ START_TEST(test_vulkan_image_texture) {
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    app->dbg_utils_set_object_name(app->ld_data[cur_ld].device, &(VkDebugUtilsObjectNameInfoEXT) {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-        .pNext = NULL,
-        .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
-        .objectHandle = (uint64_t) app->cmd_data[0].cmd_buffs[i],
-        .pObjectName = "vkCmdCopyBufferToImage"
-      }
-    );
-
-    app->dbg_utils_cmd_begin(app->cmd_data[0].cmd_buffs[i], &(VkDebugUtilsLabelEXT) {
-      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
-      .pNext = NULL,
-      .pLabelName = "Inside Bind and Draw",
-      .color[0] = 0.0f, .color[1] = 0.0f, .color[2] = 0.0f, .color[3] = 0.0f
-    });
-
-    dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
+    dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     dlu_bind_pipeline(app, cur_pool, i, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
     dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[0].buff, offsets);
     dlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, cur_bd, offsets[1], VK_INDEX_TYPE_UINT16);
     dlu_bind_desc_sets(app, cur_pool, i, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
-    dlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
+    dlu_exec_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);
@@ -605,15 +581,6 @@ START_TEST(test_vulkan_image_texture) {
     err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[1], 0);
     check_err(err, app, wc, NULL)
 
-    /* Check if a previous frame is using image */
-    if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
-      err = dlu_vk_sync(DLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
-      check_err(err, app, wc, NULL)
-    }
-
-    /* Mark the image as being in use by current frame */
-    app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
-
     /* set fence to unsignal state */
     err = dlu_vk_sync(DLU_VK_RESET_RENDER_FENCE, app, cur_scd, cur_frame);
     check_err(err, app, wc, NULL)
@@ -626,8 +593,6 @@ START_TEST(test_vulkan_image_texture) {
 
     cur_frame = (cur_frame + 1) % MAX_FRAMES;
   }
-
-  for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) app->dbg_utils_cmd_end(app->cmd_data[0].cmd_buffs[i]);
 
   FREEME(app, wc)
 } END_TEST;

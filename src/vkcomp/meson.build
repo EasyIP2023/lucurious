@@ -25,7 +25,7 @@
 libvulkan = dependency('vulkan', required: true)
 
 vkcomp_files = [
-  'create.c', 'device.c', 'display.c', 'exec.c', 'bind.c', 'cmd.c', 'update.c', 
+  'create.c', 'device.c', 'display.c', 'exec.c', 'bind.c', 'update.c', 
   'setup.c', 'utils.c', 'vlayer.c', 'vk_calls.c'
 ]
 

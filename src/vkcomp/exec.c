@@ -206,3 +206,54 @@ VkResult dlu_exec_stop_cmd_buffs(vkcomp *app, uint32_t cur_pool, uint32_t cur_sc
 
   return res;
 }
+
+void dlu_exec_cmd_draw(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t vertexCount,
+  uint32_t instanceCount,
+  uint32_t firstVertex,
+  uint32_t firstInstance
+) {
+
+  vkCmdDraw(app->cmd_data[cur_pool].cmd_buffs[cur_buff], vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+void dlu_exec_cmd_draw_indexed(
+  vkcomp *app,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t indexCount,
+  uint32_t instanceCount,
+  uint32_t firstIndex,
+  int32_t vertexOffset,
+  uint32_t firstInstance
+) {
+
+  vkCmdDrawIndexed(app->cmd_data[cur_pool].cmd_buffs[cur_buff], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+}
+
+void dlu_exec_cmd_set_viewport(
+  vkcomp *app,
+  VkViewport *viewport,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t firstViewport,
+  uint32_t viewportCount
+) {
+
+  vkCmdSetViewport(app->cmd_data[cur_pool].cmd_buffs[cur_buff], firstViewport, viewportCount, viewport);
+}
+
+void dlu_exec_cmd_set_scissor(
+  vkcomp *app,
+  VkRect2D *scissor,
+  uint32_t cur_pool,
+  uint32_t cur_buff,
+  uint32_t firstScissor,
+  uint32_t scissorCount
+) {
+
+  vkCmdSetScissor(app->cmd_data[cur_pool].cmd_buffs[cur_buff], firstScissor, scissorCount, scissor);
+}

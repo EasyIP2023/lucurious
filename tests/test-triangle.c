@@ -178,7 +178,7 @@ START_TEST(test_vulkan_client_create) {
     0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
-  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep);
+  err = dlu_create_render_pass(app, cur_gpd, 1, &color_attachment, 1, &subpass, 1, &subdep, 0);
   check_err(err, app, wc, NULL)
 
   dlu_log_me(DLU_SUCCESS, "Successfully created render pass");
@@ -349,12 +349,12 @@ START_TEST(test_vulkan_client_create) {
 
   /* Drawing will start when you begin a render pass */
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
-  dlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
+  dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
 
   dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
   const VkDeviceSize offsets = 0;
   dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, &offsets);
-  dlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
+  dlu_exec_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);
   err = dlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);

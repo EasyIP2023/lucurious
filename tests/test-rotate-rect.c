@@ -209,7 +209,7 @@ START_TEST(test_vulkan_rotate_rect) {
     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0
   );
 
-  err = dlu_create_render_pass(app, cur_gpd, 1, &attachment, 1, &subpass, 1, &subdep);
+  err = dlu_create_render_pass(app, cur_gpd, 1, &attachment, 1, &subpass, 1, &subdep, 0);
   check_err(err, app, wc, NULL)
 
   dlu_log_me(DLU_SUCCESS, "Successfully created render pass");
@@ -254,13 +254,6 @@ START_TEST(test_vulkan_rotate_rect) {
     vert_shader_stage_info, frag_shader_stage_info
   };
 
-  VkDynamicState dynamic_states[2] = {
-    VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_LINE_WIDTH
-  };
-
-  VkPipelineDynamicStateCreateInfo dynamic_state = dlu_set_dynamic_state_info(2, dynamic_states);
-
   VkPipelineInputAssemblyStateCreateInfo input_assembly = dlu_set_input_assembly_state_info(0, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
   VkViewport viewport = dlu_set_view_port(0.0f, 0.0f, (float) extent2D.width, (float) extent2D.height, 0.0f, 1.0f);
@@ -293,7 +286,7 @@ START_TEST(test_vulkan_rotate_rect) {
   err = dlu_create_graphics_pipelines(app, cur_gpd, ARR_LEN(shader_stages), shader_stages,
     &vertex_input_info, &input_assembly, VK_NULL_HANDLE, &view_port_info,
     &rasterizer, &multisampling, VK_NULL_HANDLE, &color_blending,
-    &dynamic_state, 0, VK_NULL_HANDLE, UINT32_MAX
+    VK_NULL_HANDLE, 0, VK_NULL_HANDLE, UINT32_MAX
   );
   check_err(err, NULL, NULL, vert_shader_module)
   check_err(err, app, wc, frag_shader_module)
@@ -320,8 +313,8 @@ START_TEST(test_vulkan_rotate_rect) {
   const VkDeviceSize offsets[] = {0, vsize, vsize+isize};
 
   for (uint32_t i = 0; i < vertex_count; i++) {
-    dlu_print_vector(DLU_VEC2, &rr_vertices[i].pos);
-    dlu_print_vector(DLU_VEC3, &rr_vertices[i].color);
+    dlu_print_vector(DLU_VEC2, rr_vertices[i].pos);
+    dlu_print_vector(DLU_VEC3, rr_vertices[i].color);
   }
 
   /**
@@ -353,7 +346,7 @@ START_TEST(test_vulkan_rotate_rect) {
   check_err(err, app, wc, NULL)
 
   VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
-  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);
+  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 1, &pool_size, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_desc_sets(app, cur_dd);
@@ -379,12 +372,12 @@ START_TEST(test_vulkan_rotate_rect) {
   dlu_update_desc_sets(app->ld_data[cur_ld].device, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {
-    dlu_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
+    dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, i, 0, 1);
     dlu_bind_pipeline(app, cur_pool, i, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
     dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, i, 0, 1, &app->buff_data[0].buff, offsets);
     dlu_bind_index_buff_to_cmd_buff(app, cur_pool, i, cur_bd, offsets[1], VK_INDEX_TYPE_UINT16);
     dlu_bind_desc_sets(app, cur_pool, i, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
-    dlu_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
+    dlu_exec_cmd_draw_indexed(app, cur_pool, i, index_count, 1, 0, offsets[0], 0);
   }
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);
@@ -425,15 +418,6 @@ START_TEST(test_vulkan_rotate_rect) {
 
     err = dlu_vk_map_mem(DLU_VK_BUFFER, app, cur_bd, sizeof(struct uniform_block_data), &ubd, offsets[2], 0);
     check_err(err, app, wc, NULL)
-
-    /* Check if a previous frame is using image */
-    if (app->sc_data[cur_scd].syncs[img_index].fence.image) {
-      err = dlu_vk_sync(DLU_VK_WAIT_IMAGE_FENCE, app, cur_scd, cur_frame);
-      check_err(err, app, wc, NULL)
-    }
-
-    /* Mark the image as being in use by current frame */
-    app->sc_data[cur_scd].syncs[img_index].fence.image = app->sc_data[cur_scd].syncs[cur_frame].fence.render;
 
     /* set fence to unsignal state */
     err = dlu_vk_sync(DLU_VK_RESET_RENDER_FENCE, app, cur_scd, cur_frame);

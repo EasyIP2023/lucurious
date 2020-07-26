@@ -201,7 +201,8 @@ VkResult dlu_create_render_pass(
   uint32_t subpassCount,
   const VkSubpassDescription *pSubpasses,
   uint32_t dependencyCount,
-  const VkSubpassDependency *pDependencies
+  const VkSubpassDependency *pDependencies,
+  VkRenderPassCreateFlagBits flags
 );
 
 VkResult dlu_create_graphics_pipelines(
@@ -253,9 +254,9 @@ VkResult dlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_dd,
-  VkDescriptorPoolCreateFlags flags,
   uint32_t psize,
-  VkDescriptorPoolSize *pool_sizes
+  VkDescriptorPoolSize *pool_sizes,
+  VkDescriptorPoolCreateFlags flags
 );
 
 /**

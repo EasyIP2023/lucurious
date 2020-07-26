@@ -279,7 +279,6 @@ VkResult dlu_create_swap_chain(
 
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (!app->surface) { PERR(DLU_VKCOMP_SURFACE, 0, NULL); return res; }
   if (!app->sc_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_SC_DATA"); return res; }
   if (!app->ld_data[cur_ld].device) { PERR(DLU_VKCOMP_DEVICE, 0, NULL); return res; }
 
@@ -606,7 +605,8 @@ VkResult dlu_create_render_pass(
   uint32_t subpassCount,
   const VkSubpassDescription *pSubpasses,
   uint32_t dependencyCount,
-  const VkSubpassDependency *pDependencies
+  const VkSubpassDependency *pDependencies,
+  VkRenderPassCreateFlagBits flags
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;
@@ -618,7 +618,7 @@ VkResult dlu_create_render_pass(
   VkRenderPassCreateInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   render_pass_info.pNext = NULL;
-  render_pass_info.flags = 0;
+  render_pass_info.flags = flags;
   render_pass_info.attachmentCount = attachmentCount;
   render_pass_info.pAttachments = pAttachments;
   render_pass_info.subpassCount = subpassCount;
@@ -768,9 +768,9 @@ VkResult dlu_create_desc_pool(
   vkcomp *app,
   uint32_t cur_ld,
   uint32_t cur_dd,
-  VkDescriptorPoolCreateFlags flags,
   uint32_t psize,
-  VkDescriptorPoolSize *pool_sizes
+  VkDescriptorPoolSize *pool_sizes,
+  VkDescriptorPoolCreateFlags flags
 ) {
 
   VkResult res = VK_RESULT_MAX_ENUM;

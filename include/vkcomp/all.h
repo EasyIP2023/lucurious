@@ -29,7 +29,6 @@
 #include "exec.h"
 #include "set.h"
 #include "bind.h"
-#include "cmd.h"
 #include "update.h"
 #include "display.h"
 #include "setup.h"

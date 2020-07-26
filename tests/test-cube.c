@@ -260,7 +260,7 @@ START_TEST(test_vulkan_client_create_3D) {
   VkAttachmentReference depth_ref = dlu_set_attachment_ref(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
   VkSubpassDescription subpass = dlu_set_subpass_desc(0, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL, 1, &color_ref, NULL, &depth_ref, 0, NULL);
 
-  err = dlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL);
+  err = dlu_create_render_pass(app, cur_gpd, 2, attachments, 1, &subpass, 0, NULL, 0);
   check_err(err, app, wc, NULL)
 
   dlu_log_me(DLU_SUCCESS, "Successfully created the render pass!!!");
@@ -383,7 +383,7 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(err, app, wc, NULL)
 
   VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
-  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 0, 1, &pool_size);
+  err = dlu_create_desc_pool(app, cur_ld, cur_dd, 1, &pool_size, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_desc_sets(app, cur_dd);
@@ -412,9 +412,9 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
 
   dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[0].buff, offsets);
-  dlu_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
-  dlu_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
-  dlu_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
+  dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
+  dlu_exec_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
+  dlu_exec_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);
   err = dlu_exec_stop_cmd_buffs(app, cur_pool, cur_scd);
