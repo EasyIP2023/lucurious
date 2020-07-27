@@ -40,12 +40,10 @@ void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
   va_list args; /* type that holds variable arguments */
 
   /* create message time stamp */
-  struct tm result;
-  time_t t = time(NULL);
-  struct tm *tm_info = localtime_r(&t, &result);
+  time_t rawtime = time(NULL);
 
   /* generate time */
-  strftime(buffer, sizeof(buffer), "%F %T - ", tm_info);
+  strftime(buffer, sizeof(buffer), "%F %T - ", localtime_r(&rawtime, &(struct tm){}));
   fprintf(stream, "%s", buffer);
 
   /* Set terminal color */

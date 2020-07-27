@@ -11,8 +11,8 @@ Lucurious (L) Lowkey (U) unsure and curious if this is even possible, but why st
 sophisticated and advanced [Vulkan](https://www.khronos.org/vulkan/) DRM renderers. These renderers allow for easy creation of interactable single application
 compositors that appear to be straight out of science fiction.
 
-## Needed Implementations
-* [Implement VK_EXT_image_drm_format_modifier in mesa](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466)
+## What I am currently thinking
+* [ISSUE: Remove VkSurfaceKHR and SwapChain Extension code](https://github.com/EasyIP2023/lucurious/issues/40)
 
 ## Dependencies
 * vulkan (Install your graphics card driver)

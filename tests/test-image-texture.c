@@ -280,7 +280,7 @@ START_TEST(test_vulkan_image_texture) {
   );
 
   /* Using image memory barrier to perform layout transitions */
-  dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
+  dlu_exec_pipeline_barrier(VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier, cmd_buff);
 
   /** 
   * If one were to choose to map the jpg, png, etc.. directly into a textures bounded VkDeviceMemory (Staging Image)
