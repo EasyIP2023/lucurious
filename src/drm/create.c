@@ -271,10 +271,9 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
 }
 
 bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_od, uint32_t format) {
-  bool ret = true;
 
-  if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); return !ret; }
-  if (!core->device.gbm_device) { dlu_log_me(DLU_DANGER, "[x] GBM device not created");  return !ret; }
+  if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); goto err_bo; }
+  if (!core->device.gbm_device) { dlu_log_me(DLU_DANGER, "[x] GBM device not created");  goto err_bo; }
 
   core->buff_data[cur_bi].odid = cur_od;
   
@@ -291,12 +290,37 @@ bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cu
   }
 
   if (!core->buff_data[cur_bi].bo) {
-    dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[cur_od].mode.hdisplay,
-                                                                           core->output_data[cur_od].mode.vdisplay);
-    ret = false;
+    dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay);
+    goto err_bo;
   } else {
     dlu_log_me(DLU_SUCCESS, "Successfully created gbm_bo"); 
   }
 
-  return ret;
+  core->buff_data[cur_bi].num_planes = gbm_bo_get_plane_count(core->buff_data[cur_bi].bo);
+  core->buff_data[cur_bi].modifier = gbm_bo_get_modifier(core->buff_data[cur_bi].bo);
+  core->buff_data[cur_bi].format = format;
+
+  for (uint32_t i = 0; i < core->buff_data[cur_bi].num_planes; i++) {
+    union gbm_bo_handle h;
+
+    h = gbm_bo_get_handle_for_plane(core->buff_data[cur_bi].bo, i);
+    if (!h.u32 || h.s32 == NEG_ONE) {
+      dlu_log_me(DLU_DANGER, "[x] failed to get BO plane gem handle %d (modifier 0x%" PRIx64 ")", i, core->buff_data[cur_bi].modifier);
+      goto err_bo;
+    }
+
+    core->buff_data[cur_bi].plane_data[i].gem_handle = h.u32;
+
+    core->buff_data[cur_bi].plane_data[i].pitch = gbm_bo_get_stride_for_plane(core->buff_data[cur_bi].bo, i);
+    if (!core->buff_data[cur_bi].plane_data[i].pitch) {
+      dlu_log_me(DLU_DANGER, "[x] failed to get stride/pitch for BO plane %d (modifier 0x%" PRIx64 ")", i, core->buff_data[cur_bi].modifier);
+      goto err_bo;
+    }
+
+    core->buff_data[cur_bi].plane_data[i].offset = gbm_bo_get_offset(core->buff_data[cur_bi].bo, i);
+  }
+
+  return true;
+err_bo:
+  return false;
 }

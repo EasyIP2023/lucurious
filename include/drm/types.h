@@ -144,8 +144,25 @@ typedef struct _dlu_drm_core {
     uint32_t odid; /* Output Device ID */ 
     struct gbm_bo *bo;
 
+    /**
+    * The format of an image details a each pixel is laid out in memory: (i.e. RAM, VRAM, etc...)
+    * The width of each color channel in bits, type, and the ordering.
+    * The modifier details information on how pixels should be within a buffer for different types
+    * operations such as scan out or rendering. (i.e linear, tiled, compressed, etc...)
+    */
+    uint32_t format;
+    uint64_t modifier;
+
     /* true if a buffer (scan out buffer) is currently owned by KMS. */ 
     bool in_use;
+  
+    /* Generally four planes */
+    uint32_t num_planes;
+    struct _plane_data {
+      unsigned pitch;
+      unsigned offset;
+      uint64_t gem_handle;
+    } plane_data[4];
   } *buff_data;
 
   /**
