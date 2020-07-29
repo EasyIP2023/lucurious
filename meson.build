@@ -24,19 +24,19 @@
 
 project(
   'lucurious',
-  'c',
+  'c', 'cpp',
   version: '0.0.2',
   license: 'MIT',
   meson_version: '>=0.54.0',
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
-    'werror=true',
+    'werror=false',
+    'optimization=2'
   ],
 )
 
 so_version = ['1']
-
 cc = meson.get_compiler('c')
 
 add_project_arguments(
@@ -51,14 +51,15 @@ lucur_inc = include_directories('include', '/usr/include/libdrm')
 
 subdir('include')
 subdir('src')
+subdir('external')
 
 lucur_parts = [
   lib_utils, lib_shade,
   lib_math, lib_vkcomp,
-  lib_ldrm
+  lib_drm
 ]
 
-lib_lucur = shared_library(
+lib_lucur = library(
   meson.project_name(),
   version: '.'.join(so_version),
   link_whole: lucur_parts,

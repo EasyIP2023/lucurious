@@ -31,7 +31,7 @@
 #define LUCUR_CLOCK_API
 #define CLOCK_MONOTONIC
 
-#define LUCUR_TEXTURE_API
+#define LUCUR_STBI_API
 #define STB_IMAGE_IMPLEMENTATION
 #include <lucom.h>
 

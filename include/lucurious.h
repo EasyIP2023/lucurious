@@ -54,8 +54,13 @@
 #include "vkcomp/all.h"
 #endif
  
-#ifdef LUCUR_TEXTURE_API
+#ifdef LUCUR_STBI_API
 #include "stb_image.h"
+#endif
+
+#ifdef LUCUR_KTX_KHR_API
+#include <ktx.h>
+#include <ktxvulkan.h>
 #endif
 
 #endif

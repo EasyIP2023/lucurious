@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2019-2020 Vincent Davis Jr.
+# Copyright (c) 2019 Vincent Davis Jr.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,4 @@
 # THE SOFTWARE.
 #
 
-libdrm = dependency('libdrm', required: true)
-libinput = dependency('libinput', required: true)
-libgbm = dependency('gbm', required: true)
-libsystemd = dependency('libsystemd', required: true)
-libudev = dependency('libudev', required: true)
-
-fs = [
-  'setup.c', 'create.c', 'logind.c',
-  'info.c', 'device.c', 'edid.c'
-]
-
-lib_drm = static_library(
-  'ldrm', files(fs), include_directories: lucur_inc,
-  dependencies: [libdrm, libgbm, libinput, libsystemd, libudev]
-)
+subdir('ktx')

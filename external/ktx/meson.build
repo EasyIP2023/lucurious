@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2019-2020 Vincent Davis Jr.
+# Copyright (c) 2019 Vincent Davis Jr.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,51 @@
 # THE SOFTWARE.
 #
 
-libdrm = dependency('libdrm', required: true)
-libinput = dependency('libinput', required: true)
-libgbm = dependency('gbm', required: true)
-libsystemd = dependency('libsystemd', required: true)
-libudev = dependency('libudev', required: true)
+# Install libktx headers
+ktx_dir = '/usr/include/'
+install_headers('include/ktx.h', install_dir: ktx_dir)
+install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
 
 fs = [
-  'setup.c', 'create.c', 'logind.c',
-  'info.c', 'device.c', 'edid.c'
+  'lib/checkheader.c',
+  'lib/errstr.c',
+  'lib/etcdec.cxx',
+  'lib/etcunpack.cxx',
+  'lib/filestream.c',
+  'lib/filestream.h',
+  'lib/gl_format.h',
+  'lib/gl_funcptrs.h',
+  'lib/gles1_funcptrs.h',
+  'lib/gles2_funcptrs.h',
+  'lib/gles3_funcptrs.h',
+  # 'lib/glloader.c',
+  'lib/hashlist.c',
+  'lib/hashtable.c',
+  'lib/ktxgl.h',
+  'lib/ktxint.h',
+  'lib/memstream.c',
+  'lib/memstream.h',
+  'lib/stream.h',
+  'lib/swap.c',
+  'lib/texture.c',
+  'lib/uthash.h',
+  'lib/writer.c',
+  'lib/writer_v1.c',
+  'lib/vk_format.h',
+  'lib/vkloader.c',
+  'lib/vk_funcs.c',
+  'lib/vk_funcs.h'
 ]
 
-lib_drm = static_library(
-  'ldrm', files(fs), include_directories: lucur_inc,
-  dependencies: [libdrm, libgbm, libinput, libsystemd, libudev]
+# libopengl = dependency('opengl', required: true)
+
+lib_ktx = library(
+  'ktx',
+  files(fs),
+  version: '2.0',
+  c_args: ['-D_DEBUG'],
+  include_directories: ['include', 'other_include'],
+  dependencies: [libvulkan],
+  install_dir: '/usr/lib',
+  install: true
 )
