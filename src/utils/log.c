@@ -28,10 +28,10 @@
 /* ANSI Escape Codes */
 static const char *term_colors[] = {
   [DLU_NONE]    = "",
-  [DLU_SUCCESS] = "\x1B[32;1m",
-  [DLU_DANGER]  = "\x1B[31;1m",
-  [DLU_INFO]    = "\x1B[30;1m",
-  [DLU_WARNING] = "\x1B[33;1m",
+  [DLU_SUCCESS] = "\e[32;1m",
+  [DLU_DANGER]  = "\e[31;1m",
+  [DLU_INFO]    = "\e[37;1m",
+  [DLU_WARNING] = "\e[33;1m",
   [DLU_RESET]   = "\x1b[0m"
 };
 

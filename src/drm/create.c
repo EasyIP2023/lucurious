@@ -305,7 +305,7 @@ bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cu
 
     h = gbm_bo_get_handle_for_plane(core->buff_data[cur_bi].bo, i);
     if (!h.u32 || h.s32 == NEG_ONE) {
-      dlu_log_me(DLU_DANGER, "[x] failed to get BO plane gem handle %d (modifier 0x%" PRIx64 ")", i, core->buff_data[cur_bi].modifier);
+      dlu_log_me(DLU_DANGER, "[x] failed to get BO plane %d gem handle (modifier 0x%" PRIx64 ")", i, core->buff_data[cur_bi].modifier);
       goto err_bo;
     }
 

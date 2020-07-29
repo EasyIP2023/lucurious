@@ -292,6 +292,8 @@ START_TEST(test_vulkan_client_create) {
   VkDeviceSize vsize = sizeof(tri_verts);
   const uint32_t vertex_count = ARR_LEN(tri_verts);
 
+  const VkDeviceSize offsets[1] = {0};
+
   for (uint32_t i = 0; i < vertex_count; i++) {
     dlu_print_vector(DLU_VEC2, &tri_verts[i].pos);
     dlu_print_vector(DLU_VEC3, &tri_verts[i].color);
@@ -349,11 +351,10 @@ START_TEST(test_vulkan_client_create) {
 
   /* Drawing will start when you begin a render pass */
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
+ 
   dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
-
   dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
-  const VkDeviceSize offsets = 0;
-  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[1].buff, &offsets);
+  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, cur_bd-1, 0, offsets);
   dlu_exec_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);

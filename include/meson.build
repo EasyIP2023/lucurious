@@ -24,6 +24,7 @@
 
 i_dir = '/usr/include/dluc/'
 install_headers('lucurious.h', install_dir: i_dir)
+install_headers('stb_image.h', install_dir: i_dir)
 
 ##########################
 # Installing DRM headers #

@@ -34,11 +34,9 @@ void mat3_print(mat3 mat) {
 
   for (uint32_t i = 0; i < mat_num; i++) {
     for (uint32_t j = 0; j < mat_num; j++)
-      fprintf(stdout, "\x1B[30;1m" "|\t%0.4f\t", mat[i][j]);
-    fprintf(stdout, "\n");
+      dlu_print_msg(DLU_INFO, "|\t%0.4f\t", mat[i][j]);
+    dlu_print_msg(DLU_NONE, "\n");
   }
-
-  fprintf(stdout, "\x1b[0m" "\n");
 }
 
 void mat4_print(mat4 mat) {
@@ -48,11 +46,9 @@ void mat4_print(mat4 mat) {
 
   for (uint32_t i = 0; i < mat_num; i++) {
     for (uint32_t j = 0; j < mat_num; j++)
-      fprintf(stdout, "\x1B[30;1m" "|\t%0.3f\t", mat[i][j]);
-    fprintf(stdout, " |\n");
+      dlu_print_msg(DLU_INFO, "|\t%0.3f\t", mat[i][j]);
+    dlu_print_msg(DLU_INFO, " |\n");
   }
-
-  fprintf(stdout, "\x1b[0m" "\n");
 }
 
 void vec_print(vec2 vec, dlu_vec_type type) {
@@ -61,10 +57,8 @@ void vec_print(vec2 vec, dlu_vec_type type) {
   dlu_log_me(DLU_WARNING, "%dD vector:\n", vec_num);
 
   for (int i = 0; i < vec_num; i++)
-    fprintf(stdout, "\x1B[30;1m" "|\t%0.3f\t", vec[i]);
-  fprintf(stdout, "|\n");
-
-  fprintf(stdout, "\x1b[0m" "\n");
+    dlu_print_msg(DLU_INFO, "|\t%0.3f\t", vec[i]);
+  dlu_print_msg(DLU_INFO, "|\n");
 }
 
 void dlu_print_vector(dlu_vec_type type, void *vector) {

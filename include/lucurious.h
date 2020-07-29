@@ -53,5 +53,9 @@
 #include "vkcomp/types.h"
 #include "vkcomp/all.h"
 #endif
+ 
+#ifdef LUCUR_TEXTURE_API
+#include "stb_image.h"
+#endif
 
 #endif

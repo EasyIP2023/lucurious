@@ -146,7 +146,7 @@ typedef struct _dlu_drm_core {
 
     /**
     * The format of an image details a each pixel is laid out in memory: (i.e. RAM, VRAM, etc...)
-    * The width of each color channel in bits, type, and the ordering.
+    * The width in bits, type, and ordering of each pixels color channels.
     * The modifier details information on how pixels should be within a buffer for different types
     * operations such as scan out or rendering. (i.e linear, tiled, compressed, etc...)
     */
@@ -156,13 +156,19 @@ typedef struct _dlu_drm_core {
     /* true if a buffer (scan out buffer) is currently owned by KMS. */ 
     bool in_use;
   
-    /* Generally four planes */
+    /* Generally four (BO, framebuffer, image) planes */
     uint32_t num_planes;
     struct _plane_data {
       unsigned pitch;
       unsigned offset;
       uint64_t gem_handle;
     } plane_data[4];
+
+    /**
+    * GEM buffers are wrapped by framebuffer. These framebuffers are passed to KMS for display.
+    * These framebuffers contain metadata i.e image resolution 
+    */    
+    uint32_t fb_id;
   } *buff_data;
 
   /**

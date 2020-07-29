@@ -49,9 +49,8 @@ void dlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
+  uint32_t cur_bd,
   uint32_t firstBinding,
-  uint32_t bindingCount,
-  const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 );
 

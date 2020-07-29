@@ -58,13 +58,13 @@ void dlu_bind_vertex_buffs_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
+  uint32_t cur_bd,
   uint32_t firstBinding,
-  uint32_t bindingCount,
-  const VkBuffer *pBuffers,
   const VkDeviceSize *offsets
 ) {
 
-  vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff], firstBinding, bindingCount, pBuffers, offsets);
+  /* The only way the offsets variable makes since is to bind one VkBuffer to a command buffer */ 
+  vkCmdBindVertexBuffers(app->cmd_data[cur_pool].cmd_buffs[cur_buff], firstBinding, 1, &app->buff_data[cur_bd].buff, offsets);
 }
 
 void dlu_bind_index_buff_to_cmd_buff(

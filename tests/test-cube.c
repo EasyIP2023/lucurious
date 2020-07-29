@@ -411,7 +411,7 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
   dlu_bind_desc_sets(app, cur_pool, cur_buff, cur_gpd, cur_dd, VK_PIPELINE_BIND_POINT_GRAPHICS, 0, NULL);
 
-  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, 0, 1, &app->buff_data[0].buff, offsets);
+  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, cur_bd, 0, offsets);
   dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   dlu_exec_cmd_set_scissor(app, &scissor, cur_pool, cur_buff, 0, 1);
   dlu_exec_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
