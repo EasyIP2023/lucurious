@@ -354,7 +354,7 @@ START_TEST(test_vulkan_client_create) {
  
   dlu_exec_cmd_set_viewport(app, &viewport, cur_pool, cur_buff, 0, 1);
   dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);
-  dlu_bind_vertex_buffs_to_cmd_buff(app, cur_pool, cur_buff, cur_bd-1, 0, offsets);
+  dlu_bind_vertex_buff_to_cmd_buff(app, cur_pool, cur_buff, cur_bd-1, 0, offsets);
   dlu_exec_cmd_draw(app, cur_pool, cur_buff, vertex_count, 1, 0, 0);
 
   dlu_exec_stop_render_pass(app, cur_pool, cur_scd);

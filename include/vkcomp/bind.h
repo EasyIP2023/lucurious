@@ -45,7 +45,7 @@ void dlu_bind_desc_sets(
   const uint32_t *pDynamicOffsets
 );
 
-void dlu_bind_vertex_buffs_to_cmd_buff(
+void dlu_bind_vertex_buff_to_cmd_buff(
   vkcomp *app,
   uint32_t cur_pool,
   uint32_t cur_buff,
