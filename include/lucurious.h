@@ -60,7 +60,6 @@
 
 #ifdef LUCUR_KTX_KHR_API
 #include <ktx.h>
-#include <ktxvulkan.h>
 #endif
 
 #endif

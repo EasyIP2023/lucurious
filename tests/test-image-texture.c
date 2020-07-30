@@ -33,6 +33,7 @@
 
 #define LUCUR_STBI_API
 #define STB_IMAGE_IMPLEMENTATION
+// #define LUCUR_KTX_KHR_API
 #include <lucom.h>
 
 #include "wayland/client.h"
@@ -211,6 +212,10 @@ START_TEST(test_vulkan_image_texture) {
 
   img_extent.width = pw; img_extent.height = ph; img_extent.depth = 1;
   img_size = img_extent.width * img_extent.height * (requested_channels <= 0 ? pchannels : requested_channels);
+
+  // ktxResult result;
+  // ktxTexture* ktxTexture;
+  // result = ktxTexture_CreateFromMemory((unsigned char *) picture.bytes,  picture.byte_size, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
 
   /**
   * The buffer is a staging host visible memory buffer. That can be mapped.

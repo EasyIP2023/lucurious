@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2019 Vincent Davis Jr.
+# Copyright (c) 2019-2020 Vincent Davis Jr.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 # Install libktx headers
 ktx_dir = '/usr/include/'
 install_headers('include/ktx.h', install_dir: ktx_dir)
-install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
+# install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
 
 fs = [
   'lib/checkheader.c', 'lib/filestream.c', 'lib/hashlist.c',
@@ -34,7 +34,7 @@ fs = [
 
 lib_ktx = library(
   'ktx', files(fs), version: '2.0',
-  include_directories: ['include', 'other_include'],
+  include_directories: ktx_inc,
   dependencies: [libmath], install_dir: '/usr/lib',
   install: true
 )

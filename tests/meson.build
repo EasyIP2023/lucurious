@@ -76,8 +76,8 @@ lucur_rotate_rect_test = executable('lucur-rotate-rect-test',
 
 it_files = ['test-image-texture.c']
 lucur_img_texture_test = executable('lucur-img-texture-test',
-  it_files, include_directories: lucur_inc,
-  dependencies: [check, libmath], link_with: [lib_lucur, lib_lwayland],
+  it_files, include_directories: [lucur_inc, ktx_inc],
+  dependencies: [check, libmath], link_with: [lib_lucur, lib_lwayland, lib_ktx],
   c_args: [
     '--std=gnu18', '-DDEV_ENV',
     '-DIMG_SRC=' + '"@0@"'.format(meson.current_source_dir() + '/textures/texture.jpg')
