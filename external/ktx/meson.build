@@ -28,17 +28,8 @@ install_headers('include/ktx.h', install_dir: ktx_dir)
 install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
 
 fs = [
-  'lib/checkheader.c',
-  'lib/filestream.c',
-  'lib/filestream.h',
-  'lib/hashlist.c',
-  'lib/ktxint.h',
-  'lib/memstream.c',
-  'lib/memstream.h',
-  'lib/stream.h',
-  'lib/swap.c',
-  'lib/texture.c',
-  'lib/uthash.h'
+  'lib/checkheader.c', 'lib/filestream.c', 'lib/hashlist.c',
+  'lib/memstream.c', 'lib/swap.c', 'lib/texture.c'
 ]
 
 lib_ktx = library(
@@ -47,6 +38,13 @@ lib_ktx = library(
   dependencies: [libmath], install_dir: '/usr/lib',
   install: true
 )
+
+# Needed headers
+#  'lib/filestream.h',
+#  'lib/ktxint.h',
+#  'lib/memstream.h',
+#  'lib/stream.h',
+#  'lib/uthash.h'
 
 # Unused Files
 #  'lib/errstr.c',
