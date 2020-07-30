@@ -29,44 +29,42 @@ install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
 
 fs = [
   'lib/checkheader.c',
-  'lib/errstr.c',
-  'lib/etcdec.cxx',
-  'lib/etcunpack.cxx',
   'lib/filestream.c',
   'lib/filestream.h',
-  'lib/gl_format.h',
-  'lib/gl_funcptrs.h',
-  'lib/gles1_funcptrs.h',
-  'lib/gles2_funcptrs.h',
-  'lib/gles3_funcptrs.h',
-  # 'lib/glloader.c',
   'lib/hashlist.c',
-  'lib/hashtable.c',
-  'lib/ktxgl.h',
   'lib/ktxint.h',
   'lib/memstream.c',
   'lib/memstream.h',
   'lib/stream.h',
   'lib/swap.c',
   'lib/texture.c',
-  'lib/uthash.h',
-  'lib/writer.c',
-  'lib/writer_v1.c',
-  'lib/vk_format.h',
-  'lib/vkloader.c',
-  'lib/vk_funcs.c',
-  'lib/vk_funcs.h'
+  'lib/uthash.h'
 ]
 
-# libopengl = dependency('opengl', required: true)
-
 lib_ktx = library(
-  'ktx',
-  files(fs),
-  version: '2.0',
-  c_args: ['-D_DEBUG'],
+  'ktx', files(fs), version: '2.0',
   include_directories: ['include', 'other_include'],
-  dependencies: [libvulkan],
-  install_dir: '/usr/lib',
+  dependencies: [libmath], install_dir: '/usr/lib',
   install: true
 )
+
+# Unused Files
+#  'lib/errstr.c',
+#  'lib/etcdec.cxx',
+#  'lib/etcunpack.cxx',
+#  'lib/gl_format.h',
+#  'lib/gl_funcptrs.h',
+#  'lib/gles1_funcptrs.h',
+#  'lib/gles2_funcptrs.h',
+#  'lib/gles3_funcptrs.h',
+#  'lib/glloader.c',
+#  'lib/hashtable.c',
+#  'lib/ktxgl.h',
+#  'lib/writer.c',
+#  'lib/writer_v1.c',
+#  'lib/vk_format.h',
+#  'lib/vkloader.c',
+#  'lib/vk_funcs.c',
+#  'lib/vk_funcs.h'
+#  'lib/libktx.gypi'
+#  'lib/vk_funclist.inl'

@@ -24,15 +24,14 @@
 
 project(
   'lucurious',
-  'c', 'cpp',
+  'c',
   version: '0.0.2',
   license: 'MIT',
   meson_version: '>=0.54.0',
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
-    'werror=false',
-    'optimization=2'
+    'werror=false'
   ],
 )
 
