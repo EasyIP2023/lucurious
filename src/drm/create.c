@@ -270,6 +270,13 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   return true;
 }
 
+/**
+* I decided not to create a gbm_surface object. Then create a gbm_bo from that surface.
+* Like such:
+* struct gbm_surface *gbm_surface = gbm_surface_create(gbm_device, mode_info.hdisplay, mode_info.vdisplay,
+*                                   GBM_BO_FORMAT_XRGB8888, GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+* struct gbm_bo *bo = gbm_surface_lock_front_buffer(gbm_surface);
+*/
 bool dlu_drm_create_fb(
   dlu_drm_bo_type type,
   dlu_drm_core *core,
