@@ -141,7 +141,9 @@ typedef struct _dlu_drm_core {
  
   uint32_t odbc;
   struct _drm_buff_data {
-    uint32_t odid; /* Output Device ID */ 
+
+    /* Output Device ID, Used by the API, No need to utilize member yourself */ 
+    uint32_t odid;
     struct gbm_bo *bo;
 
     /**
@@ -158,11 +160,9 @@ typedef struct _dlu_drm_core {
   
     /* Generally four (BO, framebuffer, image) planes */
     uint32_t num_planes;
-    struct _plane_data {
-      unsigned pitch;
-      unsigned offset;
-      uint64_t gem_handle;
-    } plane_data[4];
+    unsigned pitches[4];
+    unsigned offsets[4];
+    uint64_t gem_handles[4];
 
     /**
     * GEM buffers are wrapped by framebuffer. These framebuffers are passed to KMS for display.

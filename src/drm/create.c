@@ -270,7 +270,15 @@ bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   return true;
 }
 
-bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cur_bi, uint32_t cur_od, uint32_t format) {
+bool dlu_drm_create_fb(
+  dlu_drm_bo_type type,
+  dlu_drm_core *core,
+  uint32_t cur_bi,
+  uint32_t cur_od,
+  uint32_t format,
+  uint32_t bpp,
+  uint32_t flags
+) {
 
   if (!core->buff_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_BUFF_DATA"); goto err_bo; }
   if (!core->device.gbm_device) { dlu_log_me(DLU_DANGER, "[x] GBM device not created");  goto err_bo; }
@@ -293,7 +301,7 @@ bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cu
     dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay);
     goto err_bo;
   } else {
-    dlu_log_me(DLU_SUCCESS, "Successfully created gbm_bo"); 
+    dlu_log_me(DLU_SUCCESS, "Successfully created gbm framebuffer"); 
   }
 
   core->buff_data[cur_bi].num_planes = gbm_bo_get_plane_count(core->buff_data[cur_bi].bo);
@@ -309,15 +317,22 @@ bool dlu_drm_create_gbm_bo(dlu_drm_bo_type type, dlu_drm_core *core, uint32_t cu
       goto err_bo;
     }
 
-    core->buff_data[cur_bi].plane_data[i].gem_handle = h.u32;
+    core->buff_data[cur_bi].gem_handles[i] = h.u32;
 
-    core->buff_data[cur_bi].plane_data[i].pitch = gbm_bo_get_stride_for_plane(core->buff_data[cur_bi].bo, i);
-    if (!core->buff_data[cur_bi].plane_data[i].pitch) {
+    core->buff_data[cur_bi].pitches[i] = gbm_bo_get_stride_for_plane(core->buff_data[cur_bi].bo, i);
+    if (!core->buff_data[cur_bi].pitches[i]) {
       dlu_log_me(DLU_DANGER, "[x] failed to get stride/pitch for BO plane %d (modifier 0x%" PRIx64 ")", i, core->buff_data[cur_bi].modifier);
       goto err_bo;
     }
 
-    core->buff_data[cur_bi].plane_data[i].offset = gbm_bo_get_offset(core->buff_data[cur_bi].bo, i);
+    core->buff_data[cur_bi].offsets[i] = gbm_bo_get_offset(core->buff_data[cur_bi].bo, i);
+  }
+
+  if (drmModeAddFB2(core->device.kmsfd, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
+                    format, core->buff_data[cur_bi].gem_handles, core->buff_data[cur_bi].pitches, core->buff_data[cur_bi].offsets,
+                    &core->buff_data[cur_bi].fb_id, flags) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeAddFB2: %s", strerror(errno));
+    goto err_bo;
   }
 
   return true;

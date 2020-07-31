@@ -33,20 +33,6 @@ dlu_drm_core *dlu_drm_init_core() {
 }
 
 void dlu_drm_freeup_core(dlu_drm_core *core) {
-  logind_release_device(DLU_KMS_FD, core);
-  release_session_control(core);
-  free(core->session.path);
-  free(core->session.id);
-  if (core->input.inp)
-    libinput_unref(core->input.inp);
-  if (core->input.udev)
-    udev_unref(core->input.udev);
-  if (core->device.vtfd != UINT32_MAX) {
-    dlu_drm_reset_vt(core);
-    close(core->device.vtfd);
-  }
-  if (core->session.bus)
-    sd_bus_unref(core->session.bus);
   if (core->output_data) {
     uint32_t j, i;
     for (i = 0; i < core->odc; i++) {
@@ -70,10 +56,29 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
     }
   }
   if (core->buff_data)
-    for (uint32_t i = 0; i < core->odbc; i++)
+    for (uint32_t i = 0; i < core->odbc; i++) {
       if (core->buff_data[i].bo)
         gbm_bo_destroy(core->buff_data[i].bo);
+      if (core->buff_data[i].fb_id)
+        drmModeRmFB(core->device.kmsfd, core->buff_data[i].fb_id);
+    }
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);
+
+  /* Release logind session and memory */
+  logind_release_device(DLU_KMS_FD, core);
+  release_session_control(core);
+  free(core->session.path);
+  free(core->session.id);
+  if (core->input.inp)
+    libinput_unref(core->input.inp);
+  if (core->input.udev)
+    udev_unref(core->input.udev);
+  if (core->device.vtfd != UINT32_MAX) {
+    dlu_drm_reset_vt(core);
+    close(core->device.vtfd);
+  }
+  if (core->session.bus)
+    sd_bus_unref(core->session.bus);
 }
 
