@@ -283,7 +283,6 @@ bool dlu_drm_create_fb(
   uint32_t cur_bi,
   uint32_t cur_od,
   uint32_t format,
-  uint32_t bpp,
   uint32_t flags
 ) {
 
@@ -298,17 +297,14 @@ bool dlu_drm_create_fb(
                                                  core->output_data[cur_od].mode.vdisplay, format,
                                                  GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT); break;
     case DLU_DRM_GBM_BO_WITH_MODIFIERS:
-      core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay,
-                                                                core->output_data[cur_od].mode.vdisplay, format, core->output_data[cur_od].modifiers,
-                                                                core->output_data[cur_od].modifiers_cnt); break;
+      core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
+                                                                format, core->output_data[cur_od].modifiers, core->output_data[cur_od].modifiers_cnt); break;
     default: break;
   }
 
   if (!core->buff_data[cur_bi].bo) {
     dlu_log_me(DLU_DANGER, "[x] failed to create gbm_bo with res %u x %u", core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay);
     goto err_bo;
-  } else {
-    dlu_log_me(DLU_SUCCESS, "Successfully created gbm framebuffer"); 
   }
 
   core->buff_data[cur_bi].num_planes = gbm_bo_get_plane_count(core->buff_data[cur_bi].bo);
@@ -335,12 +331,15 @@ bool dlu_drm_create_fb(
     core->buff_data[cur_bi].offsets[i] = gbm_bo_get_offset(core->buff_data[cur_bi].bo, i);
   }
 
-  if (drmModeAddFB2(core->device.kmsfd, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
+  /* Create actual framebuffer */
+  if (drmModeAddFB2WithModifiers(core->device.kmsfd, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
                     format, core->buff_data[cur_bi].gem_handles, core->buff_data[cur_bi].pitches, core->buff_data[cur_bi].offsets,
-                    &core->buff_data[cur_bi].fb_id, flags) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeAddFB2: %s", strerror(errno));
+                    NULL /* Pass 4 modifiers here */, &core->buff_data[cur_bi].fb_id, flags) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeAddFB2WithModifiers: %s", strerror(-errno));
     goto err_bo;
   }
+
+  dlu_log_me(DLU_SUCCESS, "Successfully created gbm framebuffer");
 
   return true;
 err_bo:

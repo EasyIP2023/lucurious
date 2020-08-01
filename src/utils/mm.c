@@ -453,6 +453,12 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         dlu_drm_core *core = (dlu_drm_core *) addr;
         core->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _drm_buff_data));
         if (!core->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
+        for (uint32_t i = 0; i < arr_size; i++) {
+          core->buff_data[i].fb_id = UINT32_MAX;
+          core->buff_data[i].odid = UINT32_MAX;
+        }
+
         core->odbc = arr_size; return true;
       }
     default: break;

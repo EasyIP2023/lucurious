@@ -22,28 +22,10 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_DEVICE_H
-#define DLU_DRM_DEVICE_H
+#ifndef DLU_DRM_SCREEN_H
+#define DLU_DRM_SCREEN_H
 
-/**
-* Values can be computed by running the command lucur --display-info <drm device>
-* or with a call to dlu_drm_q_ouput_dev_info(3)
-* This function sets up the initial Plane -> CRTC -> Encoder -> Connector Pair.
-* These pairs may change from system to system. I also acts a a way to save the current
-* state of the Plane -> CRTC -> Encoder -> Connector Pair. 
-*/
-bool dlu_drm_kms_node_enum_ouput_dev(
-  dlu_drm_core *core,
-  uint32_t odb,
-  uint32_t conn_id_idx,
-  uint32_t enc_id_idx,
-  uint32_t crtc_id_idx,
-  uint32_t plane_id_idx,
-  uint64_t refresh,
-  const char *conn_name
-);
+/* Function name, parameters, logic may change */
+bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi);
 
-#ifdef INAPI_CALLS
-const char *ouput_devices(uint32_t type);
-#endif
 #endif

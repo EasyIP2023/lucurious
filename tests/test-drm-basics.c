@@ -104,9 +104,15 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
     ck_abort_msg(NULL);  
   }
 
-  if (!dlu_drm_create_fb(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, DRM_FORMAT_XRGB8888, 32, 0)) {
+  if (!dlu_drm_create_fb(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, DRM_FORMAT_XRGB8888, 0)) {
     free_core(core);
     ck_abort_msg(NULL);
+  }
+
+  /* Function name, parameters, logic may change */
+  if (!dlu_drm_do_modeset(core, cur_bi)) {
+    free_core(core);
+    ck_abort_msg(NULL);  
   }
 
 exit_create_kms_node:

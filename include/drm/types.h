@@ -162,7 +162,7 @@ typedef struct _dlu_drm_core {
     uint32_t num_planes;
     unsigned pitches[4];
     unsigned offsets[4];
-    uint64_t gem_handles[4];
+    unsigned gem_handles[4];
 
     /**
     * GEM buffers are wrapped by framebuffer. These framebuffers are passed to KMS for display.
@@ -188,7 +188,7 @@ typedef struct _dlu_drm_core {
     uint64_t refresh; /* Refresh rate for a pair store in nanoseconds */
 
     uint32_t pp_id;   /* Primary Plane ID */
-    uint32_t crtc_id; /* CTRC ID */
+    uint32_t crtc_id; /* CRTC ID */
     uint32_t conn_id; /* Connector ID */
     uint32_t enc_id;  /* Keeping encoder ID just because */
 

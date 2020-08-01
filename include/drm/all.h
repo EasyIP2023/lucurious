@@ -30,6 +30,7 @@
 #include "logind.h"
 #include "device.h"
 #include "info.h"
+#include "screen.h"
 
 #ifdef INAPI_CALLS
 #include "timespec-util.h"

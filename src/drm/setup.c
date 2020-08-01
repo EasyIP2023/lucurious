@@ -43,8 +43,12 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
         drmModeFreeConnector(core->output_data[i].conn);
       if (core->output_data[i].enc)
         drmModeFreeEncoder(core->output_data[i].enc);
-      if (core->output_data[i].crtc)
+      if (core->output_data[i].crtc) {
+        /* restore saved CRTC configuration */
+        drmModeSetCrtc(core->device.kmsfd, core->output_data[i].crtc->crtc_id, core->output_data[i].crtc->buffer_id, core->output_data[i].crtc->x,
+                       core->output_data[i].crtc->y, &core->output_data[i].conn_id, 1, &core->output_data[i].crtc->mode);
         drmModeFreeCrtc(core->output_data[i].crtc);
+      }
       if (core->output_data[i].plane)
         drmModeFreePlane(core->output_data[i].plane);
       for (j = 0; j < DLU_DRM_PLANE_TYPE__CNT; j++)
