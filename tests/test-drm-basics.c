@@ -26,7 +26,6 @@
 #include <lucom.h>
 #include <check.h>
 
-
 static void free_core(dlu_drm_core *core) {
   dlu_drm_freeup_core(core);
   dlu_release_blocks();

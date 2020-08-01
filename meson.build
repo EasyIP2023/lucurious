@@ -31,7 +31,8 @@ project(
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
-    'werror=false'
+    'werror=false',
+    'prefix=/usr/'
   ],
 )
 
@@ -64,7 +65,6 @@ lib_lucur = library(
   version: '.'.join(so_version),
   link_whole: lucur_parts,
   include_directories: lucur_inc,
-  install_dir: '/usr/lib',
   install: true
 )
 
@@ -72,7 +72,6 @@ executable('lucur',
   exec_files,
   link_with: lib_lucur,
   include_directories: lucur_inc,
-  install_dir: '/usr/bin',
   install: true
 )
 
@@ -83,6 +82,7 @@ pkg_mod.generate(
   name: meson.project_name(),
   filebase:  meson.project_name(),
   install_dir: '/usr/lib/pkgconfig',
+  extra_cflags: ['-I/usr/include/libdrm'],
   description: 'Library for building advanced DRM Vulkan renderers that work directly with KMS'
 )
 

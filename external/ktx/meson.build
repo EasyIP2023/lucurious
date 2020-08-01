@@ -23,7 +23,7 @@
 #
 
 # Install libktx headers
-ktx_dir = '/usr/include/'
+ktx_dir = 'include/'
 install_headers('include/ktx.h', install_dir: ktx_dir)
 # install_headers('include/ktxvulkan.h', install_dir: ktx_dir)
 
@@ -35,7 +35,7 @@ fs = [
 lib_ktx = library(
   'ktx', files(fs), version: '2.0',
   include_directories: ktx_inc,
-  dependencies: [libmath], install_dir: '/usr/lib',
+  dependencies: [libmath],
   install: true
 )
 
