@@ -61,10 +61,12 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->buff_data)
     for (uint32_t i = 0; i < core->odbc; i++) {
-      if (core->buff_data[i].bo)
-        gbm_bo_destroy(core->buff_data[i].bo);
+      for (uint32_t j = 0; j < core->buff_data[i].num_planes; j++)
+        close(core->buff_data[i].dma_buf_fds[j]);
       if (core->buff_data[i].fb_id)
         drmModeRmFB(core->device.kmsfd, core->buff_data[i].fb_id);
+      if (core->buff_data[i].bo)
+        gbm_bo_destroy(core->buff_data[i].bo);
     }
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);

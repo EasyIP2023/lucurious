@@ -35,7 +35,7 @@ bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
 
   /* Connecting a framebuffer to a Plane -> **"CRTC"** -> Encoder -> **"Connector"** pair. Perform actual modesetting */
   if (drmModeSetCrtc(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id, core->buff_data[cur_bi].fb_id, 0, 0,
-              &core->output_data[core->buff_data[cur_bi].odid].conn_id, 1, &core->output_data[core->buff_data[cur_bi].odid].mode) < 0) {
+                     &core->output_data[core->buff_data[cur_bi].odid].conn_id, 1, &core->output_data[core->buff_data[cur_bi].odid].mode) < 0) {
     dlu_log_me(DLU_DANGER, "[x] drmModeSetCrtc: %s", strerror(-errno));
     return false;
   }
@@ -45,7 +45,7 @@ bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
 
 void dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags) {
   gbm_bo_map(core->buff_data[cur_bi].bo, 0, 0, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-                      core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, flags, &core->buff_data[cur_bi].pitches[0], data);
+             core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, flags, &core->buff_data[cur_bi].pitches[0], data);
 }
 
 void dlu_drm_gbm_bo_unmap(struct gbm_bo *bo, void *map_data) {

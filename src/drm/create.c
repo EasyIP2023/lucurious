@@ -283,6 +283,7 @@ bool dlu_drm_create_fb(
   uint32_t cur_bi,
   uint32_t cur_od,
   uint32_t format,
+  uint32_t bo_flags,
   uint32_t flags
 ) {
 
@@ -294,8 +295,7 @@ bool dlu_drm_create_fb(
   switch (type) {
     case DLU_DRM_GBM_BO:
       core->buff_data[cur_bi].bo = gbm_bo_create(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay,
-                                                 core->output_data[cur_od].mode.vdisplay, format,
-                                                 GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT); break;
+                                                 core->output_data[cur_od].mode.vdisplay, format, bo_flags); break;
     case DLU_DRM_GBM_BO_WITH_MODIFIERS:
       core->buff_data[cur_bi].bo = gbm_bo_create_with_modifiers(core->device.gbm_device, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
                                                                 format, core->output_data[cur_od].modifiers, core->output_data[cur_od].modifiers_cnt); break;
@@ -332,11 +332,11 @@ bool dlu_drm_create_fb(
 
     struct drm_prime_handle prime_request = {
       .handle = core->buff_data[cur_bi].gem_handles[i],
-      .flags  = DRM_CLOEXEC | DRM_RDWR,
+      .flags  = DRM_RDWR,
       .fd     = -1
     };
 
-    /* Retrieve a fd for the GEM handle */ 
+    /* Retrieve a fd for the GEM handle */
     if (ioctl(core->device.kmsfd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime_request) == NEG_ONE)  {
       dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
       goto err_bo;
@@ -347,8 +347,8 @@ bool dlu_drm_create_fb(
 
   /* Create actual framebuffer */
   if (drmModeAddFB2WithModifiers(core->device.kmsfd, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay,
-                    format, core->buff_data[cur_bi].gem_handles, core->buff_data[cur_bi].pitches, core->buff_data[cur_bi].offsets,
-                    NULL /* Pass 4 modifiers here */, &core->buff_data[cur_bi].fb_id, flags) == NEG_ONE) {
+                                 format, core->buff_data[cur_bi].gem_handles, core->buff_data[cur_bi].pitches, core->buff_data[cur_bi].offsets,
+                                 NULL /* Pass 4 modifiers here */, &core->buff_data[cur_bi].fb_id, flags) == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] drmModeAddFB2WithModifiers: %s", strerror(-errno));
     goto err_bo;
   }

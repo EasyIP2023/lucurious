@@ -41,6 +41,7 @@ bool dlu_drm_create_fb(
   uint32_t cur_bi,
   uint32_t cur_od,
   uint32_t format,
+  uint32_t bo_flags,
   uint32_t flags
 );
 
