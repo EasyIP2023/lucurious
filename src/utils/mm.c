@@ -457,6 +457,8 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         for (uint32_t i = 0; i < arr_size; i++) {
           core->buff_data[i].fb_id = UINT32_MAX;
           core->buff_data[i].odid = UINT32_MAX;
+          for (uint32_t j = 0; j < 4; j++)
+            core->buff_data[i].dma_buf_fds[j] = NEG_ONE;
         }
 
         core->odbc = arr_size; return true;

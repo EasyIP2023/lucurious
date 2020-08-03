@@ -163,6 +163,7 @@ typedef struct _dlu_drm_core {
     unsigned pitches[4];
     unsigned offsets[4];
     unsigned gem_handles[4];
+    int dma_buf_fds[4];
 
     /**
     * GEM buffers are wrapped by framebuffer. These framebuffers are passed to KMS for display.
@@ -177,7 +178,7 @@ typedef struct _dlu_drm_core {
   */
   uint32_t odc; /* Output data count */
   struct _output_data {
-    unsigned int modifiers_cnt;
+    unsigned modifiers_cnt;
     uint64_t *modifiers;
 
     /* connector name */

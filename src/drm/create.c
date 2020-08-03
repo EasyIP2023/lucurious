@@ -329,6 +329,20 @@ bool dlu_drm_create_fb(
     }
 
     core->buff_data[cur_bi].offsets[i] = gbm_bo_get_offset(core->buff_data[cur_bi].bo, i);
+
+    struct drm_prime_handle prime_request = {
+      .handle = core->buff_data[cur_bi].gem_handles[i],
+      .flags  = DRM_CLOEXEC | DRM_RDWR,
+      .fd     = -1
+    };
+
+    /* Retrieve a fd for the GEM handle */ 
+    if (ioctl(core->device.kmsfd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime_request) == NEG_ONE)  {
+      dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+      goto err_bo;
+    }
+
+    core->buff_data[cur_bi].dma_buf_fds[i] = prime_request.fd;
   }
 
   /* Create actual framebuffer */
