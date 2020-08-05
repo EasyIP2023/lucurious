@@ -43,11 +43,15 @@ bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
   return true;
 }
 
-void dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags) {
-  gbm_bo_map(core->buff_data[cur_bi].bo, 0, 0, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
-             core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, flags, &core->buff_data[cur_bi].pitches[0], data);
+void *dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags) {
+  return gbm_bo_map(core->buff_data[cur_bi].bo, 0, 0, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
+         core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, flags, &core->buff_data[cur_bi].pitches[0], data);
 }
 
 void dlu_drm_gbm_bo_unmap(struct gbm_bo *bo, void *map_data) {
   gbm_bo_unmap(bo, map_data);
+}
+
+int dlu_drm_gbm_bo_write(struct gbm_bo *bo, const void *buff, size_t count) {
+  return gbm_bo_write(bo, buff, count);
 }

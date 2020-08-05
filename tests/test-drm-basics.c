@@ -104,7 +104,7 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
   }
 
   uint32_t bo_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
-  if (!dlu_drm_create_fb(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, GBM_BO_FORMAT_ARGB8888, bo_flags, 0)) {
+  if (!dlu_drm_create_fb(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, GBM_BO_FORMAT_ARGB8888, 24, 32, bo_flags, 0)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
