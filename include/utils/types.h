@@ -80,7 +80,7 @@ typedef struct _dlu_otma_mems {
   uint32_t ld_cnt;       /* logical device data count */
   uint32_t drmc_cnt;  /* dlu_drm_core struct count */
   uint32_t dod_cnt;    /* Device output_data struct count */
-  uint32_t odb_cnt;    /* Output Device Buffer Count */
+  uint32_t dob_cnt;    /* Device Output Buffer Count */
 } dlu_otma_mems;
 
 #ifdef INAPI_CALLS

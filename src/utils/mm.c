@@ -291,7 +291,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core))) : 0;
   size += (ma.dod_cnt ) ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
 
-  size += (ma.odb_cnt) ? (BLOCK_SIZE + (ma.odb_cnt * sizeof(struct _drm_buff_data))) : 0;
+  size += (ma.dob_cnt) ? (BLOCK_SIZE + (ma.dob_cnt * sizeof(struct _drm_buff_data))) : 0;
 
   if (!dlu_alloc(type, size)) return false;
 

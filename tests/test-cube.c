@@ -71,25 +71,25 @@ static void dlu_print_matrices() {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, ma.pd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, ma.ld_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, ma.bd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_SC_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_SC_DATA, app, INDEX_IGNORE, ma.scd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_GP_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_GP_DATA, app, INDEX_IGNORE, ma.gpd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_CMD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_CMD_DATA, app, INDEX_IGNORE, ma.cmdd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_DESC_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_DESC_DATA, app, INDEX_IGNORE, ma.dd_cnt);
   if (!err) return err;
 
   return err;
@@ -360,7 +360,7 @@ START_TEST(test_vulkan_client_create_3D) {
     VK_SAMPLE_COUNT_1_BIT, VK_FALSE, 0.0f, NULL, VK_FALSE, VK_FALSE
   );
 
-  err = dlu_otba(DLU_GP_DATA_MEMS, app, cur_gpd, 1);
+  err = dlu_otba(DLU_GP_DATA_MEMS, app, cur_gpd, ma.gp_cnt);
   check_err(!err, app, wc, NULL)
 
   err = dlu_create_graphics_pipelines(app, cur_gpd, ARR_LEN(shader_stages), shader_stages,
@@ -376,7 +376,7 @@ START_TEST(test_vulkan_client_create_3D) {
   dlu_vk_destroy(DLU_DESTROY_VK_SHADER, app, cur_ld, vert_shader_module); vert_shader_module = VK_NULL_HANDLE;
 
   /* This also sets the descriptor count */
-  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, NUM_DESCRIPTOR_SETS);
+  err = dlu_otba(DLU_DESC_DATA_MEMS, app, cur_dd, ma.desc_cnt);
   check_err(!err, app, wc, NULL)
 
   err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info[0]);

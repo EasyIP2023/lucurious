@@ -23,7 +23,7 @@ valgrind --leak-check=full \
          ./build/tests/${UNIT_TEST_NAME}
 ```
 
-**To change the level of C checkings for warnings**
+**To change the level of compiler checkings for warnings**
 ```bash
 meson --warnlevel=2 build/
 ```
