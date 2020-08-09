@@ -466,7 +466,7 @@ ktxTexture_WriteToMemory(ktxTexture* This,
 /*
  * Returns a string corresponding to a KTX error code.
  */
-const char* const ktxErrorString(KTX_error_code error);
+const char *ktxErrorString(KTX_error_code error);
 
 KTX_error_code ktxHashList_Create(ktxHashList** ppHl);
 void ktxHashList_Construct(ktxHashList* pHl);

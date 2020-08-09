@@ -35,10 +35,24 @@ bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
 
   /* Connecting a framebuffer to a Plane -> **"CRTC"** -> Encoder -> **"Connector"** pair. Perform actual modesetting */
   if (drmModeSetCrtc(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id, core->buff_data[cur_bi].fb_id, 0, 0,
-                     &core->output_data[core->buff_data[cur_bi].odid].conn_id, 1, &core->output_data[core->buff_data[cur_bi].odid].mode) < 0) {
-    dlu_log_me(DLU_DANGER, "[x] drmModeSetCrtc: %s", strerror(-errno));
+                     &core->output_data[core->buff_data[cur_bi].odid].conn_id, 1, &core->output_data[core->buff_data[cur_bi].odid].mode)) {
+    dlu_log_me(DLU_DANGER, "[x] drmModeSetCrtc: %s", strerror(errno));
     return false;
   }
+
+  return true;
+}
+
+bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi) {
+
+  /* Schedules a buffer flip for the next vblank. Fully asynchronous */
+  if (drmModePageFlip(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id, core->buff_data[cur_bi].fb_id,
+                      DRM_MODE_PAGE_FLIP_EVENT, &core->output_data[core->buff_data[cur_bi].odid])) {
+    dlu_log_me(DLU_DANGER, "[x] drmModePageFlip: %s", strerror(errno));
+    return false;
+  }
+
+  core->output_data[core->buff_data[cur_bi].odid].pflip = true;
 
   return true;
 }

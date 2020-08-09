@@ -31,7 +31,7 @@ project(
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
-    'werror=false',
+    'werror=true',
     'prefix=/usr/'
   ],
 )

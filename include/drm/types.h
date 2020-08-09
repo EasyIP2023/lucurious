@@ -180,6 +180,13 @@ typedef struct _dlu_drm_core {
   struct _output_data {
     unsigned modifiers_cnt;
     uint64_t *modifiers;
+    
+    /**
+    * Page-flip bool variable to determine when
+    * a GEM (kernel subsytem) page-flip is currently
+    * pending
+    */
+    bool pflip;
 
     /* connector name */
     char name[32];

@@ -27,6 +27,8 @@
 
 bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi);
 
+bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi);
+
 void *dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags);
 
 void dlu_drm_gbm_bo_unmap(struct gbm_bo *bo, void *map_data);

@@ -62,7 +62,7 @@ static const int lastErrorCode = (sizeof(errorStrings) / sizeof(char*)) - 1;
  * 
  * @author Mark Callow, HI Corporation
  */
-const char* const ktxErrorString(KTX_error_code error)
+const char *ktxErrorString(KTX_error_code error)
 {
     if (error > lastErrorCode)
         return "Unrecognized error code";

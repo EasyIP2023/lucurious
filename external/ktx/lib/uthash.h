@@ -408,17 +408,17 @@ do {                                                                            
   }                                                                              \
   hashv += keylen;                                                               \
   switch ( _hj_k ) {                                                             \
-     case 11: hashv += ( (unsigned)_hj_key[10] << 24 );                          \
-     case 10: hashv += ( (unsigned)_hj_key[9] << 16 );                           \
-     case 9:  hashv += ( (unsigned)_hj_key[8] << 8 );                            \
-     case 8:  _hj_j += ( (unsigned)_hj_key[7] << 24 );                           \
-     case 7:  _hj_j += ( (unsigned)_hj_key[6] << 16 );                           \
-     case 6:  _hj_j += ( (unsigned)_hj_key[5] << 8 );                            \
-     case 5:  _hj_j += _hj_key[4];                                               \
-     case 4:  _hj_i += ( (unsigned)_hj_key[3] << 24 );                           \
-     case 3:  _hj_i += ( (unsigned)_hj_key[2] << 16 );                           \
-     case 2:  _hj_i += ( (unsigned)_hj_key[1] << 8 );                            \
-     case 1:  _hj_i += _hj_key[0];                                               \
+     case 11: hashv += ( (unsigned)_hj_key[10] << 24 ); break;                   \
+     case 10: hashv += ( (unsigned)_hj_key[9] << 16 ); break;                    \
+     case 9:  hashv += ( (unsigned)_hj_key[8] << 8 ); break;                     \
+     case 8:  _hj_j += ( (unsigned)_hj_key[7] << 24 ); break;                    \
+     case 7:  _hj_j += ( (unsigned)_hj_key[6] << 16 ); break;                    \
+     case 6:  _hj_j += ( (unsigned)_hj_key[5] << 8 ); break;                     \
+     case 5:  _hj_j += _hj_key[4]; break;                                        \
+     case 4:  _hj_i += ( (unsigned)_hj_key[3] << 24 ); break;                    \
+     case 3:  _hj_i += ( (unsigned)_hj_key[2] << 16 ); break;                    \
+     case 2:  _hj_i += ( (unsigned)_hj_key[1] << 8 ); break;                     \
+     case 1:  _hj_i += _hj_key[0]; break;                                        \
   }                                                                              \
   HASH_JEN_MIX(_hj_i, _hj_j, hashv);                                             \
   bkt = hashv & (num_bkts-1);                                                    \
