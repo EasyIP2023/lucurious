@@ -86,6 +86,9 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
   if (core->session.bus)
     sd_bus_unref(core->session.bus);
-  close(core->device.kmsfd);
+  /**
+  * Called in logind_release_device()
+  * close(core->device.kmsfd);
+  */
 }
 
