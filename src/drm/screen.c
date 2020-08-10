@@ -55,6 +55,10 @@ bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi, void *user_data) 
   return true;
 }
 
+void dlu_drm_do_handle_event(int fd, drmEventContext *ev) {
+  drmHandleEvent(fd, ev);
+}
+
 void *dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags) {
   return gbm_bo_map(core->buff_data[cur_bi].bo, 0, 0, core->output_data[core->buff_data[cur_bi].odid].mode.hdisplay,
          core->output_data[core->buff_data[cur_bi].odid].mode.vdisplay, flags, &core->buff_data[cur_bi].pitches[0], data);
