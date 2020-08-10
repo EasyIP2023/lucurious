@@ -43,16 +43,14 @@ bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
   return true;
 }
 
-bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi) {
+bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi, void *user_data) {
 
   /* Schedules a buffer flip for the next vblank. Fully asynchronous */
-  if (drmModePageFlip(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id, core->buff_data[cur_bi].fb_id,
-                      DRM_MODE_PAGE_FLIP_EVENT, &core->output_data[core->buff_data[cur_bi].odid])) {
+  if (drmModePageFlip(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id,
+                      core->buff_data[cur_bi].fb_id, DRM_MODE_PAGE_FLIP_EVENT, user_data)) {
     dlu_log_me(DLU_DANGER, "[x] drmModePageFlip: %s", strerror(errno));
     return false;
   }
-
-  core->output_data[core->buff_data[cur_bi].odid].pflip = true;
 
   return true;
 }

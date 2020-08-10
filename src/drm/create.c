@@ -352,7 +352,7 @@ bool dlu_drm_create_fb(
     case DLU_DRM_GBM_BO:
       if (drmModeAddFB(core->device.kmsfd, core->output_data[cur_od].mode.hdisplay, core->output_data[cur_od].mode.vdisplay, depth, bpp,
                        core->buff_data[cur_bi].pitches[0], core->buff_data[cur_bi].gem_handles[0], &core->buff_data[cur_bi].fb_id) == NEG_ONE) {
-        dlu_log_me(DLU_DANGER, "[x] drmModeAddFB2WithModifiers: %s", strerror(-errno));
+        dlu_log_me(DLU_DANGER, "[x] drmModeAddFB: %s", strerror(-errno));
         goto err_bo;
       }
       break;
