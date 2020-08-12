@@ -164,15 +164,15 @@ void release_session_control(dlu_drm_core *core) {
   sd_bus_message_unref(msg);
 }
 
-bool logind_take_device(dlu_drm_fd_type type, dlu_drm_core *core, const char *path) {
+int logind_take_device(dlu_drm_core *core, const char *path) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
-  bool ret = true;
+  int fd = NEG_ONE;
 
   struct stat st;
   if (stat(path, &st) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to stat: '%s'", path);
-    return false;
+    return fd;
   }
 
   /* Perform conversion to see if struct stat device ID is 226 */
@@ -182,45 +182,34 @@ bool logind_take_device(dlu_drm_fd_type type, dlu_drm_core *core, const char *pa
   if (sd_bus_call_method(core->session.bus, "org.freedesktop.login1", core->session.path, "org.freedesktop.login1.Session",
       "TakeDevice", &error, &msg, "uu", major(st.st_rdev), minor(st.st_rdev)) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to take device '%s': %s", path, error.message);
-    ret = false; goto exit_logind_take_dev;
+    goto exit_logind_take_dev;
   }
 
-  int paused = 0, fd = 0;
+  int paused = 0;
   if (sd_bus_message_read(msg, "hb", &fd, &paused) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to parse D-Bus response for '%s': %s", path, strerror(-errno));
-    ret = false; goto exit_logind_take_dev;
+    goto exit_logind_take_dev;
   }
 
-  // The original fd seems to be closed when the message is freed
-  // so we just clone it.
+  /**
+  * The original fd seems to be closed when the message is freed
+  * just clone it.
+  */
   fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
   if (fd == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] Failed to clone file descriptor for '%s': %s", path, strerror(errno));
-    ret = false; goto exit_logind_take_dev;
-  }
-
-  switch(type) {
-    case DLU_KMS_FD: core->device.kmsfd = fd; break;
-    case DLU_INP_FD: core->input.inpfd = fd; break;
-    default: break;
+    goto exit_logind_take_dev;
   }
 
 exit_logind_take_dev:
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
-  return ret;
+  return fd;
 }
 
-void logind_release_device(dlu_drm_fd_type type, dlu_drm_core *core) {
+void logind_release_device(int fd, dlu_drm_core *core) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
-  int fd = NEG_ONE;
-
-  switch(type) {
-    case DLU_KMS_FD: fd = core->device.kmsfd; core->device.kmsfd = UINT32_MAX; break;
-    case DLU_INP_FD: fd = core->input.inpfd; core->input.inpfd = UINT32_MAX; break;
-    default: break;
-  }
 
   struct stat st;
   if (fstat(fd, &st) < 0) {

@@ -118,11 +118,6 @@ typedef enum _dlu_drm_plane_props {
   DLU_DRM_PLANE__CNT
 } dlu_drm_plan_props;
 
-typedef enum _dlu_drm_fd_type {
-  DLU_KMS_FD = 0x0000,
-  DLU_INP_FD = 0x0001
-} dlu_drm_fd_type;
-
 typedef enum _dlu_drm_bo_type {
   DLU_DRM_GBM_BO = 0x0000,
   DLU_DRM_GBM_BO_WITH_MODIFIERS  = 0x0001
@@ -231,7 +226,6 @@ typedef struct _dlu_drm_core {
   } session;
 
   struct _input {
-    uint32_t inpfd; /* Has IN_API usage only */
     struct udev *udev;
     struct libinput *inp;
   } input;

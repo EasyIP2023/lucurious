@@ -47,7 +47,8 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   * Open the device and ensure we have support for universal planes and
   * atomic modesetting. This function updates the kmsfd struct member
   */
-  if (!logind_take_device(DLU_KMS_FD, core, device_name)) goto close_kms;
+  core->device.kmsfd = logind_take_device(core, device_name);
+  if (core->device.kmsfd == UINT32_MAX) goto close_kms;
 
   /**
   * In order to drive KMS, we need to be 'master'. This should already
@@ -89,7 +90,7 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   return true;
 
 close_kms:
-  logind_release_device(DLU_KMS_FD, core);
+  logind_release_device(core->device.kmsfd, core);
   return false;
 }
 
@@ -340,12 +341,11 @@ err_bo:
 }
 
 static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
-   dlu_drm_core *core = (dlu_drm_core *) user_data;
-  return logind_take_device(DLU_INP_FD, core, path) ? core->input.inpfd : -1;
+  return logind_take_device((dlu_drm_core *) user_data, path);
 }
 
 static void close_restricted(int  fd, void *user_data) {
-  logind_release_device(DLU_INP_FD, (dlu_drm_core *) user_data);
+  logind_release_device(fd, (dlu_drm_core *) user_data);
 }
 
 bool dlu_drm_create_input_handle(dlu_drm_core *core) {

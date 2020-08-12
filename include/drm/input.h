@@ -22,14 +22,9 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_LOGIND_H
-#define DLU_DRM_LOGIND_H
+#ifndef DLU_DRM_INPUT_H                              
+#define DLU_DRM_INPUT_H
 
-bool dlu_drm_create_session(dlu_drm_core *core);
+bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code);
 
-#ifdef INAPI_CALLS
-void release_session_control(dlu_drm_core *core);
-int logind_take_device(dlu_drm_core *core, const char *path);
-void logind_release_device(int fd, dlu_drm_core *core);
-#endif
 #endif

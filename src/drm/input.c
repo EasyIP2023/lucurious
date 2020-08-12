@@ -22,14 +22,35 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_LOGIND_H
-#define DLU_DRM_LOGIND_H
+#define LUCUR_DRM_API
+#include <lucom.h>
+			
+bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code) {
+  enum libinput_event_type type;
+  struct libinput_event *event = NULL;
 
-bool dlu_drm_create_session(dlu_drm_core *core);
+  /* Read events from libinput FD and processes them */
+	if (libinput_dispatch(core->input.inp)) {
+    dlu_log_me(DLU_DANGER, "[x] libinput_dispatch: %s", strerror(-errno));
+    return false;
+	}
 
-#ifdef INAPI_CALLS
-void release_session_control(dlu_drm_core *core);
-int logind_take_device(dlu_drm_core *core, const char *path);
-void logind_release_device(int fd, dlu_drm_core *core);
-#endif
-#endif
+  event = libinput_get_event(core->input.inp); 
+  if (event == NULL) goto end_func;
+
+  type = libinput_event_get_type(event);
+  switch (type) {
+    case LIBINPUT_EVENT_KEYBOARD_KEY:
+      {
+        struct libinput_event_keyboard *key_event = libinput_event_get_keyboard_event(event);
+        *key_code = libinput_event_keyboard_get_key(key_event);
+      }
+      break;
+    default: break;
+  }
+     
+  libinput_event_destroy(event);
+
+end_func:
+  return true;
+}
