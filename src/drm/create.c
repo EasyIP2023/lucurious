@@ -225,41 +225,6 @@ bool dlu_drm_create_kms_node(dlu_drm_core *core, const char *preferred_dev) {
   return ret;
 }
 
-static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
-  return logind_take_device(DLU_INP_FD, (dlu_drm_core *) user_data, path);
-}
-
-static void close_restricted(int UNUSED fd, void *user_data) {
-  logind_release_device(DLU_INP_FD, (dlu_drm_core *) user_data);
-}
-
-static const struct libinput_interface libinput_impl = {
-  .open_restricted = open_restricted,
-  .close_restricted = close_restricted
-};
-
-bool dlu_drm_create_input_handle(dlu_drm_core *core) {
-
-  core->input.udev = udev_new();
-  if (!core->input.udev) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to create a udev context");
-    return false;
-  }
-
-  core->input.inp = libinput_udev_create_context(&libinput_impl, core, core->input.udev);
-  if (!core->input.inp) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to create libinput context");
-    return false;
-  }
-
-  if (libinput_udev_assign_seat(core->input.inp, "seat0") < 0) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to assign seat0 to instance of libinput");
-    return false;
-  }
-
-  return true;
-}
-
 bool dlu_drm_create_gbm_device(dlu_drm_core *core) {
   core->device.gbm_device = gbm_create_device(core->device.kmsfd);
   if (!core->device.gbm_device) {
@@ -372,4 +337,35 @@ bool dlu_drm_create_fb(
   return true;
 err_bo:
   return false;
+}
+
+static int open_restricted(const char *path, int UNUSED flags, void *user_data) {
+   dlu_drm_core *core = (dlu_drm_core *) user_data;
+  return logind_take_device(DLU_INP_FD, core, path) ? core->input.inpfd : -1;
+}
+
+static void close_restricted(int  fd, void *user_data) {
+  logind_release_device(DLU_INP_FD, (dlu_drm_core *) user_data);
+}
+
+bool dlu_drm_create_input_handle(dlu_drm_core *core) {
+
+  core->input.udev = udev_new();
+  if (!core->input.udev) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create a udev context");
+    return false;
+  }
+
+  core->input.inp = libinput_udev_create_context(&(struct libinput_interface) { .open_restricted = open_restricted, .close_restricted = close_restricted } , core, core->input.udev);
+  if (!core->input.inp) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create libinput context");
+    return false;
+  }
+ 
+  if (libinput_udev_assign_seat(core->input.inp, "seat0") < 0) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to assign seat0 to instance of libinput");
+    return false;
+  }
+
+  return true;
 }

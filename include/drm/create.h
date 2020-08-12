@@ -47,6 +47,8 @@ bool dlu_drm_create_fb(
   uint32_t flags
 );
 
+bool dlu_drm_create_input_handle(dlu_drm_core *core);
+
 #ifdef INAPI_CALLS
 void dlu_drm_reset_vt(dlu_drm_core *core);
 #endif

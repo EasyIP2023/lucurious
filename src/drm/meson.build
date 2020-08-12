@@ -30,7 +30,7 @@ libudev = dependency('libudev', required: true)
 
 fs = [
   'setup.c', 'create.c', 'logind.c', 'info.c', 
-  'device.c', 'edid.c', 'screen.c'
+  'device.c', 'edid.c', 'screen.c', 'input.c'
 ]
 
 lib_drm = static_library(

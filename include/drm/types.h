@@ -231,7 +231,7 @@ typedef struct _dlu_drm_core {
   } session;
 
   struct _input {
-    uint32_t inpfd;
+    uint32_t inpfd; /* Has IN_API usage only */
     struct udev *udev;
     struct libinput *inp;
   } input;

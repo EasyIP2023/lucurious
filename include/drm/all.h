@@ -31,6 +31,7 @@
 #include "device.h"
 #include "info.h"
 #include "screen.h"
+#include "input.h"
 
 #ifdef INAPI_CALLS
 #include "timespec-util.h"
