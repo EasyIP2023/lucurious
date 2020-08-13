@@ -33,6 +33,10 @@ dlu_drm_core *dlu_drm_init_core() {
 }
 
 void dlu_drm_freeup_core(dlu_drm_core *core) {
+//  if (core->input.inp)
+//    libinput_unref(core->input.inp);
+  if (core->input.udev)
+    udev_unref(core->input.udev);
   if (core->output_data) {
     uint32_t j, i;
     for (i = 0; i < core->odc; i++) {
@@ -76,10 +80,6 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   release_session_control(core);
   free(core->session.path);
   free(core->session.id);
-  if (core->input.inp)
-    libinput_unref(core->input.inp);
-  if (core->input.udev)
-    udev_unref(core->input.udev);
   if (core->device.vtfd != UINT32_MAX) {
     dlu_drm_reset_vt(core);
     close(core->device.vtfd);

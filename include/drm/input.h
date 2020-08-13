@@ -27,4 +27,7 @@
 
 bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code);
 
+/* Get FD associated with all input events */
+int dlu_drm_retrieve_input_fd(dlu_drm_core *core);
+
 #endif

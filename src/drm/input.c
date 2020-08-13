@@ -30,13 +30,13 @@ bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code) {
   struct libinput_event *event = NULL;
 
   /* Read events from libinput FD and processes them */
-	if (libinput_dispatch(core->input.inp)) {
-    dlu_log_me(DLU_DANGER, "[x] libinput_dispatch: %s", strerror(-errno));
+  if (libinput_dispatch(core->input.inp)) {
+    dlu_log_me(DLU_DANGER, "[x] libinput_dispatch: %s", strerror(errno));
     return false;
-	}
-
+  }
+ 
   event = libinput_get_event(core->input.inp); 
-  if (event == NULL) goto end_func;
+  if (!event) goto end_func;
 
   type = libinput_event_get_type(event);
   switch (type) {
@@ -53,4 +53,8 @@ bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code) {
 
 end_func:
   return true;
+}
+
+int dlu_drm_retrieve_input_fd(dlu_drm_core *core) {
+  return libinput_get_fd(core->input.inp);
 }
