@@ -32,6 +32,30 @@
 
 #include <fcntl.h>
 
+/* Can find here https://code.woboq.org/linux/linux/include/uapi/drm/drm_mode.h.html */
+static const char *conn_types(uint32_t type) {
+  switch (type) {
+    case DRM_MODE_CONNECTOR_Unknown:     return "Unknown";
+    case DRM_MODE_CONNECTOR_VGA:         return "VGA";
+    case DRM_MODE_CONNECTOR_DVII:        return "DVI-I";
+    case DRM_MODE_CONNECTOR_DVID:        return "DVI-D";
+    case DRM_MODE_CONNECTOR_DVIA:        return "DVI-A";
+    case DRM_MODE_CONNECTOR_Composite:   return "Composite";
+    case DRM_MODE_CONNECTOR_SVIDEO:      return "SVIDEO";
+    case DRM_MODE_CONNECTOR_LVDS:        return "LVDS";
+    case DRM_MODE_CONNECTOR_Component:   return "Component";
+    case DRM_MODE_CONNECTOR_9PinDIN:     return "DIN";
+    case DRM_MODE_CONNECTOR_DisplayPort: return "DP";
+    case DRM_MODE_CONNECTOR_HDMIA:       return "HDMI-A";
+    case DRM_MODE_CONNECTOR_HDMIB:       return "HDMI-B";
+    case DRM_MODE_CONNECTOR_TV:          return "TV";
+    case DRM_MODE_CONNECTOR_eDP:         return "eDP";
+    case DRM_MODE_CONNECTOR_VIRTUAL:     return "Virtual";
+    case DRM_MODE_CONNECTOR_DSI:         return "DSI";
+    default:                             return "Unknown";
+  }
+}
+
 /* Intentionally did not add plane freeing into this function */
 static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmModeCrtc **crtc, drmModePlane **plane) {
   if (conn) { // Just an extra check
@@ -116,7 +140,7 @@ void dlu_print_dconf_info(const char *device) {
 
         dlu_print_msg(DLU_SUCCESS, "\n\t\tConnector INFO\n");
         dlu_print_msg(DLU_INFO, "\tConn ID   : %u\tConn Index : %u\n", conn->connector_id, i);
-        dlu_print_msg(DLU_INFO, "\tConn Type : %u\tConn Name  : %s\n", conn->connector_type, ouput_devices(conn->connector_type_id));
+        dlu_print_msg(DLU_INFO, "\tConn Type : %u\tConn Name  : %s\n", conn->connector_type, conn_types(conn->connector_type_id));
         dlu_print_msg(DLU_INFO, "\tEnc ID    : %u\n", conn->encoder_id);
 
         dlu_print_msg(DLU_SUCCESS, "\n\t\tEncoder INFO\n");
@@ -240,7 +264,7 @@ bool dlu_drm_q_output_dev_info(dlu_drm_core *core, dlu_drm_device_info *info) {
 
         info[cur_info].enc_idx = e;
         info[cur_info].conn_idx = i;
-        snprintf(info[cur_info].conn_name, sizeof(info[cur_info].conn_name), "%s", ouput_devices(conn->connector_type_id));
+        snprintf(info[cur_info].conn_name, sizeof(info[cur_info].conn_name), "%s", conn_types(conn->connector_type_id));
 
         enc_crtc_id = enc->crtc_id;
         drmModeFreeEncoder(enc); enc = NULL;

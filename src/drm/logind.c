@@ -169,6 +169,12 @@ int logind_take_device(dlu_drm_core *core, const char *path) {
   sd_bus_error error = SD_BUS_ERROR_NULL;
   int fd = NEG_ONE;
 
+  if (!core->session.path) {
+    dlu_log_me(DLU_DANGER, "[x] Must have an active logind session inorder to take a device");
+    dlu_log_me(DLU_DANGER, "[x] Must first make a call to dlu_drm_create_session(3)");
+    return fd;
+  }
+
   struct stat st;
   if (stat(path, &st) < 0) {
     dlu_log_me(DLU_DANGER, "[x] Failed to stat: '%s'", path);
@@ -213,7 +219,7 @@ void logind_release_device(int fd, dlu_drm_core *core) {
 
   struct stat st;
   if (fstat(fd, &st) < 0) {
-    dlu_log_me(DLU_DANGER, "[x] fstat: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] fstat: %s : %d", strerror(errno), fd);
     return;
   }
 

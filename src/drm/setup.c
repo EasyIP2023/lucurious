@@ -33,10 +33,7 @@ dlu_drm_core *dlu_drm_init_core() {
 }
 
 void dlu_drm_freeup_core(dlu_drm_core *core) {
-//  if (core->input.inp)
-//    libinput_unref(core->input.inp);
-  if (core->input.udev)
-    udev_unref(core->input.udev);
+
   if (core->output_data) {
     uint32_t j, i;
     for (i = 0; i < core->odc; i++) {
@@ -63,7 +60,8 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
         free(core->output_data[i].props.conn[j].enum_values);
     }
   }
-  if (core->buff_data)
+
+  if (core->buff_data) {
     for (uint32_t i = 0; i < core->odbc; i++) {
       for (uint32_t j = 0; j < core->buff_data[i].num_planes; j++)
         close(core->buff_data[i].dma_buf_fds[j]);
@@ -72,17 +70,27 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
       if (core->buff_data[i].bo)
         gbm_bo_destroy(core->buff_data[i].bo);
     }
-  if (core->device.gbm_device)
-    gbm_device_destroy(core->device.gbm_device);
+  }
 
-  /* Release logind session/devices and memory */
-  logind_release_device(core->device.kmsfd, core); /* Closes kmsfd  */
-  release_session_control(core);
-  free(core->session.path);
-  free(core->session.id);
+  if (core->device.gbm_device)
+    gbm_device_destroy(core->device.gbm_device); 
+//  if (core->input.inp)
+//    libinput_unref(core->input.inp);
+  if (core->input.udev)
+    udev_unref(core->input.udev);
+
   if (core->device.vtfd != UINT32_MAX) {
     dlu_drm_reset_vt(core);
     close(core->device.vtfd);
+  }
+
+  /* Release logind session/devices and memory */
+  if (core->device.kmsfd != UINT32_MAX)
+    logind_release_device(core->device.kmsfd, core); /* Closes kmsfd  */
+  if (core->session.path || core->session.id) {
+    release_session_control(core);
+    free(core->session.path);
+    free(core->session.id);
   }
   if (core->session.bus)
     sd_bus_unref(core->session.bus);

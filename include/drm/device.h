@@ -43,7 +43,4 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   const char *conn_name
 );
 
-#ifdef INAPI_CALLS
-const char *ouput_devices(uint32_t type);
-#endif
 #endif

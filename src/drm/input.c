@@ -29,7 +29,7 @@ bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code) {
   enum libinput_event_type type;
   struct libinput_event *event = NULL;
 
-  /* Read events from libinput FD and processes them */
+  /* Read events from libinput FDs and processes them */
   if (libinput_dispatch(core->input.inp)) {
     dlu_log_me(DLU_DANGER, "[x] libinput_dispatch: %s", strerror(errno));
     return false;

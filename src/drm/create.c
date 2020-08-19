@@ -361,7 +361,7 @@ bool dlu_drm_create_input_handle(dlu_drm_core *core) {
     dlu_log_me(DLU_DANGER, "[x] Failed to create libinput context");
     return false;
   }
- 
+
   if (libinput_udev_assign_seat(core->input.inp, "seat0") == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] Failed to assign seat0 to libinput context");
     return false;

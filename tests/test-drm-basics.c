@@ -26,6 +26,9 @@
 #include <lucom.h>
 #include <check.h>
 
+/* For Libinput input event codes */
+#include <linux/input-event-codes.h>
+
 static void free_core(dlu_drm_core *core) {
   dlu_drm_freeup_core(core);
   dlu_release_blocks();
@@ -39,7 +42,7 @@ START_TEST(init_create_kms_node) {
   
   dlu_drm_core *core = dlu_drm_init_core();
 
-  /** 
+  /**
   * RUN IN TTY:
   * First creates a logind session. This allows for access to
   * privileged devices without being root.
@@ -92,7 +95,7 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
   }
 
   uint32_t cur_odb = 0, cur_bi = 0;
-  /* Indexes for my particular system kms node */
+  /* indexes for my particular system kms node */
   if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo->conn_idx, dinfo->enc_idx, dinfo->crtc_idx, dinfo->plane_idx, dinfo->refresh, dinfo->conn_name)) {
     free_core(core);
     ck_abort_msg(NULL);
@@ -109,13 +112,45 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
     ck_abort_msg(NULL);
   }
 
-  /* Function name, parameters, logic may change */
   if (!dlu_drm_do_modeset(core, cur_bi)) {
     free_core(core);
     ck_abort_msg(NULL);  
   }
 
 exit_create_kms_node:
+  free_core(core);
+} END_TEST;
+
+START_TEST(test_libinput_esc) {
+  dlu_otma_mems ma = { .drmc_cnt = 1 };
+
+  if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
+    ck_abort_msg(NULL);
+
+  dlu_drm_core *core = dlu_drm_init_core();
+
+  /**
+  * RUN IN TTY:
+  * First creates a logind session. This allows for access to
+  * privileged devices without being root.
+  * Then find a suitable kms node = drm device = gpu
+  */
+  if (!dlu_drm_create_session(core))
+    goto exit_input_loop; // Exit if not in a tty
+
+  /* Create libinput FD, Establish connection to kernel input system */
+  if (!dlu_drm_create_input_handle(core)) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
+  uint32_t key_code = 0xffffffff;
+  if (!dlu_drm_retrieve_input(core, &key_code)) {
+    free_core(core);
+    ck_abort_msg(NULL);
+  }
+
+exit_input_loop:
   free_core(core);
 } END_TEST;
 
@@ -130,6 +165,7 @@ Suite *alloc_suite(void) {
 
   tcase_add_test(tc_core, init_create_kms_node);
   tcase_add_test(tc_core, kms_node_enumeration_gbm_bo_creation);
+  tcase_add_test(tc_core, test_libinput_esc);
   suite_add_tcase(s, tc_core);
 
   return s;
