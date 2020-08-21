@@ -28,9 +28,8 @@
 /**
 * Values can be computed by running the command lucur --display-info <drm device>
 * or with a call to dlu_drm_q_ouput_dev_info(3)
-* This function sets up the initial Plane -> CRTC -> Encoder -> Connector Pair.
-* These pairs may change from system to system. I also acts a a way to save the current
-* state of the Plane -> CRTC -> Encoder -> Connector Pair. 
+* This function stores the state of the initial Plane -> CRTC -> Encoder -> Connector objects
+* and there properites to be later used in atomic modesetting.
 */
 bool dlu_drm_kms_node_enum_ouput_dev(
   dlu_drm_core *core,

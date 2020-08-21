@@ -116,7 +116,7 @@ typedef enum _dlu_drm_plane_props {
   DLU_DRM_PLANE_IN_FORMATS = 0x000B,
   DLU_DRM_PLANE_IN_FENCE_FD = 0x000C,
   DLU_DRM_PLANE__CNT
-} dlu_drm_plan_props;
+} dlu_drm_plane_props;
 
 typedef enum _dlu_drm_bo_type {
   DLU_DRM_GBM_BO = 0x0000,
@@ -142,8 +142,8 @@ typedef struct _dlu_drm_core {
     struct gbm_bo *bo;
 
     /**
-    * The format of an image details a each pixel is laid out in memory: (i.e. RAM, VRAM, etc...)
-    * The width in bits, type, and ordering of each pixels color channels.
+    * The format of an image details how each pixel color channels is laid out in memory: (i.e. RAM, VRAM, etc...)
+    * So basically the width in bits, type, and ordering of each pixels color channels.
     * The modifier details information on how pixels should be within a buffer for different types
     * operations such as scan out or rendering. (i.e linear, tiled, compressed, etc...)
     */

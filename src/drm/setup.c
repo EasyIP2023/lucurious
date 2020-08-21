@@ -73,21 +73,20 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   }
 
   if (core->device.gbm_device)
-    gbm_device_destroy(core->device.gbm_device); 
+    gbm_device_destroy(core->device.gbm_device);
+
 //  if (core->input.inp)
 //    libinput_unref(core->input.inp);
   if (core->input.udev)
     udev_unref(core->input.udev);
-
   if (core->device.vtfd != UINT32_MAX) {
     dlu_drm_reset_vt(core);
     close(core->device.vtfd);
   }
 
-  /* Release logind session/devices and memory */
-  if (core->device.kmsfd != UINT32_MAX)
-    logind_release_device(core->device.kmsfd, core); /* Closes kmsfd  */
+  /* Release logind session/devices and memory */ 
   if (core->session.path || core->session.id) {
+    logind_release_device(core->device.kmsfd, core); /* Closes kmsfd  */
     release_session_control(core);
     free(core->session.path);
     free(core->session.id);

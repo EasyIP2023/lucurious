@@ -56,6 +56,8 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   * There can only be one master at a time, so this will fail if
   * (e.g.) trying to run this test whilst a graphical session is
   * already active on the current VT.
+  * For more explanation:
+  * https://en.wikipedia.org/wiki/Direct_Rendering_Manager#DRM-Master_and_DRM-Auth
   */
   if (drmGetMagic(core->device.kmsfd, &magic) != 0 || drmAuthMagic(core->device.kmsfd, magic) != 0) {
     dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
@@ -75,14 +77,14 @@ static bool check_if_good_candidate(dlu_drm_core *core, const char *device_name)
   }
 
   err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
-  if (err || cap == 0)
+  if (err || !cap)
     dlu_log_me(DLU_WARNING, "KSM node '%s' doesn't support framebuffer modifiers", device_name);
   else
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports framebuffer modifiers", device_name);
 
   cap = 0;
   err = drmGetCap(core->device.kmsfd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
-  if (err || cap == 0)
+  if (err || !cap)
     dlu_log_me(DLU_WARNING, "KMS node '%s' doesn't support clock monotonic timestamps", device_name);
   else
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports monotonic clock", device_name);
@@ -304,7 +306,7 @@ bool dlu_drm_create_fb(
       .fd     = -1
     };
 
-    /* Retrieve a fd for the GEM handle */
+    /* Retrieve a DMA-BUF fd from the GEM handle to pass along to other processes */
     if (ioctl(core->device.kmsfd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime_request) == NEG_ONE)  {
       dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
       goto err_bo;

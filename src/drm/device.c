@@ -341,7 +341,8 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   core->output_data[odb].mode    = core->output_data[odb].crtc->mode;
 
   /**
-  * Now creating MODE_ID blob
+  * Now creating MODE_ID blob. When performing atomic commits, the driver expects a CRTC property with the name "MODE_ID".
+  * With its name pointing to the blob id. Which is set and stored here.
   * Go here for more information: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
   */
   if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->output_data[odb].mode, sizeof(drmModeModeInfo), &core->output_data[odb].mode_blob_id) < 0) {
@@ -351,11 +352,11 @@ bool dlu_drm_kms_node_enum_ouput_dev(
 
   /**
   * Objects are now created and can now get their property lists from
-  * KMS and use that to fill in the props structures so we can more easily
-  * query and set them.
+  * KMS and use that to fill in the props structures so we can more easily query and set them.
+  * Basically store certain objects (plane, crtc, connector) to be later used in atomic modesetting.
   */
   
-  /* Plane Query */
+  /* retrieve plane properties from the KMS node */
   drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
@@ -371,7 +372,7 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   drmModeFreeObjectProperties(props); props = NULL;
   /* Plane Query */
 
-  /* CRTC Query */
+ /* retrieve CRTC properties from the KMS node */
   props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].crtc_id, DRM_MODE_OBJECT_CRTC);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
@@ -386,7 +387,7 @@ bool dlu_drm_kms_node_enum_ouput_dev(
   drmModeFreeObjectProperties(props); props = NULL;
   /* CRTC Query */
 
-  /* Connector Query */
+  /* retrieve connector properties from the KMS node */
   props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].conn_id, DRM_MODE_OBJECT_CONNECTOR);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));

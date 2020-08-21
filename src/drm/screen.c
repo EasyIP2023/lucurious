@@ -25,6 +25,8 @@
 #define LUCUR_DRM_API
 #include <lucom.h>
 
+/* Need to add more IF Statement checks in file to ensure proper data is created and passed */
+
 /* Function name, parameters, logic may change */
 bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi) {
 
@@ -71,3 +73,119 @@ void dlu_drm_gbm_bo_unmap(struct gbm_bo *bo, void *map_data) {
 int dlu_drm_gbm_bo_write(struct gbm_bo *bo, const void *buff, size_t count) {
   return gbm_bo_write(bo, buff, count);
 }
+
+/* Set property of a connector inside of a atomic request */
+static int add_conn_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_drm_connector_props prop, uint64_t val) {
+  int ret = -1;
+
+  if (!core->output_data[cur_od].props.conn[prop].prop_id) return ret;
+
+  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].conn_id, core->output_data[cur_od].props.conn[prop].prop_id, val);
+  dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
+                       (unsigned long) core->output_data[cur_od].conn_id,
+                       (unsigned long) core->output_data[cur_od].props.conn[prop].prop_id,
+                       core->output_data[cur_od].props.conn[prop].name,
+                       (unsigned long long) val, (unsigned long long) val);
+
+  return (ret <= 0) ? -1 : 0;
+}
+
+/* Set property of a CRTC inside of a atomic request */
+static int add_crtc_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_drm_crtc_props prop, uint64_t val) {
+  int ret = -1;
+
+  if (!core->output_data[cur_od].props.crtc[prop].prop_id) return ret;
+
+  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].crtc_id, core->output_data[cur_od].props.crtc[prop].prop_id, val);
+  dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
+                       (unsigned long) core->output_data[cur_od].crtc_id,
+                       (unsigned long) core->output_data[cur_od].props.crtc[prop].prop_id,
+                       core->output_data[cur_od].props.crtc[prop].name,
+                       (unsigned long long) val, (unsigned long long) val);
+
+  return (ret <= 0) ? -1 : 0;
+}
+
+/* Set property of a plane inside of a atomic request */
+static int add_plane_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_drm_plane_props prop, uint64_t val) {
+  int ret = -1;
+
+  if (!core->output_data[cur_od].props.plane[prop].prop_id) return ret;
+
+  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].pp_id, core->output_data[cur_od].props.plane[prop].prop_id, val);
+  dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
+                       (unsigned long) core->output_data[cur_od].pp_id,
+                       (unsigned long) core->output_data[cur_od].props.plane[prop].prop_id,
+                       core->output_data[cur_od].props.plane[prop].name,
+                       (unsigned long long) val, (unsigned long long) val);
+
+  return (ret <= 0) ? -1 : 0;
+}
+
+bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req) {
+  int ret;
+
+  /* Output device */
+  uint32_t cur_od = core->buff_data[cur_bd].odid;
+  uint32_t width = core->output_data[cur_od].mode.hdisplay;
+  uint32_t height = core->output_data[cur_od].mode.vdisplay;
+
+  dlu_log_me(DLU_WARNING, "[%s] atomic state for commit:", core->output_data[cur_od].name);
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_ID, core->output_data[cur_od].crtc_id);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_FB_ID, core->buff_data[cur_bd].fb_id);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_X, 0);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_Y, 0);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_W, width << 16);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_H, height << 16);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_X, 0);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_Y, 0);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_W, width);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_H, height);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+
+  /**
+  * Changing any of these two properties requires the ALLOW_MODESET
+  * flag to be set on the atomic commit.
+  */
+  ret = add_crtc_prop(core, cur_od, req, DLU_DRM_CRTC_MODE_ID, core->output_data[cur_od].mode_blob_id);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop: %s", strerror(errno)); return false; }
+
+  ret = add_crtc_prop(core, cur_od, req, DLU_DRM_CRTC_ACTIVE, 1);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop: %s", strerror(errno)); return false; }
+
+  ret = add_conn_prop(core, cur_od, req, DLU_DRM_CONNECTOR_CRTC_ID, core->output_data[cur_od].crtc_id);
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_conn_prop: %s", strerror(errno)); return false; }
+
+  return true;
+}
+
+int dlu_drm_do_atomic_commit(dlu_drm_core *core, drmModeAtomicReq *req, bool allow_modeset) {
+  uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
+  
+  if (allow_modeset) /* If not set still works fine */
+    flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
+  
+  return drmModeAtomicCommit(core->device.kmsfd, req, flags, core);
+}
+
+drmModeAtomicReq *dlu_drm_do_atomic_alloc() { return drmModeAtomicAlloc(); }
+void dlu_drm_do_atomic_free(drmModeAtomicReq *req) { drmModeAtomicFree(req); }
