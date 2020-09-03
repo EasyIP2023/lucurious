@@ -173,6 +173,9 @@ typedef struct _dlu_drm_core {
   */
   uint32_t odc; /* Output data count */
   struct _output_data {
+    /* Used to keep track of page flips */
+    bool pflip;
+
     unsigned modifiers_cnt;
     uint64_t *modifiers;
 

@@ -54,6 +54,8 @@ bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi, void *user_data) 
     return false;
   }
 
+  core->output_data[core->buff_data[cur_bi].odid].pflip = true;
+
   return true;
 }
 
@@ -178,12 +180,14 @@ bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq
   return true;
 }
 
-int dlu_drm_do_atomic_commit(dlu_drm_core *core, drmModeAtomicReq *req, bool allow_modeset) {
+int dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset) {
   uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
   
   if (allow_modeset) /* If not set still works fine */
     flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
-  
+
+  core->output_data[core->buff_data[cur_bd].odid].pflip = true;
+
   return drmModeAtomicCommit(core->device.kmsfd, req, flags, core);
 }
 
