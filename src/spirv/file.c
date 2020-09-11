@@ -33,14 +33,14 @@ dlu_file_info dlu_read_file(const char *filename) {
   stream = fopen(filename, "rb");
   if (!stream) {
     dlu_log_me(DLU_DANGER, "[x] fopen: %s", filename, strerror(errno));
-    return fileinfo;
+    goto exit_err;
   }
 
   /* Go to the end of the file */
   fileinfo.byte_size = fseek(stream, 0, SEEK_END);
   if (fileinfo.byte_size == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] fseek: %s", strerror(errno));
-    return fileinfo;
+    goto exit_close;
   }
 
   /**
@@ -51,7 +51,7 @@ dlu_file_info dlu_read_file(const char *filename) {
   fileinfo.byte_size = ftell(stream);
   if (fileinfo.byte_size == NEG_ONE) {
     dlu_log_me(DLU_DANGER, "[x] ftell: %s", strerror(errno));
-    return fileinfo;
+    goto exit_close;
   }
 
   /* Jump back to the beginning of the file */
@@ -60,16 +60,24 @@ dlu_file_info dlu_read_file(const char *filename) {
   fileinfo.bytes = (char *) calloc(fileinfo.byte_size, sizeof(char));
   if (!fileinfo.bytes) {
     dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
-    return fileinfo;
+    goto exit_close;
   }
 
   /* Read in the entire file */
   if (fread(fileinfo.bytes, fileinfo.byte_size, 1, stream) == 0) {
     dlu_log_me(DLU_DANGER, "[x] fread: %s", strerror(errno));
-    return fileinfo;
+    goto exit_free;
   }
 
   fclose(stream);
 
+  return fileinfo;
+exit_free:
+  free(fileinfo.bytes);
+exit_close:
+  fclose(stream);
+exit_err:
+  fileinfo.bytes = NULL;
+  fileinfo.byte_size = 0;
   return fileinfo;
 }

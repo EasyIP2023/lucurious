@@ -54,7 +54,7 @@ const char shader_vert_src[] =
 
 /* Used in test-cube.c */
 const char vertShaderText[] =
-  "#version 400\n"
+  "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"
   "layout (std140, binding = 0) uniform bufferVals {\n"
@@ -69,7 +69,7 @@ const char vertShaderText[] =
   "}";
 
 const char fragShaderText[] =
-  "#version 400\n"
+  "#version 450\n"
   "#extension GL_ARB_separate_shader_objects : enable\n"
   "#extension GL_ARB_shading_language_420pack : enable\n"
   "layout (location = 0) in vec4 color;\n"
