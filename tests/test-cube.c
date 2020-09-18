@@ -147,9 +147,9 @@ START_TEST(test_vulkan_client_create_3D) {
   check_err(capabilities.minImageCount == UINT32_MAX, app, wc, NULL)
 
   /**
-  * VK_FORMAT_B8G8R8A8_UNORM will store the R, G, B and alpha channels
+  * VK_FORMAT_B8G8R8A8_UNORM will store the B, G, R and alpha channels
   * in that order with an 8 bit unsigned integer and a total of 32 bits per pixel.
-  * SRGB if used for colorSpace if available, because it
+  * SRGB is used for colorSpace if available, because it
   * results in more accurate perceived colors
   */
   VkSurfaceFormatKHR surface_fmt = dlu_choose_swap_surface_format(app, cur_pd, VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);

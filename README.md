@@ -13,6 +13,7 @@ compositors that appear to be straight out of science fiction.
 
 ## What I am currently thinking
 * [ISSUE: Remove VkSurfaceKHR and SwapChain Extension code](https://github.com/EasyIP2023/lucurious/issues/40)
+* [VK_EXT_image_drm_format_modifier extension in mesa (Almost implemented)](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466)
 
 ## Dependencies
 * vulkan (Install your graphics card driver)
