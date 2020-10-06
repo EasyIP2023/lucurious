@@ -180,15 +180,20 @@ bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq
   return true;
 }
 
-int dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset) {
+bool dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset) {
   uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
   
   if (allow_modeset) /* If not set still works fine */
     flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
 
+  if (drmModeAtomicCommit(core->device.kmsfd, req, flags, core)) {
+    dlu_log_me(DLU_DANGER, "[x] Atomic commit failed!!");
+    return false;
+  }
+
   core->output_data[core->buff_data[cur_bd].odid].pflip = true;
 
-  return drmModeAtomicCommit(core->device.kmsfd, req, flags, core);
+  return true;
 }
 
 drmModeAtomicReq *dlu_drm_do_atomic_alloc() { return drmModeAtomicAlloc(); }

@@ -39,7 +39,7 @@ int dlu_drm_gbm_bo_write(struct gbm_bo *bo, const void *buff, size_t count);
 
 bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req);
 
-int dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset);
+bool dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset);
 
 drmModeAtomicReq *dlu_drm_do_atomic_alloc();
 void dlu_drm_do_atomic_free(drmModeAtomicReq *req);
