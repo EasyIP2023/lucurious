@@ -382,7 +382,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_desc_set_layout(app, cur_dd, 0, &desc_set_info[0]);
   check_err(err, app, wc, NULL)
 
-  VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NUM_DESCRIPTOR_SETS);
+  VkDescriptorPoolSize pool_size = dlu_set_desc_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1);
   err = dlu_create_desc_pool(app, cur_ld, cur_dd, 1, &pool_size, 0);
   check_err(err, app, wc, NULL)
 
@@ -405,7 +405,7 @@ START_TEST(test_vulkan_client_create_3D) {
   VkDescriptorBufferInfo buff_info; VkWriteDescriptorSet write;
 
   buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, offsets[1], sizeof(ubd.mvp));
-  write = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, NUM_DESCRIPTOR_SETS, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+  write = dlu_set_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, NUM_DESCRIPTOR_SETS, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
   dlu_update_desc_sets(app->ld_data[cur_ld].device, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   dlu_bind_pipeline(app, cur_pool, cur_buff, cur_gpd, 0, VK_PIPELINE_BIND_POINT_GRAPHICS);

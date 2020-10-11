@@ -544,8 +544,8 @@ START_TEST(test_vulkan_image_texture) {
 
   /* set uniform buffer VKBufferInfo and uniform texture ImageInfo */
   VkWriteDescriptorSet writes[2];
-  writes[0] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
-  writes[1] = dlu_write_desc_set(app->desc_data[cur_dd].desc_set[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
+  writes[0] = dlu_set_write_desc_set(app->desc_data[cur_dd].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+  writes[1] = dlu_set_write_desc_set(app->desc_data[cur_dd].desc_set[0], 1, 0, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &desc_img_info, NULL, NULL);
   dlu_update_desc_sets(app->ld_data[cur_ld].device, ARR_LEN(writes), writes, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {

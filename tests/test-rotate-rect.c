@@ -368,7 +368,7 @@ START_TEST(test_vulkan_rotate_rect) {
   VkDescriptorBufferInfo buff_info; VkWriteDescriptorSet write;
 
   buff_info = dlu_set_desc_buff_info(app->buff_data[0].buff, offsets[2], VK_WHOLE_SIZE);
-  write = dlu_write_desc_set(app->desc_data[0].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
+  write = dlu_set_write_desc_set(app->desc_data[0].desc_set[0], 0, 0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, NULL, &buff_info, NULL);
   dlu_update_desc_sets(app->ld_data[cur_ld].device, NUM_DESCRIPTOR_SETS, &write, 0, NULL);
 
   for (uint32_t i = 0; i < app->sc_data[cur_scd].sic; i++) {

@@ -41,4 +41,13 @@ VkResult dlu_vk_map_mem(
   VkMemoryMapFlags flags
 );
 
+/* Update the configurations of descriptors */
+void dlu_update_desc_sets(
+  VkDevice device,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
+);
+
 #endif

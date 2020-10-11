@@ -718,7 +718,7 @@ VkResult dlu_create_pipeline_layout(
 
   if (!app->gp_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_GP_DATA"); return res; }
 
-  VkDescriptorSetLayout  *pSetLayouts  = (layout_infos) ? alloca(layout_count * sizeof(VkDescriptorSetLayout)) :  NULL;
+  VkDescriptorSetLayout *pSetLayouts = (layout_infos) ? alloca(layout_count * sizeof(VkDescriptorSetLayout)) :  NULL;
   for (uint32_t i = 0; i < layout_count; i++) {
     res = vkCreateDescriptorSetLayout(app->ld_data[cur_ld].device, &layout_infos[i], NULL, &pSetLayouts[i]);
     if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateDescriptorSetLayout"); goto end_func; }

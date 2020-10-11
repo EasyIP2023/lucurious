@@ -199,3 +199,14 @@ VkResult dlu_vk_map_mem(
 
   return res;
 }
+
+void dlu_update_desc_sets(
+  VkDevice device,
+  uint32_t descriptorWriteCount,
+  const VkWriteDescriptorSet *pDescriptorWrites,
+  uint32_t descriptorCopyCount,
+  const VkCopyDescriptorSet *pDescriptorCopies
+) {
+
+  vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies);
+}

@@ -598,4 +598,27 @@ static inline VkSamplerCreateInfo dlu_set_sampler_info(
   };
 }
 
+/**
+* descriptorCount: Specify the amount of descriptors to update
+* Tell the driver that which resource to use for descriptors in a set
+*/
+static inline VkWriteDescriptorSet dlu_set_write_desc_set(
+  VkDescriptorSet dstSet,
+  uint32_t dstBinding,
+  uint32_t dstArrayElement,
+  uint32_t descriptorCount,
+  VkDescriptorType descriptorType,
+  const VkDescriptorImageInfo *pImageInfo,
+  const VkDescriptorBufferInfo *pBufferInfo,
+  const VkBufferView *pTexelBufferView
+) {
+
+  return (VkWriteDescriptorSet) { 
+    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+    .pNext = NULL, .dstSet = dstSet, .dstBinding = dstBinding, .dstArrayElement = dstArrayElement,
+    .descriptorCount = descriptorCount, .descriptorType = descriptorType, .pImageInfo = pImageInfo,
+    .pBufferInfo = pBufferInfo, .pTexelBufferView = pTexelBufferView
+  };
+}
+
 #endif

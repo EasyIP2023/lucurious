@@ -57,8 +57,8 @@ install_headers(math_hs, install_dir: i_dir + 'math')
 # Installing vkcomp headers #
 #############################
 vkcomp_hs = [
-  'vkcomp/all.h', 'vkcomp/types.h', 'vkcomp/set.h', 'vkcomp/create.h', 'vkcomp/exec.h',
-  'vkcomp/bind.h', 'vkcomp/update.h', 'vkcomp/display.h', 'vkcomp/setup.h',
+  'vkcomp/all.h', 'vkcomp/types.h', 'vkcomp/set.h', 'vkcomp/create.h',
+  'vkcomp/exec.h', 'vkcomp/bind.h', 'vkcomp/display.h', 'vkcomp/setup.h',
   'vkcomp/utils.h', 'vkcomp/vlayer.h', 'vkcomp/vk_calls.h'
 ]
 install_headers(vkcomp_hs, install_dir: i_dir + 'vkcomp')
