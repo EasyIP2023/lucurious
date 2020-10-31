@@ -306,7 +306,7 @@ bool dlu_drm_create_fb(
       .fd     = -1
     };
 
-    /* Retrieve a DMA-BUF fd from the GEM handle to pass along to other processes */
+    /* Retrieve a DMA-BUF fd from the GEM handle/name to pass along to other processes */
     if (ioctl(core->device.kmsfd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime_request) == NEG_ONE)  {
       dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
       goto err_bo;

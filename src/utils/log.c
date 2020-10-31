@@ -53,6 +53,7 @@ void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
   va_end(args); /* Reset terminal color */
   fprintf(stream, term_colors[DLU_RESET]);
 
+  /* Flush twice */
   fprintf(stream, "\n");
   fflush(stream);
 }

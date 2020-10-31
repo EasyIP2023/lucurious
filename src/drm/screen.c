@@ -83,12 +83,13 @@ static int add_conn_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq *
   if (!core->output_data[cur_od].props.conn[prop].prop_id) return ret;
 
   ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].conn_id, core->output_data[cur_od].props.conn[prop].prop_id, val);
+  /*
   dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
                        (unsigned long) core->output_data[cur_od].conn_id,
                        (unsigned long) core->output_data[cur_od].props.conn[prop].prop_id,
                        core->output_data[cur_od].props.conn[prop].name,
                        (unsigned long long) val, (unsigned long long) val);
-
+  */
   return (ret <= 0) ? -1 : 0;
 }
 
@@ -99,12 +100,13 @@ static int add_crtc_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq *
   if (!core->output_data[cur_od].props.crtc[prop].prop_id) return ret;
 
   ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].crtc_id, core->output_data[cur_od].props.crtc[prop].prop_id, val);
+  /*
   dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
                        (unsigned long) core->output_data[cur_od].crtc_id,
                        (unsigned long) core->output_data[cur_od].props.crtc[prop].prop_id,
                        core->output_data[cur_od].props.crtc[prop].name,
                        (unsigned long long) val, (unsigned long long) val);
-
+  */
   return (ret <= 0) ? -1 : 0;
 }
 
@@ -115,11 +117,13 @@ static int add_plane_prop(dlu_drm_core *core, uint32_t cur_od, drmModeAtomicReq 
   if (!core->output_data[cur_od].props.plane[prop].prop_id) return ret;
 
   ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].pp_id, core->output_data[cur_od].props.plane[prop].prop_id, val);
+  /*
   dlu_log_me(DLU_INFO, "[CONN:%lu] %lu (%s) -> %llu (0x%llx)",
                        (unsigned long) core->output_data[cur_od].pp_id,
                        (unsigned long) core->output_data[cur_od].props.plane[prop].prop_id,
                        core->output_data[cur_od].props.plane[prop].name,
                        (unsigned long long) val, (unsigned long long) val);
+  */
 
   return (ret <= 0) ? -1 : 0;
 }
@@ -132,7 +136,7 @@ bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq
   uint32_t width = core->output_data[cur_od].mode.hdisplay;
   uint32_t height = core->output_data[cur_od].mode.vdisplay;
 
-  dlu_log_me(DLU_WARNING, "[%s] atomic state for commit:", core->output_data[cur_od].name);
+  // dlu_log_me(DLU_WARNING, "[%s] atomic state for commit:", core->output_data[cur_od].name);
 
   ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_ID, core->output_data[cur_od].crtc_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }

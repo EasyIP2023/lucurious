@@ -63,28 +63,28 @@ struct uniform_block_data {
 static bool init_buffs(vkcomp *app) {
   bool err;
 
-  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_PD_DATA, app, INDEX_IGNORE, ma.pd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_LD_DATA, app, INDEX_IGNORE, ma.ld_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_BUFF_DATA, app, INDEX_IGNORE, ma.bd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_SC_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_SC_DATA, app, INDEX_IGNORE, ma.scd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_GP_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_GP_DATA, app, INDEX_IGNORE, ma.gpd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_CMD_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_CMD_DATA, app, INDEX_IGNORE, ma.cmdd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_DESC_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_DESC_DATA, app, INDEX_IGNORE, ma.dd_cnt);
   if (!err) return err;
 
-  err = dlu_otba(DLU_TEXT_DATA, app, INDEX_IGNORE, 1);
+  err = dlu_otba(DLU_TEXT_DATA, app, INDEX_IGNORE, ma.td_cnt);
   if (!err) return err;
 
   return err;
@@ -213,9 +213,17 @@ START_TEST(test_vulkan_image_texture) {
   img_extent.width = pw; img_extent.height = ph; img_extent.depth = 1;
   img_size = img_extent.width * img_extent.height * (requested_channels <= 0 ? pchannels : requested_channels);
 
-  // ktxResult result;
-  // ktxTexture* ktxTexture;
-  // result = ktxTexture_CreateFromMemory((unsigned char *) picture.bytes,  picture.byte_size, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
+  /*
+  int pw = 0, ph = 0; ktxTexture *ktxTexture = NULL;
+  ktxResult result = ktxTexture_CreateFromMemory((unsigned char *) picture.bytes,  picture.byte_size, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
+  if (result != KTX_SUCCESS) {
+    dlu_log_me(DLU_DANGER, "[x] %s failed to load", IMG_SRC);
+    dlu_freeup_spriv_bytes(DLU_UTILS_FILE_SPRIV, picture.bytes);
+    goto exit_free_pixels;
+  }
+
+  ktxTexture_Destroy(ktxTexture);
+  */
 
   /**
   * The buffer is a staging host visible memory buffer. That can be mapped.
@@ -441,7 +449,7 @@ START_TEST(test_vulkan_image_texture) {
     VK_TRUE, VK_LOGIC_OP_COPY, 1, &color_blend_attachment, blend_const
   );
 
-  err = dlu_otba(DLU_GP_DATA_MEMS, app, cur_gpd, 1);
+  err = dlu_otba(DLU_GP_DATA_MEMS, app, cur_gpd, ma.gp_cnt);
   check_err(!err, app, wc, NULL)
 
   err = dlu_create_graphics_pipelines(app, cur_gpd, ARR_LEN(shader_stages), shader_stages,
