@@ -182,19 +182,10 @@ VkResult dlu_vk_map_mem(
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkMapMemory"); return res; }
   memmove(p_data, data, size);
 
-  /* flush the mapped memory to tell the driver which parts of VkDeviceMemory were modified */
-  /*
-  VkMappedMemoryRange range = {};
-  range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  range.pNext = NULL;
-  range.memory = mem;
-  range.offset = offset;
-  range.size = size;
-
-  res = vkFlushMappedMemoryRanges(device, 1, &range);
-  if (res) PERR(DLU_VK_FUNC_ERR, res, "vkFlushMappedMemoryRanges");
+  /**
+  * Memory map and unmap takes time need to come up with something that
+  * doesn't involve constant memory maps
   */
-
   vkUnmapMemory(device, mem);
 
   return res;

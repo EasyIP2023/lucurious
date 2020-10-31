@@ -310,7 +310,11 @@ START_TEST(test_vulkan_rotate_rect) {
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = ARR_LEN(indices);
 
-  const VkDeviceSize offsets[] = {0, vsize, vsize+isize};
+  /* Calculate uniform buffer minUniformBufferOffsetAlignment byte */
+  uint32_t vi_size = vsize+isize;
+  for (;;) { if ((vi_size % device_props.limits.minUniformBufferOffsetAlignment) == 0) break; vi_size+=1; }
+
+  const VkDeviceSize offsets[] = {0, vsize, vi_size};
 
   for (uint32_t i = 0; i < vertex_count; i++) {
     dlu_print_vector(DLU_VEC2, rr_vertices[i].pos);
@@ -325,7 +329,7 @@ START_TEST(test_vulkan_rotate_rect) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize + isize + sizeof(struct uniform_block_data), 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vi_size + sizeof(struct uniform_block_data), 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );

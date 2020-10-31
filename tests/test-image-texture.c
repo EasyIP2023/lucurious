@@ -194,7 +194,7 @@ START_TEST(test_vulkan_image_texture) {
 
   VkDeviceSize img_size; VkExtent3D img_extent;
 
-  /* First load the image */
+  /* Convert byte code to rgba image format */
   int pw = 0, ph = 0, pchannels = 0, requested_channels = STBI_rgb_alpha;
   unsigned char *pixels = stbi_load_from_memory((unsigned char *) picture.bytes, picture.byte_size, &pw, &ph, &pchannels, requested_channels);
   if (!pixels) {  
@@ -248,7 +248,7 @@ START_TEST(test_vulkan_image_texture) {
 
   stbi_image_free(pixels); pixels = NULL;
 
-  VkImageCreateInfo img_info = dlu_set_image_info(0, VK_IMAGE_TYPE_2D, VK_FORMAT_B8G8R8A8_UNORM, img_extent, 1, 1,
+  VkImageCreateInfo img_info = dlu_set_image_info(0, VK_IMAGE_TYPE_2D, surface_fmt.format, img_extent, 1, 1,
     VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_IMAGE_LAYOUT_UNDEFINED
   );
@@ -479,7 +479,11 @@ START_TEST(test_vulkan_image_texture) {
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = ARR_LEN(indices);
 
-  const VkDeviceSize offsets[] = {0, vsize, vsize+isize};
+  /* Calculate uniform buffer minUniformBufferOffsetAlignment byte */
+  uint32_t vi_size = vsize+isize;
+  for (;;) { if ((vi_size % device_props.limits.minUniformBufferOffsetAlignment) == 0) break; vi_size+=1; }
+
+  const VkDeviceSize offsets[] = {0, vsize, vi_size};
 
   for (uint32_t i = 0; i < vertex_count; i++) {
     dlu_log_me(DLU_INFO, "Position Coordinates"); dlu_print_vector(DLU_VEC2, tvertices[i].pos);
@@ -504,7 +508,7 @@ START_TEST(test_vulkan_image_texture) {
   * writes to the memory by the host are visible to the device
   * (and vice-versa) without the need to flush memory caches.
   */
-  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vsize + isize + sizeof(struct uniform_block_data), 0,
+  err = dlu_create_vk_buffer(app, cur_ld, cur_bd, vi_size + sizeof(struct uniform_block_data), 0,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
     VK_SHARING_MODE_EXCLUSIVE, 0, NULL, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
   );
@@ -547,7 +551,7 @@ START_TEST(test_vulkan_image_texture) {
   /* Drawing will start when you begin a render pass */
   dlu_exec_begin_render_pass(app, cur_pool, cur_scd, cur_gpd, 0, 0, extent2D.width, extent2D.height, 1, &clear_value, VK_SUBPASS_CONTENTS_INLINE);
 
-  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[2], sizeof(struct uniform_block_data));
+  VkDescriptorBufferInfo buff_info = dlu_set_desc_buff_info(app->buff_data[cur_bd].buff, offsets[1], sizeof(struct uniform_block_data));
   VkDescriptorImageInfo desc_img_info = dlu_set_desc_img_info(app->text_data[cur_tex].sampler, app->text_data[cur_tex].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   /* set uniform buffer VKBufferInfo and uniform texture ImageInfo */
