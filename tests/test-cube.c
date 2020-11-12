@@ -161,7 +161,7 @@ START_TEST(test_vulkan_client_create_3D) {
   VkExtent2D extent2D = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0, cur_bd = 0, cur_cmd = 0;
+  uint32_t cur_buff = 0, cur_scd = 0, cur_pool = 0, cur_dd = 0, cur_gpd = 0, cur_bd = 0;
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
@@ -179,7 +179,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info, &img_view_info);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_cmd_pool(app, cur_ld, cur_cmd, app->pd_data[cur_pd].gfam_idx, 0);
+  err = dlu_create_cmd_pool(app, cur_ld, cur_pool, app->pd_data[cur_pd].gfam_idx, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
