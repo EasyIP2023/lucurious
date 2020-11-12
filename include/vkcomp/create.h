@@ -159,14 +159,13 @@ VkResult dlu_create_framebuffers(
 );
 
 /**
-* Allows for your app to create a command pool to store your
-* command buffers before being committed to main memory
+* Allows for your app to create a command pool
+* to allocate command buffers from
 */
 VkResult dlu_create_cmd_pool(
   vkcomp *app,
   uint32_t cur_ld,
-  uint32_t cur_scd,
-  uint32_t cur_cmdd,
+  uint32_t cur_pool,
   uint32_t queueFamilyIndex,
   VkCommandPoolCreateFlagBits flags
 );

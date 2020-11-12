@@ -31,26 +31,24 @@
 #include "../../include/vkcomp/types.h"
 #include "../../include/drm/types.h"
 
-#define BLOCK_SIZE sizeof(dlu_mem_block_t)
-
 /**
 * Struct that stores block metadata
-* Using linked list to keep track of memory allocated
-* next     | points to next memory block
+* Using Doubly linked list to keep track of memory allocated
 * size     | allocated memory size
 * abytes   | available bytes left in block
-* addr     | Current address of the block
 * saddr    | Starting address of the block where data is assigned
-* prv_addr | Address of the previous block
+* prev     | Points to the previous block
+* next     | Points to the next memory block
 */
 typedef struct mblock {
-  struct mblock *next;
   size_t size;
   size_t abytes;
-  void *addr;
   void *saddr;
-  void *prv_addr;
+  struct mblock *prev;
+  struct mblock *next;
 } dlu_mem_block_t;
+
+#define BLOCK_SIZE sizeof(dlu_mem_block_t)
 
 /**
 * Globals used to keep track of memory blocks
@@ -79,18 +77,17 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
   size_t abytes = 0;
 
   /**
-  * This allows for O(1) allocation
   * If next block doesn't exists use large_block_priv/shared->saddr address
   * else set current to next block (which would be the block waiting to be allocated)
   */
   switch(type) {
     case DLU_SMALL_BLOCK_PRIV:
       abytes = large_block_priv->abytes;
-      current = (!small_block_priv->next) ? sstart_addr_priv : small_block_priv->next;
+      current = (!small_block_priv->next) ? (dlu_mem_block_t *) sstart_addr_priv : small_block_priv->next;
       break;
     case DLU_SMALL_BLOCK_SHARED:
       abytes = large_block_shared->abytes;
-      current = (!small_block_shared->next) ? sstart_addr_shared : small_block_shared->next;
+      current = (!small_block_shared->next) ? (dlu_mem_block_t *) sstart_addr_shared : small_block_shared->next;
       break;
     default: break;
   }
@@ -100,26 +97,18 @@ static dlu_mem_block_t *get_free_block(dlu_block_type type, size_t bytes) {
 
   if (abytes >= bytes) {
     /* current block thats about to be allocated set few metadata */
-    dlu_mem_block_t *block = current->addr;
+    dlu_mem_block_t *block = current;
     block->size = bytes;
     /* Put saddr at an address that doesn't contain metadata */
-    block->saddr = BLOCK_SIZE + current->addr;
+    block->saddr = ((void*)current) + BLOCK_SIZE;
 
     /**
-    * Set next blocks metadata
     * This is written this way because one needs the return address
     * to be the starting address of the next block not the current one.
     * Basically offset the memory address. Thus, allocating space.
     */
-    block = current->addr + BLOCK_SIZE + bytes;
-
-    /* set next block meta data */
-    block->addr = block;
-    block->next = NULL;
-    block->size = 0;
-    block->abytes = 0;
-    block->saddr = NULL;
-    block->prv_addr = current->addr;
+    block = ((void*)current) + BLOCK_SIZE + bytes;
+    block->prev = current;
 
     /* Decrement larger block available memory */
     switch(type) {
@@ -156,8 +145,7 @@ static dlu_mem_block_t *alloc_mem_block(dlu_block_type type, size_t bytes) {
   block->size = block->abytes = bytes;
 
   /* Put saddr at an address that doesn't contain metadata */
-  block->addr = block;
-  block->saddr = BLOCK_SIZE + block;
+  block->saddr = ((void*)block) + BLOCK_SIZE;
 finish_alloc_mem_block:
   if (close(fd) == NEG_ONE)
     dlu_log_me(DLU_DANGER, "[x] close: %s", strerror(errno));
@@ -195,7 +183,6 @@ void *dlu_alloc(dlu_block_type type, size_t bytes) {
       * doesn't include larger block metadata
       */
       small_block_priv = sstart_addr_priv = nblock->saddr;
-      small_block_priv->addr = small_block_priv;
       break;
     case DLU_SMALL_BLOCK_PRIV:
       /* If large block not allocated return NULL until allocated */
@@ -205,7 +192,7 @@ void *dlu_alloc(dlu_block_type type, size_t bytes) {
       if (!nblock) return NULL;
 
       /* set small block list to address of the previous block in the list */
-      small_block_priv = nblock->prv_addr;
+      small_block_priv = nblock->prev;
       small_block_priv->next = nblock;
 
       /* Move back to previous block (for return status) */
@@ -224,7 +211,6 @@ void *dlu_alloc(dlu_block_type type, size_t bytes) {
       * doesn't include larger block metadata
       */
       small_block_shared = sstart_addr_shared = nblock->saddr;
-      small_block_shared->addr = small_block_shared;
       break;
     case DLU_SMALL_BLOCK_SHARED:
       /* If large block not allocated return NULL until allocated */
@@ -234,7 +220,7 @@ void *dlu_alloc(dlu_block_type type, size_t bytes) {
       if (!nblock) return NULL;
 
       /* set small block list to address of the previous block in the list */
-      small_block_shared = nblock->prv_addr;
+      small_block_shared = nblock->prev;
       small_block_shared->next = nblock;
 
       /* Move back to previous block (for return status) */
@@ -259,37 +245,37 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
 
   /* This allows for exact byte allocation. Resulting in no fragmented memory */
   size += (ma.inta_cnt) ? (BLOCK_SIZE + (ma.inta_cnt * sizeof(int))) : 0;
-  size += (ma.cha_cnt ) ? (BLOCK_SIZE + (ma.cha_cnt  * sizeof(char))) : 0;
-  size += (ma.fla_cnt  ) ? (BLOCK_SIZE + (ma.fla_cnt   * sizeof(float))) : 0;
-  size += (ma.fla_cnt  ) ? (BLOCK_SIZE + (ma.dba_cnt  * sizeof(double))) : 0;
+  size += (ma.cha_cnt)  ? (BLOCK_SIZE + (ma.cha_cnt  * sizeof(char))) : 0;
+  size += (ma.fla_cnt)  ? (BLOCK_SIZE + (ma.fla_cnt  * sizeof(float))) : 0;
+  size += (ma.dba_cnt)  ? (BLOCK_SIZE + (ma.dba_cnt  * sizeof(double))) : 0;
 
-  size += (ma.vkcomp_cnt     ) ? (BLOCK_SIZE + (ma.vkcomp_cnt * sizeof(vkcomp))) : 0;
+  size += (ma.vkcomp_cnt)      ? (BLOCK_SIZE + (ma.vkcomp_cnt * sizeof(vkcomp))) : 0;
   size += (ma.vkext_props_cnt) ? (BLOCK_SIZE + (ma.vkext_props_cnt * sizeof(VkExtensionProperties))) : 0;
-  size += (ma.vk_layer_cnt) ? (BLOCK_SIZE + (ma.vk_layer_cnt * sizeof(VkLayerProperties))) : 0;
+  size += (ma.vk_layer_cnt)    ? (BLOCK_SIZE + (ma.vk_layer_cnt * sizeof(VkLayerProperties))) : 0;
 
-  size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers))) : 0;
-  size += (ma.si_cnt ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers))) : 0;
-  size += (ma.scd_cnt) ? (BLOCK_SIZE + (ma.scd_cnt* sizeof(struct _sc_data))) : 0;
+  size += (ma.si_cnt)  ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers))) : 0;
+  size += (ma.si_cnt)  ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers))) : 0;
+  size += (ma.scd_cnt) ? (BLOCK_SIZE + (ma.scd_cnt * sizeof(struct _sc_data))) : 0;
 
-  size += (ma.gp_cnt ) ? (BLOCK_SIZE + (ma.gp_cnt * sizeof(VkPipeline))) : 0;
+  size += (ma.gp_cnt)  ? (BLOCK_SIZE + (ma.gp_cnt * sizeof(VkPipeline))) : 0;
   size += (ma.gpd_cnt) ? (BLOCK_SIZE + (ma.gpd_cnt * sizeof(struct _gp_data))) : 0;
 
-  size += (ma.si_cnt  ) ? (BLOCK_SIZE + (ma.si_cnt * sizeof(VkCommandBuffer))) : 0;
+  size += (ma.si_cnt)   ? (BLOCK_SIZE + (ma.si_cnt * sizeof(VkCommandBuffer))) : 0;
   size += (ma.cmdd_cnt) ? (BLOCK_SIZE + (ma.cmdd_cnt * sizeof(struct _cmd_data))) : 0;
 
   size += (ma.bd_cnt) ? (BLOCK_SIZE + (ma.bd_cnt * sizeof(struct _buff_data))) : 0;
 
   size += (ma.desc_cnt) ? (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSet))) : 0;
   size += (ma.desc_cnt) ? (BLOCK_SIZE + (ma.desc_cnt * sizeof(VkDescriptorSetLayout))) : 0;
-  size += (ma.dd_cnt  ) ? (BLOCK_SIZE + (ma.dd_cnt * sizeof(struct _desc_data))) : 0;
+  size += (ma.dd_cnt)   ? (BLOCK_SIZE + (ma.dd_cnt * sizeof(struct _desc_data))) : 0;
 
-  size += (ma.td_cnt ) ? (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data))) : 0;
+  size += (ma.td_cnt) ? (BLOCK_SIZE + (ma.td_cnt * sizeof(struct _text_data))) : 0;
 
   size += (ma.pd_cnt) ? (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data))) : 0;
   size += (ma.ld_cnt) ? (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data))) : 0;
 
   size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core))) : 0;
-  size += (ma.dod_cnt ) ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
+  size += (ma.dod_cnt)  ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
 
   size += (ma.dob_cnt) ? (BLOCK_SIZE + (ma.dob_cnt * sizeof(struct _drm_buff_data))) : 0;
 
@@ -420,6 +406,7 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         /* Allocate Semaphores */
         app->sc_data[index].syncs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
         if (!app->sc_data[index].syncs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+
         app->sc_data[index].sic = arr_size; return true;
       }
     case DLU_DESC_DATA_MEMS:
@@ -466,7 +453,6 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
     default: break;
   }
 
-  /* They somehow passed compiler checks and failed here */
   return false;
 }
 

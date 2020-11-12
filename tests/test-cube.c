@@ -179,7 +179,7 @@ START_TEST(test_vulkan_client_create_3D) {
   err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info, &img_view_info);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmd, app->pd_data[cur_pd].gfam_idx, 0);
+  err = dlu_create_cmd_pool(app, cur_ld, cur_cmd, app->pd_data[cur_pd].gfam_idx, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);

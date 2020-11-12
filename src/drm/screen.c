@@ -144,10 +144,10 @@ bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq
   ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_FB_ID, core->buff_data[cur_bd].fb_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_X, 0);
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_X, core->output_data[cur_od].plane->x);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_Y, 0);
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_Y, core->output_data[cur_od].plane->y);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_W, width << 16);
@@ -156,10 +156,10 @@ bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq
   ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_SRC_H, height << 16);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_X, 0);
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_X, core->output_data[cur_od].crtc->x);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_Y, 0);
+  ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_Y, core->output_data[cur_od].crtc->y);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DRM_PLANE_CRTC_W, width);

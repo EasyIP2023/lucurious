@@ -488,14 +488,12 @@ VkResult dlu_create_framebuffers(
 VkResult dlu_create_cmd_pool(
   vkcomp *app,
   uint32_t cur_ld,
-  uint32_t cur_scd,
-  uint32_t cur_cmdd,
+  uint32_t cur_pool,
   uint32_t queueFamilyIndex,
   VkCommandPoolCreateFlagBits flags
 ) {
   VkResult res = VK_RESULT_MAX_ENUM;
 
-  if (app->sc_data[cur_scd].sic == 0) { PERR(DLU_VKCOMP_SC_IC, 0, NULL); return res; }
   if (!app->cmd_data) { PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_CMD_DATA"); return res; }
 
   VkCommandPoolCreateInfo create_info = {};
@@ -504,11 +502,11 @@ VkResult dlu_create_cmd_pool(
   create_info.flags = flags;
   create_info.queueFamilyIndex = queueFamilyIndex;
 
-  res = vkCreateCommandPool(app->ld_data[cur_ld].device, &create_info, NULL, &app->cmd_data[cur_cmdd].cmd_pool);
+  res = vkCreateCommandPool(app->ld_data[cur_ld].device, &create_info, NULL, &app->cmd_data[cur_pool].cmd_pool);
   if (res) { PERR(DLU_VK_FUNC_ERR, res, "vkCreateCommandPool"); return res; }
 
   /* Associate a command pool with a logical device */
-  app->cmd_data[cur_cmdd].ldi = cur_ld;
+  app->cmd_data[cur_pool].ldi = cur_ld;
 
   return res;
 }

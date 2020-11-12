@@ -146,7 +146,7 @@ START_TEST(test_vulkan_rotate_rect) {
   VkExtent2D extent2D = dlu_choose_swap_extent(capabilities, WIDTH, HEIGHT);
   check_err(extent2D.width == UINT32_MAX, app, wc, NULL)
 
-  uint32_t cur_scd = 0, cur_pool = 0, cur_gpd = 0, cur_bd = 0, cur_cmdd = 0, cur_dd = 0;
+  uint32_t cur_scd = 0, cur_gpd = 0, cur_bd = 0, cur_pool = 0, cur_dd = 0;
   err = dlu_otba(DLU_SC_DATA_MEMS, app, cur_scd, capabilities.minImageCount);
   check_err(!err, app, wc, NULL)
 
@@ -163,7 +163,7 @@ START_TEST(test_vulkan_rotate_rect) {
   err = dlu_create_swap_chain(app, cur_ld, cur_scd, &swapchain_info, &img_view_info);
   check_err(err, app, wc, NULL)
 
-  err = dlu_create_cmd_pool(app, cur_ld, cur_scd, cur_cmdd, app->pd_data[cur_pd].gfam_idx, 0);
+  err = dlu_create_cmd_pool(app, cur_ld, cur_pool, app->pd_data[cur_pd].gfam_idx, 0);
   check_err(err, app, wc, NULL)
 
   err = dlu_create_cmd_buffs(app, cur_pool, cur_scd, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -297,7 +297,7 @@ START_TEST(test_vulkan_rotate_rect) {
   /* Ending setup for graphics pipeline */
 
   /* Start of vertex, index, and uniform buffer creation */
-  vertex_2D rr_vertices[4] = {
+  vertex_2D rr_vertices[4] BYTE_ALIGN(16) = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
@@ -412,7 +412,7 @@ START_TEST(test_vulkan_rotate_rect) {
     err = dlu_acquire_sc_image_index(app, cur_scd, cur_frame, &img_index);
     check_err(err, app, wc, NULL)
 
-    cmd_buffs[img_index] = app->cmd_data[cur_cmdd].cmd_buffs[img_index];
+    cmd_buffs[img_index] = app->cmd_data[cur_pool].cmd_buffs[img_index];
     acquire_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.image;
     render_sems[cur_frame] = app->sc_data[cur_scd].syncs[cur_frame].sem.render;
 

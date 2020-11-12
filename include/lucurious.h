@@ -25,6 +25,7 @@
 #ifndef LUCURIOUS_H
 #define LUCURIOUS_H
 
+#define BYTE_ALIGN(align) __attribute__((aligned(align)))
 #define ARR_LEN(var) (sizeof(var) / sizeof(var[0]))
 #define INDEX_IGNORE 1UL << 31
 

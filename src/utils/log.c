@@ -55,7 +55,6 @@ void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
 
   /* Flush twice */
   fprintf(stream, "\n");
-  fflush(stream);
 }
 
 void _dlu_print_me(dlu_log_type type, const char *msg, ...) {
