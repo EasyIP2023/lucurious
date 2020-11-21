@@ -41,12 +41,12 @@
 * next     | Points to the next memory block
 */
 typedef struct mblock {
+  char pad[16];
   size_t size;
   size_t abytes;
   void *saddr;
   struct mblock *prev;
   struct mblock *next;
-  char pad[16];
 } dlu_mem_block_t;
 
 #define BLOCK_SIZE sizeof(dlu_mem_block_t)
