@@ -46,6 +46,7 @@ typedef struct mblock {
   void *saddr;
   struct mblock *prev;
   struct mblock *next;
+  char pad[16];
 } dlu_mem_block_t;
 
 #define BLOCK_SIZE sizeof(dlu_mem_block_t)
@@ -254,7 +255,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.vk_layer_cnt)    ? (BLOCK_SIZE + (ma.vk_layer_cnt * sizeof(VkLayerProperties))) : 0;
 
   size += (ma.si_cnt)  ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _swap_chain_buffers))) : 0;
-  size += (ma.si_cnt)  ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _synchronizers))) : 0;
+  size += (ma.si_cnt)  ? (BLOCK_SIZE + (ma.si_cnt * sizeof(struct _sync_fence) * sizeof(struct _sync_sem))) : 0;
   size += (ma.scd_cnt) ? (BLOCK_SIZE + (ma.scd_cnt * sizeof(struct _sc_data))) : 0;
 
   size += (ma.gp_cnt)  ? (BLOCK_SIZE + (ma.gp_cnt * sizeof(VkPipeline))) : 0;
@@ -404,7 +405,7 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         if (!app->cmd_data[index].cmd_buffs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         /* Allocate Semaphores */
-        app->sc_data[index].syncs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _synchronizers));
+        app->sc_data[index].syncs = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _sync_fence) * sizeof(struct _sync_sem));
         if (!app->sc_data[index].syncs) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         app->sc_data[index].sic = arr_size; return true;
@@ -444,7 +445,7 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
         for (uint32_t i = 0; i < arr_size; i++) {
           core->buff_data[i].fb_id = UINT32_MAX;
           core->buff_data[i].odid = UINT32_MAX;
-          for (uint32_t j = 0; j < 4; j++)
+          for (uint32_t j = 0; j < ARR_LEN(core->buff_data[i].dma_buf_fds); j++)
             core->buff_data[i].dma_buf_fds[j] = NEG_ONE;
         }
 

@@ -120,12 +120,12 @@ typedef struct _vkcomp {
     * VkSemaphore render: Signal that an swapchain image is ready for & done rendering
     */
     struct _synchronizers {
-      struct {
+      struct _sync_fence {
         VkFence image;
         VkFence render;
       } fence;
 
-      struct {
+      struct _sync_sem {
         VkSemaphore image;
         VkSemaphore render;
       } sem;

@@ -31,3 +31,7 @@ sed '/0m/d' <filename>.supp > <new_filname>.supp
 ```
 valgrind --suppressions=<new_filename>.supp
 ```
+
+### Useful Links
+* [Valgrind GDB server user manual](https://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver)
+* [GDB Debug Lectures](https://www.cs.dartmouth.edu/~cs50/Lectures/debug/)
