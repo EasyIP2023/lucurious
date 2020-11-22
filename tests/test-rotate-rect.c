@@ -297,7 +297,7 @@ START_TEST(test_vulkan_rotate_rect) {
   /* Ending setup for graphics pipeline */
 
   /* Start of vertex, index, and uniform buffer creation */
-  vertex_2D rr_vertices[4] BYTE_ALIGN(16) = {
+  vertex_2D rr_vertices[4] = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
@@ -312,7 +312,7 @@ START_TEST(test_vulkan_rotate_rect) {
 
   /* Calculate uniform buffer minUniformBufferOffsetAlignment byte */
   uint32_t vi_size = vsize+isize;
-  for (;;) { if ((vi_size % device_props.limits.minUniformBufferOffsetAlignment) == 0) break; vi_size+=1; }
+  OFFSET_ALIGN(vi_size, device_props.limits.minUniformBufferOffsetAlignment);
 
   const VkDeviceSize offsets[] = {0, vsize, vi_size};
 

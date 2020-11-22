@@ -25,9 +25,10 @@
 #ifndef LUCURIOUS_H
 #define LUCURIOUS_H
 
-#define BYTE_ALIGN(align) __attribute__((aligned(align)))
 #define ARR_LEN(var) (sizeof(var) / sizeof(var[0]))
 #define INDEX_IGNORE 1UL << 31
+#define BYTE_ALIGN __attribute__((aligned))
+#define OFFSET_ALIGN(var, align) for(;;){if((var%align)==0)break;vi_size++;}
 
 /* Contains linear algebra types used throughout apps */
 #include <cglm/types.h>

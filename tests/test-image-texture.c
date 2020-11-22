@@ -481,7 +481,7 @@ START_TEST(test_vulkan_image_texture) {
 
   /* Calculate uniform buffer minUniformBufferOffsetAlignment byte */
   uint32_t vi_size = vsize+isize;
-  for (;;) { if ((vi_size % device_props.limits.minUniformBufferOffsetAlignment) == 0) break; vi_size+=1; }
+  OFFSET_ALIGN(vi_size, device_props.limits.minUniformBufferOffsetAlignment);
 
   const VkDeviceSize offsets[] = {0, vsize, vi_size};
 
