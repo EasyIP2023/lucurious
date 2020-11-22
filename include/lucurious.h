@@ -28,7 +28,7 @@
 #define ARR_LEN(var) (sizeof(var) / sizeof(var[0]))
 #define INDEX_IGNORE 1UL << 31
 #define BYTE_ALIGN __attribute__((aligned))
-#define OFFSET_ALIGN(var, align) for(;;){if((var%align)==0)break;vi_size++;}
+#define OFFSET_ALIGN(var, align) while((var%align)!=0)var++;
 
 /* Contains linear algebra types used throughout apps */
 #include <cglm/types.h>
