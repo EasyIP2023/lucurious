@@ -162,6 +162,7 @@ void release_session_control(dlu_drm_core *core) {
 
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
+  sd_bus_unref(core->session.bus);
 }
 
 int logind_take_device(dlu_drm_core *core, const char *path) {

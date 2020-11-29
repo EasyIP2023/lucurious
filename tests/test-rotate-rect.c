@@ -310,7 +310,7 @@ START_TEST(test_vulkan_rotate_rect) {
   VkDeviceSize isize = sizeof(indices);
   const uint32_t index_count = ARR_LEN(indices);
 
-  /* Calculate uniform buffer minUniformBufferOffsetAlignment byte */
+  /* Calculate byte uniform buffer should start at */
   uint32_t vi_size = vsize+isize;
   OFFSET_ALIGN(vi_size, device_props.limits.minUniformBufferOffsetAlignment);
 
