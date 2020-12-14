@@ -22,39 +22,13 @@
 * THE SOFTWARE.
 */
 
-#define LUCUR_DRM_API
-#include <lucom.h>
-			
-bool dlu_drm_retrieve_input(dlu_drm_core *core, uint32_t *key_code) {
-  enum libinput_event_type type;
-  struct libinput_event *event = NULL;
+#ifndef DLU_DISPLAY_INPUT_H                              
+#define DLU_DISPLAY_INPUT_H
 
-  /* Read events from libinput FDs and processes them */
-  if (libinput_dispatch(core->input.inp)) {
-    dlu_log_me(DLU_DANGER, "[x] libinput_dispatch: %s", strerror(errno));
-    return false;
-  }
- 
-  event = libinput_get_event(core->input.inp); 
-  if (!event) goto end_func;
+bool dlu_input_create(dlu_disp_core *core);
+bool dlu_input_retrieve(dlu_disp_core *core, uint32_t *key_code);
 
-  type = libinput_event_get_type(event);
-  switch (type) {
-    case LIBINPUT_EVENT_KEYBOARD_KEY:
-      {
-        struct libinput_event_keyboard *key_event = libinput_event_get_keyboard_event(event);
-        *key_code = libinput_event_keyboard_get_key(key_event);
-      }
-      break;
-    default: break;
-  }
-     
-  libinput_event_destroy(event);
+/* Get FD associated with all input events */
+int dlu_input_retrieve_fd(dlu_disp_core *core);
 
-end_func:
-  return true;
-}
-
-int dlu_drm_retrieve_input_fd(dlu_drm_core *core) {
-  return libinput_get_fd(core->input.inp);
-}
+#endif

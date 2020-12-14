@@ -7,8 +7,13 @@
 * https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/logind.c
 */
 
-#define LUCUR_DRM_API
+#define LUCUR_DISPLAY_API
 #include <lucom.h>
+
+/**
+* D-Bus (Desktop Bus) software bus using both a IPC and RPC mechanism
+* that allows for the communication of multiple processes running concurrently
+*/
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -16,7 +21,11 @@
 
 #define DRM_MAJOR 226
 
-static bool find_session_path(dlu_drm_core *core) {
+/**
+* Calling the GetSession D-Bus function gets the D-Bus
+* object path string used in order D-Bus operations
+*/
+static bool find_session_path(dlu_disp_core *core) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
   bool ret = true;
@@ -42,7 +51,11 @@ exit_session_path:
   return ret;
 }
 
-static bool session_activate(dlu_drm_core *core) {
+/**
+* Calling the Activate D-Bus function activates a given session
+* via the sd_bus object and path string
+*/
+static bool session_activate(dlu_disp_core *core) {
   bool ret = true;
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -59,7 +72,11 @@ exit_active:
   return ret;
 }
 
-static bool take_control(dlu_drm_core *core) {
+/**
+* The TakeControl D-Bus function allows for one to take control over
+* the current session via the sd_bus object and D-Bus object path string
+*/
+static bool take_control(dlu_disp_core *core) {
   bool ret = true;
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -76,13 +93,10 @@ exit_take_control:
   return ret;
 }
 
-bool dlu_drm_create_session(dlu_drm_core *core) {
+/* Create logind session to access devices without being root */ 
+bool dlu_session_create(dlu_disp_core *core) {
 
-  /**
-  * If there's a session active for the current process then just use that,
-  * This also allows for the setting of the session path, bus, and id variables
-  * needed for other operations such as "take device"
-  */
+  /* If there's a session active for the current process then just use that */
   if (sd_pid_get_session(getpid(), &core->session.id) == 0) goto start_session;
 
   /**
@@ -102,7 +116,7 @@ bool dlu_drm_create_session(dlu_drm_core *core) {
     return false; 
   }
   
-  if (type[0] != 't' || type[1] != 't' || type[2] != 'y') {
+  if (!strncmp(type, "tty", 3)) {
     dlu_log_me(DLU_DANGER, "[x] Unfortunately for you, the available session is not a tty :{");
     free(type); return false;
   }
@@ -116,7 +130,7 @@ bool dlu_drm_create_session(dlu_drm_core *core) {
   }
 
   /* check if return seat var is the defualt seat in systemd */
-  if (seat[0] == 's' && seat[1] == 'e' && seat[2] == 'a' && seat[3] == 't' && seat[4] == '0') {
+  if (!strncmp(seat,"seat0",5)) {
     unsigned vtn;
     /* Check if virtual terminal number exists for this session */
     if (sd_session_get_vt(core->session.id, &vtn) < 0) {
@@ -138,12 +152,13 @@ start_session:
     return false;
   }
   
-  /* get session path */
+  /* Get D-Bus object path string */
   if (!find_session_path(core)) return false;
 
   /* Activate the session */
   if (!session_activate(core)) return false;
 
+  /* Take control of the session */
   if (!take_control(core)) return false;
 
   dlu_log_me(DLU_SUCCESS, "Logind session successfully loaded");
@@ -151,7 +166,12 @@ start_session:
   return true;
 }
 
-void release_session_control(dlu_drm_core *core) {
+/**
+* The ReleaseControl D-Bus function allows for one to release control over
+* the current active session via the sd_bus object and D-Bus object path string
+* This function also finishes up the free'ing of sd_bus related objects
+*/
+void release_session_control(dlu_disp_core *core) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
 
@@ -163,16 +183,23 @@ void release_session_control(dlu_drm_core *core) {
   sd_bus_error_free(&error);
   sd_bus_message_unref(msg);
   sd_bus_unref(core->session.bus);
+  core->session.bus=NULL;
 }
 
-int logind_take_device(dlu_drm_core *core, const char *path) {
+/**
+* The TakeDevice D-Bus function allows for one to acquire control over
+* a given device (i.e GPU,keyboard,mouce,etc) via the sd_bus object and
+* D-Bus object path string. This functions returns a file descriptor
+* to the device that has been acquired.
+*/
+int logind_take_device(dlu_disp_core *core, const char *path) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
   int fd = NEG_ONE;
 
   if (!core->session.path) {
     dlu_log_me(DLU_DANGER, "[x] Must have an active logind session inorder to take a device");
-    dlu_log_me(DLU_DANGER, "[x] Must first make a call to dlu_drm_create_session(3)");
+    dlu_log_me(DLU_DANGER, "[x] Must first make a call to dlu_session_create(3)");
     return fd;
   }
 
@@ -182,7 +209,7 @@ int logind_take_device(dlu_drm_core *core, const char *path) {
     return fd;
   }
 
-  /* Perform conversion to see if struct stat device ID is 226 */
+  /* Identify the device class (DRM) */
   if (major(st.st_rdev) == DRM_MAJOR)
     core->session.has_drm = true;
 
@@ -214,9 +241,16 @@ exit_logind_take_dev:
   return fd;
 }
 
-void logind_release_device(int fd, dlu_drm_core *core) {
+/**
+* The ReleaseDevice D-Bus function allows for one to release control over
+* a given device (i.e GPU,keyboard,mouce,etc) via the sd_bus object and
+* D-Bus object path string
+*/
+void logind_release_device(int fd, dlu_disp_core *core) {
   sd_bus_message *msg = NULL;
   sd_bus_error error = SD_BUS_ERROR_NULL;
+
+  if (fd == NEG_ONE) return;
 
   struct stat st;
   if (fstat(fd, &st) < 0) {

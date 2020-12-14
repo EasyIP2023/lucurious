@@ -22,17 +22,17 @@
 * THE SOFTWARE.
 */
 
-#define LUCUR_DRM_API
+#define LUCUR_DISPLAY_API
 #include <lucom.h>
 
-dlu_drm_core *dlu_drm_init_core() {
-  dlu_drm_core *core = dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(dlu_drm_core));
+dlu_disp_core *dlu_disp_init_core() {
+  dlu_disp_core *core = dlu_alloc(DLU_SMALL_BLOCK_PRIV, sizeof(dlu_disp_core));
   if (!core) { PERR(DLU_ALLOC_FAILED, 0, NULL); return core; };
   core->device.vtfd = core->device.kmsfd = UINT32_MAX;
   return core;
 }
 
-void dlu_drm_freeup_core(dlu_drm_core *core) {
+void dlu_disp_freeup_core(dlu_disp_core *core) {
 
   if (core->output_data) {
     uint32_t j, i;
@@ -52,11 +52,11 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
       }
       if (core->output_data[i].plane)
         drmModeFreePlane(core->output_data[i].plane);
-      for (j = 0; j < DLU_DRM_PLANE_TYPE__CNT; j++)
+      for (j = 0; j < DLU_DISPLAY_PLANE_TYPE__CNT; j++)
         free(core->output_data[i].props.plane[j].enum_values);
-      for (j = 0; j < DLU_DRM_CRTC__CNT; j++)
+      for (j = 0; j < DLU_DISPLAY_CRTC__CNT; j++)
         free(core->output_data[i].props.crtc[j].enum_values);
-      for (j = 0; j < DLU_DRM_CONNECTOR__CNT; j++)
+      for (j = 0; j < DLU_DISPLAY_CONNECTOR__CNT; j++)
         free(core->output_data[i].props.conn[j].enum_values);
     }
   }
@@ -80,7 +80,7 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
   if (core->input.udev)
     udev_unref(core->input.udev);
   if (core->device.vtfd != UINT32_MAX) {
-    dlu_drm_reset_vt(core);
+    dlu_kms_vt_reset(core);
     close(core->device.vtfd);
   }
 
@@ -91,7 +91,5 @@ void dlu_drm_freeup_core(dlu_drm_core *core) {
     free(core->session.path);
     free(core->session.id);
   }
-  if (core->session.bus)
-    sd_bus_unref(core->session.bus);
 }
 

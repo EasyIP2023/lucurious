@@ -1,5 +1,5 @@
-#ifndef DLU_DRM_EDID_H
-#define DLU_DRM_EDID_H 
+#ifndef DLU_DISPLAY_EDID_H
+#define DLU_DISPLAY_EDID_H 
 
 /*
  * Parse the very basic information from the EDID block, as described in

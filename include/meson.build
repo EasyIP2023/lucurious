@@ -29,22 +29,22 @@ install_headers('stb_image.h', install_dir: i_dir)
 ##########################
 # Installing DRM headers #
 ##########################
-drm_hs = [
-  'drm/all.h', 'drm/create.h', 'drm/logind.h', 'drm/device.h', 'drm/info.h',
-  'drm/input.h', 'drm/screen.h', 'drm/setup.h', 'drm/types.h'
+display_hs = [
+  'display/all.h', 'display/types.h', 'display/input.h', 'display/session.h', 
+  'display/fb.h', 'display/kms.h'
 ]
-install_headers(drm_hs, install_dir: i_dir + 'drm')
+install_headers(display_hs, install_dir: i_dir + 'display')
 
 ############################
 # Installing utils headers #
 ############################
-utils_hs = ['utils/all.h', 'utils/log.h', 'utils/mm.h', 'utils/types.h', 'utils/clock.h', 'utils/errors.h']
+utils_hs = ['utils/all.h', 'utils/types.h', 'utils/log.h', 'utils/mm.h', 'utils/clock.h', 'utils/errors.h']
 install_headers(utils_hs, install_dir: i_dir + 'utils')
 
 #############################
 # Installing spir-v headers #
 #############################
-spirv_hs = ['spirv/all.h', 'spirv/file.h', 'spirv/shade.h', 'spirv/types.h']
+spirv_hs = ['spirv/all.h', 'spirv/types.h', 'spirv/file.h', 'spirv/shade.h']
 install_headers(spirv_hs, install_dir: i_dir + 'spirv')
 
 #############################

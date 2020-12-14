@@ -25,6 +25,6 @@
 subdir('utils')
 subdir('vkcomp')
 subdir('spirv')
-subdir('drm')
+subdir('display')
 subdir('math')
 subdir('exec')

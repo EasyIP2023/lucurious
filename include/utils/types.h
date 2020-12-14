@@ -78,7 +78,7 @@ typedef struct _dlu_otma_mems {
   uint32_t td_cnt;       /* texture data count */
   uint32_t pd_cnt;      /* physical device data count */
   uint32_t ld_cnt;       /* logical device data count */
-  uint32_t drmc_cnt;  /* dlu_drm_core struct count */
+  uint32_t drmc_cnt;  /* dlu_disp_core struct count */
   uint32_t dod_cnt;    /* Device output_data struct count */
   uint32_t dob_cnt;    /* Device Output Buffer Count */
 } dlu_otma_mems;

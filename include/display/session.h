@@ -22,26 +22,14 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_SCREEN_H
-#define DLU_DRM_SCREEN_H
+#ifndef DLU_DISPLAY_SESSION_H
+#define DLU_DISPLAY_SESSION_H
 
-bool dlu_drm_do_modeset(dlu_drm_core *core, uint32_t cur_bi);
+bool dlu_session_create(dlu_disp_core *core);
 
-bool dlu_drm_do_page_flip(dlu_drm_core *core, uint32_t cur_bi, void *user_data);
-
-int dlu_drm_do_handle_event(int fd, drmEventContext *ev);
-
-void *dlu_drm_gbm_bo_map(dlu_drm_core *core, uint32_t cur_bi, void **data, uint32_t flags);
-
-void dlu_drm_gbm_bo_unmap(struct gbm_bo *bo, void *map_data);
-
-int dlu_drm_gbm_bo_write(struct gbm_bo *bo, const void *buff, size_t count);
-
-bool dlu_drm_do_atomic_req(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req);
-
-bool dlu_drm_do_atomic_commit(dlu_drm_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset);
-
-drmModeAtomicReq *dlu_drm_do_atomic_alloc();
-void dlu_drm_do_atomic_free(drmModeAtomicReq *req);
-
+#ifdef INAPI_CALLS
+void release_session_control(dlu_disp_core *core);
+int logind_take_device(dlu_disp_core *core, const char *path);
+void logind_release_device(int fd, dlu_disp_core *core);
+#endif
 #endif

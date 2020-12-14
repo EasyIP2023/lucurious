@@ -53,16 +53,16 @@ VkPhysicalDeviceType ret_dtype(char *str) {
   return VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM;
 }
 
-void help_message() {
-  dlu_print_msg(DLU_SUCCESS, "Usage: lucur [options]\n");
-  dlu_print_msg(DLU_WARNING, "Example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n");
+void help_message(const char *file) {
+  dlu_print_msg(DLU_SUCCESS, "Usage: %s [options]\n", file);
+  dlu_print_msg(DLU_WARNING, "Example: %s --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n", file);
   dlu_print_msg(DLU_INFO, "Options:\n");
-  dlu_print_msg(DLU_INFO, "\t-l, --pgvl\t\t\t Print global validation layers\n");
-  dlu_print_msg(DLU_INFO, "\t-i, --pie\t\t\t Print instance extenstion list\n");
-  dlu_print_msg(DLU_INFO, "\t-d, --pde=<VkPhysicalDeviceType> Print device extenstion list\n");
-  dlu_print_msg(DLU_INFO, "\t    --display-info=<drm device>  Display compatible DRM Device and it's capabilities\n");
-  dlu_print_msg(DLU_INFO, "\t-v, --version\t\t\t Print lucurious library version\n");
-  dlu_print_msg(DLU_INFO, "\t-h, --help\t\t\t Show this message\n");
+  dlu_print_msg(DLU_DANGER, "\t-l, --pgvl                      "); dlu_print_msg(DLU_INFO, "\tPrint global validation layers\n");
+  dlu_print_msg(DLU_DANGER, "\t-i, --pie                       "); dlu_print_msg(DLU_INFO, "\tPrint instance extenstion list\n");
+  dlu_print_msg(DLU_DANGER, "\t-d, --pde=<VkPhysicalDeviceType>"); dlu_print_msg(DLU_INFO, "\tPrint device extenstion list\n");
+  dlu_print_msg(DLU_DANGER, "\t    --display-info=<drm device> "); dlu_print_msg(DLU_INFO, "\tDisplay compatible DRM Device and it's capabilities\n");
+  dlu_print_msg(DLU_DANGER, "\t-v, --version                   "); dlu_print_msg(DLU_INFO, "\tPrint lucurious library version\n");
+  dlu_print_msg(DLU_DANGER, "\t-h, --help                      "); dlu_print_msg(DLU_INFO, "\tShow this message\n");
 }
 
 void version_num() {

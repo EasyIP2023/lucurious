@@ -29,8 +29,8 @@ libsystemd = dependency('libsystemd', required: true)
 libudev = dependency('libudev', required: true)
 
 fs = [
-  'setup.c', 'create.c', 'logind.c', 'info.c', 
-  'device.c', 'edid.c', 'screen.c', 'input.c'
+  'setup.c', 'session.c', 'kms.c',
+  'edid.c', 'input.c', 'fb.c'
 ]
 
 lib_drm = static_library(

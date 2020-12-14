@@ -22,10 +22,19 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_SETUP_H
-#define DLU_DRM_SETUP_H
+#ifndef DLU_DISPLAY_ALL_H
+#define DLU_DISPLAY_ALL_H
 
-dlu_drm_core *dlu_drm_init_core();
-void dlu_drm_freeup_core(dlu_drm_core *core);
+#include "kms.h"
+#include "session.h"
+#include "input.h"
+#include "fb.h"
 
+dlu_disp_core *dlu_disp_init_core();
+void dlu_disp_freeup_core(dlu_disp_core *core);
+
+#ifdef INAPI_CALLS
+#include "timespec-util.h"
+#include "edid.h"
+#endif
 #endif

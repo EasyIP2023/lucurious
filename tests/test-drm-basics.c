@@ -22,15 +22,15 @@
 * THE SOFTWARE.
 */
 
-#define LUCUR_DRM_API
+#define LUCUR_DISPLAY_API
 #include <lucom.h>
 #include <check.h>
 
 /* For Libinput input event codes */
 #include <linux/input-event-codes.h>
 
-static void free_core(dlu_drm_core *core) {
-  dlu_drm_freeup_core(core);
+static void free_core(dlu_disp_core *core) {
+  dlu_disp_freeup_core(core);
   dlu_release_blocks();
 }
 
@@ -40,7 +40,7 @@ START_TEST(init_create_kms_node) {
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
   
-  dlu_drm_core *core = dlu_drm_init_core();
+  dlu_disp_core *core = dlu_disp_init_core();
 
   /**
   * RUN IN TTY:
@@ -48,10 +48,10 @@ START_TEST(init_create_kms_node) {
   * privileged devices without being root.
   * Then find a suitable kms node = drm device = gpu
   */
-  if (!dlu_drm_create_session(core))
+  if (!dlu_session_create(core))
     goto exit_create_kms_node; // Exit if not in a tty
  
-  if (!dlu_drm_create_kms_node(core, "/dev/dri/card0")) {
+  if (!dlu_kms_node_create(core, "/dev/dri/card0")) {
     free_core(core);
     ck_abort_msg(NULL);
   }
@@ -66,7 +66,7 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
 
-  dlu_drm_core *core = dlu_drm_init_core();
+  dlu_disp_core *core = dlu_disp_init_core();
 
   if (!dlu_otba(DLU_DEVICE_OUTPUT_DATA, core, INDEX_IGNORE, 1))
     ck_abort_msg(NULL);
@@ -80,39 +80,36 @@ START_TEST(kms_node_enumeration_gbm_bo_creation) {
   * privileged devices without being root.
   * Then find a suitable kms node = drm device = gpu
   */
-  if (!dlu_drm_create_session(core))
+  if (!dlu_session_create(core))
     goto exit_create_kms_node; // Exit if not in a tty
 
-  if (!dlu_drm_create_kms_node(core, NULL)) {
+  if (!dlu_kms_node_create(core, NULL)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
 
-  dlu_drm_device_info dinfo[1];  
-  if (!dlu_drm_q_output_dev_info(core, dinfo) ) {
+  dlu_disp_device_info dinfo[1];  
+  if (!dlu_kms_q_output_chain(core, dinfo) ) {
     free_core(core);
     ck_abort_msg(NULL);
   }
 
   uint32_t cur_odb = 0, cur_bi = 0;
   /* indexes for my particular system kms node */
-  if (!dlu_drm_kms_node_enum_ouput_dev(core, cur_odb, dinfo->conn_idx, dinfo->enc_idx, dinfo->crtc_idx, dinfo->plane_idx, dinfo->refresh, dinfo->conn_name)) {
+  if (!dlu_kms_enum_device(core, cur_odb, dinfo->conn_idx, dinfo->enc_idx, dinfo->crtc_idx, dinfo->plane_idx, dinfo->refresh, dinfo->conn_name)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
 
-  if (!dlu_drm_create_gbm_device(core)) {
-    free_core(core);
-    ck_abort_msg(NULL);  
-  }
-
-  uint32_t bo_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
-  if (!dlu_drm_create_fb(DLU_DRM_GBM_BO, core, cur_bi, cur_odb, GBM_BO_FORMAT_ARGB8888, 24, 32, bo_flags, 0)) {
+  if (!dlu_fb_create(core, 2, &(dlu_disp_fb_info) {
+    .type = DLU_DISPLAY_GBM_BO, .cur_odb = cur_odb, .depth = 24, .bpp = 32,
+    .bo_flags = GBM_BO_USE_RENDERING|GBM_BO_USE_SCANOUT, .format = GBM_BO_FORMAT_XRGB8888, .flags = 0
+  })) {
     free_core(core);
     ck_abort_msg(NULL);
   }
 
-  if (!dlu_drm_do_modeset(core, cur_bi)) {
+  if (!dlu_kms_modeset(core, cur_bi)) {
     free_core(core);
     ck_abort_msg(NULL);  
   }
@@ -127,7 +124,7 @@ START_TEST(test_libinput_esc) {
   if (!dlu_otma(DLU_LARGE_BLOCK_PRIV, ma))
     ck_abort_msg(NULL);
 
-  dlu_drm_core *core = dlu_drm_init_core();
+  dlu_disp_core *core = dlu_disp_init_core();
 
   /**
   * RUN IN TTY:
@@ -135,17 +132,17 @@ START_TEST(test_libinput_esc) {
   * privileged devices without being root.
   * Then find a suitable kms node = drm device = gpu
   */
-  if (!dlu_drm_create_session(core))
+  if (!dlu_session_create(core))
     goto exit_input_loop; // Exit if not in a tty
 
   /* Create libinput FD, Establish connection to kernel input system */
-  if (!dlu_drm_create_input_handle(core)) {
+  if (!dlu_input_create(core)) {
     free_core(core);
     ck_abort_msg(NULL);
   }
 
   uint32_t key_code = 0xffffffff;
-  if (!dlu_drm_retrieve_input(core, &key_code)) {
+  if (!dlu_input_retrieve(core, &key_code)) {
     free_core(core);
     ck_abort_msg(NULL);
   }

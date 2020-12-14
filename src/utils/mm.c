@@ -29,7 +29,7 @@
 
 #include <lucom.h>
 #include "../../include/vkcomp/types.h"
-#include "../../include/drm/types.h"
+#include "../../include/display/types.h"
 
 /**
 * Struct that stores block metadata
@@ -274,7 +274,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.pd_cnt) ? (BLOCK_SIZE + (ma.pd_cnt * sizeof(struct _pd_data))) : 0;
   size += (ma.ld_cnt) ? (BLOCK_SIZE + (ma.ld_cnt * sizeof(struct _ld_data))) : 0;
 
-  size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_drm_core))) : 0;
+  size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_disp_core))) : 0;
   size += (ma.dod_cnt)  ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_data))) : 0;
 
   size += (ma.dob_cnt) ? (BLOCK_SIZE + (ma.dob_cnt * sizeof(struct _drm_buff_data))) : 0;
@@ -430,14 +430,14 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
       }
     case DLU_DEVICE_OUTPUT_DATA:
       {
-        dlu_drm_core *core = (dlu_drm_core *) addr;
+        dlu_disp_core *core = (dlu_disp_core *) addr;
         core->output_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_data));
         if (!core->output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
         core->odc = arr_size; return true;
       }
     case DLU_DEVICE_OUTPUT_BUFF_DATA:
       {
-        dlu_drm_core *core = (dlu_drm_core *) addr;
+        dlu_disp_core *core = (dlu_disp_core *) addr;
         core->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _drm_buff_data));
         if (!core->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 

@@ -25,13 +25,13 @@
 #include <getopt.h>
 
 #define LUCUR_VKCOMP_API
-#define LUCUR_DRM_API // for definition of dlu_print_dconf_info
+#define LUCUR_DISPLAY_API // for definition of dlu_print_dconf_info
 #include <lucom.h>
 
 /* In helpers.c */
 VkQueueFlagBits ret_qfambit(char *str);
 VkPhysicalDeviceType ret_dtype(char *str);
-void help_message();
+void help_message(const char *file);
 void version_num();
 
 /* In vk_info.c */
@@ -40,7 +40,7 @@ void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
 
 int main(int argc, char **argv) {
-  int c = 0;
+  int opt = 0;
   int8_t track = 0;
 
   while (1) {
@@ -56,14 +56,14 @@ int main(int argc, char **argv) {
       {0,              0,                 NULL,  0  }
     };
 
-    c = getopt_long(argc, argv, "vhlid:", long_options, &option_index);
-    if (c == NEG_ONE) { goto exit_loop; }
+    opt = getopt_long(argc, argv, "vhlid:", long_options, &option_index);
+    if (opt == NEG_ONE) { goto exit_loop; }
     track++;
 
-    switch (c) {
+    switch (opt) {
       case 0:
         if (!strcmp(long_options[option_index].name, "version")) { version_num(); goto exit_loop; }
-        if (!strcmp(long_options[option_index].name, "help")) { help_message(); goto exit_loop; }
+        if (!strcmp(long_options[option_index].name, "help")) { help_message(argv[0]); goto exit_loop; }
         if (!strcmp(long_options[option_index].name, "pgvl")) print_validation_layers();
         if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
         if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info(optarg);
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
         break;
       case 1: break;
       case 'v': version_num(); goto exit_loop;
-      case 'h': help_message(); goto exit_loop;
+      case 'h': help_message(argv[0]); goto exit_loop;
       case 'l': print_validation_layers(); break;
       case 'i': print_instance_extensions(); break;
       case 'd':
@@ -95,6 +95,6 @@ int main(int argc, char **argv) {
   }
 
 exit_loop:
-  if (c == NEG_ONE && track == 0) help_message();
+  if (opt == NEG_ONE && track == 0) help_message(argv[0]);
   return EXIT_SUCCESS;
 }

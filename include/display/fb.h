@@ -22,19 +22,19 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_ALL_H
-#define DLU_DRM_ALL_H
+#ifndef DLU_DISPLAY_FB_H
+#define DLU_DISPLAY_FB_H
 
-#include "setup.h"
-#include "create.h"
-#include "logind.h"
-#include "device.h"
-#include "info.h"
-#include "screen.h"
-#include "input.h"
+bool dlu_fb_create(
+  dlu_disp_core *core,
+  uint32_t bo_count,
+  dlu_disp_fb_info *fb_info
+);
 
-#ifdef INAPI_CALLS
-#include "timespec-util.h"
-#include "edid.h"
-#endif
+void *dlu_fb_gbm_bo_map(dlu_disp_core *core, uint32_t cur_bi, void **data, uint32_t flags);
+
+void dlu_fb_gbm_bo_unmap(struct gbm_bo *bo, void *map_data);
+
+int dlu_fb_gbm_bo_write(struct gbm_bo *bo, const void *buff, size_t count);
+
 #endif

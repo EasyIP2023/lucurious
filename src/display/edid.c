@@ -62,7 +62,7 @@
 
 #include <ctype.h>
 
-#define LUCUR_DRM_API
+#define LUCUR_DISPLAY_API
 #include <lucom.h>
 
 #define EDID_DESCRIPTOR_ALPHANUMERIC_DATA_STRING	0xfe

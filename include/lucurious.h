@@ -41,9 +41,9 @@
 #include "spirv/all.h"
 #endif
 
-#ifdef LUCUR_DRM_API
-#include "drm/types.h"
-#include "drm/all.h"
+#ifdef LUCUR_DISPLAY_API
+#include "display/types.h"
+#include "display/all.h"
 #endif
 
 #ifdef LUCUR_MATH_API

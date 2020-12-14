@@ -28,8 +28,8 @@
 * THE SOFTWARE.
 */
 
-#ifndef DLU_DRM_TYPES_H
-#define DLU_DRM_TYPES_H
+#ifndef DLU_DISPLAY_TYPES_H
+#define DLU_DISPLAY_TYPES_H
 
 /* These headers allow for the use of ioctl calls directly */
 #include <drm.h>
@@ -42,6 +42,9 @@
 */
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 /* GBM allocates buffers that are used with KMS */
 #include <gbm.h>
@@ -67,72 +70,82 @@ struct drm_prop_info {
 };
 
 /**
-* DLU_DRM_PLANE_TYPE_PRIMARY: Store background image or graphics content
-* DLU_DRM_PLANE_TYPE_CURSOR: Used to display a cursor plane (mouse)
-* DLU_DRM_PLANE_TYPE_OVERLAY: Used to display any surface (window) over a background
+* DLU_DISPLAY_PLANE_TYPE_PRIMARY: Store background image or graphics content
+* DLU_DISPLAY_PLANE_TYPE_CURSOR: Used to display a cursor plane (mouse)
+* DLU_DISPLAY_PLANE_TYPE_OVERLAY: Used to display any surface (window) over a background
 */
-typedef enum _dlu_drm_plane_type {
-  DLU_DRM_PLANE_TYPE_PRIMARY = 0x0000,
-  DLU_DRM_PLANE_TYPE_CURSOR = 0x0001,
-  DLU_DRM_PLANE_TYPE_OVERLAY = 0x0002,
-  DLU_DRM_PLANE_TYPE__CNT
-} dlu_drm_plane_type;
+typedef enum _dlu_disp_plane_type {
+  DLU_DISPLAY_PLANE_TYPE_PRIMARY,
+  DLU_DISPLAY_PLANE_TYPE_CURSOR,
+  DLU_DISPLAY_PLANE_TYPE_OVERLAY,
+  DLU_DISPLAY_PLANE_TYPE__CNT
+} dlu_disp_plane_type;
 
-typedef enum _dlu_drm_connector_props {
-  DLU_DRM_CONNECTOR_EDID = 0x0000,
-  DLU_DRM_CONNECTOR_DPMS = 0x0001,
-  DLU_DRM_CONNECTOR_CRTC_ID = 0x0002,
-  DLU_DRM_CONNECTOR_NON_DESKTOP = 0x0003,
-  DLU_DRM_CONNECTOR__CNT
-} dlu_drm_connector_props;
+typedef enum _dlu_disp_connector_props {
+  DLU_DISPLAY_CONNECTOR_EDID,
+  DLU_DISPLAY_CONNECTOR_DPMS,
+  DLU_DISPLAY_CONNECTOR_CRTC_ID,
+  DLU_DISPLAY_CONNECTOR_NON_DESKTOP,
+  DLU_DISPLAY_CONNECTOR__CNT
+} dlu_disp_connector_props;
 
 /* Display Power Management Signaling */
-typedef enum _dlu_drm_dpms_state {
-  DLU_DRM_DPMS_STATE_OFF = 0x0000,
-  DLU_DRM_DPMS_STATE_ON = 0x0001,
-  DLU_DRM_DPMS_STATE__CNT
-} dlu_drm_dpms_state;
+typedef enum _dlu_disp_dpms_state {
+  DLU_DISPLAY_DPMS_STATE_OFF,
+  DLU_DISPLAY_DPMS_STATE_ON,
+  DLU_DISPLAY_DPMS_STATE__CNT
+} dlu_disp_dpms_state;
 
-typedef enum _dlu_drm_crtc_props {
-  DLU_DRM_CRTC_MODE_ID = 0x0000,
-  DLU_DRM_CRTC_ACTIVE = 0x0001,
-  DLU_DRM_CRTC_OUT_FENCE_PTR = 0x0002,
-  DLU_DRM_CRTC__CNT
-} dlu_drm_crtc_props;
+typedef enum _dlu_disp_crtc_props {
+  DLU_DISPLAY_CRTC_MODE_ID,
+  DLU_DISPLAY_CRTC_ACTIVE,
+  DLU_DISPLAY_CRTC_OUT_FENCE_PTR,
+  DLU_DISPLAY_CRTC__CNT
+} dlu_disp_crtc_props;
 
 /* Properties attached to DRM planes */
-typedef enum _dlu_drm_plane_props {
-  DLU_DRM_PLANE_TYPE = 0x0000,
-  DLU_DRM_PLANE_SRC_X = 0x0001,
-  DLU_DRM_PLANE_SRC_Y = 0x0002,
-  DLU_DRM_PLANE_SRC_W = 0x0003,
-  DLU_DRM_PLANE_SRC_H = 0x0004,
-  DLU_DRM_PLANE_CRTC_X = 0x0005,
-  DLU_DRM_PLANE_CRTC_Y = 0x0006,
-  DLU_DRM_PLANE_CRTC_W = 0x0007,
-  DLU_DRM_PLANE_CRTC_H = 0x0008,
-  DLU_DRM_PLANE_FB_ID = 0x0009,
-  DLU_DRM_PLANE_CRTC_ID = 0x000A,
-  DLU_DRM_PLANE_IN_FORMATS = 0x000B,
-  DLU_DRM_PLANE_IN_FENCE_FD = 0x000C,
-  DLU_DRM_PLANE__CNT
-} dlu_drm_plane_props;
+typedef enum _dlu_disp_plane_props {
+  DLU_DISPLAY_PLANE_TYPE,
+  DLU_DISPLAY_PLANE_SRC_X,
+  DLU_DISPLAY_PLANE_SRC_Y,
+  DLU_DISPLAY_PLANE_SRC_W,
+  DLU_DISPLAY_PLANE_SRC_H,
+  DLU_DISPLAY_PLANE_CRTC_X,
+  DLU_DISPLAY_PLANE_CRTC_Y,
+  DLU_DISPLAY_PLANE_CRTC_W,
+  DLU_DISPLAY_PLANE_CRTC_H,
+  DLU_DISPLAY_PLANE_FB_ID,
+  DLU_DISPLAY_PLANE_CRTC_ID,
+  DLU_DISPLAY_PLANE_IN_FORMATS,
+  DLU_DISPLAY_PLANE_IN_FENCE_FD,
+  DLU_DISPLAY_PLANE__CNT
+} dlu_disp_plane_props;
 
-typedef enum _dlu_drm_bo_type {
-  DLU_DRM_GBM_BO = 0x0000,
-  DLU_DRM_GBM_BO_WITH_MODIFIERS  = 0x0001
-} dlu_drm_bo_type;
+typedef enum _dlu_disp_bo_type {
+  DLU_DISPLAY_GBM_BO,
+  DLU_DISPLAY_GBM_BO_WITH_MODIFIERS
+} dlu_disp_bo_type;
 
-typedef struct _dlu_drm_device_info {
+typedef struct _dlu_disp_fb_info {
+  dlu_disp_bo_type type;
+  uint32_t cur_odb;
+  uint32_t depth;
+  uint32_t bpp;
+  uint32_t bo_flags;
+  uint32_t format;
+  uint32_t flags;
+} dlu_disp_fb_info;
+
+typedef struct _dlu_disp_device_info {
   uint32_t conn_idx;
   uint32_t enc_idx;
   uint32_t crtc_idx;
   uint32_t plane_idx;
   uint64_t refresh;
   char conn_name[32];
-} dlu_drm_device_info;
+} dlu_disp_device_info;
 
-typedef struct _dlu_drm_core {
+typedef struct _dlu_disp_core {
  
   uint32_t odbc;
   struct _drm_buff_data {
@@ -152,8 +165,7 @@ typedef struct _dlu_drm_core {
 
     /* true if a buffer (scan out buffer) is currently owned by KMS. */ 
     bool in_use;
-  
-    /* Generally four (BO, framebuffer, image) planes */
+
     uint32_t num_planes;
     unsigned pitches[4];
     unsigned offsets[4];
@@ -201,9 +213,9 @@ typedef struct _dlu_drm_core {
     drmModeConnector *conn;
 
     struct {
-      struct drm_prop_info plane[DLU_DRM_PLANE__CNT];
-      struct drm_prop_info crtc[DLU_DRM_CRTC__CNT];
-      struct drm_prop_info conn[DLU_DRM_CONNECTOR__CNT];
+      struct drm_prop_info plane[DLU_DISPLAY_PLANE__CNT];
+      struct drm_prop_info crtc[DLU_DISPLAY_CRTC__CNT];
+      struct drm_prop_info conn[DLU_DISPLAY_CONNECTOR__CNT];
     } props;
   } *output_data;
 
@@ -218,7 +230,7 @@ typedef struct _dlu_drm_core {
     struct gbm_device *gbm_device;
   } device;
 
-  struct _logind {
+  struct _session {
     /* For open D-Bus connection */
     sd_bus *bus;
 
@@ -232,6 +244,6 @@ typedef struct _dlu_drm_core {
     struct udev *udev;
     struct libinput *inp;
   } input;
-} dlu_drm_core;
+} dlu_disp_core;
 
 #endif
