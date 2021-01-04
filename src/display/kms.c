@@ -289,6 +289,185 @@ static void output_get_edid(dlu_disp_core *core, uint32_t odb, drmModeObjectProp
   free(edid);
 }
 
+/* Open a single DRM device. Check to see if the node is a good candidate for usage */
+static bool check_if_good_candidate(dlu_disp_core *core, const char *device_name) {
+  drm_magic_t magic;
+  uint64_t cap = 0;
+  int err = 0;
+
+  /**
+  * Open the device and ensure we have support for universal planes and
+  * kms atomic modesetting. This function updates the kmsfd struct member
+  */
+  core->device.kmsfd = logind_take_device(core, device_name);
+  if (core->device.kmsfd == UINT32_MAX) goto close_kms;
+
+  /**
+  * In order to drive KMS, we need to be 'master'. This should already
+  * have happened for us thanks to being root and the first client.
+  * There can only be one master at a time, so this will fail if
+  * (e.g.) trying to run this test whilst a graphical session is
+  * already active on the current VT.
+  * For more explanation:
+  * https://en.wikipedia.org/wiki/Direct_Rendering_Manager#DRM-Master_and_DRM-Auth
+  */
+  if (drmGetMagic(core->device.kmsfd, &magic) != 0 || drmAuthMagic(core->device.kmsfd, magic) != 0) {
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
+    goto close_kms;
+  } else {
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
+  }
+
+  /* Universal planes means exposing primary & cursor as proper plane objects */
+  err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+  err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
+  if (err < 0) {
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or KMS atomic", device_name);
+    goto close_kms;
+  } else {
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for universal planes and or KMS atomic", device_name);
+  }
+
+  err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
+  if (err || !cap)
+    dlu_log_me(DLU_WARNING, "KSM node '%s' doesn't support framebuffer modifiers", device_name);
+  else
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports framebuffer modifiers", device_name);
+
+  cap = 0;
+  err = drmGetCap(core->device.kmsfd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
+  if (err || !cap)
+    dlu_log_me(DLU_WARNING, "KMS node '%s' doesn't support clock monotonic timestamps", device_name);
+  else
+    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports monotonic clock", device_name);
+
+  return true;
+
+close_kms:
+  logind_release_device(core->device.kmsfd, core);
+  return false;
+}
+
+/**
+* Setting up VT/TTY so program runs in graphical mode.
+* This also lets a process handle its own input
+*/
+bool dlu_kms_vt_create(dlu_disp_core *core) {
+  int vt_num = 0, tty = 0;
+  char tty_dev[10]; /* stores location, chars are /dev/tty#N */
+
+  /* looking for a free virtual terminal (VT) that can be used */
+  tty = open("/dev/tty0", O_WRONLY);
+  if (tty == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] open: %s", strerror(errno));
+    return false;
+  }
+
+  if (ioctl(tty, VT_OPENQRY, &vt_num) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    close(tty); return false;
+  }
+
+  close(tty);
+
+  snprintf(tty_dev, sizeof(tty_dev), "/dev/tty%d", vt_num);
+
+  core->device.vtfd = open(tty_dev, O_RDWR | O_NOCTTY);
+  if (core->device.vtfd == UINT32_MAX) {
+    dlu_log_me(DLU_DANGER, "open: %s", strerror(errno));
+    return false;
+  }
+
+  /* Switching over to virtual terminal */
+  if (ioctl(core->device.vtfd, VT_ACTIVATE, vt_num) == NEG_ONE ||
+      ioctl(core->device.vtfd, VT_WAITACTIVE, vt_num) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] failed to switch to VT %d", vt_num);
+    return false;
+  }
+
+  dlu_log_me(DLU_SUCCESS, "VT %d is in use", vt_num);
+
+  /**
+  * Disable kernel keyboard processing:
+  * 1. Back up the keybord mode for restoration purposes.
+  * 2. Then disable keyboard
+  */
+  if (ioctl(core->device.vtfd, KDGKBMODE, &core->device.bkbm) == NEG_ONE ||
+      ioctl(core->device.vtfd, KDSKBMODE, K_OFF) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] Disabling TTY keyboard processing failed");
+    return false;
+  }
+
+  dlu_log_me(DLU_WARNING, "Changing VT %d to graphics mode", vt_num);
+
+  /**
+  * Now changing the VT into graphics mode.
+  * stoping the kernel from printing text
+  */
+  if (ioctl(core->device.vtfd, KDSETMODE, KD_GRAPHICS) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    return false;
+  }
+
+  dlu_log_me(DLU_SUCCESS, "VT successfully setup");
+
+  return true;
+}
+
+bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev) {
+  bool ret = false;
+
+  if (preferred_dev) {
+    ret = check_if_good_candidate(core, preferred_dev);
+    if (ret) {
+      dlu_log_me(DLU_SUCCESS, "Your KMS node '%s' is suitable!!", preferred_dev);
+      return ret;
+    }
+  }
+
+  drmDevicePtr *devices = NULL;
+  uint32_t num_dev = drmGetDevices2(0, NULL, 0);
+  if (!num_dev) {
+    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
+    dlu_log_me(DLU_DANGER, "[x] no available KMS nodes from /dev/dri/*");
+    return false;
+  }
+
+  devices = alloca(num_dev * sizeof(drmDevicePtr));
+
+  num_dev = drmGetDevices2(0, devices, num_dev);
+  if (!num_dev) {
+    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
+    return false;
+  }
+
+  dlu_log_me(DLU_SUCCESS, "%d available KMS nodes", num_dev);
+
+  char *kms_node = NULL;
+  for (uint32_t i = 0; i < num_dev; i++) {
+    /**
+    * We need /dev/dri/cardN nodes for modesetting, not render
+    * nodes; render nodes are only used for GPU rendering, and
+    * control nodes are totally useless. Primary nodes are the
+    * only ones which let us control KMS.
+    */
+    if (!(devices[i]->available_nodes & (1 << DRM_NODE_PRIMARY))) continue;
+
+    kms_node = devices[i]->nodes[DRM_NODE_PRIMARY];
+    ret = check_if_good_candidate(core, kms_node);
+    if (ret) {
+      dlu_log_me(DLU_SUCCESS, "Suitable KMS node found!! '%s'", kms_node);
+      break;
+    }
+  }
+
+  drmFreeDevices(devices, num_dev);
+
+  return ret;
+}
+
 /** 
 * Might be a good idea to run lucur --display-info=/dev/dri/card0 from within a TTY :)  
 * or make a call to dlu_disp_q_ouput_dev_info(3).
@@ -523,56 +702,53 @@ bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *
   // dlu_log_me(DLU_WARNING, "[%s] atomic state for commit:", core->output_data[cur_od].name);
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_ID, core->output_data[cur_od].crtc_id);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_FB_ID, core->buff_data[cur_bd].fb_id);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_X, core->output_data[cur_od].plane->x);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_Y, core->output_data[cur_od].plane->y);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_W, width << 16);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_H, height << 16);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_X, core->output_data[cur_od].crtc->x);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_Y, core->output_data[cur_od].crtc->y);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_W, width);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_H, height);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   /**
   * Changing any of these two properties requires the ALLOW_MODESET
   * flag to be set on the atomic commit.
   */
   ret = add_crtc_prop(core, cur_od, req, DLU_DISPLAY_CRTC_MODE_ID, core->output_data[cur_od].mode_blob_id);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop"); return false; }
 
   ret = add_crtc_prop(core, cur_od, req, DLU_DISPLAY_CRTC_ACTIVE, 1);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop"); return false; }
 
   ret = add_conn_prop(core, cur_od, req, DLU_DISPLAY_CONNECTOR_CRTC_ID, core->output_data[cur_od].crtc_id);
-  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_conn_prop: %s", strerror(errno)); return false; }
+  if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_conn_prop"); return false; }
 
   return true;
 }
 
-bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset) {
-  uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
-  
-  if (allow_modeset) /* If not set still works fine */
-    flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
+bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *req) {
+  uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT | DRM_MODE_ATOMIC_ALLOW_MODESET;
 
   if (drmModeAtomicCommit(core->device.kmsfd, req, flags, core)) {
     dlu_log_me(DLU_DANGER, "[x] Atomic commit failed!!");
@@ -586,197 +762,6 @@ bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicRe
 
 drmModeAtomicReq *dlu_kms_atomic_alloc() { return drmModeAtomicAlloc(); }
 void dlu_kms_atomic_free(drmModeAtomicReq *req) { drmModeAtomicFree(req); }
-
-/* Open a single DRM device. Check to see if the node is a good candidate for usage */
-static bool check_if_good_candidate(dlu_disp_core *core, const char *device_name) {
-  drm_magic_t magic;
-  uint64_t cap = 0;
-  int err = 0;
-
-  /**
-  * Open the device and ensure we have support for universal planes and
-  * kms atomic modesetting. This function updates the kmsfd struct member
-  */
-  core->device.kmsfd = logind_take_device(core, device_name);
-  if (core->device.kmsfd == UINT32_MAX) goto close_kms;
-
-  /**
-  * In order to drive KMS, we need to be 'master'. This should already
-  * have happened for us thanks to being root and the first client.
-  * There can only be one master at a time, so this will fail if
-  * (e.g.) trying to run this test whilst a graphical session is
-  * already active on the current VT.
-  * For more explanation:
-  * https://en.wikipedia.org/wiki/Direct_Rendering_Manager#DRM-Master_and_DRM-Auth
-  */
-  if (drmGetMagic(core->device.kmsfd, &magic) != 0 || drmAuthMagic(core->device.kmsfd, magic) != 0) {
-    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
-    goto close_kms;
-  } else {
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
-  }
-
-  /* Universal planes means exposing primary & cursor as proper plane objects */
-  err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
-  err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
-  if (err < 0) {
-    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or KMS atomic", device_name);
-    goto close_kms;
-  } else {
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for universal planes and or KMS atomic", device_name);
-  }
-
-  err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
-  if (err || !cap)
-    dlu_log_me(DLU_WARNING, "KSM node '%s' doesn't support framebuffer modifiers", device_name);
-  else
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports framebuffer modifiers", device_name);
-
-  cap = 0;
-  err = drmGetCap(core->device.kmsfd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
-  if (err || !cap)
-    dlu_log_me(DLU_WARNING, "KMS node '%s' doesn't support clock monotonic timestamps", device_name);
-  else
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports monotonic clock", device_name);
-
-  return true;
-
-close_kms:
-  logind_release_device(core->device.kmsfd, core);
-  return false;
-}
-
-void dlu_kms_vt_reset(dlu_disp_core *core) {
-  if (ioctl(core->device.vtfd, KDSKBMODE, core->device.bkbm) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return;
-  }
-
-  if (ioctl(core->device.vtfd, KDSETMODE, KD_TEXT) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return;
-  }
-}
-
-/**
-* Setting up VT/TTY so program runs in graphical mode.
-* This also lets a process handle its own input
-*/
-bool dlu_kms_vt_create(dlu_disp_core *core) {
-  int vt_num = 0, tty = 0;
-  char tty_dev[10]; /* stores location, chars are /dev/tty#N */
-
-  /* looking for a free virtual terminal (VT) that can be used */
-  tty = open("/dev/tty0", O_WRONLY);
-  if (tty == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] open: %s", strerror(errno));
-    return false;
-  }
-
-  if (ioctl(tty, VT_OPENQRY, &vt_num) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    close(tty); return false;
-  }
-
-  close(tty);
-
-  snprintf(tty_dev, sizeof(tty_dev), "/dev/tty%d", vt_num);
-
-  core->device.vtfd = open(tty_dev, O_RDWR | O_NOCTTY);
-  if (core->device.vtfd == UINT32_MAX) {
-    dlu_log_me(DLU_DANGER, "open: %s", strerror(errno));
-    return false;
-  }
-
-  /* Switching over to virtual terminal */
-  if (ioctl(core->device.vtfd, VT_ACTIVATE, vt_num) == NEG_ONE ||
-      ioctl(core->device.vtfd, VT_WAITACTIVE, vt_num) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    dlu_log_me(DLU_DANGER, "[x] failed to switch to VT %d", vt_num);
-    return false;
-  }
-
-  dlu_log_me(DLU_SUCCESS, "VT %d is in use", vt_num);
-
-  /**
-  * Disable kernel keyboard processing:
-  * 1. Back up the keybord mode for restoration purposes.
-  * 2. Then disable keyboard
-  */
-  if (ioctl(core->device.vtfd, KDGKBMODE, &core->device.bkbm) == NEG_ONE ||
-      ioctl(core->device.vtfd, KDSKBMODE, K_OFF) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    dlu_log_me(DLU_DANGER, "[x] Disabling TTY keyboard processing failed");
-    return false;
-  }
-
-  dlu_log_me(DLU_WARNING, "Changing VT %d to graphics mode", vt_num);
-
-  /**
-  * Now changing the VT into graphics mode.
-  * stoping the kernel from printing text
-  */
-  if (ioctl(core->device.vtfd, KDSETMODE, KD_GRAPHICS) == NEG_ONE) {
-    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
-    return false;
-  }
-
-  dlu_log_me(DLU_SUCCESS, "VT successfully setup");
-
-  return true;
-}
-
-bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev) {
-  bool ret = false;
-
-  if (preferred_dev) {
-    ret = check_if_good_candidate(core, preferred_dev);
-    if (ret) {
-      dlu_log_me(DLU_SUCCESS, "Your KMS node '%s' is suitable!!", preferred_dev);
-      return ret;
-    }
-  }
-
-  drmDevicePtr *devices = NULL;
-  uint32_t num_dev = drmGetDevices2(0, NULL, 0);
-  if (!num_dev) {
-    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
-    dlu_log_me(DLU_DANGER, "[x] no available KMS nodes from /dev/dri/*");
-    return false;
-  }
-
-  devices = alloca(num_dev * sizeof(drmDevicePtr));
-
-  num_dev = drmGetDevices2(0, devices, num_dev);
-  if (!num_dev) {
-    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
-    return false;
-  }
-
-  dlu_log_me(DLU_SUCCESS, "%d available KMS nodes", num_dev);
-
-  char *kms_node = NULL;
-  for (uint32_t i = 0; i < num_dev; i++) {
-    /**
-    * We need /dev/dri/cardN nodes for modesetting, not render
-    * nodes; render nodes are only used for GPU rendering, and
-    * control nodes are totally useless. Primary nodes are the
-    * only ones which let us control KMS.
-    */
-    if (!(devices[i]->available_nodes & (1 << DRM_NODE_PRIMARY))) continue;
-
-    kms_node = devices[i]->nodes[DRM_NODE_PRIMARY];
-    ret = check_if_good_candidate(core, kms_node);
-    if (ret) {
-      dlu_log_me(DLU_SUCCESS, "Suitable KMS node found!! '%s'", kms_node);
-      break;
-    }
-  }
-
-  drmFreeDevices(devices, num_dev);
-
-  return ret;
-}
 
 static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmModeCrtc **crtc, drmModePlane **plane) {
   if (conn) {
@@ -805,6 +790,18 @@ static void free_drm_objs(drmModeConnector **conn, drmModeEncoder **enc, drmMode
       drmModeFreePlane(*plane);
       *plane = NULL;
     }
+  }
+}
+
+void dlu_kms_vt_reset(dlu_disp_core *core) {
+  if (ioctl(core->device.vtfd, KDSKBMODE, core->device.bkbm) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    return;
+  }
+
+  if (ioctl(core->device.vtfd, KDSETMODE, KD_TEXT) == NEG_ONE) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl: %s", strerror(errno));
+    return;
   }
 }
 

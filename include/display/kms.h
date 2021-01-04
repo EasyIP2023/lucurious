@@ -26,6 +26,14 @@
 #define DLU_DISPLAY_KMS_H
 
 /**
+* Function sets up a VT/TTY (directly switch to the TTY mode) so the process
+* can in be graphical mode. It also sets a process up so that it can handle 
+* its own input.
+*/
+bool dlu_kms_vt_create(dlu_disp_core *core);
+bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev);
+
+/**
 * Values can be computed by running the command lucur --display-info <drm device>
 * or with a call to dlu_disp_q_ouput_dev_info(3)
 * This function stores the state of the initial Plane -> CRTC -> Encoder -> Connector objects
@@ -50,17 +58,10 @@ int dlu_kms_handle_event(int fd, drmEventContext *ev);
 
 bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *req);
 
-bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *req, bool allow_modeset);
+bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *req);
 
 drmModeAtomicReq *dlu_kms_atomic_alloc();
 void dlu_kms_atomic_free(drmModeAtomicReq *req);
-
-/**
-* Function sets up a VT/TTY so the process can in graphical mode.
-* It also sets a process up so that it can handle its own input.
-*/
-bool dlu_kms_vt_create(dlu_disp_core *core);
-bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev);
 
 bool dlu_kms_q_output_chain(dlu_disp_core *core, dlu_disp_device_info *info);
 
