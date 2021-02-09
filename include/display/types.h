@@ -142,13 +142,13 @@ typedef struct _dlu_disp_device_info {
   uint32_t crtc_idx;
   uint32_t plane_idx;
   uint64_t refresh;
-  char conn_name[32];
+  char conn_name[10];
 } dlu_disp_device_info;
 
 typedef struct _dlu_disp_core {
  
   uint32_t odbc;
-  struct _drm_buff_data {
+  struct _disp_buff_data {
 
     /* Output Device ID, Used by the API, No need to utilize member yourself */ 
     uint32_t odid;
@@ -184,7 +184,7 @@ typedef struct _dlu_disp_core {
   * Plane, CRTC, Encoder, Connector pair
   */
   uint32_t odc; /* Output data count */
-  struct _output_data {
+  struct _output_chain_data {
     /* Used to keep track of page flips */
     bool pflip;
 
@@ -192,30 +192,23 @@ typedef struct _dlu_disp_core {
     uint64_t *modifiers;
 
     /* connector name */
-    char name[32];
+    char name[10];
+
+    uint64_t refresh; /* Refresh rate, stored in nanoseconds */
+
+    /* Storing kms node resource info */ 
+    struct drm_mode_get_connector conn;
+    struct drm_mode_get_encoder enc;
+    struct drm_mode_crtc crtc;
+    struct drm_mode_set_plane plane;
 
     uint32_t mode_blob_id;
-    drmModeModeInfo mode;
-    uint64_t refresh; /* Refresh rate for a pair store in nanoseconds */
+    struct drm_mode_modeinfo mode;
 
-    uint32_t pp_id;   /* Primary Plane ID */
-    uint32_t crtc_id; /* CRTC ID */
-    uint32_t conn_id; /* Connector ID */
-    uint32_t enc_id;  /* Keeping encoder ID just because */
-
-    /**
-    * Encoders are deprecated and unused KMS objects
-    * The Plane -> CRTC -> Encoder -> Connector chain construct
-    */
-    drmModePlane *plane;
-    drmModeCrtc *crtc;
-    drmModeEncoder *enc;
-    drmModeConnector *conn;
-
-    struct {
-      struct drm_prop_info plane[DLU_DISPLAY_PLANE__CNT];
-      struct drm_prop_info crtc[DLU_DISPLAY_CRTC__CNT];
-      struct drm_prop_info conn[DLU_DISPLAY_CONNECTOR__CNT];
+    struct _props {
+      struct drm_prop_info planes[DLU_DISPLAY_PLANE__CNT];
+      struct drm_prop_info crtcs[KG_DRM_CRTC__CNT];
+      struct drm_prop_info conns[KG_DRM_CONNECTOR__CNT];
     } props;
   } *output_data;
 

@@ -318,7 +318,10 @@ static bool check_if_good_candidate(dlu_disp_core *core, const char *device_name
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
   }
 
-  /* Universal planes means exposing primary & cursor as proper plane objects */
+  /** 
+   * Universal planes means exposing primary & cursor as proper plane objects
+   * Also allows for legacy modesetting usage 
+   */
   err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
   err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
   if (err < 0) {
@@ -698,8 +701,6 @@ bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *
   uint32_t cur_od = core->buff_data[cur_bd].odid;
   uint32_t width = core->output_data[cur_od].mode.hdisplay;
   uint32_t height = core->output_data[cur_od].mode.vdisplay;
-
-  // dlu_log_me(DLU_WARNING, "[%s] atomic state for commit:", core->output_data[cur_od].name);
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_ID, core->output_data[cur_od].crtc_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
