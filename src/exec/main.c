@@ -22,8 +22,6 @@
 * THE SOFTWARE.
 */
 
-#include <getopt.h>
-
 #define LUCUR_VKCOMP_API
 #define LUCUR_DISPLAY_API // for definition of dlu_print_dconf_info
 #include <lucom.h>
@@ -39,62 +37,39 @@ void print_validation_layers();
 void print_instance_extensions();
 void print_device_extensions(VkPhysicalDeviceType dt);
 
-int main(int argc, char **argv) {
-  int opt = 0;
-  int8_t track = 0;
+int main(int argc, char *argv[]) {
+  char *arg = NULL, *val = NULL;
 
-  while (1) {
-    int option_index = 0;
-
-    static struct option long_options[] = {
-      {"version",      no_argument,       NULL,  0  },
-      {"help",         no_argument,       NULL,  0  },
-      {"pgvl",         no_argument,       NULL,  0  },
-      {"pie",          no_argument,       NULL,  0  },
-      {"pde",          required_argument, NULL,  0  },
-      {"display-info", optional_argument, NULL,  0  },
-      {0,              0,                 NULL,  0  }
-    };
-
-    opt = getopt_long(argc, argv, "vhlid:", long_options, &option_index);
-    if (opt == NEG_ONE) { goto exit_loop; }
-    track++;
-
-    switch (opt) {
-      case 0:
-        if (!strcmp(long_options[option_index].name, "version")) { version_num(); goto exit_loop; }
-        if (!strcmp(long_options[option_index].name, "help")) { help_message(argv[0]); goto exit_loop; }
-        if (!strcmp(long_options[option_index].name, "pgvl")) print_validation_layers();
-        if (!strcmp(long_options[option_index].name, "pie")) print_instance_extensions();
-        if (!strcmp(long_options[option_index].name, "display-info")) dlu_print_dconf_info(optarg);
-        if (!strcmp(long_options[option_index].name, "pde")) {
-          if (optarg) {
-            print_device_extensions(ret_dtype(optarg));
-          } else {
-            dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
-            goto exit_loop;
-          }
-        }
+  while ((arg = *(++argv))) {
+    if (!strcmp(arg, "version")) { version_num(); break; }
+    if (!strcmp(arg, "help")) { help_message(argv[0]); break; }
+    if (!strcmp(arg, "pgvl")) { print_validation_layers(); break; }
+    if (!strcmp(arg, "pie")) { print_instance_extensions(); break; }
+    if (!strcmp(arg, "display-info")) { dlu_print_dconf_info((val = *(++argv))); break; }
+    if (!strcmp(arg, "pde")) {
+      if ((val = *(++argv))) {
+        print_device_extensions(ret_dtype(val));
         break;
-      case 1: break;
-      case 'v': version_num(); goto exit_loop;
-      case 'h': help_message(argv[0]); goto exit_loop;
-      case 'l': print_validation_layers(); break;
-      case 'i': print_instance_extensions(); break;
-      case 'd':
-        if (optarg) {
-          print_device_extensions(ret_dtype(optarg));
-        } else {
-          dlu_print_msg(DLU_DANGER, "[x] usage example: lucur --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU");
-          goto exit_loop;
-        }
+      } else {
+        dlu_print_msg(DLU_DANGER, "[x] usage example: %s --pde VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU", argv[0]);
         break;
-      case '?': break;
-      default: break;
+      }
+    }
+    
+    if (!strcmp(arg, "-v")) { version_num(); break; }
+    if (!strcmp(arg, "-h")) { help_message(argv[0]); break; }
+    if (!strcmp(arg, "-l")) { print_validation_layers(); break; }
+    if (!strcmp(arg, "-i")) { print_instance_extensions(); break; }
+    if (!strcmp(arg, "-d")) {
+      if ((val = *(++argv))) {
+        print_device_extensions(ret_dtype(val));
+        break;
+      } else {
+        dlu_print_msg(DLU_DANGER, "[x] usage example: %s -d VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU", argv[0]);
+        break;
+      }
     }
   }
 
-exit_loop:
-  if (opt == NEG_ONE && track == 0) help_message(argv[0]);
   return EXIT_SUCCESS;
 }
