@@ -40,13 +40,15 @@ void print_device_extensions(VkPhysicalDeviceType dt);
 int main(int argc, char *argv[]) {
   char *arg = NULL, *val = NULL;
 
+  if (argc == 1) { help_message(argv[0]); return EXIT_FAILURE; }
+
   while ((arg = *(++argv))) {
-    if (!strcmp(arg, "version")) { version_num(); break; }
-    if (!strcmp(arg, "help")) { help_message(argv[0]); break; }
-    if (!strcmp(arg, "pgvl")) { print_validation_layers(); break; }
-    if (!strcmp(arg, "pie")) { print_instance_extensions(); break; }
-    if (!strcmp(arg, "display-info")) { dlu_print_dconf_info((val = *(++argv))); break; }
-    if (!strcmp(arg, "pde")) {
+    if (!strcmp(arg, "--version")) { version_num(); break; }
+    if (!strcmp(arg, "--help")) { help_message(argv[0]); break; }
+    if (!strcmp(arg, "--pgvl")) { print_validation_layers(); break; }
+    if (!strcmp(arg, "--pie")) { print_instance_extensions(); break; }
+    if (!strcmp(arg, "--display-info")) { dlu_print_dconf_info((val = *(++argv))); break; }
+    if (!strcmp(arg, "--pde")) {
       if ((val = *(++argv))) {
         print_device_extensions(ret_dtype(val));
         break;
