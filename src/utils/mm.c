@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019-2020 Vincent Davis Jr.
+* Copyright (c) 2019-2021 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -277,7 +277,7 @@ bool dlu_otma(dlu_block_type type, dlu_otma_mems ma) {
   size += (ma.drmc_cnt) ? (BLOCK_SIZE + (ma.drmc_cnt * sizeof(dlu_disp_core))) : 0;
   size += (ma.dod_cnt)  ? (BLOCK_SIZE + (ma.dod_cnt * sizeof(struct _output_chain_data))) : 0;
 
-  size += (ma.dob_cnt) ? (BLOCK_SIZE + (ma.dob_cnt * sizeof(struct _disp_buff_data))) : 0;
+  size += (ma.dob_cnt) ? (BLOCK_SIZE + (ma.dob_cnt * sizeof(struct _disp_fb_data))) : 0;
 
   if (!dlu_alloc(type, size)) return false;
 
@@ -431,21 +431,21 @@ bool dlu_otba(dlu_data_type type, void *addr, uint32_t index, uint32_t arr_size)
     case DLU_DEVICE_OUTPUT_DATA:
       {
         dlu_disp_core *core = (dlu_disp_core *) addr;
-        core->output_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_chain_data));
-        if (!core->output_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        core->oc_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _output_chain_data));
+        if (!core->oc_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
         core->odc = arr_size; return true;
       }
     case DLU_DEVICE_OUTPUT_BUFF_DATA:
       {
         dlu_disp_core *core = (dlu_disp_core *) addr;
-        core->buff_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _disp_buff_data));
-        if (!core->buff_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
+        core->dfb_data = dlu_alloc(DLU_SMALL_BLOCK_PRIV, arr_size * sizeof(struct _disp_fb_data));
+        if (!core->dfb_data) { PERR(DLU_ALLOC_FAILED, 0, NULL); return false; }
 
         for (uint32_t i = 0; i < arr_size; i++) {
-          core->buff_data[i].fb_id = UINT32_MAX;
-          core->buff_data[i].odid = UINT32_MAX;
-          for (uint32_t j = 0; j < ARR_LEN(core->buff_data[i].dma_buf_fds); j++)
-            core->buff_data[i].dma_buf_fds[j] = NEG_ONE;
+          core->dfb_data[i].fb_id = UINT32_MAX;
+          core->dfb_data[i].odid = UINT32_MAX;
+          for (uint32_t j = 0; j < ARR_LEN(core->dfb_data[i].dma_buf_fds); j++)
+            core->dfb_data[i].dma_buf_fds[j] = NEG_ONE;
         }
 
         core->odbc = arr_size; return true;

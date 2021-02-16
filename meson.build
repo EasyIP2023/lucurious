@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2019-2020 Vincent Davis Jr.
+# Copyright (c) 2019-2021 Vincent Davis Jr.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,7 @@ project(
   default_options: [
     'c_std=gnu18',
     'warning_level=2',
-    'werror=true',
-    'prefix=/usr/'
+    'werror=true'
   ],
 )
 
@@ -47,7 +46,7 @@ add_project_arguments(
   language : 'c'
 )
 
-lucur_inc = include_directories('include', '/usr/include/libdrm')
+lucur_inc = include_directories('external/drm','include')
 ktx_inc = include_directories('external/ktx/include', 'external/ktx/other_include')
 
 subdir('include')

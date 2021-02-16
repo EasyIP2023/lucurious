@@ -10,6 +10,15 @@
 #include <linux/kd.h>
 #include <linux/vt.h>
 
+/* Defined in display/libdrm.c */
+void *drmAllocCpy(char *array, int count, int entry_size);
+void drmModeFreeProperty(drmModePropertyPtr ptr);
+drmModePropertyPtr drmModeGetProperty(int fd, uint32_t property_id);
+void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr);
+drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t object_id, uint32_t object_type);
+void drmModeFreePropertyBlob(drmModePropertyBlobPtr ptr);
+drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id);
+
 /* All properties and enum values supported one needs to */
 static struct drm_prop_enum_info plane_type_enums[] = {
   [DLU_DISPLAY_PLANE_TYPE_PRIMARY] = { .name = "Primary" },
@@ -212,9 +221,9 @@ static void plane_formats_populate(dlu_disp_core *core, uint32_t odb, drmModeObj
   uint32_t *blob_formats = NULL; /* array of formats */
   struct drm_format_modifier *blob_modifiers = NULL;
 
-  blob_id = drm_property_get_value(&core->output_data[odb].props.plane[DLU_DISPLAY_PLANE_IN_FORMATS], props, 0);
+  blob_id = drm_property_get_value(&core->oc_data[odb].props.planes[DLU_DISPLAY_PLANE_IN_FORMATS], props, 0);
   if (blob_id == 0) {
-    dlu_log_me(DLU_WARNING, "'%s' plane does not have IN_FORMATS", core->output_data[odb].name);
+    dlu_log_me(DLU_WARNING, "'%s' plane does not have IN_FORMATS", core->oc_data[odb].name);
     return;
   }
 
@@ -244,15 +253,15 @@ static void plane_formats_populate(dlu_disp_core *core, uint32_t odb, drmModeObj
       if ((f < mod->offset) || (f > mod->offset + 63)) continue;
       if (!(mod->formats & (1 << (f - mod->offset)))) continue;
     
-      core->output_data[odb].modifiers = realloc(core->output_data[odb].modifiers,
-          (core->output_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
+      core->oc_data[odb].modifiers = realloc(core->oc_data[odb].modifiers,
+          (core->oc_data[odb].modifiers_cnt + 1) * sizeof(uint32_t));
 
-      if (!core->output_data[odb].modifiers) {
+      if (!core->oc_data[odb].modifiers) {
         dlu_log_me(DLU_DANGER, "[x] realloc: %s", strerror(errno));
         return;
       }
 
-      core->output_data[odb].modifiers[core->output_data[odb].modifiers_cnt++] = mod->modifier;
+      core->oc_data[odb].modifiers[core->oc_data[odb].modifiers_cnt++] = mod->modifier;
     }
   }
 
@@ -264,9 +273,9 @@ static void output_get_edid(dlu_disp_core *core, uint32_t odb, drmModeObjectProp
   struct edid_info *edid = NULL;
   uint32_t blob_id = 0;
 
-  blob_id = drm_property_get_value(&core->output_data[odb].props.conn[DLU_DISPLAY_CONNECTOR_EDID], props, 0);
+  blob_id = drm_property_get_value(&core->oc_data[odb].props.conns[DLU_DISPLAY_CONNECTOR_EDID], props, 0);
   if (blob_id == 0) {
-    dlu_log_me(DLU_WARNING, "'%s' output does not have EDID", core->output_data[odb].name);
+    dlu_log_me(DLU_WARNING, "'%s' output does not have EDID", core->oc_data[odb].name);
     return;
   }
 
@@ -280,7 +289,7 @@ static void output_get_edid(dlu_disp_core *core, uint32_t odb, drmModeObjectProp
   drmModeFreePropertyBlob(blob);
   if (!edid) return;
 
-  dlu_log_me(DLU_INFO, "For Output Device '%s'", core->output_data[odb].name);
+  dlu_log_me(DLU_INFO, "For Output Device '%s'", core->oc_data[odb].name);
   dlu_log_me(DLU_INFO, "EDID PNP ID: %s", edid->pnp_id);
   dlu_log_me(DLU_INFO, "EISA ID: %s", edid->eisa_id);
   dlu_log_me(DLU_INFO, "Monitor Name: %s", edid->monitor_name);
@@ -494,7 +503,7 @@ bool dlu_kms_enum_device(
     goto exit_func;
   }
 
-  if (!core->output_data) {
+  if (!core->oc_data) {
     PERR(DLU_BUFF_NOT_ALLOC, 0, "DLU_DEVICE_OUTPUT_DATA");
     goto exit_func;
   }
@@ -516,46 +525,46 @@ bool dlu_kms_enum_device(
     ret = false; goto exit_free_plane_res;
   }
 
-  core->output_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_idx]);
-  if (!core->output_data[odb].conn) {
+  core->oc_data[odb].conn = drmModeGetConnector(core->device.kmsfd, dmr->connectors[conn_idx]);
+  if (!core->oc_data[odb].conn) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetConnector: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->output_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_idx]);
-  if (!core->output_data[odb].enc) {
+  core->oc_data[odb].enc = drmModeGetEncoder(core->device.kmsfd, dmr->encoders[enc_idx]);
+  if (!core->oc_data[odb].enc) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetEncoder: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->output_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_idx]);
-  if (!core->output_data[odb].crtc) {
+  core->oc_data[odb].crtc = drmModeGetCrtc(core->device.kmsfd, dmr->crtcs[crtc_idx]);
+  if (!core->oc_data[odb].crtc) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetCrtc: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  core->output_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_idx]);
-  if (!core->output_data[odb].plane) {
+  core->oc_data[odb].plane = drmModeGetPlane(core->device.kmsfd, pres->planes[plane_idx]);
+  if (!core->oc_data[odb].plane) {
     dlu_log_me(DLU_DANGER, "[x] drmModeGetPlane: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
 
-  snprintf(core->output_data[odb].name, sizeof(core->output_data[odb].name), "%s", conn_name);
-  core->output_data[odb].refresh = millihz_to_nsec(refresh);
+  snprintf(core->oc_data[odb].name, sizeof(core->oc_data[odb].name), "%s", conn_name);
+  core->oc_data[odb].refresh = millihz_to_nsec(refresh);
 
   /* This members are redundant and mainly for easy of access */
-  core->output_data[odb].conn_id = core->output_data[odb].conn->connector_id;
-  core->output_data[odb].enc_id  = core->output_data[odb].enc->encoder_id;
-  core->output_data[odb].crtc_id = core->output_data[odb].crtc->crtc_id;
-  core->output_data[odb].pp_id   = core->output_data[odb].plane->plane_id;
-  core->output_data[odb].mode    = core->output_data[odb].crtc->mode;
+  core->oc_data[odb].conn_id = core->oc_data[odb].conn->connector_id;
+  core->oc_data[odb].enc_id  = core->oc_data[odb].enc->encoder_id;
+  core->oc_data[odb].crtc_id = core->oc_data[odb].crtc->crtc_id;
+  core->oc_data[odb].pp_id   = core->oc_data[odb].plane->plane_id;
+  core->oc_data[odb].mode    = core->oc_data[odb].crtc->mode;
 
   /**
   * Now creating MODE_ID blob. When performing atomic commits, the driver expects a CRTC property with the name "MODE_ID".
   * With its name pointing to the blob id. Which is set and stored here.
   * Go here for more information: https://gitlab.freedesktop.org/daniels/kms-quads/-/blob/master/kms.c
   */
-  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->output_data[odb].mode, sizeof(drmModeModeInfo), &core->output_data[odb].mode_blob_id) < 0) {
+  if (drmModeCreatePropertyBlob(core->device.kmsfd, &core->oc_data[odb].mode, sizeof(drmModeModeInfo), &core->oc_data[odb].mode_blob_id) < 0) {
     dlu_log_me(DLU_DANGER, "[x] drmModeCreatePropertyBlob: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
@@ -567,13 +576,13 @@ bool dlu_kms_enum_device(
   */
   
   /* retrieve plane properties from the KMS node */
-  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
+  drmModeObjectProperties *props = drmModeObjectGetProperties(core->device.kmsfd, core->oc_data[odb].pp_id, DRM_MODE_OBJECT_PLANE);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, plane_props, core->output_data[odb].props.plane, DLU_DISPLAY_PLANE__CNT, props)) {
+  if (!drm_prop_info_populate(core, plane_props, core->oc_data[odb].props.planes, DLU_DISPLAY_PLANE__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }
@@ -583,13 +592,13 @@ bool dlu_kms_enum_device(
   /* Plane Query */
 
  /* retrieve CRTC properties from the KMS node */
-  props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].crtc_id, DRM_MODE_OBJECT_CRTC);
+  props = drmModeObjectGetProperties(core->device.kmsfd, core->oc_data[odb].crtc_id, DRM_MODE_OBJECT_CRTC);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, crtc_props, core->output_data[odb].props.crtc, DLU_DISPLAY_CRTC__CNT, props)) {
+  if (!drm_prop_info_populate(core, crtc_props, core->oc_data[odb].props.crtcs, DLU_DISPLAY_CRTC__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }
@@ -598,13 +607,13 @@ bool dlu_kms_enum_device(
   /* CRTC Query */
 
   /* retrieve connector properties from the KMS node */
-  props = drmModeObjectGetProperties(core->device.kmsfd, core->output_data[odb].conn_id, DRM_MODE_OBJECT_CONNECTOR);
+  props = drmModeObjectGetProperties(core->device.kmsfd, core->oc_data[odb].conn_id, DRM_MODE_OBJECT_CONNECTOR);
   if (!props) {
     dlu_log_me(DLU_DANGER, "[x] drmModeObjectGetProperties: %s", strerror(errno));
     ret = false; goto exit_free_plane_res;
   }
   
-  if (!drm_prop_info_populate(core, conn_props, core->output_data[odb].props.conn, DLU_DISPLAY_CONNECTOR__CNT, props)) {
+  if (!drm_prop_info_populate(core, conn_props, core->oc_data[odb].props.conns, DLU_DISPLAY_CONNECTOR__CNT, props)) {
     dlu_log_me(DLU_DANGER, "[x] drm_prop_info_populate failed");
     ret = false; goto exit_free_mode_obj;
   }
@@ -628,14 +637,14 @@ exit_func:
 /* Function name, parameters, logic may change */
 bool dlu_kms_modeset(dlu_disp_core *core, uint32_t cur_bi) {
 
-  if (core->buff_data[cur_bi].odid == UINT32_MAX) {
+  if (core->dfb_data[cur_bi].odid == UINT32_MAX) {
     dlu_log_me(DLU_DANGER, "[x] Must make a call to dlu_disp_create_fb(3). Before mode setting is possible");
     return false;
   }
 
   /* Connecting a framebuffer to a Plane -> **"CRTC"** -> Encoder -> **"Connector"** pair. Perform actual modesetting */
-  if (drmModeSetCrtc(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id, core->buff_data[cur_bi].fb_id, 0, 0,
-                     &core->output_data[core->buff_data[cur_bi].odid].conn_id, 1, &core->output_data[core->buff_data[cur_bi].odid].mode)) {
+  if (drmModeSetCrtc(core->device.kmsfd, core->oc_data[core->dfb_data[cur_bi].odid].crtc_id, core->dfb_data[cur_bi].fb_id, 0, 0,
+                     &core->oc_data[core->dfb_data[cur_bi].odid].conn_id, 1, &core->oc_data[core->dfb_data[cur_bi].odid].mode)) {
     dlu_log_me(DLU_DANGER, "[x] drmModeSetCrtc: %s", strerror(errno));
     return false;
   }
@@ -646,13 +655,13 @@ bool dlu_kms_modeset(dlu_disp_core *core, uint32_t cur_bi) {
 bool dlu_kms_page_flip(dlu_disp_core *core, uint32_t cur_bi, void *user_data) {
 
   /* Schedules a buffer flip for the next vblank. Fully asynchronous */
-  if (drmModePageFlip(core->device.kmsfd, core->output_data[core->buff_data[cur_bi].odid].crtc_id,
-                      core->buff_data[cur_bi].fb_id, DRM_MODE_PAGE_FLIP_EVENT, user_data)) {
+  if (drmModePageFlip(core->device.kmsfd, core->oc_data[core->dfb_data[cur_bi].odid].crtc_id,
+                      core->dfb_data[cur_bi].fb_id, DRM_MODE_PAGE_FLIP_EVENT, user_data)) {
     dlu_log_me(DLU_DANGER, "[x] drmModePageFlip: %s", strerror(errno));
     return false;
   }
 
-  core->output_data[core->buff_data[cur_bi].odid].pflip = true;
+  core->oc_data[core->dfb_data[cur_bi].odid].pflip = true;
 
   return true;
 }
@@ -665,9 +674,9 @@ int dlu_kms_handle_event(int fd, drmEventContext *ev) {
 static int add_conn_prop(dlu_disp_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_disp_connector_props prop, uint64_t val) {
   int ret = -1;
 
-  if (!core->output_data[cur_od].props.conn[prop].prop_id) return ret;
+  if (!core->oc_data[cur_od].props.conns[prop].prop_id) return ret;
 
-  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].conn_id, core->output_data[cur_od].props.conn[prop].prop_id, val);
+  ret = drmModeAtomicAddProperty(req, core->oc_data[cur_od].conn_id, core->oc_data[cur_od].props.conns[prop].prop_id, val);
 
   return (ret <= 0) ? -1 : 0;
 }
@@ -676,9 +685,9 @@ static int add_conn_prop(dlu_disp_core *core, uint32_t cur_od, drmModeAtomicReq 
 static int add_crtc_prop(dlu_disp_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_disp_crtc_props prop, uint64_t val) {
   int ret = -1;
 
-  if (!core->output_data[cur_od].props.crtc[prop].prop_id) return ret;
+  if (!core->oc_data[cur_od].props.crtcs[prop].prop_id) return ret;
 
-  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].crtc_id, core->output_data[cur_od].props.crtc[prop].prop_id, val);
+  ret = drmModeAtomicAddProperty(req, core->oc_data[cur_od].crtc_id, core->oc_data[cur_od].props.crtcs[prop].prop_id, val);
 
   return (ret <= 0) ? -1 : 0;
 }
@@ -687,9 +696,9 @@ static int add_crtc_prop(dlu_disp_core *core, uint32_t cur_od, drmModeAtomicReq 
 static int add_plane_prop(dlu_disp_core *core, uint32_t cur_od, drmModeAtomicReq *req, dlu_disp_plane_props prop, uint64_t val) {
   int ret = -1;
 
-  if (!core->output_data[cur_od].props.plane[prop].prop_id) return ret;
+  if (!core->oc_data[cur_od].props.planes[prop].prop_id) return ret;
 
-  ret = drmModeAtomicAddProperty(req, core->output_data[cur_od].pp_id, core->output_data[cur_od].props.plane[prop].prop_id, val);
+  ret = drmModeAtomicAddProperty(req, core->oc_data[cur_od].pp_id, core->oc_data[cur_od].props.planes[prop].prop_id, val);
 
   return (ret <= 0) ? -1 : 0;
 }
@@ -698,20 +707,20 @@ bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *
   int ret;
 
   /* Output device */
-  uint32_t cur_od = core->buff_data[cur_bd].odid;
-  uint32_t width = core->output_data[cur_od].mode.hdisplay;
-  uint32_t height = core->output_data[cur_od].mode.vdisplay;
+  uint32_t cur_od = core->dfb_data[cur_bd].odid;
+  uint32_t width = core->oc_data[cur_od].mode.hdisplay;
+  uint32_t height = core->oc_data[cur_od].mode.vdisplay;
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_ID, core->output_data[cur_od].crtc_id);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_ID, core->oc_data[cur_od].crtc_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_FB_ID, core->buff_data[cur_bd].fb_id);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_FB_ID, core->dfb_data[cur_bd].fb_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_X, core->output_data[cur_od].plane->x);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_X, core->oc_data[cur_od].plane->x);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_Y, core->output_data[cur_od].plane->y);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_Y, core->oc_data[cur_od].plane->y);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_W, width << 16);
@@ -720,10 +729,10 @@ bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_SRC_H, height << 16);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_X, core->output_data[cur_od].crtc->x);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_X, core->oc_data[cur_od].crtc->x);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
-  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_Y, core->output_data[cur_od].crtc->y);
+  ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_Y, core->oc_data[cur_od].crtc->y);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_plane_prop"); return false; }
 
   ret = add_plane_prop(core, cur_od, req, DLU_DISPLAY_PLANE_CRTC_W, width);
@@ -736,13 +745,13 @@ bool dlu_kms_atomic_req(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicReq *
   * Changing any of these two properties requires the ALLOW_MODESET
   * flag to be set on the atomic commit.
   */
-  ret = add_crtc_prop(core, cur_od, req, DLU_DISPLAY_CRTC_MODE_ID, core->output_data[cur_od].mode_blob_id);
+  ret = add_crtc_prop(core, cur_od, req, DLU_DISPLAY_CRTC_MODE_ID, core->oc_data[cur_od].mode_blob_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop"); return false; }
 
   ret = add_crtc_prop(core, cur_od, req, DLU_DISPLAY_CRTC_ACTIVE, 1);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_crtc_prop"); return false; }
 
-  ret = add_conn_prop(core, cur_od, req, DLU_DISPLAY_CONNECTOR_CRTC_ID, core->output_data[cur_od].crtc_id);
+  ret = add_conn_prop(core, cur_od, req, DLU_DISPLAY_CONNECTOR_CRTC_ID, core->oc_data[cur_od].crtc_id);
   if (ret == NEG_ONE) { dlu_log_me(DLU_DANGER, "[x] add_conn_prop"); return false; }
 
   return true;
@@ -756,7 +765,7 @@ bool dlu_kms_atomic_commit(dlu_disp_core *core, uint32_t cur_bd, drmModeAtomicRe
     return false;
   }
 
-  core->output_data[core->buff_data[cur_bd].odid].pflip = true;
+  core->oc_data[core->dfb_data[cur_bd].odid].pflip = true;
 
   return true;
 }

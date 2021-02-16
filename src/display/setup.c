@@ -1,7 +1,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019-2020 Vincent Davis Jr.
+* Copyright (c) 2019-2021 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -34,41 +34,37 @@ dlu_disp_core *dlu_disp_init_core() {
 
 void dlu_disp_freeup_core(dlu_disp_core *core) {
 
-  if (core->output_data) {
+  if (core->oc_data) {
     uint32_t j, i;
     for (i = 0; i < core->odc; i++) {
-      free(core->output_data[i].modifiers);
-      if (core->output_data[i].mode_blob_id != 0)
-        drmModeDestroyPropertyBlob(core->device.kmsfd, core->output_data[i].mode_blob_id);
-      if (core->output_data[i].conn)
-        drmModeFreeConnector(core->output_data[i].conn);
-      if (core->output_data[i].enc)
-        drmModeFreeEncoder(core->output_data[i].enc);
-      if (core->output_data[i].crtc) {
-        /* restore saved CRTC configuration */
-        drmModeSetCrtc(core->device.kmsfd, core->output_data[i].crtc->crtc_id, core->output_data[i].crtc->buffer_id, core->output_data[i].crtc->x,
-                       core->output_data[i].crtc->y, &core->output_data[i].conn_id, 1, &core->output_data[i].crtc->mode);
-        drmModeFreeCrtc(core->output_data[i].crtc);
+      free(core->oc_data[i].modifiers);
+      if (core->oc_data[i].mode_blob_id != 0) {
+        struct drm_mode_destroy_blob destroy;
+        memset(&destroy, 0, sizeof(destroy));
+        destroy.blob_id = core->oc_data[i].mode_blob_id;
+        ioctl(core->device.kmsfd, DRM_IOCTL_MODE_DESTROYPROPBLOB, &destroy);
       }
-      if (core->output_data[i].plane)
-        drmModeFreePlane(core->output_data[i].plane);
+
+      // Reset crtc info
+      //drmModeSetCrtc(core->device.kmsfd, core->oc_data[i].crtc->crtc_id, core->oc_data[i].crtc->buffer_id, core->oc_data[i].crtc->x,
+      //               core->oc_data[i].crtc->y, &core->oc_data[i].conn_id, 1, &core->oc_data[i].crtc->mode);
       for (j = 0; j < DLU_DISPLAY_PLANE_TYPE__CNT; j++)
-        free(core->output_data[i].props.plane[j].enum_values);
+        free(core->oc_data[i].props.planes[j].enum_values);
       for (j = 0; j < DLU_DISPLAY_CRTC__CNT; j++)
-        free(core->output_data[i].props.crtc[j].enum_values);
+        free(core->oc_data[i].props.crtcs[j].enum_values);
       for (j = 0; j < DLU_DISPLAY_CONNECTOR__CNT; j++)
-        free(core->output_data[i].props.conn[j].enum_values);
+        free(core->oc_data[i].props.conns[j].enum_values);
     }
   }
 
-  if (core->buff_data) {
+  if (core->dfb_data) {
     for (uint32_t i = 0; i < core->odbc; i++) {
-      for (uint32_t j = 0; j < core->buff_data[i].num_planes; j++)
-        close(core->buff_data[i].dma_buf_fds[j]);
-      if (core->buff_data[i].fb_id)
-        drmModeRmFB(core->device.kmsfd, core->buff_data[i].fb_id);
-      if (core->buff_data[i].bo)
-        gbm_bo_destroy(core->buff_data[i].bo);
+      for (uint32_t j = 0; j < core->dfb_data[i].num_planes; j++)
+        close(core->dfb_data[i].dma_buf_fds[j]);
+      if (core->dfb_data[i].fb_id)
+        ioctl(core->device.kmsfd, DRM_IOCTL_MODE_RMFB, &core->dfb_data[i].fb_id);
+      if (core->dfb_data[i].bo)
+        gbm_bo_destroy(core->dfb_data[i].bo);
     }
   }
 

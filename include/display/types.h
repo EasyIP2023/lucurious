@@ -7,7 +7,7 @@
 /**
 * The MIT License (MIT)
 *
-* Copyright (c) 2019-2020 Vincent Davis Jr.
+* Copyright (c) 2019-2021 Vincent Davis Jr.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -148,7 +148,7 @@ typedef struct _dlu_disp_device_info {
 typedef struct _dlu_disp_core {
  
   uint32_t odbc;
-  struct _disp_buff_data {
+  struct _disp_fb_data {
 
     /* Output Device ID, Used by the API, No need to utilize member yourself */ 
     uint32_t odid;
@@ -177,7 +177,7 @@ typedef struct _dlu_disp_core {
     * These framebuffers contain metadata i.e image resolution 
     */    
     uint32_t fb_id;
-  } *buff_data;
+  } *dfb_data;
 
   /**
   * Output Data struct contains information of a given
@@ -207,10 +207,11 @@ typedef struct _dlu_disp_core {
 
     struct _props {
       struct drm_prop_info planes[DLU_DISPLAY_PLANE__CNT];
-      struct drm_prop_info crtcs[KG_DRM_CRTC__CNT];
-      struct drm_prop_info conns[KG_DRM_CONNECTOR__CNT];
+      struct drm_prop_info crtcs[DLU_DISPLAY_CRTC__CNT];
+      struct drm_prop_info conns[DLU_DISPLAY_CONNECTOR__CNT];
     } props;
-  } *output_data;
+  } *oc_data;
+
 
   struct _device {
     /* KMS API Device node */

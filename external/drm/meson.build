@@ -22,9 +22,6 @@
 # THE SOFTWARE.
 #
 
-subdir('utils')
-subdir('vkcomp')
-subdir('spirv')
-subdir('display')
-subdir('math')
-subdir('exec')
+i_dir = 'include/dluc'
+drm_headers=['drm.h','drm_fourcc.h','drm_mode.h']
+install_headers(drm_headers, install_dir: i_dir + 'drm')
