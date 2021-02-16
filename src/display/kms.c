@@ -454,6 +454,12 @@ bool dlu_kms_vt_create(dlu_disp_core *core) {
 bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev) {
   bool ret = false;
 
+  core->device.udev = udev_new();
+  if (!core->input.udev) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to create a udev context");
+    return ret;
+  }
+
   if (preferred_dev) {
     ret = check_if_good_candidate(core, preferred_dev);
     if (ret) {
@@ -462,45 +468,52 @@ bool dlu_kms_node_create(dlu_disp_core *core, const char *preferred_dev) {
     }
   }
 
-  drmDevicePtr *devices = NULL;
-  uint32_t num_dev = drmGetDevices2(0, NULL, 0);
-  if (!num_dev) {
-    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
-    dlu_log_me(DLU_DANGER, "[x] no available KMS nodes from /dev/dri/*");
+  struct udev_device *dev=NULL;
+  struct udev_enumerate *enumerate=NULL;
+  struct udev_list_entry *devices=NULL, *dev_list_entry=NULL;
+
+  /* create enumerate object */
+  enumerate = udev_enumerate_new(core->device.udev);
+  if (!enumerate) {
+    dlu_log_me(DLU_DANGER, "[x] Cannot create enumerate context");
     return false;
   }
 
-  devices = alloca(num_dev * sizeof(drmDevicePtr));
+  udev_enumerate_add_match_subsystem(enumerate, "drm");
+  udev_enumerate_scan_devices(enumerate);
 
-  num_dev = drmGetDevices2(0, devices, num_dev);
-  if (!num_dev) {
-    dlu_log_me(DLU_DANGER, "[x] drmGetDevices2: %s", strerror(-num_dev));
-    return false;
+  /* fillup device list */
+  devices = udev_enumerate_get_list_entry(enumerate);
+  if (!devices) {
+    dlu_log_me(DLU_DANGER, "[x] Failed to get device list");
+    ret=false; goto exit_kms_node_create;
   }
 
-  dlu_log_me(DLU_SUCCESS, "%d available KMS nodes", num_dev);
+  /**
+  * We need /dev/dri/cardN nodes for modesetting, not render
+  * nodes; render nodes are only used for GPU rendering, and
+  * control nodes are totally useless. Primary nodes are the
+  * only ones which let us control KMS.
+  */
+  const char *kms_node = NULL;
+  udev_list_entry_foreach(dev_list_entry, devices) {
+    dev = udev_device_new_from_syspath(core->device.udev, udev_list_entry_get_name(dev_list_entry));
+    kms_node = udev_device_get_devnode(dev);
+    if (!kms_node) continue;
 
-  char *kms_node = NULL;
-  for (uint32_t i = 0; i < num_dev; i++) {
-    /**
-    * We need /dev/dri/cardN nodes for modesetting, not render
-    * nodes; render nodes are only used for GPU rendering, and
-    * control nodes are totally useless. Primary nodes are the
-    * only ones which let us control KMS.
-    */
-    if (!(devices[i]->available_nodes & (1 << DRM_NODE_PRIMARY))) continue;
-
-    kms_node = devices[i]->nodes[DRM_NODE_PRIMARY];
-    ret = check_if_good_candidate(core, kms_node);
-    if (ret) {
+    if (check_if_good_candidate(core, kms_node)) {
       dlu_log_me(DLU_SUCCESS, "Suitable KMS node found!! '%s'", kms_node);
       break;
     }
+
+    /* free dev */
+    udev_device_unref(dev);
   }
 
-  drmFreeDevices(devices, num_dev);
-
-  return ret;
+goto exit_kms_node_create:
+  /* free enumerate */
+  udev_enumerate_unref(enumerate);
+  return false;
 }
 
 /** 

@@ -224,6 +224,8 @@ typedef struct _dlu_disp_core {
     uint32_t vtfd; /* Virtual Terminal File Descriptor */
     uint32_t bkbm; /* Backup Keyboard mode */
 
+    struct udev *udev;
+
     /* A GBM device is used to create gbm_bo (it's a buffer allocator) */
     struct gbm_device *gbm_device;
   } device;

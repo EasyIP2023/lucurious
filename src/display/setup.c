@@ -71,10 +71,11 @@ void dlu_disp_freeup_core(dlu_disp_core *core) {
   if (core->device.gbm_device)
     gbm_device_destroy(core->device.gbm_device);
 
+  if (core->device.udev)
+    udev_unref(core->device.udev);
+
 //  if (core->input.inp)
 //    libinput_unref(core->input.inp);
-  if (core->input.udev)
-    udev_unref(core->input.udev);
   if (core->device.vtfd != UINT32_MAX) {
     dlu_kms_vt_reset(core);
     close(core->device.vtfd);

@@ -36,13 +36,6 @@ static void close_restricted(int  fd, void *user_data) {
 }
 
 bool dlu_input_create(dlu_disp_core *core) {
-
-  core->input.udev = udev_new();
-  if (!core->input.udev) {
-    dlu_log_me(DLU_DANGER, "[x] Failed to create a udev context");
-    return false;
-  }
-
   core->input.inp = libinput_udev_create_context(&(struct libinput_interface) { .open_restricted = open_restricted, .close_restricted = close_restricted } , core, core->input.udev);
   if (!core->input.inp) {
     dlu_log_me(DLU_DANGER, "[x] Failed to create libinput context");
