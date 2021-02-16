@@ -46,7 +46,7 @@ add_project_arguments(
   language : 'c'
 )
 
-lucur_inc = include_directories('external/drm','include')
+lucur_inc = include_directories('external/include','include')
 ktx_inc = include_directories('external/ktx/include', 'external/ktx/other_include')
 
 subdir('include')

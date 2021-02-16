@@ -38,7 +38,7 @@ void *drmAllocCpy(char *array, int count, int entry_size) {
 
   r = calloc(count*entry_size, sizeof(*r));
   if (!r) {
-    kg_log_me(KG_DANGER, "[x] calloc: %s\n", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s\n", strerror(errno));
     return 0;
   }
 
@@ -66,7 +66,7 @@ drmModePropertyPtr drmModeGetProperty(int fd, uint32_t property_id) {
   prop.prop_id = property_id;
 
   if (ioctl(fd, DRM_IOCTL_MODE_GETPROPERTY, &prop) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPERTY): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPERTY): %s", strerror(errno));
     return NULL;
   }
 
@@ -82,12 +82,12 @@ drmModePropertyPtr drmModeGetProperty(int fd, uint32_t property_id) {
   }
 
   if (ioctl(fd, DRM_IOCTL_MODE_GETPROPERTY, &prop) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPERTY): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPERTY): %s", strerror(errno));
     return NULL;
   }
 
   if (!(r = calloc(1,sizeof(*r)))) {
-    kg_log_me(KG_DANGER, "[x] calloc: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
     return NULL;
   }
 
@@ -135,7 +135,7 @@ drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t object_id
   properties.obj_type = object_type;
 
   if (ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES, &properties) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_OBJ_GETPROPERTIES): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_OBJ_GETPROPERTIES): %s", strerror(errno));
     return NULL;
   } 
 
@@ -147,12 +147,12 @@ drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t object_id
   }
 
   if (ioctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES, &properties) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_OBJ_GETPROPERTIES): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_OBJ_GETPROPERTIES): %s", strerror(errno));
     return NULL;
   }
 
   if (count < properties.count_props) {
-    kg_log_me(KG_DANGER, "[x] count < properties.count_props");
+    dlu_log_me(DLU_DANGER, "[x] count < properties.count_props");
     return NULL;
   }
 
@@ -160,7 +160,7 @@ drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t object_id
 
   ret = calloc(1, sizeof(*ret));
   if (!ret) {
-    kg_log_me(KG_DANGER, "[x] calloc: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
     return NULL;
   }
 
@@ -190,7 +190,7 @@ drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id) {
   blob.blob_id = blob_id;
 
   if (ioctl(fd, DRM_IOCTL_MODE_GETPROPBLOB, &blob) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPBLOB): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPBLOB): %s", strerror(errno));
     return NULL;
   }
 
@@ -198,12 +198,12 @@ drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id) {
     blob.data = VOID2U64(alloca(blob.length));
 
   if (ioctl(fd, DRM_IOCTL_MODE_GETPROPBLOB, &blob) == -1) {
-    kg_log_me(KG_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPBLOB): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_MODE_GETPROPBLOB): %s", strerror(errno));
     return NULL;
   }
 
   if (!(r = calloc(1, sizeof(*r)))) {
-    kg_log_me(KG_DANGER, "[x] calloc: %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] calloc: %s", strerror(errno));
     return NULL;
   }
 

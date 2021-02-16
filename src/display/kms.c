@@ -300,10 +300,6 @@ static void output_get_edid(dlu_disp_core *core, uint32_t odb, drmModeObjectProp
 
 /* Open a single DRM device. Check to see if the node is a good candidate for usage */
 static bool check_if_good_candidate(dlu_disp_core *core, const char *device_name) {
-  drm_magic_t magic;
-  uint64_t cap = 0;
-  int err = 0;
-
   /**
   * Open the device and ensure we have support for universal planes and
   * kms atomic modesetting. This function updates the kmsfd struct member
@@ -320,35 +316,62 @@ static bool check_if_good_candidate(dlu_disp_core *core, const char *device_name
   * For more explanation:
   * https://en.wikipedia.org/wiki/Direct_Rendering_Manager#DRM-Master_and_DRM-Auth
   */
-  if (drmGetMagic(core->device.kmsfd, &magic) != 0 || drmAuthMagic(core->device.kmsfd, magic) != 0) {
+  drm_magic_t magic;
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_GET_MAGIC, &magic) == -1) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_GET_MAGIC): %s", strerror(errno));
     dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
     goto close_kms;
-  } else {
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
   }
+
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_AUTH_MAGIC, &magic) == -1) {
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_AUTH_MAGIC): %s", strerror(errno));
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' is not master", device_name);
+    goto close_kms;
+  }
+
+  dlu_log_me(DLU_SUCCESS, "KMS node '%s' is master", device_name);
 
   /** 
    * Universal planes means exposing primary & cursor as proper plane objects
    * Also allows for legacy modesetting usage 
    */
-  err = drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
-  err |= drmSetClientCap(core->device.kmsfd, DRM_CLIENT_CAP_ATOMIC, 1);
-  if (err < 0) {
-    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes or KMS atomic", device_name);
+
+  struct drm_set_client_cap scap;
+  memset(&scap, 0, sizeof(scap));
+  scap.capability = DRM_CLIENT_CAP_UNIVERSAL_PLANES;
+  scap.value = 1;
+
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_SET_CLIENT_CAP, &scap) == -1) {
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for universal planes", device_name);
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_SET_CLIENT_CAP): %s", strerror(errno));
     goto close_kms;
-  } else {
-    dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for universal planes and or KMS atomic", device_name);
   }
 
-  err = drmGetCap(core->device.kmsfd, DRM_CAP_ADDFB2_MODIFIERS, &cap);
-  if (err || !cap)
+  dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for universal planes", device_name);
+
+  memset(&scap, 0, sizeof(scap));
+  scap.capability = DRM_CLIENT_CAP_ATOMIC;
+  scap.value = 1;
+
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_SET_CLIENT_CAP, &scap) == -1) {
+    dlu_log_me(DLU_DANGER, "[x] KMS node '%s' has no support for KMS atomic operations", device_name);
+    dlu_log_me(DLU_DANGER, "[x] ioctl(DRM_IOCTL_SET_CLIENT_CAP): %s", strerror(errno));
+    goto close_kms;
+  }
+
+  dlu_log_me(DLU_SUCCESS, "KMS node '%s' has support for KMS atomic operations", device_name);
+
+  struct drm_get_cap gcap;
+  memset(&gcap, 0, sizeof(gcap));
+  gcap.capability = DRM_CAP_ADDFB2_MODIFIERS;
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_GET_CAP, &gcap) < 0 || !gcap.value)
     dlu_log_me(DLU_WARNING, "KSM node '%s' doesn't support framebuffer modifiers", device_name);
   else
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports framebuffer modifiers", device_name);
 
-  cap = 0;
-  err = drmGetCap(core->device.kmsfd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
-  if (err || !cap)
+  memset(&gcap, 0, sizeof(gcap));
+  gcap.capability = DRM_CAP_TIMESTAMP_MONOTONIC;
+  if (ioctl(core->device.kmsfd, DRM_IOCTL_GET_CAP, &gcap) < 0 || !gcap.value)
     dlu_log_me(DLU_WARNING, "KMS node '%s' doesn't support clock monotonic timestamps", device_name);
   else
     dlu_log_me(DLU_SUCCESS, "KMS node '%s' supports monotonic clock", device_name);

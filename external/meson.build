@@ -22,5 +22,5 @@
 # THE SOFTWARE.
 #
 
-subdir('drm')
+subdir('include/drm')
 subdir('ktx')

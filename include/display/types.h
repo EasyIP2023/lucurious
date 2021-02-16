@@ -32,16 +32,16 @@
 #define DLU_DISPLAY_TYPES_H
 
 /* These headers allow for the use of ioctl calls directly */
-#include <drm.h>
-#include <drm_fourcc.h>
-#include <drm_mode.h>
+#include <drm/drm.h>
+#include <drm/drm_fourcc.h>
+#include <drm/drm_mode.h>
 
 /**
 * These headers are DRM API user space headers. Mainly used
 * for device and resource enumeration
 */
-#include <xf86drm.h>
-#include <xf86drmMode.h>
+#include <drm/xf86drm.h>
+#include <drm/xf86drmMode.h>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -55,6 +55,10 @@
 /* For input handling */
 #include <libudev.h>
 #include <libinput.h>
+
+/* https://gitlab.freedesktop.org/mesa/drm/-/blob/master/freedreno/freedreno_priv.h#L195 */
+#define VOID2U64(x) ((unsigned long long)(unsigned long)(x))
+#define U642VOID(x) ((void *)(unsigned long)(x))
 
 struct drm_prop_enum_info {
   const char *name; /**< name as string (static, not freed) */
