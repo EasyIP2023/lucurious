@@ -25,7 +25,7 @@
 libdrm = dependency('libdrm', required: true)
 libinput = dependency('libinput', required: true)
 libgbm = dependency('gbm', required: true)
-libsystemd = dependency('libsystemd', required: true)
+libsystemd = dependency('libsystemd', required: false)
 libudev = dependency('libudev', required: true)
 
 fs = [
@@ -33,7 +33,13 @@ fs = [
   'edid.c', 'input.c', 'fb.c'
 ]
 
+deps = [libdrm, libgbm, libinput, libudev]
+
+if libsystemd.found()
+  deps += [libsystemd]
+endif
+
 lib_drm = static_library(
   'ldrm', files(fs), include_directories: lucur_inc,
-  dependencies: [libdrm, libgbm, libinput, libsystemd, libudev]
+  dependencies: deps
 )
