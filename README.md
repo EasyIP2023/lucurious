@@ -3,7 +3,11 @@
 <p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
-**Note: This library is meant to be purely experimental and for educational purposes only. Yes, I am still learning all of these APIs**
+**Note: This library is meant to be purely experimental and for educational purposes only**
+
+**tested on**
+  * Ubuntu 20.04
+  * Arch Linux
 
 Inspired by the t.v series the expanse and other syfy t.v shows/movies.
 
@@ -15,20 +19,45 @@ compositors that appear to be straight out of science fiction.
 * [ISSUE: Remove VkSurfaceKHR and SwapChain Extension code](https://github.com/EasyIP2023/lucurious/issues/40)
 * [VK_EXT_image_drm_format_modifier](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/1466) extension in mesa (Almost implemented)
 
-## Dependencies
-* vulkan (Install your graphics card driver)
-* vulkan-icd-loader
-* vulkan-headers
-* [CGLM (for linear algebra)](https://github.com/recp/cglm)
-* [libshaderc](https://github.com/google/shaderc)
-* [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) (Required by glslang and libshaderc)
-* [libdrm](https://gitlab.freedesktop.org/mesa/drm)
-* [libgbm](https://gitlab.freedesktop.org/mesa/mesa/-/tree/master/src/gbm)
-* [libinput](https://gitlab.freedesktop.org/libinput/libinput)
-* libsystemd
-* libudev
+## Known Issues
+* kms-novulkan crashes on (Arch Linux, Ubuntu 20.04)
+* rotate-rectangle example crashes on Ubuntu 20.04
 
-### [Installation/Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
+## Build/Install
+
+**arch linux**
+```
+$ pacman -S lucurious-git
+```
+
+**Debian**
+```
+$ sudo apt install -y python3-pip pkg-config libdrm-dev libinput-dev libgbm-dev libudev-dev libsystemd-dev vulkan-validationlayers ninja-build
+$ sudo python3 -m pip install meson
+
+# Install google libshaderc
+$ git clone --branch v2021.2 https://github.com/google/shaderc ; cd shaderc
+$ ./utils/git-sync-deps
+$ mkdir build ; cd build
+$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+$ ninja
+$ sudo ninja install
+
+# Install libcglm
+$ git clone -b v0.8.4 https://github.com/recp/cglm ; cd cglm
+$ mkdir build
+$ meson build/
+$ sudo ninja -C build/ install
+
+# Optional Testing
+$ git clone -b 0.15.2 https://github.com/libcheck/check ; cd check
+$ mkdir build ; cd build
+$ cmake ..
+$ make -j$(nproc)
+$ sudo make install
+```
+
+### [Usage/Examples](https://github.com/EasyIP2023/lucurious-examples/)
 ### [Documentation](https://github.com/EasyIP2023/lucurious-docs/)
 ### [Development](https://github.com/EasyIP2023/lucurious/tree/development/src)
 ### [Testing](https://github.com/EasyIP2023/lucurious/tree/development/tests)
