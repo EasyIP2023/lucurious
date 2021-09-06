@@ -59,10 +59,10 @@ static const char *obj_to_str(const VkObjectType type) {
     case VK_OBJECT_TYPE_DISPLAY_KHR: return "VkDisplayKHR";
     case VK_OBJECT_TYPE_DISPLAY_MODE_KHR: return "VkDisplayModeKHR";
     case VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT: return "VkDebugReportCallbackEXT";
-    case VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NV: return "VkIndirectCommandsLayoutNV";
+    // case VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NV: return "VkIndirectCommandsLayoutNV";
     case VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT: return "VkDebugUtilsMessengerEXT";
     case VK_OBJECT_TYPE_VALIDATION_CACHE_EXT: return "VkValidationCacheEXT";
-    case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR: return "VkAccelerationStructureKHR";
+    // case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR: return "VkAccelerationStructureKHR";
     case VK_OBJECT_TYPE_PERFORMANCE_CONFIGURATION_INTEL: return "VkPerformanceConfigurationINTEL";
     default: return "Unknown/Undefined Handle";
   }
