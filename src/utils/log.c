@@ -47,11 +47,11 @@ void _dlu_log_me(dlu_log_type type, FILE *stream, const char *fmt, ...) {
   fprintf(stream, "%s", buffer);
 
   /* Set terminal color */
-  fprintf(stream, term_colors[type]);
+  fprintf(stream, "%s", term_colors[type]);
   va_start(args, fmt);
   vfprintf(stream, fmt, args);
   va_end(args); /* Reset terminal color */
-  fprintf(stream, term_colors[DLU_RESET]);
+  fprintf(stream, "%s", term_colors[DLU_RESET]);
 
   /* Flush twice */
   fprintf(stream, "\n");
@@ -61,11 +61,11 @@ void _dlu_print_me(dlu_log_type type, const char *msg, ...) {
   va_list args;
 
   /* Set terminal color */
-  fprintf(stdout, term_colors[type]);
+  fprintf(stdout, "%s", term_colors[type]);
   va_start(args, msg);
   vfprintf(stdout, msg, args);
   va_end(args); /* Reset terminal color */
-  fprintf(stdout, term_colors[DLU_RESET]);
+  fprintf(stdout, "%s", term_colors[DLU_RESET]);
 
   fflush(stdout);
 }
