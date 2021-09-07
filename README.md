@@ -25,9 +25,9 @@ compositors that appear to be straight out of science fiction.
 
 ## Build/Install
 
-**arch linux**
+**arch linux (via AUR)**
 ```
-$ pacman -S lucurious-git
+$ yay -S lucurious-git
 ```
 
 **Debian**
