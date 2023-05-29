@@ -1,10 +1,10 @@
 # Lucurious
 
-## Deprecated being replaced and written here [libunderview-renderer](https://github.com/under-view/libunderview-renderer)
+## Deprecated being replaced and written here [kmsroots](https://github.com/under-view/kmsroots)
 
 
 [//]: <> (GIF taken from https://gmunk.com/OBLIVION-GFX)
-[//]: <p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p
+<p align="center"><img src="https://github.com/EasyIP2023/lucurious/blob/development/OBLVN_GFX_CHAN_01.gif" alt="SyFy User Interfaces"></p>
 
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](#license)
 
